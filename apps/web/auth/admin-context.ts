@@ -48,6 +48,14 @@ export type AdminContextLoadResult =
       verifiedTotpFactorId: string | null;
     };
 
+interface AvailableAdminContext {
+  decision: AdminAccessDecision;
+  email: string | null;
+  mfaLevel: "aal1" | "aal2" | null;
+  userId: string;
+  verifiedTotpFactorId?: string | null;
+}
+
 function isAdminRole(value: unknown): value is AdminRole {
   return typeof value === "string" && ADMIN_ROLES.some((role) => role === value);
 }
@@ -132,6 +140,23 @@ function mapMembership(row: unknown): AdminMembership | null {
   };
 }
 
+function availableAdminContext({
+  decision,
+  email,
+  mfaLevel,
+  userId,
+  verifiedTotpFactorId = null,
+}: AvailableAdminContext): AdminContextLoadResult {
+  return {
+    decision,
+    email,
+    mfaLevel,
+    status: "AVAILABLE",
+    userId,
+    verifiedTotpFactorId,
+  };
+}
+
 export async function loadAdminContext(): Promise<AdminContextLoadResult> {
   const client = await createAdminServerClient();
   if (!client) {
@@ -152,37 +177,86 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
     };
   }
   const emailClaim = claims?.email;
+  const email = typeof emailClaim === "string" ? emailClaim : null;
+  const mfaLevel = normalizeMfaLevel(claims?.aal);
 
-  const [profileResult, membershipsResult, factorsResult] = await Promise.all([
-    client
-      .from("admin_profiles")
-      .select("user_id, display_name, status")
-      .eq("user_id", subject)
-      .maybeSingle(),
-    client
-      .from("admin_memberships")
-      .select("id, user_id, tenant_id, management_company_id, site_id, role, scope_type, status")
-      .eq("user_id", subject)
-      .eq("status", "ACTIVE"),
-    client.auth.mfa.listFactors(),
-  ]);
-
-  if (profileResult.error || membershipsResult.error || factorsResult.error) {
+  const profileResult = await client
+    .from("admin_profiles")
+    .select("user_id, display_name, status")
+    .eq("user_id", subject)
+    .maybeSingle();
+  if (profileResult.error) {
     logger.error("admin.context.load_failed", {
-      factorsErrorCode: getErrorCode(factorsResult.error),
-      membershipsErrorCode: getErrorCode(membershipsResult.error),
       profileErrorCode: getErrorCode(profileResult.error),
+      stage: "profile",
     });
     return { status: "LOAD_ERROR" };
   }
 
   const profile = mapProfile(profileResult.data);
+  const profileDecision = resolveAdminAccess(
+    {
+      authenticated: true,
+      hasVerifiedTotp: false,
+      mfaLevel,
+    },
+    profile,
+    [],
+  );
+  if (profileDecision.state === "ACCESS_DENIED" && profileDecision.reason === "PROFILE_INACTIVE") {
+    return availableAdminContext({
+      decision: profileDecision,
+      email,
+      mfaLevel,
+      userId: subject,
+    });
+  }
+
+  const membershipsResult = await client
+    .from("admin_memberships")
+    .select("id, user_id, tenant_id, management_company_id, site_id, role, scope_type, status")
+    .eq("user_id", subject)
+    .eq("status", "ACTIVE");
+  if (membershipsResult.error) {
+    logger.error("admin.context.load_failed", {
+      membershipsErrorCode: getErrorCode(membershipsResult.error),
+      stage: "memberships",
+    });
+    return { status: "LOAD_ERROR" };
+  }
+
   const memberships = Array.isArray(membershipsResult.data)
     ? membershipsResult.data
         .map((membership) => mapMembership(membership))
         .filter((membership): membership is AdminMembership => membership !== null)
     : [];
-  const mfaLevel = normalizeMfaLevel(claims?.aal);
+  const preMfaDecision = resolveAdminAccess(
+    {
+      authenticated: true,
+      hasVerifiedTotp: false,
+      mfaLevel,
+    },
+    profile,
+    memberships,
+  );
+  if (preMfaDecision.state !== "MFA_ENROLL_REQUIRED") {
+    return availableAdminContext({
+      decision: preMfaDecision,
+      email,
+      mfaLevel,
+      userId: subject,
+    });
+  }
+
+  const factorsResult = await client.auth.mfa.listFactors();
+  if (factorsResult.error) {
+    logger.error("admin.context.load_failed", {
+      factorsErrorCode: getErrorCode(factorsResult.error),
+      stage: "factors",
+    });
+    return { status: "LOAD_ERROR" };
+  }
+
   const verifiedTotpFactor =
     [...factorsResult.data.totp].sort(
       (left, right) =>
@@ -197,12 +271,11 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
     profile,
     memberships,
   );
-  return {
+  return availableAdminContext({
     decision,
-    email: typeof emailClaim === "string" ? emailClaim : null,
+    email,
     mfaLevel,
-    status: "AVAILABLE",
     userId: subject,
     verifiedTotpFactorId: verifiedTotpFactor?.id ?? null,
-  };
+  });
 }
