@@ -14,7 +14,10 @@ import {
   type AdminRole,
   type AdminScopeType,
 } from "@taptolk/domain";
+import { createLogger } from "@taptolk/observability";
 import { createAdminServerClient } from "./server-client";
+
+const logger = createLogger({ service: "taptolk-web" });
 
 interface AdminProfileRow {
   display_name: string;
@@ -63,6 +66,21 @@ function isMembershipStatus(value: unknown): value is AdminMembershipStatus {
 
 function normalizeMfaLevel(value: unknown): "aal1" | "aal2" | null {
   return value === "aal1" || value === "aal2" ? value : null;
+}
+
+function getErrorCode(error: unknown): string | number | null {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  const candidate = error as { code?: unknown; status?: unknown };
+  if (typeof candidate.code === "string") {
+    return candidate.code;
+  }
+  if (typeof candidate.status === "number") {
+    return candidate.status;
+  }
+  return null;
 }
 
 function mapProfile(row: unknown): AdminProfile | null {
@@ -135,7 +153,7 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
   }
   const emailClaim = claims?.email;
 
-  const [profileResult, membershipsResult, assuranceResult, factorsResult] = await Promise.all([
+  const [profileResult, membershipsResult, factorsResult] = await Promise.all([
     client
       .from("admin_profiles")
       .select("user_id, display_name, status")
@@ -146,16 +164,15 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
       .select("id, user_id, tenant_id, management_company_id, site_id, role, scope_type, status")
       .eq("user_id", subject)
       .eq("status", "ACTIVE"),
-    client.auth.mfa.getAuthenticatorAssuranceLevel(),
     client.auth.mfa.listFactors(),
   ]);
 
-  if (
-    profileResult.error ||
-    membershipsResult.error ||
-    assuranceResult.error ||
-    factorsResult.error
-  ) {
+  if (profileResult.error || membershipsResult.error || factorsResult.error) {
+    logger.error("admin.context.load_failed", {
+      factorsErrorCode: getErrorCode(factorsResult.error),
+      membershipsErrorCode: getErrorCode(membershipsResult.error),
+      profileErrorCode: getErrorCode(profileResult.error),
+    });
     return { status: "LOAD_ERROR" };
   }
 
@@ -165,7 +182,7 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
         .map((membership) => mapMembership(membership))
         .filter((membership): membership is AdminMembership => membership !== null)
     : [];
-  const mfaLevel = normalizeMfaLevel(assuranceResult.data.currentLevel);
+  const mfaLevel = normalizeMfaLevel(claims?.aal);
   const verifiedTotpFactor =
     [...factorsResult.data.totp].sort(
       (left, right) =>
