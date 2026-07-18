@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { extname, join, relative, resolve } from "node:path";
+import { APPROVED_LOGO_SHA256, resolveApprovedLogoSource } from "../lib/approved-brand-assets.mjs";
 import { WCJ_CONFIG, WCJ_RULES } from "./config.mjs";
 
 const SOURCE_ROOTS = [
@@ -13,8 +14,6 @@ const SOURCE_ROOTS = [
 ];
 const SOURCE_FILES = ["apps/web/proxy.ts"];
 const SOURCE_EXTENSIONS = new Set([".css", ".ts", ".tsx"]);
-const EXPECTED_LOGO_HASH = "971b7d919208f172a96dbc25c8ec9f641fc01522a1aa7a35fc90feb86f2e546f";
-
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const paths = await Promise.all(
@@ -253,12 +252,12 @@ function checkStaticRules(files) {
 }
 
 async function checkLogo(root) {
-  const sourcePath = resolve(root, "design_concept/taptolk로고.png");
+  const sourcePath = await resolveApprovedLogoSource(root);
   const publicPath = resolve(root, "apps/web/public/brand/taptolk-logo.png");
   const [source, published] = await Promise.all([readFile(sourcePath), readFile(publicPath)]);
   if (
-    sha256(source) === EXPECTED_LOGO_HASH &&
-    sha256(published) === EXPECTED_LOGO_HASH &&
+    sha256(source) === APPROVED_LOGO_SHA256 &&
+    sha256(published) === APPROVED_LOGO_SHA256 &&
     source.equals(published)
   ) {
     return [];
