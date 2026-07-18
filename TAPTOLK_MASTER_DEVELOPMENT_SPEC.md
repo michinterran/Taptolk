@@ -3,7 +3,7 @@
 **문서명:** Taptolk QR 기반 익명 차량 커뮤니케이션 플랫폼 통합 개발 명세서  
 **문서 목적:** Codex가 별도의 추측 없이 프론트엔드, 백엔드, 데이터베이스, 관리자 시스템, QR 발행·렌더링·배포, 차주 인증, 익명 연락 세션, 보안, 테스트와 배포까지 단계적으로 구현하기 위한 단일 기준 문서  
 **작성 기준:** 2026-07  
-**문서 버전:** 1.0  
+**문서 버전:** 1.1
 **개발 방식:** GitHub Monorepo + Vercel + Supabase PostgreSQL  
 **우선 출시 대상:** 국내 아파트 관리회사·관리사무소 B2B 파일럿  
 **언어:** 사용자 UI는 한국어 우선, 코드·DB·API 식별자는 영어 사용
@@ -1388,18 +1388,36 @@ Supabase Auth
 
 ## 9.5 RBAC Matrix
 
-| 기능 | Super | Mgmt Admin | Site Admin | Operator | Read Only |
-|---|---:|---:|---:|---:|---:|
-| 관리회사 생성 | O | X | X | X | X |
-| Site 생성 | O | 제한 | X | X | X |
-| QR Batch 요청 | O | O | O | X | X |
-| 샘플 승인 | O | O | O | X | X |
-| 차량 배정 | O | O | O | O | X |
-| QR 폐기 | O | 승인 | 요청 | X | X |
-| Session 조회 | O | 소속 | Site | Site | 마스킹 |
-| 메시지 본문 | 신고·운영 건 | 제한 | 제한 | 제한 | X |
-| 통계 | O | 소속 | Site | 제한 | O |
-| 감사로그 | O | 소속 | Site | X | O |
+| 기능 | Super | Platform Op | Mgmt Admin | Site Admin | Operator | Read Only |
+|---|---:|---:|---:|---:|---:|---:|
+| 관리회사 생성 | O | X | X | X | X | X |
+| Site 직접 생성·승인 | O | X | X | X | X | X |
+| Site 생성 요청 | O | X | O | X | X | X |
+| QR Batch 요청 | O | O | O | O | X | X |
+| QR 샘플 승인 | O | O | O | O | X | X |
+| 대량 생성 최종 승인 | O | X | X | X | X | X |
+| 실패 Batch 재처리 | O | O | 요청 | 요청 | X | X |
+| 차량 배정 | O | O | O | O | O | X |
+| QR 폐기 | O | 요청 | 승인 | 요청 | X | X |
+| Session 조회 | O | 운영 건 | 소속 | Site | Site | 마스킹 |
+| 메시지 본문 | 신고·운영 건 | 신고·운영 건 | 제한 | 제한 | 제한 | X |
+| 통계 | O | O | 소속 | Site | 제한 | O |
+| 감사로그 | O | O | 소속 | Site | X | 마스킹 |
+
+### 9.5.1 QR 발행 권한 원칙
+
+- QR 생성 엔진은 플랫폼에 하나만 두며 역할별 Dashboard가 별도 엔진을 소유하지 않는다.
+- Management Admin과 Site Admin은 허용 scope에서 QR Batch를 요청하고 샘플을 승인한다.
+- MVP의 실제 대량 생성 시작은 Super Admin의 최종 승인을 요구한다.
+- Platform Operator는 발행 상태와 실패 작업을 운영하지만 대량 생성 최종 승인과 최종
+  폐기는 수행하지 않는다.
+- Site Operator는 입고·배포·차량 배정을 수행하며 QR Batch 발행과 폐기는 수행하지
+  않는다.
+- 운영 안정화 후 계약 잔여 수량, 활성 Site, 승인된 Design Version과 발행 임계치를
+  모두 만족하는 표준 Batch에 한해 Management Admin 자동 승인을 별도 정책으로
+  도입할 수 있다.
+- 요청자와 최종 승인자가 같을 수 없는 작업은 Application Policy와 Audit Log에서
+  maker-checker 규칙으로 강제한다.
 
 ---
 

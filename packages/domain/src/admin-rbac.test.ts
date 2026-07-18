@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  authorizeAdminAction,
-  isResourceWithinScope,
+  ADMIN_PERMISSIONS,
+  getRolePermissions,
   roleHasPermission,
   roleRequiresMfa,
-} from "./admin-rbac.js";
+} from "./admin-permission-catalog.js";
+import { authorizeAdminAction, isResourceWithinScope } from "./admin-rbac.js";
 
 const siteA = {
   managementCompanyId: "company-a",
@@ -21,7 +22,7 @@ describe("admin RBAC", () => {
 
   it("keeps read-only memberships free of mutation permissions", () => {
     expect(roleHasPermission("READ_ONLY", "site:read")).toBe(true);
-    expect(roleHasPermission("READ_ONLY", "site:update")).toBe(false);
+    expect(roleHasPermission("READ_ONLY", "site:update-operational")).toBe(false);
   });
 
   it("rejects a Site admin outside the exact Site scope", () => {
@@ -36,14 +37,14 @@ describe("admin RBAC", () => {
           type: "SITE",
         },
       },
-      "site:update",
+      "site:update-operational",
       siteA,
     );
 
     expect(decision).toEqual({ allowed: false, reason: "OUT_OF_SCOPE" });
   });
 
-  it("allows a verified Management Admin inside the company scope", () => {
+  it("allows a verified Management Admin to request Site creation inside the company scope", () => {
     expect(
       authorizeAdminAction(
         {
@@ -55,10 +56,39 @@ describe("admin RBAC", () => {
             type: "MANAGEMENT_COMPANY",
           },
         },
-        "site:create",
+        "site:create-request",
         siteA,
       ),
     ).toEqual({ allowed: true });
+  });
+
+  it("reserves direct Site creation and approval for Super Admin", () => {
+    expect(roleHasPermission("SUPER_ADMIN", "site:create")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "site:create-approve")).toBe(true);
+    expect(roleHasPermission("MANAGEMENT_ADMIN", "site:create")).toBe(false);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "site:create-approve")).toBe(false);
+  });
+
+  it("centralizes production QR generation approval while delegating scoped requests", () => {
+    expect(roleHasPermission("MANAGEMENT_ADMIN", "qr-batch:request")).toBe(true);
+    expect(roleHasPermission("SITE_ADMIN", "qr-batch:request")).toBe(true);
+    expect(roleHasPermission("SITE_ADMIN", "qr-batch:sample-approve")).toBe(true);
+    expect(roleHasPermission("SITE_ADMIN", "qr-batch:generation-approve")).toBe(false);
+    expect(roleHasPermission("MANAGEMENT_ADMIN", "qr-batch:generation-approve")).toBe(false);
+    expect(roleHasPermission("SUPER_ADMIN", "qr-batch:generation-approve")).toBe(true);
+  });
+
+  it("lets Site Operators assign QR assets without issuing or revoking them", () => {
+    expect(roleHasPermission("SITE_OPERATOR", "qr-asset:assign")).toBe(true);
+    expect(roleHasPermission("SITE_OPERATOR", "qr-batch:request")).toBe(false);
+    expect(roleHasPermission("SITE_OPERATOR", "qr-asset:revoke-request")).toBe(false);
+  });
+
+  it("returns permissions from the same catalog used by authorization", () => {
+    const permissions = getRolePermissions("SUPER_ADMIN");
+
+    expect(permissions).toEqual(ADMIN_PERMISSIONS);
+    expect(getRolePermissions("READ_ONLY")).not.toContain("qr-asset:assign");
   });
 
   it("never crosses tenants from a tenant membership", () => {

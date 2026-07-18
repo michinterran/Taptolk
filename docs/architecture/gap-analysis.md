@@ -41,9 +41,10 @@ Auth/MFA 및 Site CRUD 제품 journey는 남아 있다.
 | 영역 | 목표 | 현재 | 판정 |
 |---|---|---|---|
 | i18n | KO/EN, 자동 판정, 명시 선택, locale URL | 구현·E2E 완료 | 완료 |
-| Tenant/Admin | Tenant, Site, Membership, RBAC, RLS, Audit | schema/policy/service 기반 | Phase 1 부분 |
+| Tenant/Admin | Tenant, Site, Membership, RBAC, RLS, Audit | schema, granular permission, server-only Site mutation 기반 | Phase 1 부분 |
 | Auth | Admin MFA, Owner OTP, Caller session | Supabase client·Admin AAL2 policy | Phase 1/5 부분 |
-| QR/Sticker | asset, binding, SVG, render, PDF/ZIP | 없음 | Phase 2–3 |
+| Admin Console | Platform/Company/Site dashboard와 domain pages | IA/read model/API/state, 3번 visual direction, UI 없음 | Phase 1 부분 |
+| QR/Sticker | asset, binding, SVG, render, PDF/ZIP | 역할별 발행·관리 권한 계약만 구현 | Phase 2–3 |
 | Contact | public scan, session, rate limit | 없음 | Phase 4 |
 | Messaging | SMS, response token, polling | provider env만 | Phase 5 |
 | Escalation | report/management flow | 없음 | Phase 6 |
@@ -56,9 +57,9 @@ Auth/MFA 및 Site CRUD 제품 journey는 남아 있다.
 | Migration | 정적 transaction/RLS/constraint 검사 | Supabase Local reset |
 | Tenant isolation | RBAC unit 및 pgTAP SQL 작성 | 실제 PostgreSQL pgTAP |
 | Admin Auth | SSR client와 AAL2 policy | 로그인·MFA enrollment/recovery |
-| Site CRUD | application service와 repository 계약 | route/UI/repository/authenticated E2E |
+| Site CRUD | granular permission과 server-only application service 계약 | request model, route/UI/repository/authenticated E2E |
 | Audit | same-transaction interface와 DB key constraint | 실제 mutation 후 append-only 검증 |
-| UI | bilingual Foundation shell | role별 bilingual Admin journey |
+| UI | bilingual Foundation shell, Admin architecture | dashboard wireframe와 role별 bilingual Admin journey |
 
 ## 5. 결정이 필요한 아키텍처 Gap
 
@@ -146,11 +147,12 @@ schema/type 및 migration 생성 보조로 사용하는 것이다. Phase 1 첫 s
 
 ## 8. 다음 개발 순서
 
-1. Docker Desktop 준비 후 Supabase Local migration/pgTAP acceptance
+1. Supabase Staging project 설정과 migration/pgTAP acceptance
 2. Phase 1 Admin Auth/MFA와 server-side trusted membership resolution 구현
-3. Site repository, route, KO/EN Admin CRUD UI와 authenticated E2E 구현
-4. 변경 파일 검토 후 사용자 승인으로 Git commit/push
-5. 별도 승인 후 Vercel Project Import 및 Preview 검증
+3. Site create request/approval model과 tenant-scoped repository 구현
+4. Site route, KO/EN Admin CRUD UI와 authenticated E2E 구현
+5. 선택된 3번 visual direction으로 Platform/Company/Site 화면 refinement
+6. 별도 승인 후 Vercel Preview 검증
 
 외부 연결 없이 가능한 Phase 1 소스 구현은 계속할 수 있지만, DB runtime과 인증된
 journey가 없는 상태를 전체 Phase 완료로 오인하지 않는다.

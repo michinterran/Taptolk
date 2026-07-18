@@ -1,16 +1,19 @@
 export {
   ADMIN_PERMISSIONS,
   ADMIN_ROLES,
+  type AdminPermission,
+  type AdminRole,
+  getRolePermissions,
+  roleHasPermission,
+  roleRequiresMfa,
+} from "./admin-permission-catalog.js";
+export {
   ADMIN_SCOPE_TYPES,
   type AdminAuthorizationContext,
   type AdminMembershipScope,
-  type AdminPermission,
-  type AdminRole,
   type AdminScopeType,
   type AuthorizationDecision,
   authorizeAdminAction,
   isResourceWithinScope,
   type ResourceScope,
-  roleHasPermission,
-  roleRequiresMfa,
 } from "./admin-rbac.js";

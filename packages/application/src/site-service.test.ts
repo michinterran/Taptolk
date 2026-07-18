@@ -44,11 +44,9 @@ describe("Site application service", () => {
     const created = await service.create({
       actor: {
         mfaVerified: true,
-        role: "MANAGEMENT_ADMIN",
+        role: "SUPER_ADMIN",
         scope: {
-          managementCompanyId: "company-a",
-          tenantId: "tenant-a",
-          type: "MANAGEMENT_COMPANY",
+          type: "PLATFORM",
         },
       },
       actorId: "admin-a",
@@ -67,7 +65,7 @@ describe("Site application service", () => {
     expect(unitOfWork.appendAudit).toHaveBeenCalledOnce();
   });
 
-  it("blocks cross-tenant creation before repository access", async () => {
+  it("blocks direct creation by a Management Admin before repository access", async () => {
     const unitOfWork = createUnitOfWork();
     const service = new SiteApplicationService({
       execute: async (operation) => operation(unitOfWork),
@@ -92,8 +90,36 @@ describe("Site application service", () => {
         tenantId: "tenant-a",
         type: "APARTMENT",
       }),
-    ).rejects.toEqual(new AdminAuthorizationError("OUT_OF_SCOPE"));
+    ).rejects.toEqual(new AdminAuthorizationError("ROLE_FORBIDDEN"));
 
     expect(unitOfWork.createSite).not.toHaveBeenCalled();
+  });
+
+  it("blocks a cross-tenant operational update before repository access", async () => {
+    const unitOfWork = createUnitOfWork();
+    const service = new SiteApplicationService({
+      execute: async (operation) => operation(unitOfWork),
+    });
+
+    await expect(
+      service.update({
+        actor: {
+          mfaVerified: true,
+          role: "MANAGEMENT_ADMIN",
+          scope: {
+            managementCompanyId: "company-b",
+            tenantId: "tenant-b",
+            type: "MANAGEMENT_COMPANY",
+          },
+        },
+        actorId: "admin-b",
+        expectedVersion: 1,
+        name: "Forbidden Site",
+        requestId: "request-c",
+        site,
+      }),
+    ).rejects.toEqual(new AdminAuthorizationError("OUT_OF_SCOPE"));
+
+    expect(unitOfWork.updateSite).not.toHaveBeenCalled();
   });
 });

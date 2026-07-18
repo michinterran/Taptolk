@@ -2,9 +2,9 @@
 
 - 기준일: 2026-07-18
 - 프로젝트 루트: `/Users/benjaminsong/Documents/Taptolk`
-- 최상위 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.0
+- 최상위 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
 - 현재 단계: Phase 0 소스 기반 및 i18n 완료, Phase 1 Tenant/Admin 기반 구현,
-  DB runtime·인증 UI acceptance 대기
+  역할별 Admin Console architecture 설계, DB runtime·인증 UI acceptance 대기
 
 ## 1. 구현 상태
 
@@ -132,7 +132,11 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
 - 모든 Phase 1 table의 RLS enable + force, 고정 `search_path`의 비재귀 scope helper
 - browser의 audit insert 금지와 민감한 audit JSON key 거부
 - 중앙 role/permission/scope/MFA 정책과 교차 tenant 거부 unit test
+- Site lifecycle을 direct/request/approve/operational/contract 권한으로 분리
+- QR Batch·Asset을 request/sample approval/generation approval/retry/assignment/revoke
+  권한으로 분리하고 MVP 대량 생성 최종 승인을 Super Admin에 중앙화
 - Site create/update/archive application service와 동일 transaction audit 계약
+- authenticated browser의 Site 직접 insert/update 권한과 mutation RLS policy 제거
 
 이는 Phase 1의 안전한 기반이며 전체 Phase 1 완료가 아니다. Docker PostgreSQL에서
 migration/pgTAP을 실행하고, Auth/MFA와 인증된 Site CRUD E2E까지 통과해야 Phase 1
@@ -158,11 +162,11 @@ Node 24.18.0과 pnpm 10.34.5에서 확인한 결과:
 |---|---|
 | Frozen lockfile install | 통과 |
 | Production dependency audit | 알려진 취약점 0건 |
-| Biome lint | 93 files, 통과 |
+| Biome lint | 96 files, 통과 |
 | TypeScript | 10 workspace packages / 14 tasks, 통과 |
-| Vitest | 8 files / 25 tests, 통과 |
-| Migration static check | 2 migrations / 2 DB tests, 통과 |
-| Secret scan | 126 text files, 통과 |
+| Vitest | 9 files / 32 tests, 통과 |
+| Migration static check | 3 migrations / 2 DB tests, 통과 |
+| Secret scan | 136 text files, 통과 |
 | Logo integrity | 원본·공개 자산 일치 |
 | WCJ static | W/C/J 100/100/100, 22 sources |
 | Next production build | `/ko`, `/en`, locale API와 proxy 포함 통과 |
@@ -178,6 +182,11 @@ Node 24.18.0과 pnpm 10.34.5에서 확인한 결과:
 - Production Worker runtime: ADR 결정 필요
 - Admin Auth/MFA enrollment와 인증된 Site CRUD E2E: Phase 1 후속 구현
 - Phase 1 migration/tenant isolation pgTAP runtime: Docker DB에서 실행 필요
+- 선택된 3번 Customer Portfolio 방향의 Platform/Company/Site별 화면 refinement
 
-따라서 i18n은 로컬 acceptance를 통과했고 Phase 1은 foundation 범위까지 진행됐다.
-Phase 0의 외부 acceptance와 Phase 1 전체 acceptance는 아직 완료로 판정하지 않는다.
+Admin Console은 Platform/Company/Site 관점의 IA, route, dashboard, read model, API,
+Site/QR 권한과 상태 계약까지 설계됐다. Customer Portfolio 기반 3번 시각 방향도
+선택됐지만 role별 화면 refinement와 실제 Auth/API/UI는 아직 없다. 따라서
+i18n은 로컬 acceptance를 통과했고 Phase 1은 foundation 및 architecture 범위까지
+진행됐지만, Phase 0의 외부 acceptance와 Phase 1 전체 acceptance는 완료로 판정하지
+않는다.

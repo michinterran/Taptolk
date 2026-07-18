@@ -1,6 +1,6 @@
 begin;
 
-select plan(14);
+select plan(15);
 
 select has_table('public', 'tenants', 'tenants table exists');
 select has_table('public', 'management_companies', 'management companies table exists');
@@ -23,8 +23,8 @@ select results_eq(
 select policies_are(
   'public',
   'sites',
-  array['sites_insert_scoped', 'sites_select_scoped', 'sites_update_scoped'],
-  'sites expose only the reviewed scoped policies'
+  array['sites_select_scoped'],
+  'sites expose only the reviewed read policy to browser sessions'
 );
 
 select throws_ok(
@@ -111,6 +111,14 @@ select table_privs_are(
   'authenticated',
   array['SELECT'],
   'authenticated browser sessions cannot insert audit logs'
+);
+
+select table_privs_are(
+  'public',
+  'sites',
+  'authenticated',
+  array['SELECT'],
+  'authenticated browser sessions cannot bypass the Site application service'
 );
 
 select table_privs_are(

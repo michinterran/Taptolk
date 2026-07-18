@@ -141,7 +141,9 @@ export class SiteApplicationService {
   }
 
   async update(command: UpdateSiteCommand): Promise<SiteRecord> {
-    assertAuthorized(authorizeAdminAction(command.actor, "site:update", scopeOf(command.site)));
+    assertAuthorized(
+      authorizeAdminAction(command.actor, "site:update-operational", scopeOf(command.site)),
+    );
     const nextName = normalizeSiteName(command.name);
 
     return this.transactions.execute(async (unitOfWork) => {
@@ -164,7 +166,9 @@ export class SiteApplicationService {
   }
 
   async archive(command: ArchiveSiteCommand): Promise<SiteRecord> {
-    assertAuthorized(authorizeAdminAction(command.actor, "site:archive", scopeOf(command.site)));
+    assertAuthorized(
+      authorizeAdminAction(command.actor, "site:archive-approve", scopeOf(command.site)),
+    );
     if (command.reason.trim().length < 3) {
       throw new Error("Archiving a Site requires a reason.");
     }
