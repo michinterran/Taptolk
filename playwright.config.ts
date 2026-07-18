@@ -23,7 +23,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `corepack pnpm build:packages && corepack pnpm --filter @taptolk/web dev --port ${port}`,
+    command: `corepack pnpm build:packages && NEXT_PUBLIC_SUPABASE_URL= NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY= corepack pnpm --filter @taptolk/web dev --port ${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     url: `http://127.0.0.1:${port}`,
