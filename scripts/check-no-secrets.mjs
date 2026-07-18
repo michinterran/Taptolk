@@ -16,6 +16,10 @@ const forbidden = [
     label: "Supabase service role JWT",
     pattern: /eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}/u,
   },
+  {
+    label: "Supabase secret API key",
+    pattern: /sb_secret_[a-zA-Z0-9_-]{20,}/u,
+  },
   { label: "private key", pattern: /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----/u },
   { label: "database credential", pattern: /postgres(?:ql)?:\/\/[^:\s]+:[^@\s]+@/u },
 ];

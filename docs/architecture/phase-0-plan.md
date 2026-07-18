@@ -1,6 +1,6 @@
 # Taptolk Phase 0 Plan
 
-- 상태: **승인됨 · 로컬 소스 구현 완료 · 외부 acceptance 대기**
+- 상태: **승인됨 · 로컬 소스 구현 완료 · Supabase Staging 연결 완료**
 - 구현 시작: **2026-07-18**
 - 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md`의 Phase 0 — Foundation
 - 목표: 구현 Phase들이 안전하게 누적될 수 있는 재현 가능한 Monorepo, Local DB, CI, 관측성, 환경 검증, 기본 UI 기반을 만든다.
@@ -19,10 +19,10 @@
 - Next.js/Turborepo와 애플리케이션 Foundation 생성
 - 로컬 DB migration 작성과 정적 검사
 
-다음 외부 작업은 여전히 별도 승인 전 금지한다.
+이후 사용자의 승인으로 Supabase Staging 연결과 Git branch/commit/push를
+진행했다. 다음 외부 작업은 여전히 별도 승인 전 금지한다.
 
-- Supabase/Vercel/SMS/Sentry 연결
-- Git remote/branch/commit/push 생성
+- Supabase Production/Vercel/SMS/Sentry 연결
 - Production Worker host 확정
 
 기존 디자인 자산은 수정하지 않았고 `.gitignore`의 사용자 규칙을 보존·확장했다.

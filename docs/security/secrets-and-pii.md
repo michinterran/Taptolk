@@ -3,14 +3,14 @@
 ## 브라우저 허용값
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
 위 값도 오직 `packages/config/src/env.client.ts`를 통해 읽는다. 이외의 환경변수는
 Client Component에 전달하지 않는다.
 
 ## 서버 전용값
 
-DB URL, Supabase service role, 암호화·서명 키, SMS 자격증명, Queue·Cron secret,
+DB URL, `SUPABASE_SECRET_KEY`, 암호화·서명 키, SMS 자격증명, Queue·Cron secret,
 Sentry auth token은 서버 전용이다. 로그, 오류 응답, analytics payload에 포함하지
 않는다.
 

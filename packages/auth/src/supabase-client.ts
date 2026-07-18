@@ -1,7 +1,7 @@
 import { type CookieOptionsWithName, createBrowserClient, createServerClient } from "@supabase/ssr";
 
 export interface PublicSupabaseConfiguration {
-  anonKey: string;
+  publishableKey: string;
   url: string;
 }
 
@@ -25,15 +25,18 @@ function assertPublicConfiguration(
   if (!URL.canParse(configuration.url)) {
     throw new Error("A valid Supabase URL is required.");
   }
-  if (configuration.anonKey.length < 20) {
-    throw new Error("A valid Supabase anonymous key is required.");
+  if (
+    !configuration.publishableKey.startsWith("sb_publishable_") ||
+    configuration.publishableKey.length < 20
+  ) {
+    throw new Error("A valid Supabase publishable key is required.");
   }
   return configuration;
 }
 
 export function createTaptolkBrowserClient(configuration: PublicSupabaseConfiguration) {
   const config = assertPublicConfiguration(configuration);
-  return createBrowserClient(config.url, config.anonKey);
+  return createBrowserClient(config.url, config.publishableKey);
 }
 
 export function createTaptolkServerClient(
@@ -41,7 +44,7 @@ export function createTaptolkServerClient(
   cookieStore: ServerCookieStore,
 ) {
   const config = assertPublicConfiguration(configuration);
-  return createServerClient(config.url, config.anonKey, {
+  return createServerClient(config.url, config.publishableKey, {
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (cookies) => cookieStore.setAll(cookies),

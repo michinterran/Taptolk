@@ -41,7 +41,10 @@ const serverEnvironmentSchema = z
       z.string().min(1).optional(),
     ),
     STICKER_RENDER_CHUNK_SIZE: integerEnvironmentSchema(25),
-    SUPABASE_SERVICE_ROLE_KEY: optionalSecretSchema,
+    SUPABASE_SECRET_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().startsWith("sb_secret_").min(20).optional(),
+    ),
     TEMP_PHONE_RETENTION_HOURS: integerEnvironmentSchema(24),
     TOKEN_HMAC_KEY: optionalSecretSchema,
   })
@@ -59,7 +62,7 @@ const serverEnvironmentSchema = z
       "OWNER_RESPONSE_BASE_URL",
       "PUBLIC_QR_BASE_URL",
       "QUEUE_WORKER_SECRET",
-      "SUPABASE_SERVICE_ROLE_KEY",
+      "SUPABASE_SECRET_KEY",
       "TOKEN_HMAC_KEY",
     ] as const;
 

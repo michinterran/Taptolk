@@ -3,8 +3,8 @@
 - 기준일: 2026-07-18
 - 프로젝트 루트: `/Users/benjaminsong/Documents/Taptolk`
 - 최상위 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
-- 현재 단계: Phase 0 소스 기반 및 i18n 완료, Phase 1 Tenant/Admin 기반 구현,
-  역할별 Admin Console architecture 설계, DB runtime·인증 UI acceptance 대기
+- 현재 단계: Phase 0 소스 기반 및 i18n 완료, Phase 1 Tenant/Admin 기반 구현과
+  Supabase Staging schema 적용 완료, 인증 UI acceptance 대기
 
 ## 1. 구현 상태
 
@@ -44,7 +44,7 @@ Tenant/Admin은 데이터·권한·application service 기반까지만 구현했
 | Language | TypeScript 5.9.3 strict + exact optional properties |
 | UI | Tailwind CSS 4.3.3, 소유형 `@taptolk/ui` |
 | Validation | Zod 4.4.3 |
-| Database | Supabase Local 계약, Drizzle 0.45.2, postgres-js 3.4.9 |
+| Database | Supabase Staging(Postgres 17.6, Seoul) + Local 계약, Drizzle 0.45.2, postgres-js 3.4.9 |
 | Auth client | Supabase JS 2.110.7, Supabase SSR 0.12.3 |
 | Test | Vitest 4.1.10, Playwright 1.61.1, axe |
 | Quality | Biome 2.5.4, TAPTOLK WCJ 1.0 |
@@ -137,10 +137,15 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
   권한으로 분리하고 MVP 대량 생성 최종 승인을 Super Admin에 중앙화
 - Site create/update/archive application service와 동일 transaction audit 계약
 - authenticated browser의 Site 직접 insert/update 권한과 mutation RLS policy 제거
+- Supabase 기본 table privilege를 초기화하고 역할별 최소 권한만 재부여
+- `app_private`와 자동 RLS helper의 browser role 직접 접근 차단
+- RLS `auth.uid()` 초기화와 계약 policy 분리로 Advisor 경고 제거
+- FK covering index를 추가해 tenant 연관 조회·삭제 검사 경로 보호
 
 이는 Phase 1의 안전한 기반이며 전체 Phase 1 완료가 아니다. Docker PostgreSQL에서
-migration/pgTAP을 실행하고, Auth/MFA와 인증된 Site CRUD E2E까지 통과해야 Phase 1
-acceptance로 판정한다.
+pgTAP을 실행하고, Auth/MFA와 인증된 Site CRUD E2E까지 통과해야 Phase 1
+acceptance로 판정한다. Staging에서는 extension 설치 없이 catalog와 transaction
+rollback 기반으로 동등한 RLS·권한·제약 검증을 수행했다.
 
 ## 7. 환경변수와 외부 서비스
 
@@ -148,15 +153,27 @@ acceptance로 판정한다.
 두 개뿐이다.
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-DB URL, service role, 암호화·서명 키, SMS, Queue, Cron, Sentry token은 서버
-전용이다. Vercel, Supabase Staging/Production, SMS, Sentry 계정에는 연결하지
-않았다.
+DB URL, Supabase Secret Key, 암호화·서명 키, SMS, Queue, Cron, Sentry token은 서버
+전용이다.
+
+Supabase Staging `taptolk-staging`은 2026-07-18 연결했다.
+
+- Project ref: `evpwzjkhfppdjivkyokh`
+- Region: Northeast Asia (Seoul), `ap-northeast-2`
+- Data API: enabled
+- Automatically expose new tables: disabled
+- Automatic RLS: enabled
+- Migration: 로컬/원격 7개 일치
+- Secret/API key: 저장소와 문서에 저장하지 않음
+
+Supabase Production, Vercel, SMS, Sentry 계정은 아직 연결하지 않았다.
 
 ## 8. 검증 결과
 
-Node 24.18.0과 pnpm 10.34.5에서 확인한 결과:
+프로젝트 target은 Node 24.18.0이며, 현재 Codex Node 24.14.0 호환 runtime과
+pnpm 10.34.5에서 확인한 결과:
 
 | 검증 | 결과 |
 |---|---|
@@ -164,9 +181,9 @@ Node 24.18.0과 pnpm 10.34.5에서 확인한 결과:
 | Production dependency audit | 알려진 취약점 0건 |
 | Biome lint | 96 files, 통과 |
 | TypeScript | 10 workspace packages / 14 tasks, 통과 |
-| Vitest | 9 files / 32 tests, 통과 |
-| Migration static check | 3 migrations / 2 DB tests, 통과 |
-| Secret scan | 136 text files, 통과 |
+| Vitest | 9 files / 33 tests, 통과 |
+| Migration static check | 7 migrations / 2 DB tests, 통과 |
+| Secret scan | 140 text files, 통과 |
 | Logo integrity | 원본·공개 자산 일치 |
 | WCJ static | W/C/J 100/100/100, 22 sources |
 | Next production build | `/ko`, `/en`, locale API와 proxy 포함 통과 |
@@ -176,8 +193,9 @@ Node 24.18.0과 pnpm 10.34.5에서 확인한 결과:
 ## 9. 아직 완료되지 않은 acceptance
 
 - Supabase Local 실제 reset 및 pgTAP 실행: Docker daemon이 없어 실행 불가
+- Staging pgTAP: `pgtap` extension이 없어 미실행; catalog/rollback 검증은 통과
+- Supabase CLI `db push --dry-run`: 임시 login role 발급 지연; migration list는 정상
 - Vercel Preview: 프로젝트 생성·외부 연결 승인 전이므로 미실행
-- GitHub CI 원격 실행: remote/push 권한 범위 밖이므로 미실행
 - Sentry/SMS 실제 연결: 후속 승인 및 자격증명 필요
 - Production Worker runtime: ADR 결정 필요
 - Admin Auth/MFA enrollment와 인증된 Site CRUD E2E: Phase 1 후속 구현

@@ -1,6 +1,6 @@
 begin;
 
-select plan(15);
+select plan(24);
 
 select has_table('public', 'tenants', 'tenants table exists');
 select has_table('public', 'management_companies', 'management companies table exists');
@@ -25,6 +25,17 @@ select policies_are(
   'sites',
   array['sites_select_scoped'],
   'sites expose only the reviewed read policy to browser sessions'
+);
+
+select policies_are(
+  'public',
+  'contracts',
+  array[
+    'contracts_insert_scoped',
+    'contracts_select_scoped',
+    'contracts_update_scoped'
+  ],
+  'contracts separate read, insert, and update policy paths'
 );
 
 select throws_ok(
@@ -127,6 +138,67 @@ select table_privs_are(
   'anon',
   array[]::text[],
   'anonymous sessions have no Site table privileges'
+);
+
+select table_privs_are(
+  'public',
+  'tenants',
+  'authenticated',
+  array['INSERT', 'SELECT', 'UPDATE'],
+  'authenticated tenant access excludes destructive and DDL-adjacent privileges'
+);
+
+select table_privs_are(
+  'public',
+  'management_companies',
+  'authenticated',
+  array['INSERT', 'SELECT', 'UPDATE'],
+  'authenticated management company access matches the reviewed contract'
+);
+
+select table_privs_are(
+  'public',
+  'contracts',
+  'authenticated',
+  array['INSERT', 'SELECT', 'UPDATE'],
+  'authenticated contract access matches the reviewed contract'
+);
+
+select table_privs_are(
+  'public',
+  'admin_profiles',
+  'authenticated',
+  array['SELECT', 'UPDATE'],
+  'authenticated admin profile access excludes insert and destructive privileges'
+);
+
+select table_privs_are(
+  'public',
+  'admin_memberships',
+  'authenticated',
+  array['INSERT', 'SELECT', 'UPDATE'],
+  'authenticated membership access matches the reviewed contract'
+);
+
+select has_index(
+  'public',
+  'admin_memberships',
+  'idx_admin_memberships_invited_by',
+  'admin membership inviter FK has a covering index'
+);
+
+select has_index(
+  'public',
+  'audit_logs',
+  'idx_audit_logs_tenant_site',
+  'audit tenant/site FK has a covering index'
+);
+
+select has_index(
+  'public',
+  'contracts',
+  'idx_contracts_tenant_management_site',
+  'contract tenant/management/site FKs share a covering index'
 );
 
 select * from finish();

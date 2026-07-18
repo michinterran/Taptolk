@@ -112,7 +112,11 @@ function checkStaticRules(files) {
     if (/dangerouslySetInnerHTML/u.test(file.source)) {
       findings.push(finding("W007", file.path, "dangerouslySetInnerHTML is forbidden."));
     }
-    if (/(?:SUPABASE_SERVICE_ROLE_KEY|DATABASE_URL|SMS_API_SECRET)/u.test(file.source)) {
+    if (
+      /(?:SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|DATABASE_URL|SMS_API_SECRET)/u.test(
+        file.source,
+      )
+    ) {
       findings.push(finding("W007", file.path, "Server-only secret name appears in UI source."));
     }
   }

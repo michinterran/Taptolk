@@ -17,14 +17,27 @@ describe("environment contracts", () => {
 
   it("returns only explicitly allowed browser variables", () => {
     const environment = parseClientEnvironment({
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: "a".repeat(24),
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: `sb_publishable_${"a".repeat(24)}`,
       NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
-      SUPABASE_SERVICE_ROLE_KEY: "must-not-cross-the-boundary",
+      SUPABASE_SECRET_KEY: "must-not-cross-the-boundary",
     });
 
     expect(Object.keys(environment).sort()).toEqual([
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
       "NEXT_PUBLIC_SUPABASE_URL",
     ]);
+  });
+
+  it("rejects legacy or malformed hosted API keys", () => {
+    expect(() =>
+      parseClientEnvironment({
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "legacy-anon-key",
+      }),
+    ).toThrow();
+    expect(() =>
+      parseServerEnvironment({
+        SUPABASE_SECRET_KEY: "legacy-service-role-key",
+      }),
+    ).toThrow();
   });
 });
