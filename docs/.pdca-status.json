@@ -1,0 +1,236 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-07-18T09:46:22.320Z",
+  "activeFeatures": ["i18n-foundation", "tenant-admin-foundation"],
+  "primaryFeature": "i18n-foundation",
+  "features": {
+    "i18n-foundation": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:16:47.609Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:18:56.879Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:43:31.950Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:45:30.888Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:46:22.269Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-18T09:15:44.797Z",
+        "lastUpdated": "2026-07-18T09:46:22.269Z"
+      },
+      "completedAt": "2026-07-18T09:46:22.268Z"
+    },
+    "tenant-admin-foundation": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:16:47.753Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:18:56.948Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:43:31.965Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:45:30.899Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:46:22.320Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-18T09:15:44.890Z",
+        "lastUpdated": "2026-07-18T09:46:22.320Z"
+      },
+      "completedAt": "2026-07-18T09:46:22.319Z"
+    }
+  },
+  "pipeline": {
+    "currentPhase": 1,
+    "level": "Starter",
+    "phaseHistory": []
+  },
+  "session": {
+    "startedAt": "2026-07-18T09:15:44.795Z",
+    "onboardingCompleted": false,
+    "lastActivity": "2026-07-18T09:46:22.320Z"
+  },
+  "history": [
+    {
+      "feature": "i18n-foundation",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-18T09:16:47.607Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-18T09:16:47.608Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-18T09:16:47.752Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-18T09:16:47.752Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-18T09:16:54.178Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-18T09:16:54.305Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-18T09:18:56.878Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-18T09:18:56.878Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-18T09:18:56.947Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-18T09:18:56.947Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-18T09:43:31.946Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-18T09:43:31.949Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-18T09:43:31.962Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-18T09:43:31.964Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-18T09:45:30.887Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-18T09:45:30.887Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-18T09:45:30.898Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-18T09:45:30.899Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-18T09:46:22.269Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-18T09:46:22.319Z"
+    }
+  ]
+}

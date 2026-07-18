@@ -1,0 +1,61 @@
+# Taptolk Phase 1 Schema
+
+The execution details are defined in
+`docs/02-design/features/tenant-admin-foundation.design.md` and the Phase 1 Supabase migration.
+
+## Entities and Key Fields
+
+### tenants
+
+`id`, `name`, `slug`, `status`, `settings`, `created_at`, `updated_at`, `version`, `deleted_at`.
+
+### management_companies
+
+`id`, `tenant_id`, `name`, `business_number`, `status`, encrypted contact phone,
+`billing_email`, common timestamps/version/deletion.
+
+### sites
+
+`id`, `tenant_id`, `management_company_id`, `name`, `site_type`, `address`, `timezone`,
+`contract_vehicle_limit`, `status`, encrypted escalation phone, `settings`, common fields.
+
+### contracts
+
+`id`, `tenant_id`, `management_company_id`, nullable `site_id`, `plan_code`, start/end date,
+minimum vehicle count, billing basis, status, metadata, common fields.
+
+### admin_profiles
+
+`user_id` primary/foreign key to `auth.users`, `display_name`, `status`, `last_login_at`,
+timestamps and version.
+
+### admin_memberships
+
+`id`, `user_id`, nullable hierarchy IDs, `role`, `scope_type`, `status`, inviter, acceptance,
+timestamps and version. Role and scope combinations are enforced by a check constraint.
+
+### audit_logs
+
+`id`, nullable tenant/site scope, actor, action, resource identity, redacted before/after data,
+reason, request ID, and immutable creation time.
+
+## Validation Rules
+
+- Name: trimmed, 1–200 characters.
+- Slug: lowercase ASCII letters, digits, and hyphens; 2–63 characters.
+- Vehicle limit/minimum count: non-negative.
+- Contract end date cannot precede start date.
+- Settings/metadata must be JSON objects.
+- All operational times are `timestamptz`.
+- Phone values are encrypted server-side; plaintext and direct hash values are not stored here.
+- Audit JSON rejects sensitive top-level keys.
+
+## Query Indexes
+
+- active tenant slug
+- tenant + status for companies/Sites/contracts
+- company + Site status
+- user + membership status
+- tenant/company/site membership scopes
+- tenant + audit creation time descending
+- request ID and resource identity for audit investigation

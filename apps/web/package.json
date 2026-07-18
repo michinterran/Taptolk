@@ -1,0 +1,26 @@
+{
+  "name": "@taptolk/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "clean": "node ../../scripts/clean-next-output.mjs .",
+    "dev": "next dev",
+    "start": "next start",
+    "typecheck": "node ../../scripts/clean-next-output.mjs . && next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@taptolk/config": "workspace:*",
+    "@taptolk/observability": "workspace:*",
+    "@taptolk/ui": "workspace:*",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "tailwindcss": "4.3.3"
+  }
+}

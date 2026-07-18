@@ -1,0 +1,29 @@
+:root {
+  --tt-color-brand: #8066ff;
+  --tt-color-brand-strong: #5c42da;
+  --tt-color-logo-purple: #8a6eff;
+  --tt-color-logo-orange: #ff8500;
+  --tt-color-accent: #ff7a00;
+  --tt-color-background: #f7f8fc;
+  --tt-color-surface: #ffffff;
+  --tt-color-text: #171a24;
+  --tt-color-text-muted: #60697a;
+  --tt-color-border: #dfe3ec;
+  --tt-color-success: #1a9b68;
+  --tt-color-warning: #d98a00;
+  --tt-color-danger: #d64553;
+  --tt-color-focus: #2b59ff;
+  --tt-radius-sm: 0.75rem;
+  --tt-radius-md: 1.25rem;
+  --tt-radius-lg: 2rem;
+  --tt-shadow-card: 0 1rem 3rem color-mix(in srgb, var(--tt-color-text) 8%, transparent);
+  --tt-space-1: 0.25rem;
+  --tt-space-2: 0.5rem;
+  --tt-space-3: 0.75rem;
+  --tt-space-4: 1rem;
+  --tt-space-5: 1.5rem;
+  --tt-space-6: 2rem;
+  --tt-space-7: 3rem;
+  --tt-line-heading: 1.18;
+  --tt-line-body: 1.72;
+}
