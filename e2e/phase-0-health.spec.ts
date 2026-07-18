@@ -84,3 +84,36 @@ test("explicit language selection persists over browser preference", async ({ br
   });
   await context.close();
 });
+
+test("admin sign-in foundation is bilingual and meets the accessibility baseline", async ({
+  page,
+}) => {
+  await page.goto("/ko/admin/login");
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "승인된 관리자 계정으로 안전하게 시작합니다.",
+  );
+  await expect(page.getByRole("button", { name: "관리자 로그인" })).toBeDisabled();
+  await expect(page.getByRole("status")).toContainText("인증 환경 연결이 필요합니다.");
+
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(accessibility.violations).toEqual([]);
+
+  await page.getByRole("link", { name: "영어로 보기" }).click();
+  await expect(page).toHaveURL(/\/en\/admin\/login$/u);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "Start securely with an approved admin account.",
+  );
+});
+
+test("admin sign-in remains usable on a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ height: 667, width: 320 });
+  await page.goto("/en/admin/login");
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(false);
+  await expect(page.getByLabel("Admin email")).toBeVisible();
+  await expect(page.getByLabel("Password")).toBeVisible();
+});

@@ -38,9 +38,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@taptolk/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@taptolk/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@taptolk/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@taptolk/observability':
         specifier: workspace:*
         version: link:../../packages/observability

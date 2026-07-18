@@ -10,7 +10,9 @@
     "typecheck": "node ../../scripts/clean-next-output.mjs . && next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@taptolk/auth": "workspace:*",
     "@taptolk/config": "workspace:*",
+    "@taptolk/domain": "workspace:*",
     "@taptolk/observability": "workspace:*",
     "@taptolk/ui": "workspace:*",
     "next": "16.2.10",

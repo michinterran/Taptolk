@@ -1,6 +1,6 @@
 # Taptolk Gap Analysis
 
-- 기준 문서: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.0
+- 기준 문서: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
 - 비교 대상: 2026-07-18 현재 저장소
 - 판정: 완료 / 부분 / 후속 Phase / 외부 의존 / 결정 필요
 
@@ -9,15 +9,14 @@
 Phase 0 소스 기반은 구현됐다. 모노레포, Web/Worker, 환경 검증, DB migration 골격,
 UI system, 관측성, 테스트, CI, WCJ가 존재하고 로컬 웹 검증은 통과한다.
 
-Phase 0 전체 acceptance와 비교하면 다음 세 항목이 남아 있다.
+Phase 0 전체 acceptance와 비교하면 다음 두 항목이 남아 있다.
 
 1. Docker 환경에서 Supabase Local reset 및 pgTAP 실행
-2. GitHub remote에서 CI 실행
-3. 사용자 승인 후 Vercel Preview 배포
+2. Vercel Preview 배포와 실제 route 검증
 
 i18n은 로컬 검증까지 완료했다. Phase 1은 Tenant/Admin schema, RBAC, RLS, audit,
-Supabase SSR client 경계와 Site application service 기반까지 진행했으며 실제
-Auth/MFA 및 Site CRUD 제품 journey는 남아 있다.
+Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA UI까지 진행했다.
+실제 Staging 계정의 AAL2 acceptance와 Site CRUD 제품 journey는 남아 있다.
 
 ## 2. Phase 0 차이
 
@@ -25,14 +24,14 @@ Auth/MFA 및 Site CRUD 제품 journey는 남아 있다.
 |---|---|---|---|---|
 | Node/pnpm | Node 24, pnpm 10 | 24.18.0/10.34.5 고정 | 완료 | 유지 |
 | Monorepo | pnpm + Turbo | 10 package workspace | 완료 | 유지 |
-| Web | Next App Router | `/ko`·`/en`, locale 선택, states, health | 완료 | Admin route 추가 |
+| Web | Next App Router | `/ko`·`/en`, locale 선택, Admin Auth states, health | 완료 | Site CRUD route 추가 |
 | Worker | 별도 Node 계약 | validation/lifecycle/health | 완료 | 운영 runtime ADR |
 | Env | client/server Zod | allowlist와 production 조건 | 완료 | 실제 env는 환경별 입력 |
 | DB | Supabase Local + Drizzle | Phase 0·1 migration/pgTAP 작성 | 부분 | Docker에서 reset/test |
 | UI | token과 기본 component | Button, heading, journey status | 완료 | 실제 feature와 함께 확장 |
 | Observability | Sentry + logs | Node adapter와 redaction | 완료 | DSN 입력은 별도 승인 |
-| Test | unit/DB/browser | 25 unit·12 browser 통과, DB runtime 미실행 | 부분 | Local DB test |
-| CI | PR pipeline | workflow 작성 | 부분 | remote push 후 실행 확인 |
+| Test | unit/DB/browser | 38 unit·16 browser 통과, DB runtime 미실행 | 부분 | Local DB test |
+| CI | PR pipeline | GitHub Actions 통과 | 완료 | 변경마다 유지 |
 | Preview | Vercel URL | 미연결 | 외부 의존 | 별도 승인 후 import/deploy |
 | 문서 | setup/security/deploy | 작성 완료 | 완료 | 변경과 함께 유지 |
 
@@ -42,8 +41,8 @@ Auth/MFA 및 Site CRUD 제품 journey는 남아 있다.
 |---|---|---|---|
 | i18n | KO/EN, 자동 판정, 명시 선택, locale URL | 구현·E2E 완료 | 완료 |
 | Tenant/Admin | Tenant, Site, Membership, RBAC, RLS, Audit | schema, granular permission, server-only Site mutation 기반 | Phase 1 부분 |
-| Auth | Admin MFA, Owner OTP, Caller session | Supabase client·Admin AAL2 policy | Phase 1/5 부분 |
-| Admin Console | Platform/Company/Site dashboard와 domain pages | IA/read model/API/state, 3번 visual direction, UI 없음 | Phase 1 부분 |
+| Auth | Admin MFA, Owner OTP, Caller session | Admin Email/Password·TOTP UI와 서버 AAL2/context 판정 | Phase 1 부분 |
+| Admin Console | Platform/Company/Site dashboard와 domain pages | IA/read model/state, role entry/context UI, 3번 visual direction | Phase 1 부분 |
 | QR/Sticker | asset, binding, SVG, render, PDF/ZIP | 역할별 발행·관리 권한 계약만 구현 | Phase 2–3 |
 | Contact | public scan, session, rate limit | 없음 | Phase 4 |
 | Messaging | SMS, response token, polling | provider env만 | Phase 5 |
@@ -56,10 +55,10 @@ Auth/MFA 및 Site CRUD 제품 journey는 남아 있다.
 |---|---|---|
 | Migration | 정적 transaction/RLS/constraint 검사 | Supabase Local reset |
 | Tenant isolation | RBAC unit 및 pgTAP SQL 작성 | 실제 PostgreSQL pgTAP |
-| Admin Auth | SSR client와 AAL2 policy | 로그인·MFA enrollment/recovery |
+| Admin Auth | KO/EN 로그인, TOTP 등록·챌린지, 단일 membership/AAL2 판정 | Staging 실계정 E2E, recovery, idle timeout |
 | Site CRUD | granular permission과 server-only application service 계약 | request model, route/UI/repository/authenticated E2E |
 | Audit | same-transaction interface와 DB key constraint | 실제 mutation 후 append-only 검증 |
-| UI | bilingual Foundation shell, Admin architecture | dashboard wireframe와 role별 bilingual Admin journey |
+| UI | bilingual Foundation와 role별 Admin Auth/context shell | Site CRUD 상태와 실제 운영 dashboard |
 
 ## 5. 결정이 필요한 아키텍처 Gap
 
@@ -139,20 +138,20 @@ schema/type 및 migration 생성 보조로 사용하는 것이다. Phase 1 첫 s
 |---|---|---|
 | Docker | daemon 없음 | Docker Desktop 설치·실행 |
 | Supabase Local | config만 존재 | reset, pgTAP, migration runtime 증명 |
-| Supabase Staging/Prod | 미연결 | 환경별 별도 project와 region |
-| GitHub | remote 없음 | push와 Actions 확인 |
+| Supabase Staging/Prod | Staging schema 연결, Production 미생성 | Auth 공개 env와 bootstrap admin, 추후 Production |
+| GitHub | remote/PR/Actions 연결 | 현재 변경 push와 CI 재확인 |
 | Vercel | 미연결 | Git import, root/build/env 설정, Preview |
 | SMS | mock 계약만 | 사업자, 발신번호 승인, callback, 비용 |
 | Sentry | adapter만 | 환경별 DSN/token과 개인정보 설정 |
 
 ## 8. 다음 개발 순서
 
-1. Supabase Staging project 설정과 migration/pgTAP acceptance
-2. Phase 1 Admin Auth/MFA와 server-side trusted membership resolution 구현
+1. Supabase Staging 공개 env 연결과 최초 Super Admin bootstrap
+2. Staging Email/Password→TOTP 등록→AAL2→platform route 실인증 acceptance
 3. Site create request/approval model과 tenant-scoped repository 구현
-4. Site route, KO/EN Admin CRUD UI와 authenticated E2E 구현
+4. Site route, KO/EN Admin CRUD UI와 authenticated tenant-isolation E2E 구현
 5. 선택된 3번 visual direction으로 Platform/Company/Site 화면 refinement
-6. 별도 승인 후 Vercel Preview 검증
+6. Vercel Preview env 연결과 동일 Auth journey 검증
 
 외부 연결 없이 가능한 Phase 1 소스 구현은 계속할 수 있지만, DB runtime과 인증된
 journey가 없는 상태를 전체 Phase 완료로 오인하지 않는다.

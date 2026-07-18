@@ -3,8 +3,8 @@
 - 기준일: 2026-07-18
 - 프로젝트 루트: `/Users/benjaminsong/Documents/Taptolk`
 - 최상위 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
-- 현재 단계: Phase 0 소스 기반 및 i18n 완료, Phase 1 Tenant/Admin 기반 구현과
-  Supabase Staging schema 적용 완료, 인증 UI acceptance 대기
+- 현재 단계: Phase 0 소스 기반 및 i18n 완료, Phase 1 Tenant/Admin 기반과
+  Admin Auth/MFA 소스 구현 완료, Supabase Staging 실인증 acceptance 대기
 
 ## 1. 구현 상태
 
@@ -16,7 +16,7 @@ apps/
   worker/              Queue consumer와 lifecycle 계약
 packages/
   application/         Site mutation service와 transaction/audit 계약
-  auth/                Supabase SSR client 경계와 Admin MFA assurance
+  auth/                Supabase SSR, 서버 session/membership/AAL 판정과 Admin MFA action
   config/              client/server 환경변수 검증
   db/                  Drizzle/postgres-js 및 Phase 1 tenant schema
   domain/              중앙 RBAC, scope, MFA policy
@@ -25,13 +25,13 @@ packages/
   ui/                  token, Button, SemanticHeading, JourneyStatus
 supabase/              Phase 0·1 migration, RLS, seed, pgTAP test
 scripts/wcj/           TAPTOLK WCJ 1.0 정적 검증기
-e2e/                   axe, health, 320px, locale journey browser smoke
+e2e/                   axe, health, 320px, locale·Admin Auth browser smoke
 .github/workflows/     동일 품질 게이트 CI
 ```
 
-Tenant/Admin은 데이터·권한·application service 기반까지만 구현했다. 실제 Admin
-로그인/MFA 등록 UI, 인증된 Site CRUD 화면과 API, QR, SMS, 스티커 렌더링은 아직
-구현하지 않았다.
+Tenant/Admin 데이터·권한·application service와 Admin 로그인/MFA 등록·챌린지
+소스까지 구현했다. 스테이징 Auth 사용자와 환경변수를 사용한 실제 AAL2 acceptance,
+인증된 Site CRUD 화면과 API, QR, SMS, 스티커 렌더링은 아직 구현하지 않았다.
 
 ## 2. 고정 기술 기준
 
@@ -69,6 +69,8 @@ UI
 - UI 문구: `apps/web/content/messages.ts`의 한·영 타입 계약
 - i18n: `/ko`·`/en` URL 기준, cookie → `Accept-Language` 최초 판정
 - 인증: browser/server Supabase client와 MFA assurance 정책 분리
+- 관리자 컨텍스트: verified JWT → active profile → 단일 membership → MFA AAL 순서로
+  서버에서 fail-closed 판정
 - 업무 권한: `@taptolk/domain`의 role/scope/permission 단일 기준
 - mutation: `@taptolk/application`의 transaction 안에서 mutation과 audit 동시 처리
 - 이용자 구분: Caller/Owner/Admin route policy
@@ -141,9 +143,18 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
 - `app_private`와 자동 RLS helper의 browser role 직접 접근 차단
 - RLS `auth.uid()` 초기화와 계약 policy 분리로 Advisor 경고 제거
 - FK covering index를 추가해 tenant 연관 조회·삭제 검사 경로 보호
+- `/ko|en/admin/login` Email/Password 로그인과 locale 유지
+- TOTP MFA 등록 QR·수동 키와 AAL2 challenge 화면
+- `SUPER_ADMIN`, `MANAGEMENT_ADMIN`, `SITE_ADMIN`의 MFA 강제 및
+  `SITE_OPERATOR`, `READ_ONLY`, `PLATFORM_OPERATOR`의 현재 명세 정책 적용
+- 활성 profile과 membership을 서버에서 확인하고 여러 membership 권한은 합치지
+  않은 채 하나의 안정적인 active context만 선택
+- 플랫폼 역할은 `/admin/platform`, 고객 역할은 `/admin/dashboard`로 분리하고
+  양쪽 모두 서버에서 역할을 재검증
+- 모든 Admin route를 `force-dynamic`으로 지정해 사용자별 인증 결과 정적 캐시 금지
 
 이는 Phase 1의 안전한 기반이며 전체 Phase 1 완료가 아니다. Docker PostgreSQL에서
-pgTAP을 실행하고, Auth/MFA와 인증된 Site CRUD E2E까지 통과해야 Phase 1
+pgTAP을 실행하고, Staging Auth/MFA와 인증된 Site CRUD E2E까지 통과해야 Phase 1
 acceptance로 판정한다. Staging에서는 extension 설치 없이 catalog와 transaction
 rollback 기반으로 동등한 RLS·권한·제약 검증을 수행했다.
 
@@ -179,15 +190,15 @@ pnpm 10.34.5에서 확인한 결과:
 |---|---|
 | Frozen lockfile install | 통과 |
 | Production dependency audit | 알려진 취약점 0건 |
-| Biome lint | 96 files, 통과 |
-| TypeScript | 10 workspace packages / 14 tasks, 통과 |
-| Vitest | 9 files / 33 tests, 통과 |
+| Biome lint | 118 files, 통과 |
+| TypeScript | 10 workspace packages / 15 tasks, 통과 |
+| Vitest | 10 files / 38 tests, 통과 |
 | Migration static check | 7 migrations / 2 DB tests, 통과 |
-| Secret scan | 140 text files, 통과 |
+| Secret scan | 163 text files, 통과 |
 | Logo integrity | 원본·공개 자산 일치 |
-| WCJ static | W/C/J 100/100/100, 22 sources |
-| Next production build | `/ko`, `/en`, locale API와 proxy 포함 통과 |
-| Playwright | Desktop/Mobile 12 tests, 통과 |
+| WCJ static | W/C/J 100/100/100, 36 sources |
+| Next production build | `/ko`, `/en`, Admin Auth/MFA, locale API와 proxy 포함 통과 |
+| Playwright | Desktop/Mobile 16 tests, 통과 |
 | axe | 위반 0건 |
 
 ## 9. 아직 완료되지 않은 acceptance
@@ -198,13 +209,16 @@ pnpm 10.34.5에서 확인한 결과:
 - Vercel Preview: 프로젝트 생성·외부 연결 승인 전이므로 미실행
 - Sentry/SMS 실제 연결: 후속 승인 및 자격증명 필요
 - Production Worker runtime: ADR 결정 필요
-- Admin Auth/MFA enrollment와 인증된 Site CRUD E2E: Phase 1 후속 구현
+- Admin Auth/MFA 소스는 구현됐으나 Staging 공개 환경변수와 실제 관리자 계정으로
+  로그인→등록→AAL2→role route acceptance 필요
+- MFA recovery와 Admin idle timeout 운영 정책은 후속 구현 필요
+- 인증된 Site CRUD repository/API/UI/E2E: Phase 1 후속 구현
 - Phase 1 migration/tenant isolation pgTAP runtime: Docker DB에서 실행 필요
 - 선택된 3번 Customer Portfolio 방향의 Platform/Company/Site별 화면 refinement
 
 Admin Console은 Platform/Company/Site 관점의 IA, route, dashboard, read model, API,
 Site/QR 권한과 상태 계약까지 설계됐다. Customer Portfolio 기반 3번 시각 방향도
-선택됐지만 role별 화면 refinement와 실제 Auth/API/UI는 아직 없다. 따라서
-i18n은 로컬 acceptance를 통과했고 Phase 1은 foundation 및 architecture 범위까지
-진행됐지만, Phase 0의 외부 acceptance와 Phase 1 전체 acceptance는 완료로 판정하지
-않는다.
+선택됐다. 현재 role별 Auth entry와 보안 컨텍스트 UI는 구현됐지만 실제 Site/QR 운영
+화면 refinement와 API는 아직 없다. 따라서 i18n과 Auth 소스 acceptance는 통과했고
+Phase 1은 인증 기반까지 진행됐지만, Staging 실인증과 Site CRUD tenant isolation
+E2E 전에는 Phase 1 전체 완료로 판정하지 않는다.

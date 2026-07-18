@@ -57,6 +57,7 @@ redacted audit와 Site application service 기반을 만들었다. 이 보고서
 
 - [ ] Docker에서 Supabase Local reset과 pgTAP 실행
 - [ ] 역할별 Site CRUD permission matrix 확정
-- [ ] Admin Auth/MFA enrollment/recovery 구현
+- [x] Admin Email/Password·TOTP enrollment/challenge 소스 구현
+- [ ] Staging 실계정 Auth/MFA E2E와 recovery/idle timeout 구현
 - [ ] tenant-scoped repository와 KO/EN Site CRUD UI/API 구현
 - [ ] 실제 session 기반 tenant-isolation E2E 통과

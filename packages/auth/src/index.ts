@@ -3,6 +3,17 @@ export {
   hasRequiredAdminAssurance,
 } from "./admin-assurance.js";
 export {
+  type AdminAccessDecision,
+  type AdminAuthenticationState,
+  type AdminMembership,
+  type AdminMembershipStatus,
+  type AdminProfile,
+  type AdminProfileStatus,
+  getAdminLandingArea,
+  resolveAdminAccess,
+  selectPrimaryAdminMembership,
+} from "./admin-session.js";
+export {
   createTaptolkBrowserClient,
   createTaptolkServerClient,
   type PublicSupabaseConfiguration,
