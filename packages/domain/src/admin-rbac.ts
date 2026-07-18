@@ -32,6 +32,39 @@ export type AuthorizationDecision =
   | { allowed: true }
   | { allowed: false; reason: "MFA_REQUIRED" | "OUT_OF_SCOPE" | "ROLE_FORBIDDEN" };
 
+export function isAdminRoleScopeValid(role: AdminRole, scope: AdminMembershipScope): boolean {
+  if (role === "SUPER_ADMIN" || role === "PLATFORM_OPERATOR") {
+    return (
+      scope.type === "PLATFORM" && !scope.tenantId && !scope.managementCompanyId && !scope.siteId
+    );
+  }
+
+  if (role === "MANAGEMENT_ADMIN") {
+    return (
+      scope.type === "MANAGEMENT_COMPANY" &&
+      Boolean(scope.tenantId && scope.managementCompanyId) &&
+      !scope.siteId
+    );
+  }
+
+  if (role === "SITE_ADMIN" || role === "SITE_OPERATOR") {
+    return (
+      scope.type === "SITE" && Boolean(scope.tenantId && scope.managementCompanyId && scope.siteId)
+    );
+  }
+
+  if (scope.type === "TENANT") {
+    return Boolean(scope.tenantId && !scope.managementCompanyId && !scope.siteId);
+  }
+  if (scope.type === "MANAGEMENT_COMPANY") {
+    return Boolean(scope.tenantId && scope.managementCompanyId && !scope.siteId);
+  }
+  if (scope.type === "SITE") {
+    return Boolean(scope.tenantId && scope.managementCompanyId && scope.siteId);
+  }
+  return false;
+}
+
 export function isResourceWithinScope(
   membership: AdminMembershipScope,
   resource: ResourceScope,

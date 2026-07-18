@@ -386,17 +386,26 @@ h3,
   font-weight: 800;
 }
 
-.admin-field input {
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
   background: var(--tt-color-background);
   border: 1px solid var(--tt-color-border);
   border-radius: var(--tt-radius-sm);
   color: var(--tt-color-text);
   min-height: 3.5rem;
-  padding-inline: var(--tt-space-4);
+  padding: var(--tt-space-3) var(--tt-space-4);
   width: 100%;
 }
 
-.admin-field input:focus {
+.admin-field textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.admin-field input:focus,
+.admin-field select:focus,
+.admin-field textarea:focus {
   background: var(--tt-color-surface);
   border-color: var(--tt-color-brand);
 }
@@ -489,6 +498,11 @@ h3,
 .admin-notice--danger {
   background: color-mix(in srgb, var(--tt-color-danger) 8%, var(--tt-color-surface));
   border: 1px solid color-mix(in srgb, var(--tt-color-danger) 30%, var(--tt-color-border));
+}
+
+.admin-notice--success {
+  background: color-mix(in srgb, var(--tt-color-success) 8%, var(--tt-color-surface));
+  border: 1px solid color-mix(in srgb, var(--tt-color-success) 30%, var(--tt-color-border));
 }
 
 .admin-notice strong {
@@ -657,6 +671,12 @@ h3,
   margin-top: var(--tt-space-4);
 }
 
+.admin-next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tt-space-3);
+}
+
 .admin-section-hero {
   align-items: flex-end;
   display: flex;
@@ -794,6 +814,130 @@ h3,
   font-size: 0.85rem;
 }
 
+.admin-approval-list {
+  display: grid;
+  gap: var(--tt-space-5);
+}
+
+.admin-approval-card {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-lg);
+  box-shadow: var(--tt-shadow-card);
+  overflow: hidden;
+}
+
+.admin-approval-card__header {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--tt-color-border);
+  display: flex;
+  gap: var(--tt-space-5);
+  justify-content: space-between;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.admin-approval-card__label {
+  color: var(--tt-color-text-muted);
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-bottom: var(--tt-space-2);
+}
+
+.admin-approval-card__header h2 {
+  font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+  overflow-wrap: anywhere;
+}
+
+.admin-approval-signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tt-space-2);
+  justify-content: flex-end;
+}
+
+.admin-approval-meta {
+  background: color-mix(in srgb, var(--tt-color-background) 75%, var(--tt-color-surface));
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.admin-approval-meta > div {
+  background: var(--tt-color-surface);
+  padding: var(--tt-space-4) clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.admin-approval-meta dt {
+  color: var(--tt-color-text-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  margin-bottom: var(--tt-space-2);
+}
+
+.admin-approval-meta dd {
+  font-weight: 750;
+  margin: 0;
+}
+
+.admin-approval-form {
+  display: grid;
+  gap: var(--tt-space-5);
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.admin-approval-field-grid {
+  display: grid;
+  gap: var(--tt-space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-approval-field-grid--scope {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-approval-scope-help {
+  border-left: 4px solid var(--tt-color-logo-orange);
+  color: var(--tt-color-text-muted);
+  font-size: 0.88rem;
+  margin: calc(var(--tt-space-2) * -1) 0 0;
+  padding-left: var(--tt-space-3);
+}
+
+.admin-approval-primary-action {
+  justify-self: start;
+}
+
+.admin-rejection-panel {
+  border-top: 1px solid var(--tt-color-border);
+  padding: var(--tt-space-4) clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.admin-rejection-panel summary {
+  color: var(--tt-color-danger);
+  cursor: pointer;
+  font-weight: 800;
+  width: fit-content;
+}
+
+.admin-rejection-panel > p {
+  color: var(--tt-color-text-muted);
+  font-size: 0.88rem;
+  margin: var(--tt-space-3) 0 0;
+}
+
+.admin-rejection-form {
+  display: grid;
+  gap: var(--tt-space-4);
+  margin-top: var(--tt-space-4);
+}
+
+.admin-danger-action {
+  background: var(--tt-color-danger);
+  justify-self: start;
+}
+
 @media (max-width: 48rem) {
   .brand-header {
     align-items: flex-start;
@@ -850,6 +994,20 @@ h3,
   .admin-context-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .admin-approval-card__header {
+    flex-direction: column;
+  }
+
+  .admin-approval-signals {
+    justify-content: flex-start;
+  }
+
+  .admin-approval-meta,
+  .admin-approval-field-grid,
+  .admin-approval-field-grid--scope {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 28rem) {
@@ -893,6 +1051,12 @@ h3,
 
   .admin-context-card span {
     margin-bottom: var(--tt-space-3);
+  }
+
+  .admin-approval-primary-action,
+  .admin-danger-action {
+    justify-self: stretch;
+    width: 100%;
   }
 }
 

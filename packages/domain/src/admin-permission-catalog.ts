@@ -25,6 +25,7 @@ export const ADMIN_PERMISSIONS = [
   "site:archive-request",
   "site:archive-approve",
   "membership:manage",
+  "membership:approve-account",
   "audit:read",
   "qr-batch:read",
   "qr-batch:request",

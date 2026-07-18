@@ -10,6 +10,7 @@ export async function requireReadyAdminContext(locale: AppLocale): Promise<{
   decision: Extract<AdminAccessDecision, { state: "READY" }>;
   email: string | null;
   mfaLevel: "aal1" | "aal2" | null;
+  userId: string;
 }> {
   const context = await loadAdminContext();
   if (context.status === "CONFIGURATION_MISSING") {
@@ -21,10 +22,14 @@ export async function requireReadyAdminContext(locale: AppLocale): Promise<{
   if (context.decision.state !== "READY") {
     redirect(getAdminDecisionPath(locale, context.decision));
   }
+  if (!context.userId) {
+    redirect(getLocalizedAdminPath(locale, "/login?error=session"));
+  }
 
   return {
     decision: context.decision,
     email: context.email,
     mfaLevel: context.mfaLevel,
+    userId: context.userId,
   };
 }

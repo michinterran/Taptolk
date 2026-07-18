@@ -6,6 +6,60 @@ export const ko = {
   "admin.access.line2": "아직 확인할 수 없습니다.",
   "admin.access.profileInactive": "관리자 프로필이 활성 상태가 아닙니다.",
   "admin.access.membershipInactive": "사용 가능한 활성 소속이 없습니다.",
+  "admin.approvals.account": "가입 계정",
+  "admin.approvals.approve": "역할과 범위 승인",
+  "admin.approvals.back": "플랫폼 콘솔로 돌아가기",
+  "admin.approvals.configuration.description":
+    "staging 프로젝트의 Secret Key를 서버 환경변수 SUPABASE_SECRET_KEY에 연결한 뒤 다시 확인해 주세요. 키는 브라우저나 Git에 포함하지 않습니다.",
+  "admin.approvals.configuration.title": "승인 목록을 위한 서버 연결이 필요합니다.",
+  "admin.approvals.description":
+    "인증을 마친 신규 계정의 업무 역할과 접근 범위를 검토합니다. 승인은 프로필·소속·감사 로그를 하나의 트랜잭션으로 기록합니다.",
+  "admin.approvals.displayName": "관리자 표시 이름",
+  "admin.approvals.emailStatus": "이메일 상태",
+  "admin.approvals.empty.description":
+    "새로운 이메일 가입 또는 Google SSO 계정이 생성되면 이 검토 큐에 표시됩니다.",
+  "admin.approvals.empty.title": "현재 승인 대기 계정이 없습니다.",
+  "admin.approvals.error.configuration": "서버 전용 Supabase Secret Key 설정을 확인해 주세요.",
+  "admin.approvals.error.conflict": "이미 승인 또는 거절된 계정입니다. 목록을 새로 확인해 주세요.",
+  "admin.approvals.error.forbidden": "이 작업을 수행할 슈퍼어드민 권한이 없습니다.",
+  "admin.approvals.error.unavailable":
+    "승인 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  "admin.approvals.error.validation": "역할, 접근 범위, 표시 이름과 처리 사유를 확인해 주세요.",
+  "admin.approvals.eyebrow": "슈퍼어드민 가입 승인 센터",
+  "admin.approvals.joinedAt": "가입 시각",
+  "admin.approvals.line1": "새 관리자 계정의",
+  "admin.approvals.line2": "역할과 범위를 검토합니다.",
+  "admin.approvals.managementCompany": "관리업체",
+  "admin.approvals.noManagementCompany": "관리업체 선택 안 함",
+  "admin.approvals.noSite": "사이트 선택 안 함",
+  "admin.approvals.noTenant": "테넌트 선택 안 함",
+  "admin.approvals.pagination": "가입 승인 목록 페이지 이동",
+  "admin.approvals.provider": "가입 방식",
+  "admin.approvals.provider.email": "이메일",
+  "admin.approvals.provider.google": "Google SSO",
+  "admin.approvals.provider.other": "기타 인증",
+  "admin.approvals.reason": "승인 사유",
+  "admin.approvals.reasonPlaceholder": "담당 업무와 승인 근거를 3자 이상 입력해 주세요.",
+  "admin.approvals.reject": "계정 요청 거절",
+  "admin.approvals.rejectDescription":
+    "거절하면 Auth 계정은 삭제하지 않고 관리자 프로필을 종료 상태로 기록합니다.",
+  "admin.approvals.rejectReason": "거절 사유",
+  "admin.approvals.rejectReasonPlaceholder": "거절 근거를 3자 이상 입력해 주세요.",
+  "admin.approvals.rejectSummary": "이 가입 요청을 거절해야 하나요?",
+  "admin.approvals.role": "부여할 역할",
+  "admin.approvals.scopeHelp":
+    "플랫폼 역할은 고객 범위를 선택하지 않습니다. 관리업체·사이트 역할은 역할과 일치하는 범위를 모두 선택해야 합니다.",
+  "admin.approvals.scopeType": "접근 범위 유형",
+  "admin.approvals.securityNote": "AAL2 슈퍼어드민 · 서버 권한 재검증 · 감사 로그",
+  "admin.approvals.site": "사이트",
+  "admin.approvals.status.approved": "관리자 계정이 승인되었습니다.",
+  "admin.approvals.status.rejected": "가입 요청이 거절 처리되었습니다.",
+  "admin.approvals.tenant": "테넌트",
+  "admin.approvals.total": "승인 대기 {count}개 계정",
+  "admin.approvals.truncated":
+    "안전한 조회 한도까지 표시했습니다. 추가 계정은 다음 운영 검색 기능에서 지원합니다.",
+  "admin.approvals.verification.pending": "확인 대기",
+  "admin.approvals.verification.verified": "이메일 확인",
   "admin.auth.configuration.description":
     "스테이징 Supabase 공개 URL과 Publishable Key를 서버 환경변수에 연결하면 로그인을 시작할 수 있습니다.",
   "admin.auth.configuration.title": "인증 환경 연결이 필요합니다.",
@@ -64,6 +118,7 @@ export const ko = {
   "admin.platform.description":
     "전체 테넌트, 관리업체, 사이트와 QR 운영 상태를 관리하기 전에 슈퍼어드민 보안 컨텍스트를 확인하는 화면입니다.",
   "admin.platform.eyebrow": "플랫폼 운영 콘솔",
+  "admin.platform.accessAction": "가입 승인 센터 열기",
   "admin.platform.line1": "전체 서비스를 관리하는",
   "admin.platform.line2": "플랫폼 컨텍스트가 연결되었습니다.",
   "admin.platform.next.description":
@@ -172,6 +227,65 @@ export const en = {
   "admin.access.line2": "is not available yet.",
   "admin.access.profileInactive": "The admin profile is not active.",
   "admin.access.membershipInactive": "No active membership is available.",
+  "admin.approvals.account": "Applicant account",
+  "admin.approvals.approve": "Approve role and scope",
+  "admin.approvals.back": "Back to platform console",
+  "admin.approvals.configuration.description":
+    "Connect the staging Secret Key to the server-only SUPABASE_SECRET_KEY environment variable, then try again. Never place the key in the browser or Git.",
+  "admin.approvals.configuration.title": "A secure server connection is required for approvals.",
+  "admin.approvals.description":
+    "Review the operating role and access scope for newly authenticated accounts. Approval records the profile, membership, and audit event in one transaction.",
+  "admin.approvals.displayName": "Admin display name",
+  "admin.approvals.emailStatus": "Email status",
+  "admin.approvals.empty.description":
+    "New email registrations and Google SSO accounts will appear in this review queue.",
+  "admin.approvals.empty.title": "There are no accounts waiting for approval.",
+  "admin.approvals.error.configuration": "Check the server-only Supabase Secret Key setting.",
+  "admin.approvals.error.conflict":
+    "This account was already approved or rejected. Refresh the review queue.",
+  "admin.approvals.error.forbidden":
+    "The current session does not have Super Admin approval permission.",
+  "admin.approvals.error.unavailable":
+    "The approval service is unavailable. Please try again shortly.",
+  "admin.approvals.error.validation":
+    "Check the role, access scope, display name, and decision reason.",
+  "admin.approvals.eyebrow": "Super Admin access approval center",
+  "admin.approvals.joinedAt": "Registered",
+  "admin.approvals.line1": "Review each new admin account",
+  "admin.approvals.line2": "before granting an operating scope.",
+  "admin.approvals.managementCompany": "Management company",
+  "admin.approvals.noManagementCompany": "No management company",
+  "admin.approvals.noSite": "No site",
+  "admin.approvals.noTenant": "No tenant",
+  "admin.approvals.pagination": "Account approval pagination",
+  "admin.approvals.provider": "Registration method",
+  "admin.approvals.provider.email": "Email",
+  "admin.approvals.provider.google": "Google SSO",
+  "admin.approvals.provider.other": "Other identity",
+  "admin.approvals.reason": "Approval reason",
+  "admin.approvals.reasonPlaceholder":
+    "Enter at least three characters describing the operating need and approval basis.",
+  "admin.approvals.reject": "Reject account request",
+  "admin.approvals.rejectDescription":
+    "Rejection keeps the Auth identity and records a closed admin profile instead of deleting history.",
+  "admin.approvals.rejectReason": "Rejection reason",
+  "admin.approvals.rejectReasonPlaceholder":
+    "Enter at least three characters explaining the decision.",
+  "admin.approvals.rejectSummary": "Should this registration request be rejected?",
+  "admin.approvals.role": "Role to grant",
+  "admin.approvals.scopeHelp":
+    "Platform roles do not use a customer scope. Management-company and site roles require every matching scope selection.",
+  "admin.approvals.scopeType": "Access scope type",
+  "admin.approvals.securityNote": "AAL2 Super Admin · server reauthorization · audited",
+  "admin.approvals.site": "Site",
+  "admin.approvals.status.approved": "The admin account was approved.",
+  "admin.approvals.status.rejected": "The registration request was rejected.",
+  "admin.approvals.tenant": "Tenant",
+  "admin.approvals.total": "{count} accounts waiting for approval",
+  "admin.approvals.truncated":
+    "The safe scan limit was reached. Additional accounts will be supported by the operator search index.",
+  "admin.approvals.verification.pending": "Pending verification",
+  "admin.approvals.verification.verified": "Email verified",
   "admin.auth.configuration.description":
     "Connect the staging Supabase public URL and publishable key as server environment variables to enable sign-in.",
   "admin.auth.configuration.title": "Authentication configuration is required.",
@@ -231,6 +345,7 @@ export const en = {
   "admin.platform.description":
     "This screen verifies the Super Admin security context before service-wide tenants, management companies, sites, and QR operations are connected.",
   "admin.platform.eyebrow": "Platform operations console",
+  "admin.platform.accessAction": "Open access approval center",
   "admin.platform.line1": "The platform context for managing",
   "admin.platform.line2": "the full service is now connected.",
   "admin.platform.next.description":

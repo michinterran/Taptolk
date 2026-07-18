@@ -42,8 +42,20 @@ export default async function PlatformAdminPage({
         localeTitle={copy["locale.switcher.label"]}
         logoAlt={copy["admin.brand.logoAlt"]}
         nextDescription={copy["admin.platform.next.description"]}
-        nextActionHref={`/${locale}/admin/platform/tenants`}
-        nextActionLabel={copy["admin.platform.tenantsAction"]}
+        nextActions={[
+          {
+            href: `/${locale}/admin/platform/tenants`,
+            label: copy["admin.platform.tenantsAction"],
+          },
+          ...(membership.role === "SUPER_ADMIN"
+            ? [
+                {
+                  href: `/${locale}/admin/platform/access`,
+                  label: copy["admin.platform.accessAction"],
+                },
+              ]
+            : []),
+        ]}
         nextTitle={copy["admin.platform.next.title"]}
         pathname={`/${locale}/admin/platform`}
         roleLabel={getAdminRoleLabel(copy, membership.role)}

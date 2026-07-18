@@ -1,7 +1,13 @@
 import { type CookieOptionsWithName, createBrowserClient, createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 
 export interface PublicSupabaseConfiguration {
   publishableKey: string;
+  url: string;
+}
+
+export interface SecretSupabaseConfiguration {
+  secretKey: string;
   url: string;
 }
 
@@ -48,6 +54,23 @@ export function createTaptolkServerClient(
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (cookies) => cookieStore.setAll(cookies),
+    },
+  });
+}
+
+export function createTaptolkAdminClient(configuration: SecretSupabaseConfiguration) {
+  if (!URL.canParse(configuration.url)) {
+    throw new Error("A valid Supabase URL is required.");
+  }
+  if (!configuration.secretKey.startsWith("sb_secret_") || configuration.secretKey.length < 20) {
+    throw new Error("A valid Supabase secret key is required.");
+  }
+
+  return createClient(configuration.url, configuration.secretKey, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
     },
   });
 }

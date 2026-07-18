@@ -22,9 +22,11 @@ export {
   selectPrimaryAdminMembership,
 } from "./admin-session.js";
 export {
+  createTaptolkAdminClient,
   createTaptolkBrowserClient,
   createTaptolkServerClient,
   type PublicSupabaseConfiguration,
+  type SecretSupabaseConfiguration,
   type ServerCookie,
   type ServerCookieStore,
   type ServerCookieToSet,

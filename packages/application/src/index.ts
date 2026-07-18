@@ -1,4 +1,16 @@
 export {
+  ADMIN_ACCOUNT_SCAN_LIMIT,
+  ADMIN_APPROVAL_PAGE_SIZE,
+  AdminAccountApprovalError,
+  type AdminAccountApprovalRepository,
+  AdminAccountApprovalService,
+  type AdminApprovalQueue,
+  type AdminApprovalScopeCatalog,
+  type AdminIdentityProvider,
+  type AdminScopeOption,
+  type PendingAdminAccount,
+} from "./admin-account-approval-service.js";
+export {
   AdminAuthorizationError,
   assertAdminAuthorized,
 } from "./authorization-error.js";

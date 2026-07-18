@@ -5,7 +5,11 @@ import {
   roleHasPermission,
   roleRequiresMfa,
 } from "./admin-permission-catalog.js";
-import { authorizeAdminAction, isResourceWithinScope } from "./admin-rbac.js";
+import {
+  authorizeAdminAction,
+  isAdminRoleScopeValid,
+  isResourceWithinScope,
+} from "./admin-rbac.js";
 
 const siteA = {
   managementCompanyId: "company-a",
@@ -67,6 +71,38 @@ describe("admin RBAC", () => {
     expect(roleHasPermission("SUPER_ADMIN", "site:create-approve")).toBe(true);
     expect(roleHasPermission("MANAGEMENT_ADMIN", "site:create")).toBe(false);
     expect(roleHasPermission("PLATFORM_OPERATOR", "site:create-approve")).toBe(false);
+  });
+
+  it("reserves new-account approval for Super Admin", () => {
+    expect(roleHasPermission("SUPER_ADMIN", "membership:approve-account")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "membership:approve-account")).toBe(false);
+    expect(roleHasPermission("MANAGEMENT_ADMIN", "membership:approve-account")).toBe(false);
+  });
+
+  it("validates role and membership scope as one domain rule", () => {
+    expect(isAdminRoleScopeValid("SUPER_ADMIN", { type: "PLATFORM" })).toBe(true);
+    expect(
+      isAdminRoleScopeValid("MANAGEMENT_ADMIN", {
+        managementCompanyId: "company-a",
+        tenantId: "tenant-a",
+        type: "MANAGEMENT_COMPANY",
+      }),
+    ).toBe(true);
+    expect(
+      isAdminRoleScopeValid("SITE_ADMIN", {
+        managementCompanyId: "company-a",
+        tenantId: "tenant-a",
+        type: "SITE",
+      }),
+    ).toBe(false);
+    expect(
+      isAdminRoleScopeValid("READ_ONLY", {
+        managementCompanyId: "company-a",
+        siteId: "site-a",
+        tenantId: "tenant-a",
+        type: "SITE",
+      }),
+    ).toBe(true);
   });
 
   it("centralizes production QR generation approval while delegating scoped requests", () => {

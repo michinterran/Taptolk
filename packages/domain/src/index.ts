@@ -14,6 +14,7 @@ export {
   type AdminScopeType,
   type AuthorizationDecision,
   authorizeAdminAction,
+  isAdminRoleScopeValid,
   isResourceWithinScope,
   type ResourceScope,
 } from "./admin-rbac.js";

@@ -156,3 +156,15 @@ test("admin account creation remains usable at 320 pixels", async ({ page }) => 
   await expect(page.getByLabel("Work email")).toBeVisible();
   await expect(page.getByLabel("Confirm password")).toBeVisible();
 });
+
+test("the account approval center is never exposed without an authenticated admin session", async ({
+  page,
+}) => {
+  await page.goto("/ko/admin/platform/access");
+
+  await expect(page).toHaveURL(/\/ko\/admin\/login\?error=configuration$/u);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "승인된 관리자 계정으로 안전하게 시작합니다.",
+  );
+  await expect(page.getByText("가입 승인 센터", { exact: true })).toHaveCount(0);
+});

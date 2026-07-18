@@ -95,8 +95,9 @@ authorization, read model에서 명확히 구분한다.
 | 3 | Dashboard/read-model/API contract | Completed |
 | 4 | Screen state and KO/EN content contract | Completed |
 | 5 | Selected visual direction refinement and journey review | In progress |
-| 6 | Supabase Staging/Auth setup | Pending |
-| 7 | Authenticated vertical-slice implementation | Pending |
+| 6 | Supabase Staging/Auth setup | Completed |
+| 7 | Authenticated account-approval vertical slice | Completed |
+| 8 | Tenant command vertical slice | Next |
 
 ## 8. Risks and Mitigations
 
