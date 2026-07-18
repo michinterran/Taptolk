@@ -1,5 +1,8 @@
 export {
   AdminAuthorizationError,
+  assertAdminAuthorized,
+} from "./authorization-error.js";
+export {
   type ArchiveSiteCommand,
   type AuditEventInput,
   type CreateSiteCommand,
@@ -9,3 +12,13 @@ export {
   type SiteUnitOfWork,
   type UpdateSiteCommand,
 } from "./site-service.js";
+export {
+  type ListTenantCatalogCommand,
+  TENANT_CATALOG_MAX_PAGE_SIZE,
+  TENANT_CATALOG_PAGE_SIZE,
+  type TenantCatalogItem,
+  type TenantCatalogPage,
+  type TenantCatalogRepository,
+  TenantCatalogService,
+  type TenantStatus,
+} from "./tenant-catalog-service.js";

@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { signInAdmin } from "../../../../auth/actions";
 import { loadAdminContext } from "../../../../auth/admin-context";
 import { getAdminDecisionPath } from "../../../../auth/admin-routing";
+import { getAdminRegistrationPath } from "../../../../auth/registration-routing";
+import { AdminAuthAlternatives } from "../../../../components/admin-auth-alternatives";
 import { AdminAuthNotice } from "../../../../components/admin-auth-notice";
 import { AdminPageHeader } from "../../../../components/admin-page-header";
 import { getMessages } from "../../../../content/messages";
@@ -31,7 +33,9 @@ export default async function AdminLoginPage({ params, searchParams }: AdminLogi
       ? copy["admin.auth.error.invalidCredentials"]
       : queryError === "configuration"
         ? copy["admin.auth.error.configuration"]
-        : null;
+        : queryError === "oauth_unavailable"
+          ? copy["admin.auth.error.unavailable"]
+          : null;
   const configurationMissing = context.status === "CONFIGURATION_MISSING";
   const serviceUnavailable = context.status === "LOAD_ERROR";
 
@@ -118,6 +122,17 @@ export default async function AdminLoginPage({ params, searchParams }: AdminLogi
               {copy["admin.login.submit"]}
             </button>
           </form>
+          <AdminAuthAlternatives
+            disabled={configurationMissing || serviceUnavailable}
+            dividerLabel={copy["admin.auth.divider"]}
+            flow="login"
+            googleLabel={copy["admin.login.google"]}
+            locale={locale}
+            localeTitle={copy["locale.switcher.label"]}
+            secondaryAction={copy["admin.login.signupAction"]}
+            secondaryHref={getAdminRegistrationPath(locale)}
+            secondaryPrompt={copy["admin.login.signupPrompt"]}
+          />
         </section>
       </section>
     </main>

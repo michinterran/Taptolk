@@ -1,10 +1,18 @@
 "use server";
 
+import { validateAdminRegistration } from "@taptolk/auth";
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import type { AppLocale } from "../i18n/config";
 import { isAppLocale } from "../i18n/locale";
 import { loadAdminContext } from "./admin-context";
 import { getLocalizedAdminPath } from "./admin-routing";
+import {
+  type AdminRegistrationFlow,
+  getAdminAuthCallbackUrl,
+  getAdminAuthErrorPath,
+  getAdminRegistrationPath,
+} from "./registration-routing";
 import { createAdminServerClient } from "./server-client";
 
 export type AdminActionError =
@@ -12,6 +20,14 @@ export type AdminActionError =
   | "INVALID_CODE"
   | "INVALID_CREDENTIALS"
   | "SESSION"
+  | "UNAVAILABLE";
+
+export type AdminRegistrationActionError =
+  | "CONFIGURATION"
+  | "INVALID_EMAIL"
+  | "INVALID_PASSWORD"
+  | "OAUTH_UNAVAILABLE"
+  | "PASSWORD_MISMATCH"
   | "UNAVAILABLE";
 
 export type MfaEnrollmentResult =
@@ -31,6 +47,14 @@ function readLocale(value: FormDataEntryValue | string | null): AppLocale {
 
 function loginErrorPath(locale: AppLocale, error: AdminActionError) {
   return getLocalizedAdminPath(locale, `/login?error=${error.toLowerCase()}`);
+}
+
+function readRegistrationFlow(value: FormDataEntryValue | null): AdminRegistrationFlow {
+  return value === "signup" ? "signup" : "login";
+}
+
+function registrationErrorPath(locale: AppLocale, error: AdminRegistrationActionError) {
+  return getAdminRegistrationPath(locale, `?error=${error.toLowerCase()}`);
 }
 
 export async function signInAdmin(formData: FormData): Promise<never> {
@@ -55,6 +79,67 @@ export async function signInAdmin(formData: FormData): Promise<never> {
   }
 
   redirect(getLocalizedAdminPath(locale));
+}
+
+export async function signUpAdmin(formData: FormData): Promise<never> {
+  const locale = readLocale(formData.get("locale"));
+  const emailValue = formData.get("email");
+  const passwordValue = formData.get("password");
+  const passwordConfirmationValue = formData.get("passwordConfirmation");
+  const validation = validateAdminRegistration({
+    email: typeof emailValue === "string" ? emailValue : "",
+    password: typeof passwordValue === "string" ? passwordValue : "",
+    passwordConfirmation:
+      typeof passwordConfirmationValue === "string" ? passwordConfirmationValue : "",
+  });
+
+  if (!validation.valid) {
+    redirect(registrationErrorPath(locale, validation.error));
+  }
+
+  const callbackUrl = getAdminAuthCallbackUrl(locale, "signup");
+  const client = await createAdminServerClient();
+  if (!client || !callbackUrl) {
+    redirect(registrationErrorPath(locale, "CONFIGURATION"));
+  }
+
+  const { data, error } = await client.auth.signUp({
+    email: validation.email,
+    password: validation.password,
+    options: {
+      emailRedirectTo: callbackUrl,
+    },
+  });
+  if (error) {
+    redirect(registrationErrorPath(locale, "UNAVAILABLE"));
+  }
+  if (data.session) {
+    redirect(getLocalizedAdminPath(locale));
+  }
+
+  redirect(getAdminRegistrationPath(locale, "?status=check_email"));
+}
+
+export async function signInWithGoogle(formData: FormData): Promise<never> {
+  const locale = readLocale(formData.get("locale"));
+  const flow = readRegistrationFlow(formData.get("flow"));
+  const callbackUrl = getAdminAuthCallbackUrl(locale, flow);
+  const client = await createAdminServerClient();
+  if (!client || !callbackUrl) {
+    redirect(getAdminAuthErrorPath(locale, flow, "configuration"));
+  }
+
+  const { data, error } = await client.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: callbackUrl,
+    },
+  });
+  if (error || !data.url) {
+    redirect(getAdminAuthErrorPath(locale, flow, "oauth_unavailable"));
+  }
+
+  redirect(data.url as Route);
 }
 
 export async function signOutAdmin(formData: FormData): Promise<never> {

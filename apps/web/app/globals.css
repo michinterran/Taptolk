@@ -333,6 +333,7 @@ h3,
 
 .admin-auth-intro {
   max-width: 44rem;
+  min-width: 0;
 }
 
 .admin-auth-title {
@@ -366,6 +367,7 @@ h3,
   border: 1px solid var(--tt-color-border);
   border-radius: var(--tt-radius-lg);
   box-shadow: var(--tt-shadow-card);
+  min-width: 0;
   padding: clamp(1.5rem, 4vw, 2.5rem);
 }
 
@@ -404,9 +406,65 @@ h3,
   opacity: 0.65;
 }
 
+.admin-field small {
+  color: var(--tt-color-text-muted);
+  line-height: var(--tt-line-body);
+}
+
 .admin-submit {
   border-radius: var(--tt-radius-sm);
   width: 100%;
+}
+
+.admin-auth-alternatives {
+  display: grid;
+  gap: var(--tt-space-4);
+  margin-top: var(--tt-space-5);
+}
+
+.admin-auth-divider {
+  align-items: center;
+  color: var(--tt-color-text-muted);
+  display: flex;
+  font-size: 0.8rem;
+  gap: var(--tt-space-3);
+}
+
+.admin-auth-divider::before,
+.admin-auth-divider::after {
+  background: var(--tt-color-border);
+  content: "";
+  flex: 1;
+  height: 1px;
+}
+
+.admin-google-mark {
+  align-items: center;
+  background: var(--tt-color-background);
+  border: 1px solid var(--tt-color-border);
+  border-radius: 50%;
+  display: inline-flex;
+  font-size: 0.8rem;
+  height: 1.7rem;
+  justify-content: center;
+  margin-right: var(--tt-space-2);
+  width: 1.7rem;
+}
+
+.admin-auth-secondary {
+  align-items: center;
+  color: var(--tt-color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tt-space-2);
+  justify-content: center;
+  margin: 0;
+}
+
+.admin-auth-secondary a {
+  color: var(--tt-color-brand-strong);
+  font-weight: 800;
+  text-underline-offset: 0.25rem;
 }
 
 .admin-form-error {
@@ -595,6 +653,147 @@ h3,
   margin: var(--tt-space-2) 0 0;
 }
 
+.admin-next-action {
+  margin-top: var(--tt-space-4);
+}
+
+.admin-section-hero {
+  align-items: flex-end;
+  display: flex;
+  gap: var(--tt-space-6);
+  justify-content: space-between;
+  padding: clamp(4rem, 10vh, 7rem) 0 var(--tt-space-6);
+}
+
+.admin-back-link {
+  color: var(--tt-color-text-muted);
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 800;
+  margin-bottom: var(--tt-space-5);
+  text-underline-offset: 0.25rem;
+}
+
+.admin-section-title {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  letter-spacing: -0.055em;
+  max-width: 14ch;
+}
+
+.admin-section-title .semantic-line:last-child {
+  color: var(--tt-color-brand-strong);
+}
+
+.admin-catalog-summary {
+  align-items: center;
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  display: flex;
+  gap: var(--tt-space-4);
+  justify-content: space-between;
+  margin-bottom: var(--tt-space-4);
+  padding: var(--tt-space-4) var(--tt-space-5);
+}
+
+.admin-catalog-summary span {
+  color: var(--tt-color-text-muted);
+  font-size: 0.85rem;
+}
+
+.admin-catalog-empty {
+  background: var(--tt-color-surface);
+  border: 1px dashed var(--tt-color-border);
+  border-radius: var(--tt-radius-lg);
+  padding: clamp(2rem, 6vw, 4rem);
+  text-align: center;
+}
+
+.admin-catalog-empty h2 {
+  font-size: 1.4rem;
+}
+
+.admin-catalog-empty p {
+  color: var(--tt-color-text-muted);
+  margin: var(--tt-space-3) auto 0;
+  max-width: 38rem;
+}
+
+.admin-table-scroll {
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-lg);
+  overflow-x: auto;
+}
+
+.admin-data-table {
+  background: var(--tt-color-surface);
+  border-collapse: collapse;
+  min-width: 48rem;
+  width: 100%;
+}
+
+.admin-data-table th,
+.admin-data-table td {
+  border-bottom: 1px solid var(--tt-color-border);
+  padding: var(--tt-space-4) var(--tt-space-5);
+  text-align: left;
+}
+
+.admin-data-table th {
+  color: var(--tt-color-text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+
+.admin-data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-data-table code {
+  overflow-wrap: anywhere;
+}
+
+.admin-status-badge {
+  border: 1px solid var(--tt-color-border);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: var(--tt-space-1) var(--tt-space-3);
+}
+
+.admin-status-badge--active {
+  background: color-mix(in srgb, var(--tt-color-brand) 9%, var(--tt-color-surface));
+  color: var(--tt-color-brand-strong);
+}
+
+.admin-status-badge--suspended {
+  background: color-mix(in srgb, var(--tt-color-warning) 10%, var(--tt-color-surface));
+  color: var(--tt-color-text);
+}
+
+.admin-status-badge--closed {
+  background: var(--tt-color-background);
+  color: var(--tt-color-text-muted);
+}
+
+.admin-pagination {
+  align-items: center;
+  display: grid;
+  gap: var(--tt-space-4);
+  grid-template-columns: 1fr auto 1fr;
+  margin-top: var(--tt-space-5);
+}
+
+.admin-pagination > :last-child {
+  justify-self: end;
+}
+
+.admin-pagination > span {
+  color: var(--tt-color-text-muted);
+  font-size: 0.85rem;
+}
+
 @media (max-width: 48rem) {
   .brand-header {
     align-items: flex-start;
@@ -635,6 +834,17 @@ h3,
     align-items: flex-start;
     flex-direction: column;
     padding-top: 5rem;
+  }
+
+  .admin-section-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-top: 4rem;
+  }
+
+  .admin-catalog-summary {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .admin-context-grid {

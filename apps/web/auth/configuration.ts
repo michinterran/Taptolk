@@ -1,7 +1,15 @@
 import "server-only";
 
 import type { PublicSupabaseConfiguration } from "@taptolk/auth";
-import { parseClientEnvironment } from "@taptolk/config";
+import { parseClientEnvironment, parseServerEnvironment } from "@taptolk/config";
+
+export function readAppUrl(): string | null {
+  try {
+    return parseServerEnvironment().APP_URL ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function readPublicSupabaseConfiguration(): PublicSupabaseConfiguration | null {
   try {

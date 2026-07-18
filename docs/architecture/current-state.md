@@ -4,7 +4,8 @@
 - 프로젝트 루트: `/Users/benjaminsong/Documents/Taptolk`
 - 최상위 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
 - 현재 단계: Phase 0 소스 기반 및 i18n 완료, Phase 1 Tenant/Admin 기반과
-  Admin Auth/MFA 소스 구현 완료, Supabase Staging 실인증 acceptance 대기
+  Admin Auth/MFA 실인증 완료, 계정 생성·Google SSO 코드와 RLS Tenant Catalog 구현,
+  Google provider 외부 설정 대기
 
 ## 1. 구현 상태
 
@@ -15,8 +16,8 @@ apps/
   web/                 Next.js 16, /ko·/en i18n, locale 선택, health API
   worker/              Queue consumer와 lifecycle 계약
 packages/
-  application/         Site mutation service와 transaction/audit 계약
-  auth/                Supabase SSR, 서버 session/membership/AAL 판정과 Admin MFA action
+  application/         Site mutation·Tenant Catalog service와 transaction/audit 계약
+  auth/                Supabase SSR, 가입 검증, session/membership/AAL과 Admin MFA action
   config/              client/server 환경변수 검증
   db/                  Drizzle/postgres-js 및 Phase 1 tenant schema
   domain/              중앙 RBAC, scope, MFA policy
@@ -29,9 +30,10 @@ e2e/                   axe, health, 320px, locale·Admin Auth browser smoke
 .github/workflows/     동일 품질 게이트 CI
 ```
 
-Tenant/Admin 데이터·권한·application service와 Admin 로그인/MFA 등록·챌린지
-소스까지 구현했다. 스테이징 Auth 사용자와 환경변수를 사용한 실제 AAL2 acceptance,
-인증된 Site CRUD 화면과 API, QR, SMS, 스티커 렌더링은 아직 구현하지 않았다.
+Tenant/Admin 데이터·권한·application service, Admin 로그인/MFA와 실제 staging
+AAL2 acceptance를 완료했다. 이메일/Google 계정 생성과 Super Admin Tenant Catalog도
+구현했다. Google provider 외부 설정, 관리자 승인 mutation, 인증된 Site CRUD 화면과
+API, QR, SMS, 스티커 렌더링은 아직 구현하지 않았다.
 
 ## 2. 고정 기술 기준
 
@@ -152,6 +154,10 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
 - 플랫폼 역할은 `/admin/platform`, 고객 역할은 `/admin/dashboard`로 분리하고
   양쪽 모두 서버에서 역할을 재검증
 - 모든 Admin route를 `force-dynamic`으로 지정해 사용자별 인증 결과 정적 캐시 금지
+- 이메일 가입과 Google SSO를 Supabase PKCE callback으로 연결하고 신규 Auth
+  identity에는 admin profile·membership을 자동 부여하지 않음
+- `tenant:read` application service와 authenticated Supabase repository를 분리하고
+  Super Admin Tenant Catalog에 PLATFORM scope, MFA, RLS를 중첩 적용
 
 이는 Phase 1의 안전한 기반이며 전체 Phase 1 완료가 아니다. Docker PostgreSQL에서
 pgTAP을 실행하고, Staging Auth/MFA와 인증된 Site CRUD E2E까지 통과해야 Phase 1
@@ -190,15 +196,15 @@ pnpm 10.34.5에서 확인한 결과:
 |---|---|
 | Frozen lockfile install | 통과 |
 | Production dependency audit | 알려진 취약점 0건 |
-| Biome lint | 118 files, 통과 |
-| TypeScript | 10 workspace packages / 15 tasks, 통과 |
-| Vitest | 10 files / 38 tests, 통과 |
+| Biome lint | 130 files, 통과 |
+| TypeScript | 10 workspace packages / 16 tasks, 통과 |
+| Vitest | 12 files / 48 tests, 통과 |
 | Migration static check | 7 migrations / 2 DB tests, 통과 |
 | Secret scan | 163 text files, 통과 |
 | Logo integrity | 원본·공개 자산 일치 |
-| WCJ static | W/C/J 100/100/100, 36 sources |
+| WCJ static | W/C/J 100/100/100, 41 sources |
 | Next production build | `/ko`, `/en`, Admin Auth/MFA, locale API와 proxy 포함 통과 |
-| Playwright | Desktop/Mobile 16 tests, 통과 |
+| Playwright | Desktop/Mobile 20 tests, 통과 |
 | axe | 위반 0건 |
 
 ## 9. 아직 완료되지 않은 acceptance
@@ -209,8 +215,11 @@ pnpm 10.34.5에서 확인한 결과:
 - Vercel Preview: 프로젝트 생성·외부 연결 승인 전이므로 미실행
 - Sentry/SMS 실제 연결: 후속 승인 및 자격증명 필요
 - Production Worker runtime: ADR 결정 필요
-- Admin Auth/MFA 소스는 구현됐으나 Staging 공개 환경변수와 실제 관리자 계정으로
-  로그인→등록→AAL2→role route acceptance 필요
+- Staging Admin Email/Password→TOTP→AAL2→platform route는 실제 계정으로 통과
+- Google SSO는 코드가 구현됐으나 Google Cloud/Supabase provider 연결과 실계정
+  acceptance 필요
+- 이메일/Google 신규 계정의 access-pending 실계정 acceptance 필요
+- 관리자 profile/membership 승인 mutation과 동일 transaction audit 필요
 - MFA recovery와 Admin idle timeout 운영 정책은 후속 구현 필요
 - 인증된 Site CRUD repository/API/UI/E2E: Phase 1 후속 구현
 - Phase 1 migration/tenant isolation pgTAP runtime: Docker DB에서 실행 필요

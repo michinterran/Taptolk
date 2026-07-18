@@ -42,6 +42,8 @@ export default async function PlatformAdminPage({
         localeTitle={copy["locale.switcher.label"]}
         logoAlt={copy["admin.brand.logoAlt"]}
         nextDescription={copy["admin.platform.next.description"]}
+        nextActionHref={`/${locale}/admin/platform/tenants`}
+        nextActionLabel={copy["admin.platform.tenantsAction"]}
         nextTitle={copy["admin.platform.next.title"]}
         pathname={`/${locale}/admin/platform`}
         roleLabel={getAdminRoleLabel(copy, membership.role)}

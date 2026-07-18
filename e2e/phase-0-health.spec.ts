@@ -94,6 +94,11 @@ test("admin sign-in foundation is bilingual and meets the accessibility baseline
     "승인된 관리자 계정으로 안전하게 시작합니다.",
   );
   await expect(page.getByRole("button", { name: "관리자 로그인" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Google 계정으로 계속" })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "계정 만들기" })).toHaveAttribute(
+    "href",
+    "/ko/admin/signup",
+  );
   await expect(page.getByRole("status")).toContainText("인증 환경 연결이 필요합니다.");
 
   const accessibility = await new AxeBuilder({ page }).analyze();
@@ -116,4 +121,38 @@ test("admin sign-in remains usable on a narrow viewport", async ({ page }) => {
   expect(overflow).toBe(false);
   await expect(page.getByLabel("Admin email")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
+});
+
+test("admin account creation offers email and Google in both languages", async ({ page }) => {
+  await page.goto("/ko/admin/signup");
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "업무 계정을 만들고 승인된 운영 범위를 연결합니다.",
+  );
+  await expect(page.getByRole("button", { name: "이메일로 계정 만들기" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Google 계정으로 가입" })).toBeDisabled();
+  await expect(
+    page.getByText("관리자 권한은 자동 부여되지 않습니다", { exact: false }),
+  ).toBeVisible();
+
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(accessibility.violations).toEqual([]);
+
+  await page.getByRole("link", { name: "영어로 보기" }).click();
+  await expect(page).toHaveURL(/\/en\/admin\/signup$/u);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "Create a work account and connect an approved operating scope.",
+  );
+});
+
+test("admin account creation remains usable at 320 pixels", async ({ page }) => {
+  await page.setViewportSize({ height: 760, width: 320 });
+  await page.goto("/en/admin/signup");
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(false);
+  await expect(page.getByLabel("Work email")).toBeVisible();
+  await expect(page.getByLabel("Confirm password")).toBeVisible();
 });

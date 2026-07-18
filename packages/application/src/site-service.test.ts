@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  AdminAuthorizationError,
-  SiteApplicationService,
-  type SiteRecord,
-  type SiteUnitOfWork,
-} from "./site-service.js";
+import { AdminAuthorizationError } from "./authorization-error.js";
+import { SiteApplicationService, type SiteRecord, type SiteUnitOfWork } from "./site-service.js";
 
 const site: SiteRecord = {
   contractVehicleLimit: 100,

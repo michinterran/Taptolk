@@ -1,9 +1,9 @@
 import {
   type AdminAuthorizationContext,
-  type AuthorizationDecision,
   authorizeAdminAction,
   type ResourceScope,
 } from "@taptolk/domain";
+import { assertAdminAuthorized } from "./authorization-error.js";
 
 export interface SiteRecord extends ResourceScope {
   contractVehicleLimit: number;
@@ -69,22 +69,6 @@ export interface SiteTransactionManager {
   execute<T>(operation: (unitOfWork: SiteUnitOfWork) => Promise<T>): Promise<T>;
 }
 
-export class AdminAuthorizationError extends Error {
-  readonly code: Exclude<AuthorizationDecision, { allowed: true }>["reason"];
-
-  constructor(code: Exclude<AuthorizationDecision, { allowed: true }>["reason"]) {
-    super(`Admin action denied: ${code}`);
-    this.name = "AdminAuthorizationError";
-    this.code = code;
-  }
-}
-
-function assertAuthorized(decision: AuthorizationDecision): void {
-  if (!decision.allowed) {
-    throw new AdminAuthorizationError(decision.reason);
-  }
-}
-
 function normalizeSiteName(name: string): string {
   const normalized = name.trim();
   if (normalized.length < 1 || normalized.length > 200) {
@@ -109,7 +93,7 @@ export class SiteApplicationService {
       managementCompanyId: command.managementCompanyId,
       tenantId: command.tenantId,
     };
-    assertAuthorized(authorizeAdminAction(command.actor, "site:create", resource));
+    assertAdminAuthorized(authorizeAdminAction(command.actor, "site:create", resource));
     if (!Number.isInteger(command.contractVehicleLimit) || command.contractVehicleLimit < 0) {
       throw new Error("Contract vehicle limit must be a non-negative integer.");
     }
@@ -141,7 +125,7 @@ export class SiteApplicationService {
   }
 
   async update(command: UpdateSiteCommand): Promise<SiteRecord> {
-    assertAuthorized(
+    assertAdminAuthorized(
       authorizeAdminAction(command.actor, "site:update-operational", scopeOf(command.site)),
     );
     const nextName = normalizeSiteName(command.name);
@@ -166,7 +150,7 @@ export class SiteApplicationService {
   }
 
   async archive(command: ArchiveSiteCommand): Promise<SiteRecord> {
-    assertAuthorized(
+    assertAdminAuthorized(
       authorizeAdminAction(command.actor, "site:archive-approve", scopeOf(command.site)),
     );
     if (command.reason.trim().length < 3) {

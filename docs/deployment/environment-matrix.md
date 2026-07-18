@@ -24,8 +24,10 @@ Vercel Function region은 Supabase region이 결정된 뒤 같은 지역 또는 
 - New table auto exposure: disabled
 - Automatic RLS: enabled
 - 로컬/원격 migration history: 7개 일치
-- Security Advisor: error 0, warning 0
+- Security Advisor: error 0, warning 1
 - Performance Advisor: error 0, warning 0
 
-정보 수준의 unused-index 제안은 데이터가 없는 신규 staging 특성상 제거하지 않는다.
+Security warning은 Auth의 Leaked Password Protection 비활성 상태다. 이메일 가입을
+운영에 열기 전 사용 가능한 요금제에서 활성화한다. 정보 수준의 unused-index 제안은
+데이터가 없는 신규 staging 특성상 제거하지 않는다.
 Publishable/Secret key와 DB password는 이 문서나 Git에 기록하지 않는다.

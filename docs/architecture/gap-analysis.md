@@ -15,8 +15,9 @@ Phase 0 전체 acceptance와 비교하면 다음 두 항목이 남아 있다.
 2. Vercel Preview 배포와 실제 route 검증
 
 i18n은 로컬 검증까지 완료했다. Phase 1은 Tenant/Admin schema, RBAC, RLS, audit,
-Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA UI까지 진행했다.
-실제 Staging 계정의 AAL2 acceptance와 Site CRUD 제품 journey는 남아 있다.
+Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA 실인증까지 진행했다.
+이메일/Google 계정 생성과 RLS Tenant Catalog도 구현했으며 Google provider 연결,
+관리자 승인 mutation과 Site CRUD 제품 journey가 남아 있다.
 
 ## 2. Phase 0 차이
 
@@ -30,7 +31,7 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA UI까지 
 | DB | Supabase Local + Drizzle | Phase 0·1 migration/pgTAP 작성 | 부분 | Docker에서 reset/test |
 | UI | token과 기본 component | Button, heading, journey status | 완료 | 실제 feature와 함께 확장 |
 | Observability | Sentry + logs | Node adapter와 redaction | 완료 | DSN 입력은 별도 승인 |
-| Test | unit/DB/browser | 38 unit·16 browser 통과, DB runtime 미실행 | 부분 | Local DB test |
+| Test | unit/DB/browser | 48 unit·20 browser 통과, DB runtime 미실행 | 부분 | Local DB test |
 | CI | PR pipeline | GitHub Actions 통과 | 완료 | 변경마다 유지 |
 | Preview | Vercel URL | 미연결 | 외부 의존 | 별도 승인 후 import/deploy |
 | 문서 | setup/security/deploy | 작성 완료 | 완료 | 변경과 함께 유지 |
@@ -41,8 +42,8 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA UI까지 
 |---|---|---|---|
 | i18n | KO/EN, 자동 판정, 명시 선택, locale URL | 구현·E2E 완료 | 완료 |
 | Tenant/Admin | Tenant, Site, Membership, RBAC, RLS, Audit | schema, granular permission, server-only Site mutation 기반 | Phase 1 부분 |
-| Auth | Admin MFA, Owner OTP, Caller session | Admin Email/Password·TOTP UI와 서버 AAL2/context 판정 | Phase 1 부분 |
-| Admin Console | Platform/Company/Site dashboard와 domain pages | IA/read model/state, role entry/context UI, 3번 visual direction | Phase 1 부분 |
+| Auth | Admin MFA, Owner OTP, Caller session | Admin Email/Password·TOTP AAL2 실인증, 이메일/Google 가입 코드 | Phase 1 부분 |
+| Admin Console | Platform/Company/Site dashboard와 domain pages | role entry/context UI와 RLS Tenant Catalog, 3번 visual direction | Phase 1 부분 |
 | QR/Sticker | asset, binding, SVG, render, PDF/ZIP | 역할별 발행·관리 권한 계약만 구현 | Phase 2–3 |
 | Contact | public scan, session, rate limit | 없음 | Phase 4 |
 | Messaging | SMS, response token, polling | provider env만 | Phase 5 |
@@ -55,7 +56,8 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA UI까지 
 |---|---|---|
 | Migration | 정적 transaction/RLS/constraint 검사 | Supabase Local reset |
 | Tenant isolation | RBAC unit 및 pgTAP SQL 작성 | 실제 PostgreSQL pgTAP |
-| Admin Auth | KO/EN 로그인, TOTP 등록·챌린지, 단일 membership/AAL2 판정 | Staging 실계정 E2E, recovery, idle timeout |
+| Admin Auth | KO/EN 로그인, TOTP 등록·챌린지와 staging AAL2 실인증 | Google provider 실연결, recovery, idle timeout |
+| Account approval | 신규 Auth identity의 권한 자동 부여 금지 | profile/membership 승인 transaction과 audit |
 | Site CRUD | granular permission과 server-only application service 계약 | request model, route/UI/repository/authenticated E2E |
 | Audit | same-transaction interface와 DB key constraint | 실제 mutation 후 append-only 검증 |
 | UI | bilingual Foundation와 role별 Admin Auth/context shell | Site CRUD 상태와 실제 운영 dashboard |
@@ -146,12 +148,13 @@ schema/type 및 migration 생성 보조로 사용하는 것이다. Phase 1 첫 s
 
 ## 8. 다음 개발 순서
 
-1. Supabase Staging 공개 env 연결과 최초 Super Admin bootstrap
-2. Staging Email/Password→TOTP 등록→AAL2→platform route 실인증 acceptance
-3. Site create request/approval model과 tenant-scoped repository 구현
-4. Site route, KO/EN Admin CRUD UI와 authenticated tenant-isolation E2E 구현
-5. 선택된 3번 visual direction으로 Platform/Company/Site 화면 refinement
-6. Vercel Preview env 연결과 동일 Auth journey 검증
+1. Google Cloud/Supabase staging provider와 callback URL 연결
+2. 이메일·Google 신규 계정의 access-pending 실인증 acceptance
+3. 관리자 profile/membership 승인 transaction과 audit 구현
+4. Site create request/approval model과 tenant-scoped repository 구현
+5. Site route, KO/EN Admin CRUD UI와 authenticated tenant-isolation E2E 구현
+6. 선택된 3번 visual direction으로 Platform/Company/Site 화면 refinement
+7. Vercel Preview env 연결과 동일 Auth journey 검증
 
 외부 연결 없이 가능한 Phase 1 소스 구현은 계속할 수 있지만, DB runtime과 인증된
 journey가 없는 상태를 전체 Phase 완료로 오인하지 않는다.

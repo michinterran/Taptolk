@@ -15,6 +15,8 @@ interface AdminDashboardViewProps {
   localeTitle: string;
   logoAlt: string;
   nextDescription: string;
+  nextActionHref?: string;
+  nextActionLabel?: string;
   nextTitle: string;
   pathname: string;
   roleLabel: string;
@@ -37,6 +39,8 @@ export function AdminDashboardView({
   localeTitle,
   logoAlt,
   nextDescription,
+  nextActionHref,
+  nextActionLabel,
   nextTitle,
   pathname,
   roleLabel,
@@ -93,6 +97,11 @@ export function AdminDashboardView({
         <div>
           <h2>{nextTitle}</h2>
           <p>{nextDescription}</p>
+          {nextActionHref && nextActionLabel ? (
+            <a className="tt-button admin-next-action" href={nextActionHref}>
+              {nextActionLabel}
+            </a>
+          ) : null}
         </div>
       </section>
     </>
