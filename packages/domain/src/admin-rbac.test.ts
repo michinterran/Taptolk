@@ -91,6 +91,16 @@ describe("admin RBAC", () => {
     expect(roleHasPermission("PLATFORM_OPERATOR", "tenant:close")).toBe(false);
   });
 
+  it("reserves Management Company lifecycle mutations for Super Admin", () => {
+    expect(roleHasPermission("SUPER_ADMIN", "management-company:create")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "management-company:update")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "management-company:suspend")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "management-company:close")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "management-company:read")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "management-company:create")).toBe(false);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "management-company:update")).toBe(false);
+  });
+
   it("validates role and membership scope as one domain rule", () => {
     expect(isAdminRoleScopeValid("SUPER_ADMIN", { type: "PLATFORM" })).toBe(true);
     expect(

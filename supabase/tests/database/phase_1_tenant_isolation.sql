@@ -152,8 +152,8 @@ select table_privs_are(
   'public',
   'management_companies',
   'authenticated',
-  array['INSERT', 'SELECT', 'UPDATE'],
-  'authenticated management company access matches the reviewed contract'
+  array['SELECT'],
+  'authenticated Management Company table access is read-only'
 );
 
 select table_privs_are(

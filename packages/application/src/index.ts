@@ -15,6 +15,22 @@ export {
   assertAdminAuthorized,
 } from "./authorization-error.js";
 export {
+  MANAGEMENT_COMPANY_PAGE_SIZE,
+  type ManagementCompanyCatalogItem,
+  type ManagementCompanyCatalogPage,
+  type ManagementCompanyCatalogRepository,
+  ManagementCompanyCatalogService,
+  type ManagementCompanyTenantOption,
+  type OrganizationStatus,
+} from "./management-company-catalog-service.js";
+export {
+  type ManagementCompanyActor,
+  type ManagementCompanyCommandResult,
+  ManagementCompanyManagementError,
+  type ManagementCompanyManagementRepository,
+  ManagementCompanyManagementService,
+} from "./management-company-management-service.js";
+export {
   type ArchiveSiteCommand,
   type AuditEventInput,
   type CreateSiteCommand,

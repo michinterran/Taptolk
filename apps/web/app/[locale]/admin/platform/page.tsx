@@ -47,6 +47,10 @@ export default async function PlatformAdminPage({
             href: `/${locale}/admin/platform/tenants`,
             label: copy["admin.platform.tenantsAction"],
           },
+          {
+            href: `/${locale}/admin/platform/management-companies`,
+            label: copy["admin.platform.managementCompaniesAction"],
+          },
           ...(membership.role === "SUPER_ADMIN"
             ? [
                 {

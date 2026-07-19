@@ -123,7 +123,14 @@ export const managementCompanies = pgTable(
     }).onDelete("restrict"),
     unique("uq_management_companies_tenant_id").on(table.tenantId, table.id),
     index("idx_management_companies_tenant_status").on(table.tenantId, table.status),
+    uniqueIndex("uq_management_companies_active_business_number")
+      .on(table.tenantId, table.businessNumber)
+      .where(sql`${table.businessNumber} is not null and ${table.deletedAt} is null`),
     check("chk_management_companies_name", sql`length(trim(${table.name})) between 1 and 200`),
+    check(
+      "chk_management_companies_business_number",
+      sql`${table.businessNumber} is null or ${table.businessNumber} ~ '^[0-9]{10}$'`,
+    ),
   ],
 );
 

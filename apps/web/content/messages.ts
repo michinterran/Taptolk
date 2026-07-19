@@ -119,6 +119,7 @@ export const ko = {
     "전체 테넌트, 관리업체, 사이트와 QR 운영 상태를 관리하기 전에 슈퍼어드민 보안 컨텍스트를 확인하는 화면입니다.",
   "admin.platform.eyebrow": "플랫폼 운영 콘솔",
   "admin.platform.accessAction": "가입 승인 센터 열기",
+  "admin.platform.managementCompaniesAction": "관리업체 관리 열기",
   "admin.platform.line1": "전체 서비스를 관리하는",
   "admin.platform.line2": "플랫폼 컨텍스트가 연결되었습니다.",
   "admin.platform.next.description":
@@ -210,6 +211,61 @@ export const ko = {
   "admin.tenants.status.updated": "테넌트 기본 정보가 저장되었습니다.",
   "admin.tenants.suspend": "일시 중지",
   "admin.tenants.total": "총 {count}개 테넌트",
+  "admin.companies.actions": "관리",
+  "admin.companies.back": "플랫폼 콘솔로 돌아가기",
+  "admin.companies.businessNumber": "사업자번호",
+  "admin.companies.businessNumber.help": "선택 입력 · 숫자 10자리",
+  "admin.companies.close": "운영 종료",
+  "admin.companies.create": "관리업체 등록",
+  "admin.companies.create.description":
+    "활성 테넌트 아래 계약 관리업체를 등록합니다. 연락처 정보는 개인정보 정책 확정 후 별도 연결합니다.",
+  "admin.companies.create.title": "새 관리업체 등록",
+  "admin.companies.createdAt": "생성일",
+  "admin.companies.description":
+    "전체 테넌트의 관리업체를 한 곳에서 확인하고 계약된 운영 주체의 상태를 안전하게 관리합니다.",
+  "admin.companies.edit": "정보와 상태 관리",
+  "admin.companies.edit.description": "테넌트 소속은 변경하지 않고 이름과 사업자번호만 수정합니다.",
+  "admin.companies.empty.description":
+    "먼저 활성 테넌트를 만든 뒤 계약된 관리업체를 등록해 주세요.",
+  "admin.companies.empty.title": "등록된 관리업체가 아직 없습니다.",
+  "admin.companies.error.blocked":
+    "활성 사이트가 있거나 상위 테넌트가 비활성 상태라 변경할 수 없습니다.",
+  "admin.companies.error.conflict":
+    "다른 관리자가 먼저 변경했거나 같은 사업자번호가 이미 사용 중입니다.",
+  "admin.companies.error.forbidden": "이 작업에는 AAL2 슈퍼어드민 권한이 필요합니다.",
+  "admin.companies.error.unavailable":
+    "관리업체 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  "admin.companies.error.validation":
+    "테넌트, 관리업체 이름, 사업자번호와 처리 사유를 확인해 주세요.",
+  "admin.companies.eyebrow": "플랫폼 관리업체 운영",
+  "admin.companies.line1": "계약된 관리업체의",
+  "admin.companies.line2": "소속과 운영 상태를 관리합니다.",
+  "admin.companies.name": "관리업체",
+  "admin.companies.next": "다음",
+  "admin.companies.noActiveTenant":
+    "선택할 수 있는 활성 테넌트가 없습니다. 테넌트를 먼저 등록하거나 재개해 주세요.",
+  "admin.companies.page": "{current} / {total} 페이지",
+  "admin.companies.pagination": "관리업체 페이지 이동",
+  "admin.companies.previous": "이전",
+  "admin.companies.reactivate": "운영 재개",
+  "admin.companies.readOnly":
+    "플랫폼 운영자는 관리업체 현황을 조회할 수 있지만 변경은 슈퍼어드민만 수행합니다.",
+  "admin.companies.reason": "처리 사유",
+  "admin.companies.reason.placeholder": "계약 또는 운영 근거를 3자 이상 입력해 주세요.",
+  "admin.companies.save": "정보 저장",
+  "admin.companies.securityNote": "Tenant scope · AAL2 command · 감사 로그 · RLS",
+  "admin.companies.status": "상태",
+  "admin.companies.status.active": "운영 중",
+  "admin.companies.status.closed": "종료",
+  "admin.companies.status.created": "새 관리업체가 감사 로그와 함께 등록되었습니다.",
+  "admin.companies.status.description":
+    "활성 사이트가 있으면 중지하거나 종료할 수 없으며, 운영 종료는 복구할 수 없습니다.",
+  "admin.companies.status.statusChanged": "관리업체 운영 상태가 변경되었습니다.",
+  "admin.companies.status.suspended": "일시 중지",
+  "admin.companies.status.updated": "관리업체 기본 정보가 저장되었습니다.",
+  "admin.companies.suspend": "일시 중지",
+  "admin.companies.tenant": "소속 테넌트",
+  "admin.companies.total": "총 {count}개 관리업체",
   "foundation.card.modular.description":
     "화면, 정책, 데이터 접근을 분리해 다음 단계의 기능이 안전하게 쌓이도록 구성합니다.",
   "foundation.card.modular.title": "모듈 경계",
@@ -373,6 +429,7 @@ export const en = {
     "This screen verifies the Super Admin security context before service-wide tenants, management companies, sites, and QR operations are connected.",
   "admin.platform.eyebrow": "Platform operations console",
   "admin.platform.accessAction": "Open access approval center",
+  "admin.platform.managementCompaniesAction": "Open management companies",
   "admin.platform.line1": "The platform context for managing",
   "admin.platform.line2": "the full service is now connected.",
   "admin.platform.next.description":
@@ -467,6 +524,63 @@ export const en = {
   "admin.tenants.status.updated": "The tenant identity was saved.",
   "admin.tenants.suspend": "Suspend",
   "admin.tenants.total": "{count} tenants",
+  "admin.companies.actions": "Manage",
+  "admin.companies.back": "Back to platform console",
+  "admin.companies.businessNumber": "Business registration number",
+  "admin.companies.businessNumber.help": "Optional · 10 digits",
+  "admin.companies.close": "Close operations",
+  "admin.companies.create": "Register company",
+  "admin.companies.create.description":
+    "Register a contracted operator under an active tenant. Contact data will be connected after the privacy policy is approved.",
+  "admin.companies.create.title": "Register a management company",
+  "admin.companies.createdAt": "Created",
+  "admin.companies.description":
+    "Review management companies across every tenant and safely control the lifecycle of contracted operators.",
+  "admin.companies.edit": "Manage identity and status",
+  "admin.companies.edit.description":
+    "The tenant boundary remains immutable; only the name and business number can change.",
+  "admin.companies.empty.description":
+    "Create an active tenant before registering its contracted management company.",
+  "admin.companies.empty.title": "No management companies have been registered.",
+  "admin.companies.error.blocked":
+    "This change is blocked by an active site or an inactive parent tenant.",
+  "admin.companies.error.conflict":
+    "Another admin changed this company first, or the business number is already in use.",
+  "admin.companies.error.forbidden": "This action requires an AAL2 Super Admin session.",
+  "admin.companies.error.unavailable":
+    "The management company service is unavailable. Please try again shortly.",
+  "admin.companies.error.validation":
+    "Check the tenant, company name, business number, and decision reason.",
+  "admin.companies.eyebrow": "Platform operator directory",
+  "admin.companies.line1": "Manage tenant assignment",
+  "admin.companies.line2": "and operating status for contracted companies.",
+  "admin.companies.name": "Management company",
+  "admin.companies.next": "Next",
+  "admin.companies.noActiveTenant":
+    "No active tenant is available. Register or reactivate a tenant first.",
+  "admin.companies.page": "Page {current} of {total}",
+  "admin.companies.pagination": "Management company pagination",
+  "admin.companies.previous": "Previous",
+  "admin.companies.reactivate": "Reactivate",
+  "admin.companies.readOnly":
+    "Platform Operators can review companies. Mutations are reserved for Super Admins.",
+  "admin.companies.reason": "Decision reason",
+  "admin.companies.reason.placeholder":
+    "Enter at least three characters explaining the contract or operating basis.",
+  "admin.companies.save": "Save identity",
+  "admin.companies.securityNote": "Tenant scope · AAL2 command · audited · RLS",
+  "admin.companies.status": "Status",
+  "admin.companies.status.active": "Active",
+  "admin.companies.status.closed": "Closed",
+  "admin.companies.status.created": "The management company was registered with an audit event.",
+  "admin.companies.status.description":
+    "Active sites block suspension and closure. Closing operations is permanent.",
+  "admin.companies.status.statusChanged": "The company operating status was changed.",
+  "admin.companies.status.suspended": "Suspended",
+  "admin.companies.status.updated": "The company identity was saved.",
+  "admin.companies.suspend": "Suspend",
+  "admin.companies.tenant": "Tenant",
+  "admin.companies.total": "{count} management companies",
   "foundation.card.modular.description":
     "Screen, policy, and data boundaries keep later product work safe to extend.",
   "foundation.card.modular.title": "Module boundaries",
