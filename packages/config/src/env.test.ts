@@ -21,6 +21,8 @@ describe("environment contracts", () => {
     expect(environment.QR_GENERATION_DELIVERY_RETRY_BASE_DELAY_MS).toBe(5_000);
     expect(environment.QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS).toBe(300_000);
     expect(environment.QR_GENERATION_DELIVERY_RETRY_JITTER_RATIO).toBe(0.2);
+    expect(environment.PRIVACY_CLEANUP_DURATION_BUDGET_MS).toBe(45_000);
+    expect(environment.PRIVACY_CLEANUP_TENANT_LIMIT).toBe(25);
   });
 
   it("rejects a production environment without server secrets", () => {
@@ -102,6 +104,15 @@ describe("environment contracts", () => {
     },
     { QR_GENERATION_DELIVERY_RETRY_JITTER_RATIO: "0.51" },
   ])("rejects invalid QR generation dispatch configuration %o", (input) => {
+    expect(() => parseServerEnvironment(input)).toThrow();
+  });
+
+  it.each([
+    { PRIVACY_CLEANUP_DURATION_BUDGET_MS: "999" },
+    { PRIVACY_CLEANUP_DURATION_BUDGET_MS: "55001" },
+    { PRIVACY_CLEANUP_TENANT_LIMIT: "0" },
+    { PRIVACY_CLEANUP_TENANT_LIMIT: "101" },
+  ])("rejects invalid scheduled privacy cleanup configuration %o", (input) => {
     expect(() => parseServerEnvironment(input)).toThrow();
   });
 });

@@ -7,6 +7,7 @@
 | Region | 개발자 로컬 | Supabase Seoul (`ap-northeast-2`) | Staging 검증 후 확정 |
 | API key | Local key | `sb_publishable_…` / server `sb_secret_…` | 환경별 별도 key |
 | SMS | mock | provider sandbox | provider production |
+| Privacy cleanup Cron | manual/internal test | authenticated manual acceptance | Vercel hourly GET, operator approval pending |
 | Sentry | console 또는 disabled | staging environment | production environment |
 | 데이터 | synthetic only | test data only | approved live data |
 | 배포 승인 | 개발자 로컬 | 사용자 승인 필요 | 사용자 승인 + release gate |

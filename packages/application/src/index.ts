@@ -203,6 +203,14 @@ export {
   QrSampleArtifactService,
 } from "./qr-sample-artifact-service.js";
 export {
+  type ScheduledPrivacyCleanupClock,
+  type ScheduledPrivacyCleanupRepository,
+  type ScheduledPrivacyCleanupResult,
+  ScheduledPrivacyCleanupService,
+  type ScheduledPrivacyCleanupTenantResult,
+  scheduledPrivacyCleanupRequestId,
+} from "./scheduled-privacy-cleanup-service.js";
+export {
   SITE_CATALOG_PAGE_SIZE,
   type SiteCatalogItem,
   type SiteCatalogPage,

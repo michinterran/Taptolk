@@ -28,6 +28,18 @@ test("health endpoint exposes no secret or personal data", async ({ request }) =
   expect(JSON.stringify(body)).not.toMatch(/phone|token|secret|authorization/iu);
 });
 
+test("scheduled privacy cleanup fails closed without server configuration", async ({ request }) => {
+  const response = await request.get("/api/internal/privacy-cleanup");
+  const body = await response.json();
+
+  expect(response.status()).toBe(503);
+  expect(body).toMatchObject({
+    error: { code: "UNAVAILABLE", retryable: false },
+    meta: { requestId: expect.any(String) },
+  });
+  expect(JSON.stringify(body)).not.toMatch(/tenantId|tenant_id|phone|token|secret|authorization/iu);
+});
+
 test("foundation page is usable at narrow viewport widths", async ({ page }) => {
   await page.setViewportSize({ height: 667, width: 320 });
   await page.goto("/ko");

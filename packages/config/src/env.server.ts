@@ -42,6 +42,8 @@ const serverEnvironmentSchema = z
         .optional(),
     ),
     PUBLIC_QR_BASE_URL: optionalUrlSchema,
+    PRIVACY_CLEANUP_DURATION_BUDGET_MS: integerEnvironmentSchema(45_000, 1_000, 55_000),
+    PRIVACY_CLEANUP_TENANT_LIMIT: integerEnvironmentSchema(25, 1, 100),
     QR_CALL_COOLDOWN_SECONDS: integerEnvironmentSchema(180),
     QR_GLOBAL_LIMIT_PER_MINUTE: integerEnvironmentSchema(5, 1, 20),
     QR_GENERATION_DELIVERY_RETRY_BASE_DELAY_MS: integerEnvironmentSchema(5_000, 1_000, 86_400_000),

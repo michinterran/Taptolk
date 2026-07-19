@@ -20,12 +20,16 @@
       tests, secret scan 491 files, WCJ 100, production build.
 - [x] Bounded health load and security-header regression gate.
 - [x] Generated 100-item print source: 85mm geometry, decode 100/100, export checksums 4/4.
+- [x] Production privacy-cleanup Cron source contract: bounded due-tenant selection, deterministic
+      tenant/hour idempotency, credential-free hourly manifest, and static verifier.
+- [x] Production Cron pgTAP: 16/16; complete linked database suite PASS.
 
 ## Manual and external pilot gates
 
 - [ ] Configure an approved production SMS provider and verify receipt/cost reconciliation.
 - [ ] Configure a production CAPTCHA provider; keep public Contact fail closed until then.
-- [ ] Configure production Cron scheduling and verify secret rotation/run monitoring.
+- [ ] Configure production Cron scheduling and verify secret rotation/run monitoring using
+      `docs/deployment/production-privacy-cleanup-cron-runbook.md`.
 - [ ] Verify representative iOS and Android devices across scan, contact, wait, and reply.
 - [ ] Run VoiceOver and TalkBack hands-on journeys, including live announcements and focus order.
 - [ ] Inspect computed contrast in production browser states.
