@@ -5,6 +5,7 @@
       "**",
       "!!**/.next",
       "!!**/.turbo",
+      "!!**/.vercel",
       "!!**/coverage",
       "!!**/dist",
       "!!**/node_modules",

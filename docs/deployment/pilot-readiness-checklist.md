@@ -1,6 +1,6 @@
 # Taptolk Pilot Readiness Checklist
 
-> Updated: 2026-07-20 | Current decision: Automated ready / Manual gates pending
+> Updated: 2026-07-20 | Current decision: Web deployed / Cron deferred / Manual gates pending
 
 ## Automated staging gates
 
@@ -27,14 +27,20 @@
       migrations match through `20260719184000`; all 22 linked pgTAP files PASS; authenticated
       staging E2E 28 PASS with one intentional opt-in skip; `pnpm verify` PASS on checkpoint
       `215bb11`.
+- [x] Created and linked the Vercel `taptolk` project with Root Directory `apps/web`, Next.js,
+      Node 24.x, and zero active Cron definitions.
+- [x] Deployed commit `896904e` with the default Cron-deferred manifest. Public KO/EN/health
+      routes return 200, the unconfigured internal cleanup route fails closed with 503, and the
+      staging-data Preview remains protected by Vercel team SSO.
+- [x] Preserved the approved hourly schedule in the inert
+      `apps/web/vercel.production-cron.template.json` and added separate deferred/active
+      verification gates.
 
 ## Manual and external pilot gates
 
-- [ ] Move the intended Production Vercel project to an approved Pro or Enterprise team. The
-      currently accessible team is Hobby, which does not support `0 * * * *`.
-- [ ] Grant access to or create/import the actual `taptolk` Production Vercel project and confirm
-      its Root Directory is exactly `apps/web`. No accessible `taptolk` project was present during
-      the 2026-07-20 audit, so Root Directory remains unverified.
+- [ ] At actual service launch, move the Vercel project to Pro or Enterprise before activating
+      `0 * * * *`; keep Cron deferred on Hobby.
+- [x] Create/link the `taptolk` Vercel project and confirm Root Directory exactly `apps/web`.
 - [ ] Create or grant access to a separate approved Production Supabase project, approve its data
       region, and apply migrations through `20260719184000`. Only `taptolk-staging` was accessible
       for this lane during the audit.
@@ -43,10 +49,11 @@
       secret values until the adapter and Production project are approved.
 - [ ] Select a production CAPTCHA provider and authorize provider-adapter implementation and
       failure rehearsal; keep public Contact fail closed until then.
-- [ ] After the Vercel and Supabase gates pass, configure Production secrets only in the deployment
-      secret manager and follow `docs/deployment/production-privacy-cleanup-cron-runbook.md` for
-      one authorized aggregate-only run, same-hour replay, duplicate-zero proof, monitoring,
-      rotation, and rollback rehearsal.
+- [ ] At actual service launch, configure Production secrets only in the deployment secret
+      manager, activate the reviewed Cron template, and follow
+      `docs/deployment/production-privacy-cleanup-cron-runbook.md` for one authorized
+      aggregate-only run, same-hour replay, duplicate-zero proof, monitoring, rotation, and
+      rollback rehearsal.
 - [ ] Verify representative iOS and Android devices across scan, contact, wait, and reply.
 - [ ] Run VoiceOver and TalkBack hands-on journeys, including live announcements and focus order.
 - [ ] Inspect computed contrast in production browser states.
