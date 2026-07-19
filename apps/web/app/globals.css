@@ -819,6 +819,40 @@ h3,
   gap: var(--tt-space-3);
 }
 
+.admin-lifecycle-queue {
+  display: grid;
+  gap: var(--tt-space-5);
+  margin: var(--tt-space-6) 0;
+}
+
+.admin-lifecycle-queue > header {
+  display: grid;
+  gap: var(--tt-space-2);
+}
+
+.admin-lifecycle-queue > header h2 {
+  font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+}
+
+.admin-lifecycle-queue > header p,
+.admin-lifecycle-pending > p {
+  color: var(--tt-color-text-muted);
+  margin: 0;
+}
+
+.admin-lifecycle-pending {
+  background: color-mix(in srgb, var(--tt-color-warning) 7%, var(--tt-color-surface));
+  border-top: 1px solid var(--tt-color-border);
+  display: grid;
+  gap: var(--tt-space-3);
+  padding: var(--tt-space-5);
+}
+
+.admin-lifecycle-pending .admin-tenant-status-form {
+  border: 0;
+  padding: var(--tt-space-2) 0 0;
+}
+
 .admin-danger-button {
   background: var(--tt-color-danger);
 }

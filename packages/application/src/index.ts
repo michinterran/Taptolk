@@ -39,6 +39,19 @@ export {
   type SiteParentOption,
 } from "./site-catalog-service.js";
 export {
+  SITE_LIFECYCLE_ACTIONS,
+  SITE_LIFECYCLE_REQUEST_STATUSES,
+  type SiteLifecycleAction,
+  type SiteLifecycleActor,
+  type SiteLifecycleCommandResult,
+  SiteLifecycleRequestError,
+  type SiteLifecycleRequestItem,
+  type SiteLifecycleRequestReadModel,
+  type SiteLifecycleRequestRepository,
+  SiteLifecycleRequestService,
+  type SiteLifecycleRequestStatus,
+} from "./site-lifecycle-request-service.js";
+export {
   DEFAULT_SITE_TIMEZONE,
   SITE_CONTRACT_VEHICLE_LIMIT_MAX,
   SITE_TYPES,

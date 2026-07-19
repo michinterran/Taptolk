@@ -234,7 +234,7 @@ pnpm 10.34.5에서 확인한 결과:
 
 Admin Console은 Platform/Company/Site 관점의 IA, route, dashboard, read model, API,
 Site/QR 권한과 상태 계약까지 설계됐다. Customer Portfolio 기반 3번 시각 방향도
-선택됐다. 현재 role별 Auth entry, Site catalog와 lifecycle UI/API, staging tenant
-isolation E2E까지 구현됐다. QR 운영 화면과 Site maker-checker request queue는 아직
-없다. Phase 1 전체 완료는 Supabase Local reset과 local pgTAP runtime 전까지
-판정하지 않는다.
+선택됐다. 현재 role별 Auth entry, Site catalog와 direct lifecycle UI/API, Site
+maker-checker request/approval queue, staging tenant isolation E2E까지 구현됐다. QR 운영
+화면은 아직 없다. Phase 1 전체 완료는 Supabase Local reset과 local pgTAP runtime
+전까지 판정하지 않는다.

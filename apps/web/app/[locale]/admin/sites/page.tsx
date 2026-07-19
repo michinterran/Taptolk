@@ -2,11 +2,13 @@ import {
   DEFAULT_SITE_TIMEZONE,
   SITE_CONTRACT_VEHICLE_LIMIT_MAX,
   SiteCatalogService,
+  SiteLifecycleRequestService,
 } from "@taptolk/application";
 import { getAdminLandingArea } from "@taptolk/auth";
 import { roleHasPermission } from "@taptolk/domain";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseSiteCatalogRepository } from "../../../../admin/supabase-site-catalog-repository";
+import { createSupabaseSiteLifecycleRequestRepository } from "../../../../admin/supabase-site-lifecycle-request-repository";
 import { toAdminAuthorizationContext } from "../../../../auth/admin-authorization";
 import { getLocalizedAdminPath } from "../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../auth/page-guard";
@@ -48,10 +50,16 @@ export default async function SitesPage({
 
   const membership = context.decision.membership;
   const authorization = toAdminAuthorizationContext(membership, context.mfaLevel === "aal2");
-  const catalog = await new SiteCatalogService(createSupabaseSiteCatalogRepository(client)).list({
-    actor: authorization,
-    page: readPage(query.page),
-  });
+  const actor = { authorization, userId: context.userId };
+  const [catalog, lifecycleRequests] = await Promise.all([
+    new SiteCatalogService(createSupabaseSiteCatalogRepository(client)).list({
+      actor: authorization,
+      page: readPage(query.page),
+    }),
+    new SiteLifecycleRequestService(createSupabaseSiteLifecycleRequestRepository(client)).list({
+      actor,
+    }),
+  ]);
   const copy = getMessages(locale);
   const errorMessages: Readonly<Record<string, string>> = {
     blocked: copy["admin.sites.error.blocked"],
@@ -64,6 +72,10 @@ export default async function SitesPage({
     contractUpdated: copy["admin.sites.status.contractUpdated"],
     created: copy["admin.sites.status.created"],
     operationalUpdated: copy["admin.sites.status.operationalUpdated"],
+    requestApproved: copy["admin.sites.lifecycle.status.approved"],
+    requestCancelled: copy["admin.sites.lifecycle.status.cancelled"],
+    requestCreated: copy["admin.sites.lifecycle.status.created"],
+    requestRejected: copy["admin.sites.lifecycle.status.rejected"],
     statusChanged: copy["admin.sites.status.statusChanged"],
   };
   const error = readValue(query.error);
@@ -77,6 +89,14 @@ export default async function SitesPage({
         canChangeStatus={roleHasPermission(membership.role, "site:suspend-approve")}
         canClose={roleHasPermission(membership.role, "site:archive-approve")}
         canCreate={roleHasPermission(membership.role, "site:create")}
+        canRequestClose={
+          !roleHasPermission(membership.role, "site:archive-approve") &&
+          roleHasPermission(membership.role, "site:archive-request")
+        }
+        canRequestStatus={
+          !roleHasPermission(membership.role, "site:suspend-approve") &&
+          roleHasPermission(membership.role, "site:suspend-request")
+        }
         canUpdateContract={roleHasPermission(membership.role, "site:update-contract")}
         canUpdateOperational={roleHasPermission(membership.role, "site:update-operational")}
         catalog={catalog}
@@ -100,6 +120,25 @@ export default async function SitesPage({
           emptyTitle: copy["admin.sites.empty.title"],
           eyebrow: copy["admin.sites.eyebrow"],
           lifecycleRequestOnly: copy["admin.sites.lifecycle.requestOnly"],
+          lifecycleActionLabels: {
+            CLOSE: copy["admin.sites.lifecycle.action.close"],
+            REACTIVATE: copy["admin.sites.lifecycle.action.reactivate"],
+            SUSPEND: copy["admin.sites.lifecycle.action.suspend"],
+          },
+          lifecycleApprovalApprove: copy["admin.sites.lifecycle.approval.approve"],
+          lifecycleApprovalDescription: copy["admin.sites.lifecycle.approval.description"],
+          lifecycleApprovalEmpty: copy["admin.sites.lifecycle.approval.empty"],
+          lifecycleApprovalReject: copy["admin.sites.lifecycle.approval.reject"],
+          lifecycleApprovalRejectSummary: copy["admin.sites.lifecycle.approval.rejectSummary"],
+          lifecycleApprovalTitle: copy["admin.sites.lifecycle.approval.title"],
+          lifecycleCancel: copy["admin.sites.lifecycle.cancel"],
+          lifecycleCancelDescription: copy["admin.sites.lifecycle.cancel.description"],
+          lifecyclePending: copy["admin.sites.lifecycle.pending"],
+          lifecyclePendingAt: copy["admin.sites.lifecycle.pendingAt"],
+          lifecyclePendingDescription: copy["admin.sites.lifecycle.pending.description"],
+          lifecycleRequest: copy["admin.sites.lifecycle.request"],
+          lifecycleRequestDescription: copy["admin.sites.lifecycle.request.description"],
+          lifecycleRequestReason: copy["admin.sites.lifecycle.request.reason"],
           localeLabels: {
             en: copy["locale.english"],
             ko: copy["locale.korean"],
@@ -145,11 +184,7 @@ export default async function SitesPage({
         }}
         defaultTimezone={DEFAULT_SITE_TIMEZONE}
         errorMessage={error ? errorMessages[error] : undefined}
-        lifecycleRequestOnly={
-          !roleHasPermission(membership.role, "site:suspend-approve") &&
-          (roleHasPermission(membership.role, "site:suspend-request") ||
-            roleHasPermission(membership.role, "site:archive-request"))
-        }
+        lifecycleRequests={lifecycleRequests}
         locale={locale}
         statusMessage={status ? statusMessages[status] : undefined}
       />

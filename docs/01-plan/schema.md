@@ -39,6 +39,30 @@ timestamps and version. Role and scope combinations are enforced by a check cons
 `id`, nullable tenant/site scope, actor, action, resource identity, redacted before/after data,
 reason, request ID, and immutable creation time.
 
+### site_lifecycle_requests
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| id | uuid | Yes | Primary key, random default |
+| tenant_id | uuid | Yes | Highest customer isolation boundary |
+| management_company_id | uuid | Yes | Part of composite Site scope |
+| site_id | uuid | Yes | Composite FK with tenant and company |
+| action | enum | Yes | `SUSPEND`, `REACTIVATE`, `CLOSE` |
+| status | enum | Yes | `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED` |
+| requested_site_version | integer | Yes | Site version captured when requested, at least 1 |
+| requested_by | uuid | Yes | Auth user and maker identity |
+| request_reason | text | Yes | Trimmed 3–500 characters |
+| reviewed_by | uuid | No | Checker identity; required for approved/rejected |
+| review_reason | text | No | Trimmed 3–500 for approved/rejected |
+| reviewed_at | timestamptz | No | Required for approved/rejected |
+| cancelled_at | timestamptz | No | Required only for cancelled |
+| created_at | timestamptz | Yes | UTC database time |
+| updated_at | timestamptz | Yes | UTC database time |
+| version | integer | Yes | Request optimistic version, starts at 1 |
+
+Only one `PENDING` request may exist for a Site. Terminal requests remain immutable history.
+Approval also requires the current Site version to equal `requested_site_version`.
+
 ## Validation Rules
 
 - Name: trimmed, 1–200 characters.
@@ -49,6 +73,10 @@ reason, request ID, and immutable creation time.
 - All operational times are `timestamptz`.
 - Phone values are encrypted server-side; plaintext and direct hash values are not stored here.
 - Audit JSON rejects sensitive top-level keys.
+- Lifecycle request action must match the current Site state at request and approval time.
+- Requester cannot approve or reject their own lifecycle request.
+- Review metadata is present only on approved/rejected rows; cancellation metadata is present
+  only on cancelled rows.
 
 ## Query Indexes
 
@@ -59,3 +87,6 @@ reason, request ID, and immutable creation time.
 - tenant/company/site membership scopes
 - tenant + audit creation time descending
 - request ID and resource identity for audit investigation
+- Site lifecycle request tenant/status/created time
+- Site lifecycle request site/status
+- one pending Site lifecycle request per Site

@@ -14,20 +14,39 @@ interface AuditRow {
   before_data: unknown;
 }
 
-let fixture: StagingFixture;
+interface LifecycleRequestRow {
+  action: "CLOSE" | "REACTIVATE" | "SUSPEND";
+  id: string;
+  requested_by: string;
+  reviewed_by: string | null;
+  site_id: string;
+  status: "APPROVED" | "CANCELLED" | "PENDING" | "REJECTED";
+}
 
-async function signInAndEnrollMfa(page: Page, actor: StagingActor, locale: "en" | "ko") {
+let fixture: StagingFixture;
+const mfaSecrets = new Map<string, string>();
+
+async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en" | "ko") {
   await page.goto(`/${locale}/admin/login`);
   await page.locator('input[name="email"]').fill(actor.email);
   await page.locator('input[name="password"]').fill(actor.password);
   await page.locator('button[type="submit"]').first().click();
-  await expect(page).toHaveURL(new RegExp(`/${locale}/admin/mfa/enroll$`, "u"));
+  const existingSecret = mfaSecrets.get(actor.id);
+  if (existingSecret) {
+    await expect(page).toHaveURL(new RegExp(`/${locale}/admin/mfa/challenge$`, "u"));
+    await page.locator('input[name="code"]').fill(await currentTotp(existingSecret));
+    await page.locator(".admin-mfa-form button[type='submit']").click();
+    await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"));
+    return;
+  }
 
+  await expect(page).toHaveURL(new RegExp(`/${locale}/admin/mfa/enroll$`, "u"));
   await page.locator(".admin-enrollment-start button").click();
   const secret = await page.locator(".admin-enrollment-secret code").textContent();
   if (!secret) {
     throw new Error("The real MFA enrollment UI returned no TOTP secret.");
   }
+  mfaSecrets.set(actor.id, secret);
   await page.locator('input[name="code"]').fill(await currentTotp(secret));
   await page.locator(".admin-mfa-form button[type='submit']").click();
   await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"));
@@ -39,10 +58,13 @@ function siteRow(page: Page, siteName: string): Locator {
 
 async function openSiteActions(page: Page, siteName: string): Promise<Locator> {
   const row = siteRow(page, siteName);
-  const summary = row.locator("details > summary");
+  const details = row.locator("details").first();
+  const summary = details.locator(":scope > summary");
   await expect(row).toBeVisible();
   await expect(summary).toHaveCount(1);
-  await summary.click();
+  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await summary.click();
+  }
   return row;
 }
 
@@ -95,6 +117,46 @@ async function submitTamperedOperationalUpdate(
   await expect(page).toHaveURL(/error=forbidden/u);
 }
 
+async function requestLifecycle(page: Page, siteName: string, buttonName: string, reason: string) {
+  const row = await openSiteActions(page, siteName);
+  const button = row.getByRole("button", { name: buttonName });
+  const form = button.locator("xpath=ancestor::form");
+  await form.locator('textarea[name="reason"]').fill(reason);
+  await button.click();
+  await expect(page).toHaveURL(/status=requestCreated/u);
+}
+
+async function submitTamperedLifecycleRequest(
+  page: Page,
+  visibleSiteName: string,
+  buttonName: string,
+  target: {
+    companyId: string;
+    expectedVersion: number;
+    siteId: string;
+    tenantId: string;
+  },
+) {
+  const row = await openSiteActions(page, visibleSiteName);
+  const button = row.getByRole("button", { name: buttonName });
+  const form = button.locator("xpath=ancestor::form");
+  const hiddenValues: Readonly<Record<string, string>> = {
+    expectedSiteVersion: String(target.expectedVersion),
+    managementCompanyId: target.companyId,
+    siteId: target.siteId,
+    tenantId: target.tenantId,
+  };
+  for (const [name, value] of Object.entries(hiddenValues)) {
+    await form.locator(`input[name="${name}"]`).evaluate((element, nextValue) => {
+      (element as HTMLInputElement).value = nextValue;
+    }, value);
+  }
+  await form.locator('textarea[name="reason"]').fill("Authenticated staging request scope denial");
+  await button.click();
+  await expect(page).toHaveURL(/error=forbidden/u);
+  await page.reload();
+}
+
 async function expectAudit(
   siteId: string,
   actorId: string,
@@ -113,6 +175,25 @@ async function expectAudit(
   expect(JSON.stringify(rows)).not.toContain(forbiddenAddress);
 }
 
+async function expectLifecycleAudit(
+  request: LifecycleRequestRow,
+  requesterId: string,
+  approverId: string,
+) {
+  const rows = await fixture.api.select<AuditRow>(
+    "audit_logs",
+    `resource_id=eq.${encodeURIComponent(request.id)}&select=action,actor_id,before_data,after_data&order=created_at.asc`,
+  );
+  expect(rows.map(({ action }) => action)).toEqual([
+    "SITE_LIFECYCLE_REQUESTED",
+    "SITE_LIFECYCLE_REQUEST_APPROVED",
+  ]);
+  expect(rows.map(({ actor_id }) => actor_id)).toEqual([requesterId, approverId]);
+  expect(
+    rows.every(({ before_data, after_data }) => auditPayloadIsSafe([before_data, after_data])),
+  ).toBe(true);
+}
+
 test.describe
   .serial("authenticated staging Site CRUD and tenant isolation", () => {
     test.beforeAll(async () => {
@@ -126,7 +207,7 @@ test.describe
     test("Super Admin completes the full lifecycle through the real KO and EN UI", async ({
       page,
     }) => {
-      await signInAndEnrollMfa(page, fixture.actors.superAdmin, "ko");
+      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "ko");
       await page.goto("/ko/admin/sites");
       await expect(siteRow(page, fixture.sites.companyAFirst.name)).toBeVisible();
       await expect(siteRow(page, fixture.sites.companyASecond.name)).toBeVisible();
@@ -226,14 +307,14 @@ test.describe
     test("Management Admin sees and mutates only its management-company scope", async ({
       page,
     }) => {
-      await signInAndEnrollMfa(page, fixture.actors.managementAdmin, "ko");
+      await signInAndSatisfyMfa(page, fixture.actors.managementAdmin, "ko");
       await page.goto("/ko/admin/sites");
       await expect(siteRow(page, fixture.sites.companyAFirst.name)).toBeVisible();
       await expect(siteRow(page, fixture.sites.companyASecond.name)).toBeVisible();
       await expect(page.getByText(fixture.sites.tenantB.name, { exact: true })).toHaveCount(0);
       await expect(
         page.getByText(
-          "이 역할은 사이트 상태 변경을 직접 실행하지 않습니다. 요청·승인 큐가 연결되기 전까지 현재 상태를 유지합니다.",
+          "직접 상태 변경 권한은 부여되지 않습니다. 허용된 범위에서 요청을 만들면 별도 플랫폼 승인자가 검토합니다.",
         ),
       ).toBeVisible();
 
@@ -258,6 +339,28 @@ test.describe
         "운영정보 저장",
       );
       expect(await fixture.api.site(fixture.sites.tenantB.id)).toEqual(foreignBefore);
+      await submitTamperedLifecycleRequest(
+        page,
+        fixture.sites.companyAFirst.name,
+        "일시 중지 요청",
+        {
+          companyId: fixture.companyBId,
+          expectedVersion: foreignBefore.version,
+          siteId: fixture.sites.tenantB.id,
+          tenantId: fixture.tenantBId,
+        },
+      );
+      expect(await fixture.api.site(fixture.sites.tenantB.id)).toEqual(foreignBefore);
+      await requestLifecycle(
+        page,
+        updatedName,
+        "일시 중지 요청",
+        "Authenticated staging Management Admin suspend request",
+      );
+      await openSiteActions(page, updatedName);
+      await expect(
+        siteRow(page, updatedName).getByText("승인 대기", { exact: true }),
+      ).toBeVisible();
       await expectAudit(
         fixture.sites.companyASecond.id,
         fixture.actors.managementAdmin.id,
@@ -267,7 +370,7 @@ test.describe
     });
 
     test("Site Admin sees and mutates only its exact Site scope", async ({ page }) => {
-      await signInAndEnrollMfa(page, fixture.actors.siteAdmin, "en");
+      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "en");
       await page.goto("/en/admin/sites");
       await expect(siteRow(page, fixture.sites.companyAFirst.name)).toBeVisible();
       await expect(
@@ -296,11 +399,85 @@ test.describe
         "Save operations",
       );
       expect(await fixture.api.site(fixture.sites.companyASecond.id)).toEqual(siblingBefore);
+      await submitTamperedLifecycleRequest(page, updatedName, "Request suspension", {
+        companyId: fixture.companyAId,
+        expectedVersion: siblingBefore.version,
+        siteId: fixture.sites.companyASecond.id,
+        tenantId: fixture.tenantAId,
+      });
+      expect(await fixture.api.site(fixture.sites.companyASecond.id)).toEqual(siblingBefore);
+      await requestLifecycle(
+        page,
+        updatedName,
+        "Request suspension",
+        "Authenticated staging Site Admin suspend request",
+      );
+      await openSiteActions(page, updatedName);
+      await expect(
+        siteRow(page, updatedName).getByText("Pending approval", { exact: true }),
+      ).toBeVisible();
       await expectAudit(
         fixture.sites.companyAFirst.id,
         fixture.actors.siteAdmin.id,
         ["SITE_OPERATIONAL_UPDATED"],
         fixture.sites.companyAFirst.address,
       );
+    });
+
+    test("Super Admin approves customer requests with maker-checker and redacted audit", async ({
+      page,
+    }) => {
+      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await page.goto("/en/admin/sites");
+
+      const pending = await fixture.api.select<LifecycleRequestRow>(
+        "site_lifecycle_requests",
+        `site_id=in.(${fixture.sites.companyAFirst.id},${fixture.sites.companyASecond.id})&status=eq.PENDING&select=id,site_id,action,status,requested_by,reviewed_by&order=created_at.asc`,
+      );
+      expect(pending).toHaveLength(2);
+
+      for (const request of pending) {
+        const site =
+          request.site_id === fixture.sites.companyAFirst.id
+            ? `${fixture.sites.companyAFirst.name} Admin`
+            : `${fixture.sites.companyASecond.name} Managed`;
+        const card = page.locator(".admin-approval-card").filter({ hasText: site });
+        await expect(card).toBeVisible();
+        const form = card.locator("form").first();
+        await form
+          .locator('textarea[name="reason"]')
+          .fill("Authenticated staging independent approval");
+        await form.getByRole("button", { name: "Review and approve" }).click();
+        await expect(page).toHaveURL(/status=requestApproved/u);
+        await expect
+          .poll(async () => {
+            const rows = await fixture.api.select<LifecycleRequestRow>(
+              "site_lifecycle_requests",
+              `id=eq.${request.id}&select=id,site_id,action,status,requested_by,reviewed_by`,
+            );
+            return rows[0]?.status;
+          })
+          .toBe("APPROVED");
+      }
+
+      const approved = await fixture.api.select<LifecycleRequestRow>(
+        "site_lifecycle_requests",
+        `id=in.(${pending.map(({ id }) => id).join(",")})&select=id,site_id,action,status,requested_by,reviewed_by&order=created_at.asc`,
+      );
+      expect(approved).toHaveLength(2);
+      expect(approved.every(({ status }) => status === "APPROVED")).toBe(true);
+      expect(
+        approved.every(({ reviewed_by }) => reviewed_by === fixture.actors.superAdmin.id),
+      ).toBe(true);
+      await expect
+        .poll(async () => (await fixture.api.site(fixture.sites.companyAFirst.id)).status)
+        .toBe("SUSPENDED");
+      await expect
+        .poll(async () => (await fixture.api.site(fixture.sites.companyASecond.id)).status)
+        .toBe("SUSPENDED");
+
+      for (const request of approved) {
+        await expectLifecycleAudit(request, request.requested_by, fixture.actors.superAdmin.id);
+      }
     });
   });

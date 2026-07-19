@@ -1,4 +1,11 @@
-import type { OrganizationStatus, SiteCatalogPage, SiteType } from "@taptolk/application";
+import type {
+  OrganizationStatus,
+  SiteCatalogPage,
+  SiteLifecycleAction,
+  SiteLifecycleRequestItem,
+  SiteLifecycleRequestReadModel,
+  SiteType,
+} from "@taptolk/application";
 import { SemanticHeading } from "@taptolk/ui";
 import {
   changeSiteStatus,
@@ -6,6 +13,12 @@ import {
   updateSiteContract,
   updateSiteOperational,
 } from "../admin/site-actions";
+import {
+  approveSiteLifecycleRequest,
+  cancelSiteLifecycleRequest,
+  rejectSiteLifecycleRequest,
+  requestSiteLifecycle,
+} from "../admin/site-lifecycle-request-actions";
 import { signOutAdmin } from "../auth/actions";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -29,6 +42,21 @@ interface SiteCatalogCopy {
   emptyTitle: string;
   eyebrow: string;
   lifecycleRequestOnly: string;
+  lifecycleActionLabels: Readonly<Record<SiteLifecycleAction, string>>;
+  lifecycleApprovalApprove: string;
+  lifecycleApprovalDescription: string;
+  lifecycleApprovalEmpty: string;
+  lifecycleApprovalReject: string;
+  lifecycleApprovalRejectSummary: string;
+  lifecycleApprovalTitle: string;
+  lifecycleCancel: string;
+  lifecycleCancelDescription: string;
+  lifecyclePending: string;
+  lifecyclePendingAt: string;
+  lifecyclePendingDescription: string;
+  lifecycleRequest: string;
+  lifecycleRequestDescription: string;
+  lifecycleRequestReason: string;
   localeLabels: Readonly<Record<AppLocale, string>>;
   localeTitle: string;
   logoAlt: string;
@@ -66,6 +94,8 @@ interface SiteCatalogViewProps {
   canChangeStatus: boolean;
   canClose: boolean;
   canCreate: boolean;
+  canRequestClose: boolean;
+  canRequestStatus: boolean;
   canUpdateContract: boolean;
   canUpdateOperational: boolean;
   catalog: SiteCatalogPage;
@@ -73,9 +103,47 @@ interface SiteCatalogViewProps {
   copy: SiteCatalogCopy;
   defaultTimezone: string;
   errorMessage?: string | undefined;
-  lifecycleRequestOnly: boolean;
+  lifecycleRequests: SiteLifecycleRequestReadModel;
   locale: AppLocale;
   statusMessage?: string | undefined;
+}
+
+function LifecycleRequestHiddenFields({
+  copy,
+  locale,
+  request,
+}: {
+  copy: SiteCatalogCopy;
+  locale: AppLocale;
+  request: SiteLifecycleRequestItem;
+}) {
+  return (
+    <>
+      <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+      <input aria-label={copy.actions} name="action" type="hidden" value={request.action} />
+      <input aria-label={copy.actions} name="lifecycleRequestId" type="hidden" value={request.id} />
+      <input
+        aria-label={copy.actions}
+        name="expectedRequestVersion"
+        type="hidden"
+        value={request.version}
+      />
+      <input aria-label={copy.tenant} name="tenantId" type="hidden" value={request.tenantId} />
+      <input
+        aria-label={copy.company}
+        name="managementCompanyId"
+        type="hidden"
+        value={request.managementCompanyId}
+      />
+      <input aria-label={copy.name} name="siteId" type="hidden" value={request.siteId} />
+      <input
+        aria-label={copy.lifecyclePending}
+        name="requestedBy"
+        type="hidden"
+        value={request.requestedBy}
+      />
+    </>
+  );
 }
 
 function getPageHref(locale: AppLocale, page: number): string {
@@ -112,6 +180,8 @@ export function SiteCatalogView({
   canChangeStatus,
   canClose,
   canCreate,
+  canRequestClose,
+  canRequestStatus,
   canUpdateContract,
   canUpdateOperational,
   catalog,
@@ -119,14 +189,21 @@ export function SiteCatalogView({
   copy,
   defaultTimezone,
   errorMessage,
-  lifecycleRequestOnly,
+  lifecycleRequests,
   locale,
   statusMessage,
 }: SiteCatalogViewProps) {
   const totalPages = Math.max(1, Math.ceil(catalog.total / catalog.pageSize));
   const hasPrevious = catalog.page > 1;
   const hasNext = catalog.page < totalPages;
-  const hasRowActions = canUpdateOperational || canUpdateContract || canChangeStatus || canClose;
+  const hasRowActions =
+    canUpdateOperational ||
+    canUpdateContract ||
+    canChangeStatus ||
+    canClose ||
+    canRequestStatus ||
+    canRequestClose ||
+    lifecycleRequests.pendingBySiteId.size > 0;
 
   return (
     <>
@@ -165,10 +242,90 @@ export function SiteCatalogView({
           <strong>{errorMessage}</strong>
         </aside>
       ) : null}
-      {lifecycleRequestOnly ? (
+      {canRequestStatus || canRequestClose ? (
         <aside className="admin-notice">
           <strong>{copy.lifecycleRequestOnly}</strong>
         </aside>
+      ) : null}
+
+      {lifecycleRequests.approvalQueue.length > 0 ? (
+        <section aria-labelledby="site-lifecycle-approval-title" className="admin-lifecycle-queue">
+          <header>
+            <h2 id="site-lifecycle-approval-title">{copy.lifecycleApprovalTitle}</h2>
+            <p>{copy.lifecycleApprovalDescription}</p>
+          </header>
+          <div className="admin-approval-list">
+            {lifecycleRequests.approvalQueue.map((request) => {
+              const prefix = `lifecycle-review-${request.id}`;
+              return (
+                <article className="admin-approval-card" key={request.id}>
+                  <header className="admin-approval-card__header">
+                    <div>
+                      <span className="admin-approval-card__label">
+                        {copy.lifecycleActionLabels[request.action]}
+                      </span>
+                      <h3>{request.siteName}</h3>
+                    </div>
+                    <span className="admin-status-badge admin-status-badge--suspended">
+                      {copy.lifecyclePending}
+                    </span>
+                  </header>
+                  <dl className="admin-approval-meta">
+                    <div>
+                      <dt>{copy.tenant}</dt>
+                      <dd>{request.tenantName}</dd>
+                    </div>
+                    <div>
+                      <dt>{copy.company}</dt>
+                      <dd>{request.managementCompanyName}</dd>
+                    </div>
+                    <div>
+                      <dt>{copy.lifecycleRequestReason}</dt>
+                      <dd>{request.reason}</dd>
+                    </div>
+                  </dl>
+                  <form action={approveSiteLifecycleRequest} className="admin-approval-form">
+                    <LifecycleRequestHiddenFields copy={copy} locale={locale} request={request} />
+                    <label className="admin-field" htmlFor={`${prefix}-approve-reason`}>
+                      <span>{copy.reason}</span>
+                      <textarea
+                        id={`${prefix}-approve-reason`}
+                        maxLength={500}
+                        minLength={3}
+                        name="reason"
+                        placeholder={copy.reasonPlaceholder}
+                        required
+                      />
+                    </label>
+                    <button className="tt-button admin-approval-primary-action" type="submit">
+                      {copy.lifecycleApprovalApprove}
+                    </button>
+                  </form>
+                  <details className="admin-rejection-panel">
+                    <summary>{copy.lifecycleApprovalRejectSummary}</summary>
+                    <form action={rejectSiteLifecycleRequest} className="admin-rejection-form">
+                      <LifecycleRequestHiddenFields copy={copy} locale={locale} request={request} />
+                      <label className="admin-field" htmlFor={`${prefix}-reject-reason`}>
+                        <span>{copy.reason}</span>
+                        <textarea
+                          id={`${prefix}-reject-reason`}
+                          maxLength={500}
+                          minLength={3}
+                          name="reason"
+                          placeholder={copy.reasonPlaceholder}
+                          required
+                        />
+                      </label>
+                      <button className="tt-button admin-danger-action" type="submit">
+                        {copy.lifecycleApprovalReject}
+                      </button>
+                    </form>
+                  </details>
+                </article>
+              );
+            })}
+          </div>
+        </section>
       ) : null}
 
       {canCreate ? (
@@ -285,8 +442,11 @@ export function SiteCatalogView({
               {catalog.items.map((site) => {
                 const prefix = `site-${site.id}`;
                 const mutable = site.status !== "CLOSED";
+                const pendingRequest = lifecycleRequests.pendingBySiteId.get(site.id);
                 const canRenderLifecycle =
                   mutable && (canChangeStatus || (canClose && site.status !== "CLOSED"));
+                const canRenderLifecycleRequest =
+                  mutable && !pendingRequest && (canRequestStatus || canRequestClose);
                 return (
                   <tr key={site.id}>
                     <td>
@@ -426,6 +586,127 @@ export function SiteCatalogView({
                                   <button className="tt-button tt-button--compact" type="submit">
                                     {copy.saveContract}
                                   </button>
+                                </form>
+                              ) : null}
+
+                              {pendingRequest ? (
+                                <section
+                                  aria-label={copy.lifecyclePending}
+                                  className="admin-lifecycle-pending"
+                                >
+                                  <h3>{copy.lifecyclePending}</h3>
+                                  <p>
+                                    {copy.lifecyclePendingDescription.replace(
+                                      "{action}",
+                                      copy.lifecycleActionLabels[pendingRequest.action],
+                                    )}
+                                  </p>
+                                  <p>
+                                    {copy.lifecyclePendingAt.replace(
+                                      "{date}",
+                                      new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en", {
+                                        dateStyle: "medium",
+                                        timeStyle: "short",
+                                      }).format(new Date(pendingRequest.createdAt)),
+                                    )}
+                                  </p>
+                                  {lifecycleRequests.cancellableRequestIds.has(
+                                    pendingRequest.id,
+                                  ) ? (
+                                    <form
+                                      action={cancelSiteLifecycleRequest}
+                                      className="admin-tenant-status-form"
+                                    >
+                                      <LifecycleRequestHiddenFields
+                                        copy={copy}
+                                        locale={locale}
+                                        request={pendingRequest}
+                                      />
+                                      <label
+                                        className="admin-field"
+                                        htmlFor={`${prefix}-cancel-reason`}
+                                      >
+                                        <span>{copy.reason}</span>
+                                        <textarea
+                                          id={`${prefix}-cancel-reason`}
+                                          maxLength={500}
+                                          minLength={3}
+                                          name="reason"
+                                          placeholder={copy.reasonPlaceholder}
+                                          required
+                                        />
+                                      </label>
+                                      <button
+                                        className="tt-button tt-button--secondary tt-button--compact"
+                                        type="submit"
+                                      >
+                                        {copy.lifecycleCancel}
+                                      </button>
+                                    </form>
+                                  ) : (
+                                    <p>{copy.lifecycleCancelDescription}</p>
+                                  )}
+                                </section>
+                              ) : null}
+
+                              {canRenderLifecycleRequest ? (
+                                <form
+                                  action={requestSiteLifecycle}
+                                  className="admin-tenant-status-form"
+                                >
+                                  <SiteHiddenFields copy={copy} locale={locale} site={site} />
+                                  <input
+                                    aria-label={copy.status}
+                                    name="currentStatus"
+                                    type="hidden"
+                                    value={site.status}
+                                  />
+                                  <input
+                                    aria-label={copy.actions}
+                                    name="expectedSiteVersion"
+                                    type="hidden"
+                                    value={site.version}
+                                  />
+                                  <h3>{copy.lifecycleRequest}</h3>
+                                  <p>{copy.lifecycleRequestDescription}</p>
+                                  <label
+                                    className="admin-field"
+                                    htmlFor={`${prefix}-request-reason`}
+                                  >
+                                    <span>{copy.reason}</span>
+                                    <textarea
+                                      id={`${prefix}-request-reason`}
+                                      maxLength={500}
+                                      minLength={3}
+                                      name="reason"
+                                      placeholder={copy.reasonPlaceholder}
+                                      required
+                                    />
+                                  </label>
+                                  <div className="admin-tenant-status-actions">
+                                    {canRequestStatus ? (
+                                      <button
+                                        className="tt-button tt-button--secondary tt-button--compact"
+                                        name="action"
+                                        type="submit"
+                                        value={site.status === "ACTIVE" ? "SUSPEND" : "REACTIVATE"}
+                                      >
+                                        {site.status === "ACTIVE"
+                                          ? copy.lifecycleActionLabels.SUSPEND
+                                          : copy.lifecycleActionLabels.REACTIVATE}
+                                      </button>
+                                    ) : null}
+                                    {canRequestClose ? (
+                                      <button
+                                        className="tt-button tt-button--compact admin-danger-button"
+                                        name="action"
+                                        type="submit"
+                                        value="CLOSE"
+                                      >
+                                        {copy.lifecycleActionLabels.CLOSE}
+                                      </button>
+                                    ) : null}
+                                  </div>
                                 </form>
                               ) : null}
 

@@ -312,6 +312,7 @@ export async function createStagingFixture(): Promise<StagingFixture> {
 
     if (allSiteIds.length > 0) {
       await api.deleteWhere("audit_logs", postgrestFilter("site_id", allSiteIds));
+      await api.deleteWhere("site_lifecycle_requests", postgrestFilter("site_id", allSiteIds));
     }
     if (actorIds.length > 0) {
       await api.deleteWhere("admin_memberships", postgrestFilter("user_id", actorIds));

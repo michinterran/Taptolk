@@ -58,7 +58,7 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA 실인증
 | Tenant isolation | staging authenticated browser·tampered mutation·rollback SQL 통과 | local PostgreSQL pgTAP |
 | Admin Auth | KO/EN 로그인, TOTP 등록·챌린지와 staging AAL2 실인증 | Google provider 실연결, recovery, idle timeout |
 | Account approval | 신규 Auth identity의 권한 자동 부여 금지 | profile/membership 승인 transaction과 audit |
-| Site CRUD | KO/EN route/UI/repository와 authenticated E2E 통과 | maker-checker request/approval model |
+| Site CRUD | KO/EN route/UI/repository, maker-checker request/approval, authenticated E2E 통과 | Local reset/pgTAP runtime |
 | Audit | 실제 Site mutation action/actor/redaction 검증 | local pgTAP runtime |
 | UI | bilingual Auth/context와 role-scoped Site lifecycle | QR 운영 dashboard와 manual assistive-tech review |
 
@@ -149,12 +149,11 @@ schema/type 및 migration 생성 보조로 사용하는 것이다. Phase 1 첫 s
 ## 8. 다음 개발 순서
 
 1. Docker에서 Supabase Local reset과 pgTAP runtime 실행
-2. Site lifecycle request/approval queue를 maker-checker entity로 구현
-3. QR inventory/batch lifecycle vertical slice 구현
-4. MFA recovery와 idle timeout 운영 정책 확정
-5. keyboard, screen-reader, computed contrast, real-device journey 수동 검증
-6. 선택된 3번 visual direction으로 Platform/Company/Site 화면 refinement
-7. Vercel Preview env 연결과 동일 Auth journey 검증
+2. QR inventory/batch lifecycle vertical slice 구현
+3. MFA recovery와 idle timeout 운영 정책 확정
+4. keyboard, screen-reader, computed contrast, real-device journey 수동 검증
+5. 선택된 3번 visual direction으로 Platform/Company/Site 화면 refinement
+6. Vercel Preview env 연결과 동일 Auth journey 검증
 
 외부 연결 없이 가능한 Phase 1 소스 구현은 계속할 수 있지만, DB runtime과 인증된
 journey가 없는 상태를 전체 Phase 완료로 오인하지 않는다.

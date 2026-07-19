@@ -70,6 +70,17 @@ export const auditActorType = pgEnum("audit_actor_type", [
   "SYSTEM",
   "WORKER",
 ]);
+export const siteLifecycleAction = pgEnum("site_lifecycle_action", [
+  "SUSPEND",
+  "REACTIVATE",
+  "CLOSE",
+]);
+export const siteLifecycleRequestStatus = pgEnum("site_lifecycle_request_status", [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "CANCELLED",
+]);
 
 function commonColumns() {
   return {
@@ -316,6 +327,84 @@ export const adminMemberships = pgTable(
               and ${table.siteId} is not null
             )
           )
+        )
+      `,
+    ),
+  ],
+);
+
+export const siteLifecycleRequests = pgTable(
+  "site_lifecycle_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    action: siteLifecycleAction("action").notNull(),
+    status: siteLifecycleRequestStatus("status").default("PENDING").notNull(),
+    requestedSiteVersion: integer("requested_site_version").notNull(),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    requestReason: text("request_reason").notNull(),
+    reviewedBy: uuid("reviewed_by").references(() => authUsers.id, { onDelete: "restrict" }),
+    reviewReason: text("review_reason"),
+    reviewedAt: timestamp("reviewed_at", { mode: "date", withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { mode: "date", withTimezone: true }),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId],
+      foreignColumns: [sites.tenantId, sites.managementCompanyId, sites.id],
+      name: "fk_site_lifecycle_requests_site",
+    }).onDelete("restrict"),
+    index("idx_site_lifecycle_requests_tenant_status_created").on(
+      table.tenantId,
+      table.status,
+      table.createdAt,
+    ),
+    index("idx_site_lifecycle_requests_site_status_created").on(
+      table.siteId,
+      table.status,
+      table.createdAt,
+    ),
+    uniqueIndex("uq_site_lifecycle_requests_pending_site")
+      .on(table.siteId)
+      .where(sql`${table.status} = 'PENDING'`),
+    check("chk_site_lifecycle_requests_site_version", sql`${table.requestedSiteVersion} >= 1`),
+    check(
+      "chk_site_lifecycle_requests_request_reason",
+      sql`length(trim(${table.requestReason})) between 3 and 500`,
+    ),
+    check(
+      "chk_site_lifecycle_requests_review_reason",
+      sql`${table.reviewReason} is null or length(trim(${table.reviewReason})) between 3 and 500`,
+    ),
+    check(
+      "chk_site_lifecycle_requests_state_metadata",
+      sql`
+        (
+          ${table.status} = 'PENDING'
+          and ${table.reviewedBy} is null
+          and ${table.reviewReason} is null
+          and ${table.reviewedAt} is null
+          and ${table.cancelledAt} is null
+        )
+        or (
+          ${table.status} in ('APPROVED', 'REJECTED')
+          and ${table.reviewedBy} is not null
+          and ${table.reviewReason} is not null
+          and ${table.reviewedAt} is not null
+          and ${table.cancelledAt} is null
+          and ${table.requestedBy} <> ${table.reviewedBy}
+        )
+        or (
+          ${table.status} = 'CANCELLED'
+          and ${table.reviewedBy} is null
+          and ${table.reviewReason} is null
+          and ${table.reviewedAt} is null
+          and ${table.cancelledAt} is not null
         )
       `,
     ),
