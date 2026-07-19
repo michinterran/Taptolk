@@ -93,6 +93,7 @@ export interface QrGenerationHandlerOptions {
   encryptionKey: Uint8Array;
   keyVersion: number;
   publicQrBaseUrl: string;
+  renderConcurrency: number;
   taptolkLogoDataUri: string;
 }
 
@@ -105,6 +106,13 @@ export class QrGenerationHandler {
     private readonly renderer: QrGenerationRenderer,
     private readonly options: QrGenerationHandlerOptions,
   ) {
+    if (
+      !Number.isInteger(options.renderConcurrency) ||
+      options.renderConcurrency < 1 ||
+      options.renderConcurrency > 10
+    ) {
+      throw new Error("INVALID_RENDER_CONCURRENCY");
+    }
     this.generateCredential = createQrCredentialGenerator({
       encryptionKey: options.encryptionKey,
       keyVersion: options.keyVersion,
@@ -149,53 +157,68 @@ export class QrGenerationHandler {
     ) {
       const ordinals = missingOrdinals.slice(offset, offset + QR_GENERATION_EXECUTION_CHUNK_SIZE);
       const credentials = issueQrBatch(ordinals.length, this.generateCredential);
-      const items = await Promise.all(
-        ordinals.map(async (ordinal, index): Promise<QrGenerationCommitItem> => {
-          const credential = credentials[index];
-          if (!credential) {
-            throw new Error("GENERATION_CREDENTIAL_MISSING");
+      const items = new Array<QrGenerationCommitItem>(ordinals.length);
+      let nextIndex = 0;
+      const workers = Array.from(
+        { length: Math.min(ordinals.length, this.options.renderConcurrency) },
+        async () => {
+          while (true) {
+            const index = nextIndex;
+            nextIndex += 1;
+            if (index >= ordinals.length) {
+              return;
+            }
+            const ordinal = ordinals[index];
+            if (ordinal === undefined) {
+              throw new Error("GENERATION_ORDINAL_MISSING");
+            }
+            const credential = credentials[index];
+            if (!credential) {
+              throw new Error("GENERATION_CREDENTIAL_MISSING");
+            }
+            const publicUrl = new URL(
+              `/q/${credential.publicToken.value}`,
+              this.options.publicQrBaseUrl,
+            ).toString();
+            const rendered = await this.renderer.render({
+              ...(context.customerLogoDataUri
+                ? { customerLogoDataUri: context.customerLogoDataUri }
+                : {}),
+              publicUrl,
+              taptolkLogoDataUri: this.options.taptolkLogoDataUri,
+              templateCode: context.templateCode,
+            });
+            if (rendered.decodedValue !== publicUrl) {
+              throw new Error("QR_DECODE_MISMATCH");
+            }
+            const artifact = await this.artifactStore.store({
+              batchId: context.batchId,
+              generationRevision: context.generationRevision,
+              ordinal,
+              png: rendered.png,
+              svg: rendered.svg,
+              tenantId: context.tenantId,
+            });
+            items[index] = {
+              activationCodeCiphertext: credential.activationCode.ciphertext,
+              activationCodeHash: credential.activationCode.hash,
+              activationKeyVersion: credential.activationCode.keyVersion,
+              decodedPublicTokenHash: credential.publicToken.hash,
+              humanCode: credential.humanCode,
+              internalUuid: randomUUID(),
+              ordinal,
+              previewPngPath: artifact.previewPngPath,
+              printSvgPath: artifact.printSvgPath,
+              publicTokenCiphertext: credential.publicToken.ciphertext,
+              publicTokenHash: credential.publicToken.hash,
+              qrAssetId: randomUUID(),
+              renderChecksumSha256: artifact.renderChecksumSha256,
+              tokenKeyVersion: credential.publicToken.keyVersion,
+            };
           }
-          const publicUrl = new URL(
-            `/q/${credential.publicToken.value}`,
-            this.options.publicQrBaseUrl,
-          ).toString();
-          const rendered = await this.renderer.render({
-            ...(context.customerLogoDataUri
-              ? { customerLogoDataUri: context.customerLogoDataUri }
-              : {}),
-            publicUrl,
-            taptolkLogoDataUri: this.options.taptolkLogoDataUri,
-            templateCode: context.templateCode,
-          });
-          if (rendered.decodedValue !== publicUrl) {
-            throw new Error("QR_DECODE_MISMATCH");
-          }
-          const artifact = await this.artifactStore.store({
-            batchId: context.batchId,
-            generationRevision: context.generationRevision,
-            ordinal,
-            png: rendered.png,
-            svg: rendered.svg,
-            tenantId: context.tenantId,
-          });
-          return {
-            activationCodeCiphertext: credential.activationCode.ciphertext,
-            activationCodeHash: credential.activationCode.hash,
-            activationKeyVersion: credential.activationCode.keyVersion,
-            decodedPublicTokenHash: credential.publicToken.hash,
-            humanCode: credential.humanCode,
-            internalUuid: randomUUID(),
-            ordinal,
-            previewPngPath: artifact.previewPngPath,
-            printSvgPath: artifact.printSvgPath,
-            publicTokenCiphertext: credential.publicToken.ciphertext,
-            publicTokenHash: credential.publicToken.hash,
-            qrAssetId: randomUUID(),
-            renderChecksumSha256: artifact.renderChecksumSha256,
-            tokenKeyVersion: credential.publicToken.keyVersion,
-          };
-        }),
+        },
       );
+      await Promise.all(workers);
       const committed = await this.repository.commitChunk({
         generationRevision: context.generationRevision,
         items,

@@ -22,6 +22,7 @@
     "dev:web": "corepack pnpm build:packages && corepack pnpm --filter @taptolk/web dev",
     "e2e:smoke": "playwright test",
     "e2e:staging": "playwright test --config=playwright.staging.config.ts",
+    "e2e:staging:qr-generation-acceptance": "corepack pnpm build:packages && corepack pnpm --filter @taptolk/worker build && RUN_QR_GENERATION_ACCEPTANCE=1 playwright test --config=playwright.staging.config.ts e2e/staging/qr-generation-worker-acceptance.spec.ts",
     "e2e:staging:sites": "corepack pnpm e2e:staging",
     "format": "biome check --write .",
     "lint": "biome check .",

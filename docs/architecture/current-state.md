@@ -1,11 +1,9 @@
 # Taptolk Current State
 
-- 기준일: 2026-07-19
+- 기준일: 2026-07-20
 - 프로젝트 루트: `/Users/benjaminsong/Documents/Taptolk`
 - 최상위 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
-- 현재 단계: Phase 0 소스 기반 및 i18n 완료, Phase 1 Tenant/Admin 기반과
-  Admin Auth/MFA 실인증 완료, 계정 생성·Google SSO 코드와 RLS Tenant Catalog 구현,
-  QR 재고·소량 Batch·샘플 승인 기반을 Staging에 적용, Google provider 외부 설정 대기
+- 현재 단계: Phase 0–4 자동화 staging acceptance 완료, Phase 5 Owner Activation 착수
 
 ## 1. 구현 상태
 
@@ -32,9 +30,11 @@ e2e/                   axe, health, 320px, locale·Admin Auth browser smoke
 
 Tenant/Admin 데이터·권한·application service, Admin 로그인/MFA와 실제 staging
 AAL2 acceptance를 완료했다. 이메일/Google 계정 생성과 Super Admin Tenant Catalog도
-구현했다. 인증된 Site CRUD와 QR Design/소량 Batch/샘플 승인 화면·RPC도
-Staging acceptance를 통과했다. QR 대량 생성 최종 승인, Queue/Worker, 실제
-스티커 렌더링·PDF/ZIP, public token, SMS는 아직 구현하지 않았다.
+구현했다. 인증된 Site CRUD와 QR Design/승인/입고/배정 화면·RPC가 staging
+acceptance를 통과했다. 10개 승인 100-item Batch의 실제 Queue/Worker에서 1,000 QR
+생성, chunk commit 후 lease 재개, decode 100%, PDF/CSV/ZIP/manifest checksum과
+residue 0을 검증했다. Owner activation, public contact, SMS notification/reply,
+abuse/escalation, analytics/hardening은 Phase 5–9 범위다.
 
 ## 2. 고정 기술 기준
 

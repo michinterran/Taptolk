@@ -79,6 +79,7 @@ function setup(target: QrGenerationExecutionContext) {
       encryptionKey: Buffer.alloc(32, 9),
       keyVersion: 1,
       publicQrBaseUrl: "https://taptolk.example",
+      renderConcurrency: 2,
       taptolkLogoDataUri: `data:image/png;base64,${Buffer.from("logo").toString("base64")}`,
     },
   );
@@ -112,6 +113,28 @@ describe("QR generation handler", () => {
     expect(repository.commitChunk).toHaveBeenCalledTimes(12);
     expect(Math.min(...committed.keys())).toBe(401);
     expect(Math.max(...committed.keys())).toBe(1_000);
+  });
+
+  it("bounds render and Storage preparation concurrency inside each durable chunk", async () => {
+    const { handler, renderer } = setup(context(12));
+    let activeRenders = 0;
+    let maximumActiveRenders = 0;
+    renderer.render.mockImplementation(async ({ publicUrl }) => {
+      activeRenders += 1;
+      maximumActiveRenders = Math.max(maximumActiveRenders, activeRenders);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      activeRenders -= 1;
+      return {
+        checksumSha256: "a".repeat(64),
+        decodedValue: publicUrl,
+        png: new Uint8Array([1, 2, 3]),
+        svg: "<svg/>",
+      };
+    });
+
+    await handler.handle(job);
+
+    expect(maximumActiveRenders).toBe(2);
   });
 
   it("does not duplicate work for an already completed job", async () => {

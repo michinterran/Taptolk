@@ -63,13 +63,17 @@ async function initializeQrQueueWorker(): Promise<void> {
         .digest(),
       keyVersion: environment.APP_ENCRYPTION_KEY_VERSION,
       publicQrBaseUrl: environment.PUBLIC_QR_BASE_URL,
+      renderConcurrency: environment.QR_GENERATION_RENDER_CONCURRENCY,
       taptolkLogoDataUri: await readWorkerTaptolkLogoDataUri(),
     },
   );
   const printRuntime = new SupabaseQrPrintExportRuntime(client);
   const execution = new QrWorkerExecutionRuntime(
     generation,
-    new QrPrintExportHandler(printRuntime, printRuntime),
+    new QrPrintExportHandler(printRuntime, printRuntime, {
+      loadConcurrency: environment.QR_PRINT_EXPORT_LOAD_CONCURRENCY,
+      storeConcurrency: environment.QR_PRINT_EXPORT_STORE_CONCURRENCY,
+    }),
     new SupabaseQrWorkerFailureRepository(client),
   );
   const queue = new SupabasePgmqQueue(

@@ -132,7 +132,6 @@ export async function buildPrintExportBundle(
   const zipEntries: Record<string, Uint8Array> = {
     [csv.filename]: csv.bytes,
     [manifest.filename]: manifest.bytes,
-    [pdf.filename]: pdf.bytes,
   };
   for (const item of items) {
     const ordinal = item.ordinal.toString().padStart(5, "0");

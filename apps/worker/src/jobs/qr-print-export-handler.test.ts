@@ -21,6 +21,8 @@ describe("QR print export handler", () => {
       ["preview/1.png", rendered.png],
       ["svg/1.svg", new TextEncoder().encode(rendered.svg)],
     ]);
+    let activeStores = 0;
+    let maxActiveStores = 0;
     const repository: QrPrintExportRepository = {
       commit: vi.fn(async () => undefined),
       getContext: vi.fn(async () => ({
@@ -49,15 +51,25 @@ describe("QR print export handler", () => {
         }
         return value;
       }),
-      store: vi.fn(async ({ artifact }) => `exports/${artifact.filename}`),
+      store: vi.fn(async ({ artifact }) => {
+        activeStores += 1;
+        maxActiveStores = Math.max(maxActiveStores, activeStores);
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        activeStores -= 1;
+        return `exports/${artifact.filename}`;
+      }),
     };
-    const handler = new QrPrintExportHandler(repository, storage);
+    const handler = new QrPrintExportHandler(repository, storage, {
+      loadConcurrency: 2,
+      storeConcurrency: 1,
+    });
 
     await expect(handler.handle("00000000-0000-4000-8000-000000000001")).resolves.toEqual({
       exportCount: 4,
       itemCount: 1,
     });
     expect(storage.store).toHaveBeenCalledTimes(4);
+    expect(maxActiveStores).toBe(1);
     expect(repository.commit).toHaveBeenCalledWith(
       expect.objectContaining({
         exports: expect.arrayContaining([

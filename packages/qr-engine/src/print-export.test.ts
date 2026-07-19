@@ -38,7 +38,6 @@ describe("print export bundle", () => {
     expect(Object.keys(unzipSync(bundle.zip.bytes)).sort()).toEqual([
       "BATCH_TEST_001-checksums.json",
       "BATCH_TEST_001-manifest.csv",
-      "BATCH_TEST_001-print.pdf",
       "preview/00001.png",
       "svg/00001.svg",
     ]);

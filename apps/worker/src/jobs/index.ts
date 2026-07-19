@@ -22,6 +22,9 @@ export {
   type QrPrintExportContext,
   type QrPrintExportContextItem,
   QrPrintExportHandler,
+  QrPrintExportHandlerError,
+  type QrPrintExportHandlerErrorCode,
+  type QrPrintExportHandlerOptions,
   type QrPrintExportRepository,
 } from "./qr-print-export-handler.js";
 export {
