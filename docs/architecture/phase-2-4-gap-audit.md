@@ -14,7 +14,8 @@ Queue Worker, 입고·배정·CSV·교체·폐기까지 하나의 모듈 경계�
 
 - 새 migration 10개의 local reset 및 pgTAP 실행: Docker 부재
 - 새 migration의 staging 적용과 인증된 Phase 2–4 journey E2E: 아직 미실행
-- staging `pgmq` extension, `pgmq_public` API, `qr-generation` Queue 생성: 사용자 소유 설정
+- staging `pgmq`/`pgtap` extension, `pgmq_public` API, `qr-generation` Queue 생성:
+  2026-07-19 live read-only 확인 기준 미설치, 사용자 소유 설정
 - 실제 인쇄물·실기기 QR 판독과 키보드·스크린리더·계산 대비 수동 검수
 
 따라서 개발 진행 단계는 Phase 4에 도달했지만, Phase 2–4 release acceptance는 위
@@ -52,10 +53,15 @@ Queue Worker, 입고·배정·CSV·교체·폐기까지 하나의 모듈 경계�
 - immutable logo SHA-256: PASS
 - production build: PASS
 - Playwright local smoke: desktop/mobile 28 tests PASS
+- Supabase `taptolk-staging`: `ACTIVE_HEALTHY`, PostgreSQL 17
+- linked staging `db push --dry-run`: 새 migration 10개가 정확히 pending이며 원격 변경 없음
+- staging migration history: `20260719052000`까지 적용, `20260719060000`–`069000` 미적용
+- staging extension read: `pgmq`, `pgtap` 모두 available이지만 installed 상태는 아님
 
 `db:check`는 migration transaction boundary와 test contract 존재를 검증하지만 SQL을
-실제 PostgreSQL에 적용하지 않는다. 그러므로 local reset/pgTAP 및 staging E2E를
-대체하지 않는다.
+실제 PostgreSQL에 적용하지 않는다. Phase 2–4의 RLS, 비밀 테이블 차단, worker 전용
+RPC, 이력 보존 marker가 빠질 경우에는 실패하도록 강화했지만 local reset/pgTAP 및
+staging E2E를 대체하지 않는다.
 
 ## 4. Release acceptance 잔여 Gate
 
