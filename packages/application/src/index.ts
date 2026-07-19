@@ -15,6 +15,14 @@ export {
   assertAdminAuthorized,
 } from "./authorization-error.js";
 export {
+  type BrandAssetActor,
+  type BrandAssetCommandResult,
+  BrandAssetError,
+  type BrandAssetRepository,
+  BrandAssetService,
+  type CustomerBrandAssetType,
+} from "./brand-asset-service.js";
+export {
   MANAGEMENT_COMPANY_PAGE_SIZE,
   type ManagementCompanyCatalogItem,
   type ManagementCompanyCatalogPage,
@@ -30,6 +38,12 @@ export {
   type ManagementCompanyManagementRepository,
   ManagementCompanyManagementService,
 } from "./management-company-management-service.js";
+export {
+  type QrBatchProgressActor,
+  type QrBatchProgressItem,
+  type QrBatchProgressRepository,
+  QrBatchProgressService,
+} from "./qr-batch-progress-service.js";
 export {
   QR_GENERATION_JOB_STATUSES,
   QR_GENERATION_MAX_EXECUTION_ATTEMPTS,
@@ -86,6 +100,21 @@ export {
   QrGenerationDispatcherService,
 } from "./qr-generation-dispatcher-service.js";
 export {
+  type ProtectedVehiclePlate,
+  type QrInventoryAssignmentActor,
+  type QrInventoryAssignmentAssetItem,
+  type QrInventoryAssignmentBatchItem,
+  type QrInventoryAssignmentCommandResult,
+  QrInventoryAssignmentError,
+  type QrInventoryAssignmentReadModel,
+  type QrInventoryAssignmentRepository,
+  QrInventoryAssignmentService,
+  type ValidatedVehicleImportRow,
+  type VehicleImportItem,
+  type VehicleImportValidation,
+  type VehiclePlateProtector,
+} from "./qr-inventory-assignment-service.js";
+export {
   QR_ASSET_STATUSES,
   QR_BATCH_REQUEST_QUANTITY_MAX,
   QR_BATCH_REQUEST_QUANTITY_MIN,
@@ -99,6 +128,7 @@ export {
   type QrBatchSampleStatus,
   type QrBatchStatus,
   type QrInventoryActor,
+  type QrInventoryBrandAssetOption,
   type QrInventoryCommandResult,
   QrInventorySampleError,
   type QrInventorySampleReadModel,
@@ -107,9 +137,17 @@ export {
   type QrInventorySiteOption,
   type QrSampleMimeType,
   STICKER_DESIGN_STATUSES,
+  STICKER_TEMPLATE_CODES,
   type StickerDesignStatus,
   type StickerDesignVersionItem,
+  type StickerTemplateCode,
 } from "./qr-inventory-sample-service.js";
+export {
+  type QrSampleArtifact,
+  type QrSampleArtifactActor,
+  type QrSampleArtifactRepository,
+  QrSampleArtifactService,
+} from "./qr-sample-artifact-service.js";
 export {
   SITE_CATALOG_PAGE_SIZE,
   type SiteCatalogItem,

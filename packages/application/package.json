@@ -17,6 +17,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@taptolk/domain": "workspace:*"
+    "@taptolk/domain": "workspace:*",
+    "@taptolk/qr-engine": "workspace:*"
   }
 }

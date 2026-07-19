@@ -7,6 +7,7 @@ describe("environment contracts", () => {
     const environment = parseServerEnvironment({});
 
     expect(environment.APP_ENV).toBe("local");
+    expect(environment.APP_ENCRYPTION_KEY_VERSION).toBe(1);
     expect(environment.SMS_PROVIDER).toBe("mock");
     expect(environment.DATABASE_URL).toBeUndefined();
     expect(environment.QR_GENERATION_QUEUE_NAME).toBe("qr-generation");
@@ -14,6 +15,9 @@ describe("environment contracts", () => {
     expect(environment.QR_GENERATION_DISPATCH_LEASE_SECONDS).toBe(60);
     expect(environment.QR_GENERATION_DISPATCH_DURATION_BUDGET_MS).toBe(8_000);
     expect(environment.QR_GENERATION_QUEUE_SEND_TIMEOUT_MS).toBe(3_000);
+    expect(environment.QR_GENERATION_QUEUE_MAX_READ_COUNT).toBe(5);
+    expect(environment.QR_GENERATION_QUEUE_POLL_INTERVAL_MS).toBe(1_000);
+    expect(environment.QR_GENERATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS).toBe(3_600);
     expect(environment.QR_GENERATION_DELIVERY_RETRY_BASE_DELAY_MS).toBe(5_000);
     expect(environment.QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS).toBe(300_000);
     expect(environment.QR_GENERATION_DELIVERY_RETRY_JITTER_RATIO).toBe(0.2);
@@ -58,7 +62,10 @@ describe("environment contracts", () => {
       QR_GENERATION_DISPATCH_DURATION_BUDGET_MS: "5000",
       QR_GENERATION_DISPATCH_LEASE_SECONDS: "45",
       QR_GENERATION_QUEUE_NAME: "qr_generation_staging",
+      QR_GENERATION_QUEUE_MAX_READ_COUNT: "4",
+      QR_GENERATION_QUEUE_POLL_INTERVAL_MS: "750",
       QR_GENERATION_QUEUE_SEND_TIMEOUT_MS: "2500",
+      QR_GENERATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "7200",
     });
 
     expect(environment).toMatchObject({
@@ -69,7 +76,10 @@ describe("environment contracts", () => {
       QR_GENERATION_DISPATCH_DURATION_BUDGET_MS: 5_000,
       QR_GENERATION_DISPATCH_LEASE_SECONDS: 45,
       QR_GENERATION_QUEUE_NAME: "qr_generation_staging",
+      QR_GENERATION_QUEUE_MAX_READ_COUNT: 4,
+      QR_GENERATION_QUEUE_POLL_INTERVAL_MS: 750,
       QR_GENERATION_QUEUE_SEND_TIMEOUT_MS: 2_500,
+      QR_GENERATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS: 7_200,
     });
   });
 
@@ -78,7 +88,10 @@ describe("environment contracts", () => {
     { QR_GENERATION_DISPATCH_LEASE_SECONDS: "4" },
     { QR_GENERATION_DISPATCH_DURATION_BUDGET_MS: "999" },
     { QR_GENERATION_QUEUE_NAME: "QR Generation" },
+    { QR_GENERATION_QUEUE_MAX_READ_COUNT: "21" },
+    { QR_GENERATION_QUEUE_POLL_INTERVAL_MS: "249" },
     { QR_GENERATION_QUEUE_SEND_TIMEOUT_MS: "10001" },
+    { QR_GENERATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS: "59" },
     {
       QR_GENERATION_DISPATCH_DURATION_BUDGET_MS: "1000",
       QR_GENERATION_QUEUE_SEND_TIMEOUT_MS: "1001",

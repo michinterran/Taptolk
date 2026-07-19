@@ -49,7 +49,7 @@ function design(overrides: Partial<StickerDesignVersionItem> = {}): StickerDesig
     siteId: IDS.site,
     siteName: "Site",
     status: "DRAFT",
-    templateCode: "ROUND_85",
+    templateCode: "ROUND_WHITE_MINIMAL_V1",
     tenantId: IDS.tenant,
     version: 1,
     ...overrides,
@@ -94,7 +94,7 @@ describe("QrInventorySampleService", () => {
       expectedSiteVersion: 1,
       reason: "  New parking sticker  ",
       siteStatus: "ACTIVE",
-      templateCode: " round_85 ",
+      templateCode: " round_white_minimal_v1 ",
       ...scope,
     });
 
@@ -102,7 +102,7 @@ describe("QrInventorySampleService", () => {
       expect.objectContaining({
         designConfig: { layout: "round" },
         reason: "New parking sticker",
-        templateCode: "ROUND_85",
+        templateCode: "ROUND_WHITE_MINIMAL_V1",
       }),
     );
   });
@@ -119,7 +119,7 @@ describe("QrInventorySampleService", () => {
         expectedSiteVersion: 1,
         reason: "New parking sticker",
         siteStatus: "ACTIVE",
-        templateCode: "ROUND_85",
+        templateCode: "ROUND_WHITE_MINIMAL_V1",
         ...scope,
       }),
     ).rejects.toEqual(new QrInventorySampleError("INVALID_DESIGN_CONFIG"));
@@ -176,7 +176,7 @@ describe("QrInventorySampleService", () => {
         expectedSiteVersion: 1,
         idempotencyKey: IDS.batch,
         purpose: "Resident distribution",
-        quantity: 101,
+        quantity: 10_001,
         reason: "Initial sample review",
         siteStatus: "ACTIVE",
         stickerDesignVersionId: IDS.design,
@@ -264,7 +264,7 @@ describe("QrInventorySampleService", () => {
           siteName: "Site",
           status: "SAMPLE_READY",
           stickerDesignVersionId: IDS.design,
-          templateCode: "ROUND_85",
+          templateCode: "ROUND_WHITE_MINIMAL_V1",
           tenantId: IDS.tenant,
           version: 2,
         },

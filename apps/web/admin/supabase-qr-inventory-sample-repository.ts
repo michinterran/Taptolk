@@ -5,6 +5,7 @@ import type {
   QrBatchSampleItem,
   QrBatchSampleStatus,
   QrBatchStatus,
+  QrInventoryBrandAssetOption,
   QrInventoryCommandResult,
   QrInventorySampleRepository,
   QrInventorySiteOption,
@@ -220,6 +221,31 @@ function mapSite(row: unknown): QrInventorySiteOption {
   };
 }
 
+function mapBrandAsset(row: unknown): QrInventoryBrandAssetOption {
+  if (!row || typeof row !== "object" || Array.isArray(row)) {
+    throw new QrInventorySampleRepositoryError("UNAVAILABLE");
+  }
+  const candidate = row as Record<string, unknown>;
+  if (
+    typeof candidate.id !== "string" ||
+    typeof candidate.tenant_id !== "string" ||
+    typeof candidate.management_company_id !== "string" ||
+    typeof candidate.site_id !== "string" ||
+    typeof candidate.name !== "string" ||
+    (candidate.mime_type !== "image/png" && candidate.mime_type !== "image/svg+xml")
+  ) {
+    throw new QrInventorySampleRepositoryError("UNAVAILABLE");
+  }
+  return {
+    id: candidate.id,
+    managementCompanyId: candidate.management_company_id,
+    mimeType: candidate.mime_type,
+    name: candidate.name,
+    siteId: candidate.site_id,
+    tenantId: candidate.tenant_id,
+  };
+}
+
 function readCommandResult(value: unknown): QrInventoryCommandResult | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -398,7 +424,7 @@ export function createSupabaseQrInventorySampleRepository(
       );
     },
     async list() {
-      const [inventoryResult, siteResult] = await Promise.all([
+      const [inventoryResult, siteResult, brandAssetResult] = await Promise.all([
         client.rpc("list_qr_inventory_sample_read_model"),
         client
           .from("sites")
@@ -409,8 +435,18 @@ export function createSupabaseQrInventorySampleRepository(
           .order("name", { ascending: true })
           .order("id", { ascending: true })
           .limit(100),
+        client
+          .from("brand_assets")
+          .select("id, tenant_id, management_company_id, site_id, name, mime_type")
+          .eq("asset_type", "SITE_LOGO")
+          .eq("status", "ACTIVE")
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: true })
+          .limit(100),
       ]);
-      const failed = [inventoryResult.error, siteResult.error].find(Boolean);
+      const failed = [inventoryResult.error, siteResult.error, brandAssetResult.error].find(
+        Boolean,
+      );
       if (failed) {
         logger.error("admin.qr_inventory.query_failed", { errorCode: failed.code });
         throw new QrInventorySampleRepositoryError("UNAVAILABLE");
@@ -418,6 +454,7 @@ export function createSupabaseQrInventorySampleRepository(
       const inventory = readInventoryResult(inventoryResult.data);
       return {
         batches: inventory.batches,
+        brandAssets: (brandAssetResult.data ?? []).map(mapBrandAsset),
         designs: inventory.designs,
         sites: (siteResult.data ?? []).map(mapSite),
       };

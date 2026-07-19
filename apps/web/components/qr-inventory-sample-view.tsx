@@ -1,13 +1,15 @@
-import type {
-  QrBatchItem,
-  QrBatchStatus,
-  QrFinalApprovalBatchItem,
-  QrFinalGenerationApprovalReadModel,
-  QrInventorySampleReadModel,
-  StickerDesignStatus,
-  StickerDesignVersionItem,
+import {
+  type QrBatchItem,
+  type QrBatchStatus,
+  type QrFinalApprovalBatchItem,
+  type QrFinalGenerationApprovalReadModel,
+  type QrInventorySampleReadModel,
+  STICKER_TEMPLATE_CODES,
+  type StickerDesignStatus,
+  type StickerDesignVersionItem,
 } from "@taptolk/application";
 import { SemanticHeading } from "@taptolk/ui";
+import Image from "next/image";
 import {
   approveQrBatchFinalGeneration,
   cancelQrBatchBeforeGenerationApproval,
@@ -17,9 +19,9 @@ import {
   approveQrBatchSample,
   approveStickerDesignVersion,
   archiveStickerDesignVersion,
-  attachQrBatchSample,
   cancelQrBatch,
   createStickerDesignVersion,
+  generateQrBatchSample,
   invalidateQrBatchSample,
   requestQrBatch,
 } from "../admin/qr-inventory-sample-actions";
@@ -53,6 +55,8 @@ interface QrInventoryCopy {
   designApproveDescription: string;
   designApproveTitle: string;
   designConfig: string;
+  designLogo: string;
+  designLogoNone: string;
   designCreate: string;
   designCreateDescription: string;
   designCreateTitle: string;
@@ -85,6 +89,9 @@ interface QrInventoryCopy {
   sampleAttach: string;
   sampleAttachDescription: string;
   sampleReady: string;
+  samplePreviewAlt: string;
+  samplePreviewDesktop: string;
+  samplePreviewMobile: string;
   sampleStatus: string;
   securityNote: string;
   signOut: string;
@@ -375,73 +382,47 @@ function BatchCard({
           </dd>
         </div>
       </dl>
+      {batch.sample ? (
+        <div className="admin-qr-preview-grid">
+          <figure className="admin-qr-preview admin-qr-preview--desktop">
+            <figcaption>{copy.samplePreviewDesktop}</figcaption>
+            <Image
+              alt={`${batch.siteName} · ${copy.samplePreviewAlt}`}
+              height={300}
+              loading="lazy"
+              src={`/api/admin/qr-samples/${batch.sample.id}`}
+              unoptimized
+              width={300}
+            />
+          </figure>
+          <figure className="admin-qr-preview admin-qr-preview--mobile">
+            <figcaption>{copy.samplePreviewMobile}</figcaption>
+            <Image
+              alt={`${batch.siteName} · ${copy.samplePreviewAlt}`}
+              height={300}
+              loading="lazy"
+              src={`/api/admin/qr-samples/${batch.sample.id}`}
+              unoptimized
+              width={300}
+            />
+          </figure>
+        </div>
+      ) : null}
       <div className="admin-approval-form">
         <p className="admin-catalog-read-only">{waiting}</p>
       </div>
       {canAttach ? (
         <details className="admin-rejection-panel">
           <summary>{copy.sampleAttach}</summary>
-          <form action={attachQrBatchSample} className="admin-rejection-form">
+          <form action={generateQrBatchSample} className="admin-rejection-form">
             <BatchFields batch={batch} copy={copy} locale={locale} />
-            <div className="admin-approval-field-grid">
-              <label className="admin-field" htmlFor={`bucket-${batch.id}`}>
-                <span>{copy.storageBucket}</span>
-                <input id={`bucket-${batch.id}`} name="storageBucket" required />
-              </label>
-              <label className="admin-field" htmlFor={`path-${batch.id}`}>
-                <span>{copy.storagePath}</span>
-                <input id={`path-${batch.id}`} maxLength={500} name="storagePath" required />
-              </label>
-              <label className="admin-field" htmlFor={`checksum-${batch.id}`}>
-                <span>{copy.checksum}</span>
-                <input
-                  id={`checksum-${batch.id}`}
-                  maxLength={64}
-                  minLength={64}
-                  name="checksumSha256"
-                  required
-                />
-              </label>
-              <label className="admin-field" htmlFor={`mime-${batch.id}`}>
-                <span>{copy.mimeType}</span>
-                <select id={`mime-${batch.id}`} name="mimeType">
-                  <option value="image/png">image/png</option>
-                  <option value="image/svg+xml">image/svg+xml</option>
-                  <option value="application/pdf">application/pdf</option>
-                </select>
-              </label>
-              <label className="admin-field" htmlFor={`bytes-${batch.id}`}>
-                <span>{copy.byteSize}</span>
-                <input
-                  id={`bytes-${batch.id}`}
-                  max={20_000_000}
-                  min={1}
-                  name="byteSize"
-                  required
-                  type="number"
-                />
-              </label>
-            </div>
-            <fieldset className="admin-approval-form">
-              <legend>{copy.qaEvidence}</legend>
-              <label>
-                <input aria-label={copy.decode} name="decodePassed" required type="checkbox" />{" "}
-                {copy.decode}
-              </label>
-              <label>
-                <input
-                  aria-label={copy.quietZone}
-                  name="quietZonePassed"
-                  required
-                  type="checkbox"
-                />{" "}
-                {copy.quietZone}
-              </label>
-              <label>
-                <input aria-label={copy.contrast} name="contrastPassed" required type="checkbox" />{" "}
-                {copy.contrast}
-              </label>
-            </fieldset>
+            <input
+              aria-label={copy.templateCode}
+              name="templateCode"
+              type="hidden"
+              value={batch.templateCode}
+            />
+            <p className="admin-catalog-read-only">{copy.sampleAttachDescription}</p>
             <ReasonField copy={copy} id={`sample-attach-reason-${batch.id}`} />
             <button className="tt-button" type="submit">
               {copy.sampleAttach}
@@ -631,19 +612,30 @@ export function QrInventorySampleView({
                 </label>
                 <label className="admin-field" htmlFor="design-template">
                   <span>{copy.templateCode}</span>
-                  <input id="design-template" maxLength={64} name="templateCode" required />
+                  <select id="design-template" name="templateCode" required>
+                    {STICKER_TEMPLATE_CODES.map((templateCode) => (
+                      <option key={templateCode} value={templateCode}>
+                        {templateCode}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="admin-field" htmlFor="design-brand-asset">
+                  <span>{copy.designLogo}</span>
+                  <select id="design-brand-asset" name="brandAssetId">
+                    <option value="">{copy.designLogoNone}</option>
+                    {model.brandAssetOptions.map((asset) => (
+                      <option
+                        key={asset.id}
+                        value={`${asset.tenantId}|${asset.managementCompanyId}|${asset.siteId}|${asset.id}`}
+                      >
+                        {asset.name} · {asset.mimeType}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
-              <label className="admin-field" htmlFor="design-config">
-                <span>{copy.designConfig}</span>
-                <textarea
-                  defaultValue={'{"layout":"round-85","qrQuietZone":4}'}
-                  id="design-config"
-                  maxLength={20_000}
-                  name="designConfig"
-                  required
-                />
-              </label>
+              <p className="admin-catalog-read-only">{copy.designConfig}</p>
               <ReasonField copy={copy} id="design-create-reason" />
               <button className="tt-button" type="submit">
                 {copy.designCreate}
@@ -780,7 +772,7 @@ export function QrInventorySampleView({
                           <span>{copy.batchQuantity}</span>
                           <input
                             id={`quantity-${design.id}`}
-                            max={100}
+                            max={10_000}
                             min={1}
                             name="quantity"
                             required

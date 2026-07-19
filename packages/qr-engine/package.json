@@ -1,0 +1,29 @@
+{
+  "name": "@taptolk/qr-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "fflate": "0.8.2",
+    "jsqr": "1.4.0",
+    "pdf-lib": "1.17.1",
+    "qrcode": "1.5.4",
+    "sharp": "0.34.5"
+  },
+  "devDependencies": {
+    "@types/qrcode": "1.5.6"
+  }
+}

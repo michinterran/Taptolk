@@ -11,6 +11,7 @@ import {
 const serverEnvironmentSchema = z
   .object({
     APP_ENCRYPTION_KEY_V1: optionalSecretSchema,
+    APP_ENCRYPTION_KEY_VERSION: integerEnvironmentSchema(1, 1, 100),
     APP_ENV: appEnvironmentSchema.default("local"),
     APP_TIMEZONE: z.string().min(1).default("Asia/Seoul"),
     APP_URL: optionalUrlSchema,
@@ -40,7 +41,10 @@ const serverEnvironmentSchema = z
         .regex(/^[a-z0-9](?:[a-z0-9_-]{0,62})$/u)
         .default("qr-generation"),
     ),
+    QR_GENERATION_QUEUE_MAX_READ_COUNT: integerEnvironmentSchema(5, 1, 20),
+    QR_GENERATION_QUEUE_POLL_INTERVAL_MS: integerEnvironmentSchema(1_000, 250, 60_000),
     QR_GENERATION_QUEUE_SEND_TIMEOUT_MS: integerEnvironmentSchema(3_000, 250, 10_000),
+    QR_GENERATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS: integerEnvironmentSchema(3_600, 60, 86_400),
     QUEUE_WORKER_SECRET: optionalSecretSchema,
     RESPONSE_TOKEN_TTL_MINUTES: integerEnvironmentSchema(60),
     SENTRY_AUTH_TOKEN: optionalSecretSchema,
@@ -99,6 +103,7 @@ const serverEnvironmentSchema = z
       "DIRECT_DATABASE_URL",
       "OWNER_RESPONSE_BASE_URL",
       "PUBLIC_QR_BASE_URL",
+      "QR_GENERATION_QUEUE_NAME",
       "QUEUE_WORKER_SECRET",
       "SUPABASE_SECRET_KEY",
       "TOKEN_HMAC_KEY",

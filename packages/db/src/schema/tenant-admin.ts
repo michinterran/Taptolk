@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   date,
@@ -7,6 +8,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgSchema,
   pgTable,
@@ -139,6 +141,61 @@ export const qrGenerationJobStatus = pgEnum("qr_generation_job_status", [
   "FAILED",
   "ABORTED",
   "PARTIALLY_COMPLETED",
+]);
+export const brandAssetType = pgEnum("brand_asset_type", [
+  "MANAGEMENT_COMPANY_LOGO",
+  "SITE_LOGO",
+  "TAPTOLK_LOGO",
+  "BACKGROUND_TEMPLATE",
+  "DECORATION",
+]);
+export const brandAssetStatus = pgEnum("brand_asset_status", [
+  "UPLOADING",
+  "ACTIVE",
+  "REJECTED",
+  "ARCHIVED",
+]);
+export const stickerTemplateStatus = pgEnum("sticker_template_status", ["ACTIVE", "ARCHIVED"]);
+export const qrActivationCodeStatus = pgEnum("qr_activation_code_status", [
+  "ISSUED",
+  "USED",
+  "REVOKED",
+  "EXPIRED",
+]);
+export const renderJobType = pgEnum("render_job_type", ["SAMPLE", "BATCH", "RETRY"]);
+export const renderJobStatus = pgEnum("render_job_status", [
+  "QUEUED",
+  "PROCESSING",
+  "RENDERED",
+  "QUALITY_CHECKED",
+  "EXPORTED",
+  "COMPLETED",
+  "FAILED_RETRYABLE",
+  "FAILED_FINAL",
+  "CANCELLED",
+]);
+export const renderQualityStatus = pgEnum("render_quality_status", ["PENDING", "PASSED", "FAILED"]);
+export const printExportType = pgEnum("print_export_type", ["PDF", "CSV", "ZIP", "MANIFEST"]);
+export const printExportStatus = pgEnum("print_export_status", ["PENDING", "READY", "FAILED"]);
+export const inventoryTransactionType = pgEnum("inventory_transaction_type", [
+  "RECEIVE",
+  "ASSIGN",
+  "RETURN",
+  "DAMAGE",
+  "REPLACE",
+  "REVOKE",
+]);
+export const qrAssignmentMethod = pgEnum("qr_assignment_method", [
+  "MANUAL",
+  "CSV_IMPORT",
+  "OWNER_ACTIVATION",
+  "REPLACEMENT",
+]);
+export const vehicleImportStatus = pgEnum("vehicle_import_status", [
+  "VALIDATED",
+  "COMMITTED",
+  "REJECTED",
+  "EXPIRED",
 ]);
 
 function commonColumns() {
@@ -470,6 +527,83 @@ export const siteLifecycleRequests = pgTable(
   ],
 );
 
+export const brandAssets = pgTable(
+  "brand_assets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id"),
+    siteId: uuid("site_id"),
+    assetType: brandAssetType("asset_type").notNull(),
+    name: text("name").notNull(),
+    storageBucket: text("storage_bucket").notNull(),
+    storagePath: text("storage_path").notNull(),
+    mimeType: text("mime_type").notNull(),
+    widthPx: integer("width_px"),
+    heightPx: integer("height_px"),
+    byteSize: integer("byte_size").notNull(),
+    checksumSha256: text("checksum_sha256").notNull(),
+    backgroundVariant: text("background_variant"),
+    isDefault: boolean("is_default").default(false).notNull(),
+    status: brandAssetStatus("status").default("UPLOADING").notNull(),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    completedAt: timestamp("completed_at", { mode: "date", withTimezone: true }),
+    archivedAt: timestamp("archived_at", { mode: "date", withTimezone: true }),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId],
+      foreignColumns: [tenants.id],
+      name: "fk_brand_assets_tenant",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId],
+      foreignColumns: [managementCompanies.tenantId, managementCompanies.id],
+      name: "fk_brand_assets_management_company",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId],
+      foreignColumns: [sites.tenantId, sites.managementCompanyId, sites.id],
+      name: "fk_brand_assets_site",
+    }).onDelete("restrict"),
+    unique("uq_brand_assets_tenant_id").on(table.tenantId, table.id),
+    index("idx_brand_assets_tenant_status_created").on(
+      table.tenantId,
+      table.status,
+      table.createdAt,
+    ),
+    index("idx_brand_assets_site_type_status").on(table.siteId, table.assetType, table.status),
+    check("chk_brand_assets_checksum", sql`${table.checksumSha256} ~ '^[0-9a-f]{64}$'`),
+    check("chk_brand_assets_byte_size", sql`${table.byteSize} between 1 and 5000000`),
+  ],
+);
+
+export const stickerTemplates = pgTable(
+  "sticker_templates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    templateCode: text("template_code").notNull().unique(),
+    name: text("name").notNull(),
+    shape: text("shape").notNull(),
+    widthMm: numeric("width_mm", { precision: 8, scale: 2 }).notNull(),
+    heightMm: numeric("height_mm", { precision: 8, scale: 2 }).notNull(),
+    dpi: integer("dpi").notNull(),
+    layoutSchema: jsonb("layout_schema").notNull(),
+    materialCode: text("material_code"),
+    version: integer("version").notNull(),
+    status: stickerTemplateStatus("status").default("ACTIVE").notNull(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check("chk_sticker_templates_code", sql`${table.templateCode} ~ '^[A-Z0-9][A-Z0-9_]{1,63}$'`),
+    check("chk_sticker_templates_shape", sql`${table.shape} in ('CIRCLE', 'SQUARE')`),
+    check("chk_sticker_templates_dpi", sql`${table.dpi} between 72 and 1200`),
+  ],
+);
+
 export const stickerDesignVersions = pgTable(
   "sticker_design_versions",
   {
@@ -478,6 +612,11 @@ export const stickerDesignVersions = pgTable(
     managementCompanyId: uuid("management_company_id").notNull(),
     siteId: uuid("site_id").notNull(),
     templateCode: text("template_code").notNull(),
+    templateId: uuid("template_id").references(() => stickerTemplates.id, {
+      onDelete: "restrict",
+    }),
+    customerLogoAssetId: uuid("customer_logo_asset_id"),
+    taptolkLogoAssetId: uuid("taptolk_logo_asset_id"),
     designConfig: jsonb("design_config").notNull(),
     status: stickerDesignStatus("status").default("DRAFT").notNull(),
     createdBy: uuid("created_by")
@@ -494,6 +633,16 @@ export const stickerDesignVersions = pgTable(
       columns: [table.tenantId, table.managementCompanyId, table.siteId],
       foreignColumns: [sites.tenantId, sites.managementCompanyId, sites.id],
       name: "fk_sticker_design_versions_site",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.customerLogoAssetId],
+      foreignColumns: [brandAssets.tenantId, brandAssets.id],
+      name: "fk_sticker_design_versions_customer_logo",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.taptolkLogoAssetId],
+      foreignColumns: [brandAssets.tenantId, brandAssets.id],
+      name: "fk_sticker_design_versions_taptolk_logo",
     }).onDelete("restrict"),
     unique("uq_sticker_design_versions_scope_id").on(
       table.tenantId,
@@ -593,7 +742,7 @@ export const qrBatches = pgTable(
     unique("uq_qr_batches_batch_code").on(table.batchCode),
     index("idx_qr_batches_tenant_status_created").on(table.tenantId, table.status, table.createdAt),
     index("idx_qr_batches_site_status_created").on(table.siteId, table.status, table.createdAt),
-    check("chk_qr_batches_requested_quantity", sql`${table.requestedQuantity} between 1 and 100`),
+    check("chk_qr_batches_requested_quantity", sql`${table.requestedQuantity} between 1 and 10000`),
     check("chk_qr_batches_purpose", sql`length(trim(${table.purpose})) between 3 and 200`),
   ],
 );
@@ -875,6 +1024,349 @@ export const qrAssetStatusLogs = pgTable(
       "chk_qr_asset_status_logs_reason_code",
       sql`${table.reasonCode} ~ '^[A-Z0-9][A-Z0-9_]{1,63}$'`,
     ),
+  ],
+);
+
+export const qrActivationCodes = pgTable(
+  "qr_activation_codes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    codeHash: text("code_hash").notNull().unique(),
+    codeCiphertext: text("code_ciphertext").notNull(),
+    keyVersion: integer("key_version").notNull(),
+    status: qrActivationCodeStatus("status").default("ISSUED").notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }),
+    usedAt: timestamp("used_at", { mode: "date", withTimezone: true }),
+    usedByOwnerId: uuid("used_by_owner_id"),
+    revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_qr_activation_codes_asset",
+    }).onDelete("restrict"),
+    unique("uq_qr_activation_codes_tenant_id").on(table.tenantId, table.id),
+    unique("uq_qr_activation_codes_asset").on(table.qrAssetId),
+    check("chk_qr_activation_codes_hash", sql`${table.codeHash} ~ '^[0-9a-f]{64}$'`),
+  ],
+);
+
+export const renderJobs = pgTable(
+  "render_jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrBatchId: uuid("qr_batch_id").notNull(),
+    stickerDesignVersionId: uuid("sticker_design_version_id").notNull(),
+    jobType: renderJobType("job_type").notNull(),
+    renderRevision: integer("render_revision").default(1).notNull(),
+    requestedCount: integer("requested_count").notNull(),
+    processedCount: integer("processed_count").default(0).notNull(),
+    passedCount: integer("passed_count").default(0).notNull(),
+    failedCount: integer("failed_count").default(0).notNull(),
+    status: renderJobStatus("status").default("QUEUED").notNull(),
+    queueMessageId: text("queue_message_id"),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    startedAt: timestamp("started_at", { mode: "date", withTimezone: true }),
+    completedAt: timestamp("completed_at", { mode: "date", withTimezone: true }),
+    errorSummary: jsonb("error_summary"),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrBatchId],
+      foreignColumns: [qrBatches.tenantId, qrBatches.siteId, qrBatches.id],
+      name: "fk_render_jobs_batch",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.stickerDesignVersionId],
+      foreignColumns: [
+        stickerDesignVersions.tenantId,
+        stickerDesignVersions.siteId,
+        stickerDesignVersions.id,
+      ],
+      name: "fk_render_jobs_design",
+    }).onDelete("restrict"),
+    unique("uq_render_jobs_tenant_id").on(table.tenantId, table.id),
+    unique("uq_render_jobs_idempotency").on(table.tenantId, table.idempotencyKey),
+    unique("uq_render_jobs_revision").on(
+      table.tenantId,
+      table.qrBatchId,
+      table.stickerDesignVersionId,
+      table.jobType,
+      table.renderRevision,
+    ),
+  ],
+);
+
+export const renderedAssets = pgTable(
+  "rendered_assets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    stickerDesignVersionId: uuid("sticker_design_version_id").notNull(),
+    renderVersion: integer("render_version").notNull(),
+    previewPngPath: text("preview_png_path").notNull(),
+    printSvgPath: text("print_svg_path").notNull(),
+    checksumSha256: text("checksum_sha256").notNull(),
+    qualityStatus: renderQualityStatus("quality_status").default("PENDING").notNull(),
+    decodedPublicTokenHash: text("decoded_public_token_hash"),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_rendered_assets_qr",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.stickerDesignVersionId],
+      foreignColumns: [
+        stickerDesignVersions.tenantId,
+        stickerDesignVersions.siteId,
+        stickerDesignVersions.id,
+      ],
+      name: "fk_rendered_assets_design",
+    }).onDelete("restrict"),
+    unique("uq_rendered_assets_version").on(
+      table.qrAssetId,
+      table.stickerDesignVersionId,
+      table.renderVersion,
+    ),
+    check("chk_rendered_assets_checksum", sql`${table.checksumSha256} ~ '^[0-9a-f]{64}$'`),
+  ],
+);
+
+export const printExports = pgTable(
+  "print_exports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrBatchId: uuid("qr_batch_id").notNull(),
+    exportType: printExportType("export_type").notNull(),
+    exportRevision: integer("export_revision").default(1).notNull(),
+    storagePath: text("storage_path"),
+    checksumSha256: text("checksum_sha256"),
+    byteSize: bigint("byte_size", { mode: "number" }),
+    status: printExportStatus("status").default("PENDING").notNull(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { mode: "date", withTimezone: true }),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrBatchId],
+      foreignColumns: [qrBatches.tenantId, qrBatches.siteId, qrBatches.id],
+      name: "fk_print_exports_batch",
+    }).onDelete("restrict"),
+    unique("uq_print_exports_revision").on(table.qrBatchId, table.exportType, table.exportRevision),
+  ],
+);
+
+export const vehicles = pgTable(
+  "vehicles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    plateLookupHash: text("plate_lookup_hash").notNull(),
+    plateCiphertext: text("plate_ciphertext").notNull(),
+    plateKeyVersion: integer("plate_key_version").notNull(),
+    plateLast4: text("plate_last4").notNull(),
+    status: text("status").default("PREASSIGNED").notNull(),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId],
+      foreignColumns: [sites.tenantId, sites.id],
+      name: "fk_vehicles_site",
+    }).onDelete("restrict"),
+    unique("uq_vehicles_tenant_id").on(table.tenantId, table.id),
+    unique("uq_vehicles_tenant_site_id").on(table.tenantId, table.siteId, table.id),
+    unique("uq_vehicles_site_plate_hash").on(table.siteId, table.plateLookupHash),
+    check("chk_vehicles_plate_hash", sql`${table.plateLookupHash} ~ '^[0-9a-f]{64}$'`),
+  ],
+);
+
+export const qrBindings = pgTable(
+  "qr_bindings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    vehicleId: uuid("vehicle_id").notNull(),
+    ownerId: uuid("owner_id"),
+    assignmentMethod: qrAssignmentMethod("assignment_method").notNull(),
+    startedAt: timestamp("started_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    endedAt: timestamp("ended_at", { mode: "date", withTimezone: true }),
+    endedReason: text("ended_reason"),
+    isPrimary: boolean("is_primary").default(true).notNull(),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_qr_bindings_asset",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.vehicleId],
+      foreignColumns: [vehicles.tenantId, vehicles.siteId, vehicles.id],
+      name: "fk_qr_bindings_vehicle",
+    }).onDelete("restrict"),
+    unique("uq_qr_bindings_tenant_id").on(table.tenantId, table.id),
+    uniqueIndex("uq_qr_active_binding").on(table.qrAssetId).where(sql`${table.endedAt} is null`),
+    uniqueIndex("uq_vehicle_primary_active_qr")
+      .on(table.vehicleId)
+      .where(sql`${table.endedAt} is null and ${table.isPrimary} = true`),
+  ],
+);
+
+export const inventoryTransactions = pgTable(
+  "inventory_transactions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrBatchId: uuid("qr_batch_id").notNull(),
+    qrAssetId: uuid("qr_asset_id"),
+    transactionType: inventoryTransactionType("transaction_type").notNull(),
+    quantity: integer("quantity").notNull(),
+    referenceType: text("reference_type").notNull(),
+    referenceId: uuid("reference_id").notNull(),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrBatchId],
+      foreignColumns: [qrBatches.tenantId, qrBatches.siteId, qrBatches.id],
+      name: "fk_inventory_transactions_batch",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_inventory_transactions_asset",
+    }).onDelete("restrict"),
+    check("chk_inventory_transactions_quantity", sql`${table.quantity} > 0`),
+  ],
+);
+
+export const vehicleImports = pgTable(
+  "vehicle_imports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    sourceChecksumSha256: text("source_checksum_sha256").notNull(),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    rowCount: integer("row_count").notNull(),
+    validRowCount: integer("valid_row_count").notNull(),
+    invalidRowCount: integer("invalid_row_count").notNull(),
+    status: vehicleImportStatus("status").default("VALIDATED").notNull(),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    committedAt: timestamp("committed_at", { mode: "date", withTimezone: true }),
+    originalDeletedAt: timestamp("original_deleted_at", {
+      mode: "date",
+      withTimezone: true,
+    }).notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }).notNull(),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId],
+      foreignColumns: [sites.tenantId, sites.id],
+      name: "fk_vehicle_imports_site",
+    }).onDelete("restrict"),
+    unique("uq_vehicle_imports_tenant_id").on(table.tenantId, table.id),
+    unique("uq_vehicle_imports_idempotency").on(table.tenantId, table.idempotencyKey),
+    unique("uq_vehicle_imports_checksum").on(
+      table.tenantId,
+      table.siteId,
+      table.sourceChecksumSha256,
+    ),
+  ],
+);
+
+export const vehicleImportRows = pgTable(
+  "vehicle_import_rows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    importId: uuid("import_id").notNull(),
+    rowNumber: integer("row_number").notNull(),
+    plateLookupHash: text("plate_lookup_hash"),
+    plateCiphertext: text("plate_ciphertext"),
+    plateKeyVersion: integer("plate_key_version"),
+    plateLast4: text("plate_last4"),
+    qrAssetId: uuid("qr_asset_id"),
+    validationCode: text("validation_code"),
+    committedBindingId: uuid("committed_binding_id"),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.importId],
+      foreignColumns: [vehicleImports.tenantId, vehicleImports.id],
+      name: "fk_vehicle_import_rows_import",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_vehicle_import_rows_asset",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.committedBindingId],
+      foreignColumns: [qrBindings.tenantId, qrBindings.id],
+      name: "fk_vehicle_import_rows_binding",
+    }).onDelete("restrict"),
+    unique("uq_vehicle_import_rows_number").on(table.importId, table.rowNumber),
+  ],
+);
+
+export const qrGenerationItems = pgTable(
+  "qr_generation_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    generationJobId: uuid("generation_job_id").notNull(),
+    ordinal: integer("ordinal").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.generationJobId],
+      foreignColumns: [qrGenerationJobs.tenantId, qrGenerationJobs.id],
+      name: "fk_qr_generation_items_job",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_qr_generation_items_asset",
+    }).onDelete("restrict"),
+    unique("uq_qr_generation_items_ordinal").on(table.generationJobId, table.ordinal),
+    unique("uq_qr_generation_items_asset").on(table.generationJobId, table.qrAssetId),
   ],
 );
 

@@ -10,6 +10,14 @@ import type { OrganizationStatus } from "./management-company-catalog-service.js
 export const STICKER_DESIGN_STATUSES = ["DRAFT", "APPROVED", "ARCHIVED"] as const;
 export type StickerDesignStatus = (typeof STICKER_DESIGN_STATUSES)[number];
 
+export const STICKER_TEMPLATE_CODES = [
+  "ROUND_BLUE_HOLOGRAM_V1",
+  "ROUND_PURPLE_GRADIENT_V1",
+  "ROUND_WHITE_MINIMAL_V1",
+  "SQUARE_DARK_PREMIUM_V1",
+] as const;
+export type StickerTemplateCode = (typeof STICKER_TEMPLATE_CODES)[number];
+
 export const QR_BATCH_STATUSES = [
   "DRAFT",
   "SAMPLE_RENDERING",
@@ -55,7 +63,7 @@ export const QR_ASSET_STATUSES = [
 export type QrAssetStatus = (typeof QR_ASSET_STATUSES)[number];
 
 export const QR_BATCH_REQUEST_QUANTITY_MIN = 1;
-export const QR_BATCH_REQUEST_QUANTITY_MAX = 100;
+export const QR_BATCH_REQUEST_QUANTITY_MAX = 10_000;
 export const QR_SAMPLE_BYTE_SIZE_MAX = 20_000_000;
 export const QR_SAMPLE_MIME_TYPES = ["image/png", "image/svg+xml", "application/pdf"] as const;
 export type QrSampleMimeType = (typeof QR_SAMPLE_MIME_TYPES)[number];
@@ -74,6 +82,15 @@ export interface QrInventorySiteOption {
   tenantId: string;
   tenantName: string;
   version: number;
+}
+
+export interface QrInventoryBrandAssetOption {
+  id: string;
+  managementCompanyId: string;
+  mimeType: "image/png" | "image/svg+xml";
+  name: string;
+  siteId: string;
+  tenantId: string;
 }
 
 export interface StickerDesignVersionItem {
@@ -124,6 +141,7 @@ export interface QrBatchItem {
 export interface QrInventorySampleReadModel {
   approvedDesignOptions: readonly StickerDesignVersionItem[];
   batches: readonly QrBatchItem[];
+  brandAssetOptions: readonly QrInventoryBrandAssetOption[];
   cancellableBatchIds: ReadonlySet<string>;
   designApprovalQueue: readonly StickerDesignVersionItem[];
   designs: readonly StickerDesignVersionItem[];
@@ -197,6 +215,7 @@ export interface QrInventorySampleRepository {
   }): Promise<QrInventoryCommandResult>;
   list(): Promise<{
     batches: readonly QrBatchItem[];
+    brandAssets?: readonly QrInventoryBrandAssetOption[];
     designs: readonly StickerDesignVersionItem[];
     sites: readonly QrInventorySiteOption[];
   }>;
@@ -279,7 +298,10 @@ function normalizePurpose(value: string): string {
 
 function normalizeTemplateCode(value: string): string {
   const normalized = value.trim().toUpperCase();
-  if (!TEMPLATE_CODE_PATTERN.test(normalized)) {
+  if (
+    !TEMPLATE_CODE_PATTERN.test(normalized) ||
+    !STICKER_TEMPLATE_CODES.some((templateCode) => templateCode === normalized)
+  ) {
     throw new QrInventorySampleError("INVALID_TEMPLATE_CODE");
   }
   return normalized;
@@ -406,6 +428,7 @@ export class QrInventorySampleService {
     return {
       approvedDesignOptions: result.designs.filter((design) => design.status === "APPROVED"),
       batches: result.batches,
+      brandAssetOptions: result.brandAssets ?? [],
       cancellableBatchIds: new Set(
         result.batches
           .filter(

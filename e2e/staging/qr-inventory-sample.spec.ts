@@ -182,10 +182,9 @@ test.describe
         .evaluate((option, value) => {
           (option as HTMLOptionElement).value = value;
         }, `${fixture.tenantBId}|${fixture.companyBId}|${fixture.sites.tenantB.id}|1|ACTIVE`);
-      await createForm.locator('input[name="templateCode"]').fill("ROUND_85");
       await createForm
-        .locator('textarea[name="designConfig"]')
-        .fill('{"layout":"round-85","qrQuietZone":4}');
+        .locator('select[name="templateCode"]')
+        .selectOption("ROUND_WHITE_MINIMAL_V1");
       await createForm
         .locator('textarea[name="reason"]')
         .fill("Authenticated staging cross tenant denial");
@@ -201,10 +200,7 @@ test.describe
         .selectOption(
           `${fixture.tenantAId}|${fixture.companyAId}|${fixture.sites.companyAFirst.id}|1|ACTIVE`,
         );
-      await validForm.locator('input[name="templateCode"]').fill("ROUND_85");
-      await validForm
-        .locator('textarea[name="designConfig"]')
-        .fill('{"layout":"round-85","qrQuietZone":4}');
+      await validForm.locator('select[name="templateCode"]').selectOption("ROUND_WHITE_MINIMAL_V1");
       await validForm
         .locator('textarea[name="reason"]')
         .fill("Authenticated staging Design creation");
@@ -315,20 +311,11 @@ test.describe
       const attachForm = batchCard.locator("form").filter({
         has: page.getByRole("button", { name: "Attach sample artifact" }),
       });
-      await attachForm.locator('input[name="storageBucket"]').fill("qr-samples");
-      await attachForm
-        .locator('input[name="storagePath"]')
-        .fill(`${fixture.tenantAId}/${fixture.sites.companyAFirst.id}/sample.png`);
-      await attachForm.locator('input[name="checksumSha256"]').fill("a".repeat(64));
-      await attachForm.locator('input[name="byteSize"]').fill("2048");
-      await attachForm.locator('input[name="decodePassed"]').check();
-      await attachForm.locator('input[name="quietZonePassed"]').check();
-      await attachForm.locator('input[name="contrastPassed"]').check();
       await attachForm
         .locator('textarea[name="reason"]')
         .fill("Authenticated staging sample attachment");
       await attachForm.getByRole("button", { name: "Attach sample artifact" }).click();
-      await expect(page).toHaveURL(/status=sampleAttached/u);
+      await expect(page).toHaveURL(/status=sampleGenerated/u);
 
       const samples = await fixture.api.select<SampleRow>(
         "qr_batch_samples",
@@ -419,20 +406,11 @@ test.describe
       const attachForm = batchCard.locator("form").filter({
         has: page.getByRole("button", { name: "Attach sample artifact" }),
       });
-      await attachForm.locator('input[name="storageBucket"]').fill("qr-samples");
-      await attachForm
-        .locator('input[name="storagePath"]')
-        .fill(`${fixture.tenantAId}/${fixture.sites.companyAFirst.id}/sample-v2.png`);
-      await attachForm.locator('input[name="checksumSha256"]').fill("b".repeat(64));
-      await attachForm.locator('input[name="byteSize"]').fill("4096");
-      await attachForm.locator('input[name="decodePassed"]').check();
-      await attachForm.locator('input[name="quietZonePassed"]').check();
-      await attachForm.locator('input[name="contrastPassed"]').check();
       await attachForm
         .locator('textarea[name="reason"]')
         .fill("Authenticated staging replacement sample attachment");
       await attachForm.getByRole("button", { name: "Attach sample artifact" }).click();
-      await expect(page).toHaveURL(/status=sampleAttached/u);
+      await expect(page).toHaveURL(/status=sampleGenerated/u);
 
       const approvalCard = page.locator(".admin-approval-card").filter({
         has: page.getByRole("button", { name: "Approve sample independently" }),
@@ -717,20 +695,11 @@ test.describe
         const attachForm = draftCard.locator("form").filter({
           has: superPage.getByRole("button", { name: "Attach sample artifact" }),
         });
-        await attachForm.locator('input[name="storageBucket"]').fill("qr-samples");
-        await attachForm
-          .locator('input[name="storagePath"]')
-          .fill(`${fixture.tenantAId}/${fixture.sites.companyAFirst.id}/race-sample.png`);
-        await attachForm.locator('input[name="checksumSha256"]').fill("c".repeat(64));
-        await attachForm.locator('input[name="byteSize"]').fill("3072");
-        await attachForm.locator('input[name="decodePassed"]').check();
-        await attachForm.locator('input[name="quietZonePassed"]').check();
-        await attachForm.locator('input[name="contrastPassed"]').check();
         await attachForm
           .locator('textarea[name="reason"]')
           .fill("Authenticated staging race sample attachment");
         await attachForm.getByRole("button", { name: "Attach sample artifact" }).click();
-        await expect(superPage).toHaveURL(/status=sampleAttached/u);
+        await expect(superPage).toHaveURL(/status=sampleGenerated/u);
 
         const sampleApprovalCard = cardWithText(superPage, raceBatch.batch_code)
           .filter({

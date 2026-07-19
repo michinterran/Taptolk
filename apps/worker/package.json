@@ -13,8 +13,10 @@
   },
   "dependencies": {
     "@taptolk/application": "workspace:*",
+    "@taptolk/auth": "workspace:*",
     "@taptolk/config": "workspace:*",
     "@taptolk/observability": "workspace:*",
+    "@taptolk/qr-engine": "workspace:*",
     "zod": "4.4.3"
   },
   "devDependencies": {
