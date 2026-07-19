@@ -34,6 +34,8 @@
     "validate:wcj:json": "node scripts/wcj/cli.mjs --format json",
     "verify:logo": "node scripts/verify-logo-integrity.mjs",
     "verify:production-cron": "node scripts/verify-production-cron.mjs",
+    "verify:production-cron:active": "node scripts/verify-production-cron.mjs --require-active",
+    "verify:production-cron:deferred": "node scripts/verify-production-cron.mjs --require-deferred",
     "verify:secrets": "node scripts/check-no-secrets.mjs",
     "verify": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm db:check && corepack pnpm verify:secrets && corepack pnpm verify:logo && corepack pnpm verify:production-cron && corepack pnpm validate:wcj && corepack pnpm build",
     "verify:full": "corepack pnpm verify && corepack pnpm e2e:smoke"

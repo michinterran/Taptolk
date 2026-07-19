@@ -86,7 +86,8 @@ The web repository:
 
 ### 2.3 Data Flow
 
-1. Vercel performs an HTTP GET using the path in `apps/web/vercel.json`.
+1. At actual service launch, Vercel performs an HTTP GET using the path activated from
+   `apps/web/vercel.production-cron.template.json` into `apps/web/vercel.json`.
 2. The route reads typed configuration; missing Cron/service credentials fail closed.
 3. The handler validates `Authorization: Bearer ...`.
 4. The application service snapshots the current UTC hour and asks for at most the configured
@@ -175,6 +176,7 @@ apps/web/internal/scheduled-privacy-cleanup-handler.test.ts
 apps/web/internal/privacy-cleanup-runtime.ts
 apps/web/app/api/internal/privacy-cleanup/route.ts
 apps/web/vercel.json
+apps/web/vercel.production-cron.template.json
 scripts/verify-production-cron.mjs
 ```
 
@@ -183,7 +185,8 @@ scripts/verify-production-cron.mjs
 1. Add typed configuration and application coordinator with unit tests.
 2. Add the due-tenant RPC and pgTAP security/selection/idempotency contract.
 3. Add the repository, runtime, handler, and GET route.
-4. Add the Vercel manifest and static verifier to `pnpm verify`.
+4. Add a deferred default manifest, an inert Production Cron template, and a state-aware static
+   verifier to `pnpm verify`.
 5. Run focused tests, linked pgTAP, secret scan, WCJ, build, and full verify.
 
 ## 6. Test Plan
@@ -206,7 +209,9 @@ scripts/verify-production-cron.mjs
 - A current-hour run excludes its tenant; an older run remains eligible.
 - Limit and oldest-due ordering are deterministic.
 - Existing `run_privacy_cleanup` duplicate request behavior remains unchanged.
-- Static verifier confirms exact manifest path, hourly schedule, GET export, and no embedded secret.
+- Static verifier confirms the deferred current state, exact Production template path and hourly
+  schedule, GET export, and no embedded secret. Production activation requires the stricter
+  `pnpm verify:production-cron:active` gate.
 
 ## 7. Security Considerations
 

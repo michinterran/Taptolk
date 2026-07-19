@@ -1,11 +1,23 @@
 # Production Privacy Cleanup Cron Runbook
 
-> Updated: 2026-07-20 | Status: Code ready; Production setup and operator acceptance pending
+> Updated: 2026-07-20 | Status: Code ready; activation deferred until actual service launch
 
 ## Purpose
 
 Operate the hourly, tenant-bounded privacy cleanup scheduler without placing credentials or
 tenant identifiers in source, commands, screenshots, logs, or documentation.
+
+## Current activation state
+
+The default `apps/web/vercel.json` intentionally registers no Cron job so the development/staging
+web project can deploy on the current Hobby plan. The inert
+`apps/web/vercel.production-cron.template.json` preserves the approved hourly Production
+contract. The authenticated GET route remains fail closed when Production configuration is
+absent.
+
+Before actual service launch, move the reviewed template configuration into
+`apps/web/vercel.json` in a dedicated release commit and run
+`pnpm verify:production-cron:active`. Do not activate it on Hobby or against staging data.
 
 The deployed Cron target is:
 
@@ -47,15 +59,16 @@ value. Never prefix it with `NEXT_PUBLIC_`.
 1. Confirm Production Supabase migration history and linked release evidence.
 2. Configure the required Production environment variables without displaying their values in
    review artifacts.
-3. Run `pnpm verify:production-cron` and `pnpm verify` on the exact release commit.
-4. Deploy the web project from `apps/web`.
-5. Confirm the Vercel Cron Jobs screen lists exactly one hourly
+3. Activate the reviewed Production Cron template in `apps/web/vercel.json`.
+4. Run `pnpm verify:production-cron:active` and `pnpm verify` on the exact release commit.
+5. Deploy the web project from `apps/web`.
+6. Confirm the Vercel Cron Jobs screen lists exactly one hourly
    `/api/internal/privacy-cleanup` schedule.
-6. Confirm an unauthenticated request returns `401` and performs no cleanup work.
-7. Trigger one authorized operator verification through the platform's protected Cron mechanism.
-8. Confirm a bounded aggregate response and a successful cleanup ledger/audit row.
-9. Repeat within the same UTC hour and confirm no duplicate tenant/hour cleanup or audit result.
-10. Confirm logs contain request ID, status, and counts only.
+7. Confirm an unauthenticated request returns `401` and performs no cleanup work.
+8. Trigger one authorized operator verification through the platform's protected Cron mechanism.
+9. Confirm a bounded aggregate response and a successful cleanup ledger/audit row.
+10. Repeat within the same UTC hour and confirm no duplicate tenant/hour cleanup or audit result.
+11. Confirm logs contain request ID, status, and counts only.
 
 Do not put the authorization header or its value in shell history, tickets, chat, screenshots, or
 saved test output.
@@ -106,7 +119,8 @@ an incident.
 
 ## Acceptance boundary
 
-This runbook and manifest complete the code-owned scheduling contract. They do not establish that
-Production credentials, Cron execution, alerts, rollback, or incident ownership have been
-accepted. Keep the pilot status `AUTOMATED_READY / MANUAL_GATES_PENDING` until the accountable
-operators complete the Production checklist.
+This runbook, inert template, and fail-closed route complete the code-owned scheduling contract.
+They do not establish that Production credentials, Cron execution, alerts, rollback, or incident
+ownership have been accepted. Keep the pilot status
+`AUTOMATED_READY / CRON_DEFERRED / MANUAL_GATES_PENDING` until the accountable operators complete
+the Production checklist.

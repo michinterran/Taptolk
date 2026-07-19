@@ -51,7 +51,7 @@ orchestration contract; actual Production credentials and deployment remain user
 - Application service for bounded scheduled cleanup and aggregate results.
 - Production-safe configuration for tenant limit and duration budget.
 - Cron HTTP handler and `GET /api/internal/privacy-cleanup`.
-- `apps/web/vercel.json` hourly schedule.
+- An inert hourly Production Cron template and an explicitly deferred default Vercel manifest.
 - Source verifier integrated into `pnpm verify`.
 - Unit, pgTAP, static manifest, and staging-safe handler tests.
 
@@ -71,7 +71,8 @@ orchestration contract; actual Production credentials and deployment remain user
 - [ ] Limit and duration policy are bounded and validated before repository access.
 - [ ] Response and logs contain counts and request ID only; no tenant ID, secret, message, token,
       phone, or provider payload.
-- [ ] Vercel manifest schedules the exact GET route hourly and is checked by `pnpm verify`.
+- [ ] Production template schedules the exact GET route hourly, the current default manifest keeps
+      activation deferred, and both states are checked by `pnpm verify`.
 - [ ] Linked pgTAP, relevant tests, WCJ, secret scan, build, and `pnpm verify` pass.
 
 ## 5. Schedule
