@@ -1,6 +1,6 @@
 begin;
 
-select plan(20);
+select plan(22);
 
 select has_function(
   'public',
@@ -170,6 +170,30 @@ select results_eq(
   $$,
   array[true],
   'pre-generation cancellation has a bounded Batch lock wait'
+);
+
+select results_eq(
+  $$
+    select position(
+      '''40001''' in pg_get_functiondef(
+        'public.approve_qr_batch_final_generation(uuid,integer,text,uuid)'::regprocedure
+      )
+    ) = 0
+  $$,
+  array[true],
+  'final generation approval does not use retryable SQLSTATE for business conflicts'
+);
+
+select results_eq(
+  $$
+    select position(
+      '''40001''' in pg_get_functiondef(
+        'public.cancel_qr_batch_before_generation_approval(uuid,integer,text,uuid)'::regprocedure
+      )
+    ) = 0
+  $$,
+  array[true],
+  'pre-generation cancellation does not use retryable SQLSTATE for business conflicts'
 );
 
 select * from finish();

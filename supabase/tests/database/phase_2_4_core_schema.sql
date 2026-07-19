@@ -1,6 +1,6 @@
 begin;
 
-select plan(63);
+select plan(62);
 
 select enum_has_labels(
   'public',

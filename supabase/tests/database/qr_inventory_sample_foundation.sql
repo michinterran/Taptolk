@@ -466,35 +466,46 @@ select ok(
 select col_is_fk(
   'public',
   'sticker_design_versions',
-  'site_id',
+  array['tenant_id', 'management_company_id', 'site_id']::name[],
   'Design Version is constrained to a Site'
 );
 
 select col_is_fk(
   'public',
   'qr_batches',
-  'sticker_design_version_id',
+  array[
+    'tenant_id',
+    'management_company_id',
+    'site_id',
+    'sticker_design_version_id'
+  ]::name[],
   'Batch is constrained to a same-scope Design Version'
 );
 
 select col_is_fk(
   'public',
   'qr_batch_samples',
-  'batch_id',
+  array['tenant_id', 'management_company_id', 'site_id', 'batch_id']::name[],
   'sample is constrained to a same-scope Batch'
 );
 
 select col_is_fk(
   'public',
   'qr_assets',
-  'batch_id',
+  array['tenant_id', 'management_company_id', 'site_id', 'batch_id']::name[],
   'QR Asset is constrained to a same-scope Batch'
 );
 
 select col_is_fk(
   'public',
   'qr_asset_status_logs',
-  'qr_asset_id',
+  array[
+    'tenant_id',
+    'management_company_id',
+    'site_id',
+    'batch_id',
+    'qr_asset_id'
+  ]::name[],
   'QR Asset history is constrained to the same Asset scope'
 );
 

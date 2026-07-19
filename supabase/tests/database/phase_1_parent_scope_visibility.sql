@@ -33,19 +33,15 @@ select is_definer(
 select policies_are(
   'public',
   'tenants',
-  array['tenants_insert_platform', 'tenants_select_scoped', 'tenants_update_platform'],
-  'Tenant policy set remains exact after parent visibility hardening'
+  array['tenants_select_scoped'],
+  'Tenant table remains scoped read-only while mutations stay RPC-only'
 );
 
 select policies_are(
   'public',
   'management_companies',
-  array[
-    'management_companies_insert_platform',
-    'management_companies_select_scoped',
-    'management_companies_update_platform'
-  ],
-  'Management Company policy set remains exact after parent visibility hardening'
+  array['management_companies_select_scoped'],
+  'Management Company table remains scoped read-only while mutations stay RPC-only'
 );
 
 select function_privs_are(

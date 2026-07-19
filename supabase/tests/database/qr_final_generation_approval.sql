@@ -203,7 +203,7 @@ select has_index(
 select col_is_fk(
   'public',
   'qr_generation_jobs',
-  'qr_batch_id',
+  array['tenant_id', 'management_company_id', 'site_id', 'qr_batch_id']::name[],
   'generation job is constrained to the same-scope Batch'
 );
 

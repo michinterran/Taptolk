@@ -8,15 +8,15 @@ select has_schema(
 );
 
 select schema_privs_are(
-  'anon',
   'app_private',
+  'anon',
   array[]::text[],
   'anon should have no app_private privileges'
 );
 
 select schema_privs_are(
-  'authenticated',
   'app_private',
+  'authenticated',
   array[]::text[],
   'authenticated should have no app_private privileges'
 );

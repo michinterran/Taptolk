@@ -756,21 +756,31 @@ test.describe
           .locator('textarea[name="reason"]')
           .fill("Authenticated staging concurrent generation approval");
 
-        const cancellationOutcome = page.waitForURL(
-          /(?:status=finalApprovalCancelled|error=conflict)/u,
-          { timeout: 15_000 },
-        );
-        const approvalOutcome = superPage.waitForURL(
-          /(?:status=finalGenerationApproved|error=conflict)/u,
-          { timeout: 15_000 },
-        );
         await Promise.all([
           cancellationForm.getByRole("button", { name: "Cancel Batch request" }).click(),
           generationApprovalCard
             .getByRole("button", { name: "Approve and prepare generation" })
             .click(),
         ]);
-        await Promise.all([cancellationOutcome, approvalOutcome]);
+        await expect
+          .poll(
+            () => {
+              const cancellationSettled = /(?:status=finalApprovalCancelled|error=conflict)/u.test(
+                page.url(),
+              );
+              const approvalSettled = /(?:status=finalGenerationApproved|error=conflict)/u.test(
+                superPage.url(),
+              );
+              return cancellationSettled && approvalSettled
+                ? "settled"
+                : `cancellation=${page.url()} approval=${superPage.url()}`;
+            },
+            {
+              message: "both concurrent actions should redirect to a committed or conflict outcome",
+              timeout: 30_000,
+            },
+          )
+          .toBe("settled");
 
         const [committedBatch] = await fixture.api.select<BatchRow>(
           "qr_batches",

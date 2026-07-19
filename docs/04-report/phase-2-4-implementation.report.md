@@ -47,19 +47,25 @@ Authorization → Repository/RPC → PostgreSQL 계층으로 구현했다.
 |---|---|
 | `pnpm verify` | PASS |
 | Vitest | 43 files / 270 tests PASS |
-| DB static contract | 32 migrations / 14 database tests PASS |
+| DB static contract | 33 migrations / 14 database tests PASS |
+| Linked staging pgTAP | 14 files PASS |
+| Authenticated staging E2E | 15 tests PASS |
+| Staging Queue probe | send → read → archive → empty PASS |
 | WCJ | 100 / C100 / J100 / W100 |
-| Secret scan | 360 files PASS |
+| Secret scan | 362 files PASS |
 | Logo integrity | required SHA-256 PASS |
 | Production build | PASS |
 | Playwright local smoke | desktop/mobile 28 PASS |
 
 ## Evidence boundary
 
-Docker 부재로 새 migration의 local reset/pgTAP runtime 적용은 실행하지 못했다.
-staging migration과 실제 Queue는 아직 적용하지 않았다. Queue는 공식
-`pgmq_public.read(queue_name, sleep_seconds, n)` 및 `archive` 계약에 맞춰
-구현했지만 staging Queue의 생성·노출·권한 설정은 사용자 소유 외부 작업이다.
+Docker 부재로 local reset은 실행하지 못했지만, linked staging에 33개 migration을
+정렬 적용하고 전체 pgTAP 14개를 실행했다. `pgmq_public`을 노출하고 durable
+`qr-generation` Queue를 생성했으며 anon/authenticated 권한 차단과 service-role
+send → read → archive를 검증했다.
 
-따라서 이 보고서는 저장소 개발 완료 보고이며 release acceptance 보고가 아니다.
+인증된 staging Site CRUD·격리와 QR Design/Sample/Final Approval 동시성 15개 E2E는
+통과했다. 다만 실제 Worker 1,000개 전체 journey, Phase 4 입고·배정·CSV·교체·폐기
+staging E2E, 실제 출력·기기·접근성 수동 검수는 남아 있다. 따라서 이 보고서는
+staging 적용을 포함한 개발 완료 보고이며 최종 release acceptance 보고는 아니다.
 잔여 Gate는 `docs/architecture/phase-2-4-gap-audit.md`를 따른다.

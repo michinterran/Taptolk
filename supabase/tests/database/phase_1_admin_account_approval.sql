@@ -106,11 +106,15 @@ select function_privs_are(
   'authenticated sessions enter the rejection command where AAL2 and Super Admin are rechecked'
 );
 
-select has_policy(
+select policies_are(
   'public',
   'admin_profiles',
-  'admin_profiles_select_platform_super_admin',
-  'AAL2 platform Super Admin profile review policy exists'
+  array[
+    'admin_profiles_select_platform_super_admin',
+    'admin_profiles_select_self',
+    'admin_profiles_update_self'
+  ],
+  'admin profile policies include self-service and AAL2 platform Super Admin review'
 );
 
 select * from finish();
