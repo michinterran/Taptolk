@@ -23,12 +23,17 @@ function isSiteType(value: unknown): value is SiteType {
   );
 }
 
-function readRelationName(value: unknown): string | null {
+function readRelation(value: unknown): Record<string, unknown> | null {
   const relation = Array.isArray(value) ? value[0] : value;
   if (!relation || typeof relation !== "object") {
     return null;
   }
-  const name = (relation as { name?: unknown }).name;
+  return relation as Record<string, unknown>;
+}
+
+function readRelationName(value: unknown): string | null {
+  const relation = readRelation(value);
+  const name = relation?.name;
   return typeof name === "string" ? name : null;
 }
 
@@ -37,8 +42,9 @@ function mapSiteRow(row: unknown): SiteCatalogItem {
     throw new Error("Site catalog returned an invalid row.");
   }
   const candidate = row as Record<string, unknown>;
-  const managementCompanyName = readRelationName(candidate.management_companies);
-  const tenantName = readRelationName(candidate.tenants);
+  const managementCompany = readRelation(candidate.management_companies);
+  const managementCompanyName = readRelationName(managementCompany);
+  const tenantName = readRelationName(managementCompany?.tenants);
   if (
     typeof candidate.id !== "string" ||
     typeof candidate.tenant_id !== "string" ||
@@ -81,7 +87,7 @@ export function createSupabaseSiteCatalogRepository(
       const result = await client
         .from("sites")
         .select(
-          "id, tenant_id, management_company_id, name, site_type, address, timezone, contract_vehicle_limit, status, version, created_at, management_companies!inner(name), tenants!inner(name)",
+          "id, tenant_id, management_company_id, name, site_type, address, timezone, contract_vehicle_limit, status, version, created_at, management_companies!inner(name, tenants!inner(name))",
           { count: "exact" },
         )
         .is("deleted_at", null)

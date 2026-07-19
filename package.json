@@ -20,6 +20,7 @@
     "dev:local": "corepack pnpm db:start && corepack pnpm dev",
     "dev:web": "corepack pnpm build:packages && corepack pnpm --filter @taptolk/web dev",
     "e2e:smoke": "playwright test",
+    "e2e:staging:sites": "playwright test --config=playwright.staging.config.ts",
     "format": "biome check --write .",
     "lint": "biome check .",
     "test": "vitest run",

@@ -63,4 +63,10 @@ Tenant와 Management Company 아래 실제 운영 장소인 Site를 역할·scop
 - Every successful command appends exactly one redacted audit row in the same transaction.
 - Stale versions, inactive parents, invalid timezone, and forbidden roles are rejected.
 - Scoped SQL runtime tests prove Management/Site membership isolation with rollback residue `0`.
+- Ephemeral staging Auth users complete TOTP enrollment without storing account credentials.
+- Super Admin completes create, operational update, contract update, suspend, reactivate, and
+  close through the real KO/EN UI.
+- Management Admin and Site Admin render only their allowed hierarchy and a tampered form cannot
+  mutate a cross-tenant or sibling Site.
+- Audit evidence is verified and every staging fixture row is removed after the browser run.
 - Unit, WCJ, build, E2E, DB contract, logo, and secret gates pass.

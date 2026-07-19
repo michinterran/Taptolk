@@ -15,6 +15,17 @@ WCJ, production build를 순서대로 실행한다.
 pnpm verify:full
 ```
 
+연결된 staging에서 실제 Auth/TOTP와 Site tenant isolation을 검증할 때:
+
+```bash
+pnpm e2e:staging:sites
+```
+
+이 명령은 `apps/web/.env.local`의 서버 전용 staging 설정과
+`supabase/.temp/project-ref`가 일치할 때만 실행한다. 임시 계정 비밀번호와 TOTP는
+메모리에서만 사용하고, trace/video/screenshot/HTML report를 만들지 않으며 모든
+fixture를 종료 시 정리한다.
+
 DB migration을 실제 PostgreSQL에 재현할 때:
 
 ```bash

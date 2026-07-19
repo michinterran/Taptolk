@@ -69,3 +69,17 @@ Full address, escalation phone, Auth claims, tokens, cookies, and secrets are ex
 - Controls are derived from central permission flags.
 - Headline uses locale-authored semantic line groups.
 - Closed rows remain visible as immutable history.
+
+## 7. Authenticated Staging E2E
+
+- `pnpm e2e:staging:sites` is isolated from the configuration-free Desktop/Mobile smoke suite.
+- The runner accepts only `APP_ENV=staging` and requires the Supabase URL to match the locally
+  linked staging project ref.
+- Auth users, passwords, and TOTP secrets are generated in memory for one run. Trace, video,
+  screenshot, and HTML reporting are disabled for this suite.
+- The server-only Secret Key creates two Tenant hierarchies and three role-specific memberships.
+  Browser code never receives that key.
+- Parent Tenant and Management Company RLS helpers permit descendant roles to read only their
+  own hierarchy. Exact Site selection continues through `sites_select_scoped`.
+- Cleanup removes only the run's audit rows, memberships, Sites, Management Companies, Tenants,
+  and Auth users in dependency order.

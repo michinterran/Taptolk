@@ -1,5 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "globalPassThroughEnv": ["APP_ENV", "SUPABASE_SECRET_KEY"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

@@ -158,11 +158,18 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
   identity에는 admin profile·membership을 자동 부여하지 않음
 - `tenant:read` application service와 authenticated Supabase repository를 분리하고
   Super Admin Tenant Catalog에 PLATFORM scope, MFA, RLS를 중첩 적용
+- 역할별 Site catalog와 audited command boundary를 실제 KO/EN UI에 연결
+- Super Admin Site 생성·운영정보·계약한도·중지·재개·종료와
+  Management/Site Admin scope 운영정보 수정 구현
+- staging 전용 ephemeral Auth/TOTP fixture로 cross-tenant·cross-Site 렌더링과
+  변조 mutation 차단, audit redaction, cleanup residue `0` 검증
+- 하위 scope가 자신의 parent Tenant/Management Company만 읽도록 전용 RLS
+  parent-visibility helper 적용
 
 이는 Phase 1의 안전한 기반이며 전체 Phase 1 완료가 아니다. Docker PostgreSQL에서
-pgTAP을 실행하고, Staging Auth/MFA와 인증된 Site CRUD E2E까지 통과해야 Phase 1
-acceptance로 판정한다. Staging에서는 extension 설치 없이 catalog와 transaction
-rollback 기반으로 동등한 RLS·권한·제약 검증을 수행했다.
+reset과 pgTAP을 실행해야 Phase 1 acceptance로 판정한다. Staging Auth/MFA와 인증된
+Site CRUD·Tenant Isolation E2E는 통과했다. Staging에서는 extension 설치 없이
+catalog, transaction rollback, 실제 browser session으로 RLS·권한·제약을 검증했다.
 
 ## 7. 환경변수와 외부 서비스
 
@@ -182,7 +189,7 @@ Supabase Staging `taptolk-staging`은 2026-07-18 연결했다.
 - Data API: enabled
 - Automatically expose new tables: disabled
 - Automatic RLS: enabled
-- Migration: 로컬/원격 7개 일치
+- Migration: 로컬/원격 15개 일치
 - Secret/API key: 저장소와 문서에 저장하지 않음
 
 Supabase Production, Vercel, SMS, Sentry 계정은 아직 연결하지 않았다.
@@ -196,15 +203,16 @@ pnpm 10.34.5에서 확인한 결과:
 |---|---|
 | Frozen lockfile install | 통과 |
 | Production dependency audit | 알려진 취약점 0건 |
-| Biome lint | 130 files, 통과 |
+| Biome lint | 160 files, 통과 |
 | TypeScript | 10 workspace packages / 16 tasks, 통과 |
-| Vitest | 12 files / 48 tests, 통과 |
-| Migration static check | 7 migrations / 2 DB tests, 통과 |
-| Secret scan | 163 text files, 통과 |
+| Vitest | 16 files / 71 tests, 통과 |
+| Migration static check | 15 migrations / 8 DB tests, 통과 |
+| Secret scan | 231 text files, 통과 |
 | Logo integrity | 원본·공개 자산 일치 |
-| WCJ static | W/C/J 100/100/100, 41 sources |
-| Next production build | `/ko`, `/en`, Admin Auth/MFA, locale API와 proxy 포함 통과 |
-| Playwright | Desktop/Mobile 20 tests, 통과 |
+| WCJ static | W/C/J 100/100/100, 47 sources |
+| Next production build | `/ko`, `/en`, Admin Auth/MFA/Site, locale API와 proxy 포함 통과 |
+| Playwright smoke | Desktop/Mobile 26 tests, 통과 |
+| Authenticated staging E2E | Super/Management/Site Admin 3 tests, 통과 |
 | axe | 위반 0건 |
 
 ## 9. 아직 완료되지 않은 acceptance
@@ -219,15 +227,14 @@ pnpm 10.34.5에서 확인한 결과:
 - Google SSO는 코드가 구현됐으나 Google Cloud/Supabase provider 연결과 실계정
   acceptance 필요
 - 이메일/Google 신규 계정의 access-pending 실계정 acceptance 필요
-- 관리자 profile/membership 승인 mutation과 동일 transaction audit 필요
 - MFA recovery와 Admin idle timeout 운영 정책은 후속 구현 필요
-- 인증된 Site CRUD repository/API/UI/E2E: Phase 1 후속 구현
+- 인증된 Site CRUD repository/API/UI/E2E: staging acceptance 통과
 - Phase 1 migration/tenant isolation pgTAP runtime: Docker DB에서 실행 필요
 - 선택된 3번 Customer Portfolio 방향의 Platform/Company/Site별 화면 refinement
 
 Admin Console은 Platform/Company/Site 관점의 IA, route, dashboard, read model, API,
 Site/QR 권한과 상태 계약까지 설계됐다. Customer Portfolio 기반 3번 시각 방향도
-선택됐다. 현재 role별 Auth entry와 보안 컨텍스트 UI는 구현됐지만 실제 Site/QR 운영
-화면 refinement와 API는 아직 없다. 따라서 i18n과 Auth 소스 acceptance는 통과했고
-Phase 1은 인증 기반까지 진행됐지만, Staging 실인증과 Site CRUD tenant isolation
-E2E 전에는 Phase 1 전체 완료로 판정하지 않는다.
+선택됐다. 현재 role별 Auth entry, Site catalog와 lifecycle UI/API, staging tenant
+isolation E2E까지 구현됐다. QR 운영 화면과 Site maker-checker request queue는 아직
+없다. Phase 1 전체 완료는 Supabase Local reset과 local pgTAP runtime 전까지
+판정하지 않는다.

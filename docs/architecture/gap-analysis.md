@@ -41,9 +41,9 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA 실인증
 | 영역 | 목표 | 현재 | 판정 |
 |---|---|---|---|
 | i18n | KO/EN, 자동 판정, 명시 선택, locale URL | 구현·E2E 완료 | 완료 |
-| Tenant/Admin | Tenant, Site, Membership, RBAC, RLS, Audit | schema, granular permission, server-only Site mutation 기반 | Phase 1 부분 |
+| Tenant/Admin | Tenant, Site, Membership, RBAC, RLS, Audit | role-scoped Site lifecycle와 authenticated isolation E2E | Phase 1 부분 |
 | Auth | Admin MFA, Owner OTP, Caller session | Admin Email/Password·TOTP AAL2 실인증, 이메일/Google 가입 코드 | Phase 1 부분 |
-| Admin Console | Platform/Company/Site dashboard와 domain pages | role entry/context UI와 RLS Tenant Catalog, 3번 visual direction | Phase 1 부분 |
+| Admin Console | Platform/Company/Site dashboard와 domain pages | Tenant/Company/Site catalog와 role-scoped lifecycle UI | Phase 1 부분 |
 | QR/Sticker | asset, binding, SVG, render, PDF/ZIP | 역할별 발행·관리 권한 계약만 구현 | Phase 2–3 |
 | Contact | public scan, session, rate limit | 없음 | Phase 4 |
 | Messaging | SMS, response token, polling | provider env만 | Phase 5 |
@@ -55,12 +55,12 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA 실인증
 | 항목 | 현재 증명 | 완료에 필요한 증명 |
 |---|---|---|
 | Migration | 정적 transaction/RLS/constraint 검사 | Supabase Local reset |
-| Tenant isolation | RBAC unit 및 pgTAP SQL 작성 | 실제 PostgreSQL pgTAP |
+| Tenant isolation | staging authenticated browser·tampered mutation·rollback SQL 통과 | local PostgreSQL pgTAP |
 | Admin Auth | KO/EN 로그인, TOTP 등록·챌린지와 staging AAL2 실인증 | Google provider 실연결, recovery, idle timeout |
 | Account approval | 신규 Auth identity의 권한 자동 부여 금지 | profile/membership 승인 transaction과 audit |
-| Site CRUD | granular permission과 server-only application service 계약 | request model, route/UI/repository/authenticated E2E |
-| Audit | same-transaction interface와 DB key constraint | 실제 mutation 후 append-only 검증 |
-| UI | bilingual Foundation와 role별 Admin Auth/context shell | Site CRUD 상태와 실제 운영 dashboard |
+| Site CRUD | KO/EN route/UI/repository와 authenticated E2E 통과 | maker-checker request/approval model |
+| Audit | 실제 Site mutation action/actor/redaction 검증 | local pgTAP runtime |
+| UI | bilingual Auth/context와 role-scoped Site lifecycle | QR 운영 dashboard와 manual assistive-tech review |
 
 ## 5. 결정이 필요한 아키텍처 Gap
 
@@ -148,11 +148,11 @@ schema/type 및 migration 생성 보조로 사용하는 것이다. Phase 1 첫 s
 
 ## 8. 다음 개발 순서
 
-1. Google Cloud/Supabase staging provider와 callback URL 연결
-2. 이메일·Google 신규 계정의 access-pending 실인증 acceptance
-3. 관리자 profile/membership 승인 transaction과 audit 구현
-4. Site create request/approval model과 tenant-scoped repository 구현
-5. Site route, KO/EN Admin CRUD UI와 authenticated tenant-isolation E2E 구현
+1. Docker에서 Supabase Local reset과 pgTAP runtime 실행
+2. Site lifecycle request/approval queue를 maker-checker entity로 구현
+3. QR inventory/batch lifecycle vertical slice 구현
+4. MFA recovery와 idle timeout 운영 정책 확정
+5. keyboard, screen-reader, computed contrast, real-device journey 수동 검증
 6. 선택된 3번 visual direction으로 Platform/Company/Site 화면 refinement
 7. Vercel Preview env 연결과 동일 Auth journey 검증
 
