@@ -23,13 +23,30 @@
 - [x] Production privacy-cleanup Cron source contract: bounded due-tenant selection, deterministic
       tenant/hour idempotency, credential-free hourly manifest, and static verifier.
 - [x] Production Cron pgTAP: 16/16; complete linked database suite PASS.
+- [x] 2026-07-20 pre-deployment revalidation: linked `taptolk-staging` is healthy in Seoul and
+      migrations match through `20260719184000`; all 22 linked pgTAP files PASS; authenticated
+      staging E2E 28 PASS with one intentional opt-in skip; `pnpm verify` PASS on checkpoint
+      `215bb11`.
 
 ## Manual and external pilot gates
 
-- [ ] Configure an approved production SMS provider and verify receipt/cost reconciliation.
-- [ ] Configure a production CAPTCHA provider; keep public Contact fail closed until then.
-- [ ] Configure production Cron scheduling and verify secret rotation/run monitoring using
-      `docs/deployment/production-privacy-cleanup-cron-runbook.md`.
+- [ ] Move the intended Production Vercel project to an approved Pro or Enterprise team. The
+      currently accessible team is Hobby, which does not support `0 * * * *`.
+- [ ] Grant access to or create/import the actual `taptolk` Production Vercel project and confirm
+      its Root Directory is exactly `apps/web`. No accessible `taptolk` project was present during
+      the 2026-07-20 audit, so Root Directory remains unverified.
+- [ ] Create or grant access to a separate approved Production Supabase project, approve its data
+      region, and apply migrations through `20260719184000`. Only `taptolk-staging` was accessible
+      for this lane during the audit.
+- [ ] Select an approved production SMS provider and authorize provider-adapter implementation,
+      sender registration, receipt/cost reconciliation, and failure rehearsal. Do not configure
+      secret values until the adapter and Production project are approved.
+- [ ] Select a production CAPTCHA provider and authorize provider-adapter implementation and
+      failure rehearsal; keep public Contact fail closed until then.
+- [ ] After the Vercel and Supabase gates pass, configure Production secrets only in the deployment
+      secret manager and follow `docs/deployment/production-privacy-cleanup-cron-runbook.md` for
+      one authorized aggregate-only run, same-hour replay, duplicate-zero proof, monitoring,
+      rotation, and rollback rehearsal.
 - [ ] Verify representative iOS and Android devices across scan, contact, wait, and reply.
 - [ ] Run VoiceOver and TalkBack hands-on journeys, including live announcements and focus order.
 - [ ] Inspect computed contrast in production browser states.
