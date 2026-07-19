@@ -403,6 +403,10 @@ provider payloads cannot be smuggled through a structurally valid Queue message.
   delay, and jitter ratio. It uses the delivery-attempt counter, exponential growth, a 24-hour
   absolute ceiling, bounded symmetric jitter, and injected clock/random sources for deterministic
   testing. No Route, React component, provider adapter, or Queue payload owns retry values.
+- `@taptolk/db` owns the server-only RPC repository adapter for the dispatcher Application port.
+  It accepts an injected RPC client, calls only the three reviewed service-role functions, maps
+  responses into allowlisted DTOs, reduces database errors to safe categories, and never owns or
+  reads credentials. Runtime composition remains outside the package.
 - Worker does not trust Tenant/Site IDs in the payload as authorization. It loads the job by
   `jobId`, verifies the stored Batch relationship, and treats payload scope as consistency input.
 - No reason, user identity, actor UUID, contact data, token material, storage metadata, HTML/SVG,
@@ -529,6 +533,8 @@ Implemented in the current Application, DB, and Web approval units:
 - `packages/application/src/qr-generation-dispatch-coordinator.test.ts`
 - `packages/application/src/qr-generation-delivery-retry-policy.ts`
 - `packages/application/src/qr-generation-delivery-retry-policy.test.ts`
+- `packages/db/src/qr-generation-dispatcher-rpc-repository.ts`
+- `packages/db/src/qr-generation-dispatcher-rpc-repository.test.ts`
 - `packages/application/src/qr-final-generation-approval-service.ts`
 - `packages/application/src/qr-final-generation-approval-service.test.ts`
 - `packages/application/src/index.ts`

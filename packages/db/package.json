@@ -17,6 +17,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@taptolk/application": "workspace:*",
     "drizzle-orm": "0.45.2",
     "postgres": "3.4.9"
   },
