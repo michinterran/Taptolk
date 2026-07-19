@@ -143,6 +143,11 @@ describe("admin RBAC", () => {
   });
 
   it("centralizes production QR generation approval while delegating scoped requests", () => {
+    expect(roleHasPermission("MANAGEMENT_ADMIN", "sticker-design:create")).toBe(true);
+    expect(roleHasPermission("SITE_ADMIN", "sticker-design:approve")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "sticker-design:archive")).toBe(true);
+    expect(roleHasPermission("SITE_OPERATOR", "sticker-design:create")).toBe(false);
+    expect(roleHasPermission("READ_ONLY", "sticker-design:read")).toBe(true);
     expect(roleHasPermission("MANAGEMENT_ADMIN", "qr-batch:request")).toBe(true);
     expect(roleHasPermission("SITE_ADMIN", "qr-batch:request")).toBe(true);
     expect(roleHasPermission("SITE_ADMIN", "qr-batch:sample-approve")).toBe(true);

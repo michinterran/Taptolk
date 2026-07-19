@@ -192,3 +192,15 @@ test("the site catalog is never exposed without an authenticated admin session",
   );
   await expect(page.getByText("역할별 사이트 운영", { exact: true })).toHaveCount(0);
 });
+
+test("the QR inventory and sample workspace is never exposed without an admin session", async ({
+  page,
+}) => {
+  await page.goto("/en/admin/qr-inventory");
+
+  await expect(page).toHaveURL(/\/en\/admin\/login\?error=configuration$/u);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "Start securely with an approved admin account.",
+  );
+  await expect(page.getByText("QR inventory and sample approval", { exact: true })).toHaveCount(0);
+});

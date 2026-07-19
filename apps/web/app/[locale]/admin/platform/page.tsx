@@ -55,6 +55,10 @@ export default async function PlatformAdminPage({
             href: `/${locale}/admin/sites`,
             label: copy["admin.platform.sitesAction"],
           },
+          {
+            href: `/${locale}/admin/qr-inventory`,
+            label: copy["admin.platform.qrAction"],
+          },
           ...(membership.role === "SUPER_ADMIN"
             ? [
                 {

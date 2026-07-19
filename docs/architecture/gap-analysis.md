@@ -1,7 +1,7 @@
 # Taptolk Gap Analysis
 
 - 기준 문서: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
-- 비교 대상: 2026-07-18 현재 저장소
+- 비교 대상: 2026-07-19 현재 저장소
 - 판정: 완료 / 부분 / 후속 Phase / 외부 의존 / 결정 필요
 
 ## 1. 총평
@@ -16,8 +16,9 @@ Phase 0 전체 acceptance와 비교하면 다음 두 항목이 남아 있다.
 
 i18n은 로컬 검증까지 완료했다. Phase 1은 Tenant/Admin schema, RBAC, RLS, audit,
 Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA 실인증까지 진행했다.
-이메일/Google 계정 생성과 RLS Tenant Catalog도 구현했으며 Google provider 연결,
-관리자 승인 mutation과 Site CRUD 제품 journey가 남아 있다.
+이메일/Google 계정 생성, RLS Tenant Catalog, Site CRUD, QR Design/소량 Batch/샘플
+승인 여정도 구현했다. Google provider 연결, 계정 승인 mutation, QR 대량 생성
+최종 승인과 Queue/Worker가 남아 있다.
 
 ## 2. Phase 0 차이
 
@@ -25,13 +26,13 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA 실인증
 |---|---|---|---|---|
 | Node/pnpm | Node 24, pnpm 10 | 24.18.0/10.34.5 고정 | 완료 | 유지 |
 | Monorepo | pnpm + Turbo | 10 package workspace | 완료 | 유지 |
-| Web | Next App Router | `/ko`·`/en`, locale 선택, Admin Auth states, health | 완료 | Site CRUD route 추가 |
+| Web | Next App Router | `/ko`·`/en`, locale 선택, Admin Auth·Site·QR inventory, health | 완료 | 수동 보조기술 검증 |
 | Worker | 별도 Node 계약 | validation/lifecycle/health | 완료 | 운영 runtime ADR |
 | Env | client/server Zod | allowlist와 production 조건 | 완료 | 실제 env는 환경별 입력 |
 | DB | Supabase Local + Drizzle | Phase 0·1 migration/pgTAP 작성 | 부분 | Docker에서 reset/test |
 | UI | token과 기본 component | Button, heading, journey status | 완료 | 실제 feature와 함께 확장 |
 | Observability | Sentry + logs | Node adapter와 redaction | 완료 | DSN 입력은 별도 승인 |
-| Test | unit/DB/browser | 48 unit·20 browser 통과, DB runtime 미실행 | 부분 | Local DB test |
+| Test | unit/DB/browser | 89 unit·28 smoke·10 staging 통과, DB runtime 미실행 | 부분 | Local DB test |
 | CI | PR pipeline | GitHub Actions 통과 | 완료 | 변경마다 유지 |
 | Preview | Vercel URL | 미연결 | 외부 의존 | 별도 승인 후 import/deploy |
 | 문서 | setup/security/deploy | 작성 완료 | 완료 | 변경과 함께 유지 |
@@ -43,8 +44,8 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA 실인증
 | i18n | KO/EN, 자동 판정, 명시 선택, locale URL | 구현·E2E 완료 | 완료 |
 | Tenant/Admin | Tenant, Site, Membership, RBAC, RLS, Audit | role-scoped Site lifecycle와 authenticated isolation E2E | Phase 1 부분 |
 | Auth | Admin MFA, Owner OTP, Caller session | Admin Email/Password·TOTP AAL2 실인증, 이메일/Google 가입 코드 | Phase 1 부분 |
-| Admin Console | Platform/Company/Site dashboard와 domain pages | Tenant/Company/Site catalog와 role-scoped lifecycle UI | Phase 1 부분 |
-| QR/Sticker | asset, binding, SVG, render, PDF/ZIP | 역할별 발행·관리 권한 계약만 구현 | Phase 2–3 |
+| Admin Console | Platform/Company/Site dashboard와 domain pages | Tenant/Company/Site catalog, lifecycle, QR inventory/sample UI | Phase 1 부분 |
+| QR/Sticker | asset, binding, SVG, render, PDF/ZIP | Design·Batch·Sample·Asset schema와 sample approval slice | Phase 1–3 부분 |
 | Contact | public scan, session, rate limit | 없음 | Phase 4 |
 | Messaging | SMS, response token, polling | provider env만 | Phase 5 |
 | Escalation | report/management flow | 없음 | Phase 6 |
@@ -59,8 +60,9 @@ Supabase SSR, 서버 기반 Admin context, KO/EN 로그인과 TOTP MFA 실인증
 | Admin Auth | KO/EN 로그인, TOTP 등록·챌린지와 staging AAL2 실인증 | Google provider 실연결, recovery, idle timeout |
 | Account approval | 신규 Auth identity의 권한 자동 부여 금지 | profile/membership 승인 transaction과 audit |
 | Site CRUD | KO/EN route/UI/repository, maker-checker request/approval, authenticated E2E 통과 | Local reset/pgTAP runtime |
-| Audit | 실제 Site mutation action/actor/redaction 검증 | local pgTAP runtime |
-| UI | bilingual Auth/context와 role-scoped Site lifecycle | QR 운영 dashboard와 manual assistive-tech review |
+| Audit | 실제 Site·QR mutation action/actor/redaction 검증 | local pgTAP runtime |
+| QR inventory/sample | KO/EN route, redacted read DTO, maker-checker RPC, authenticated E2E | local pgTAP runtime |
+| UI | bilingual Auth/context, Site lifecycle, QR sample approval | manual assistive-tech review |
 
 ## 5. 결정이 필요한 아키텍처 Gap
 
@@ -149,7 +151,7 @@ schema/type 및 migration 생성 보조로 사용하는 것이다. Phase 1 첫 s
 ## 8. 다음 개발 순서
 
 1. Docker에서 Supabase Local reset과 pgTAP runtime 실행
-2. QR inventory/batch lifecycle vertical slice 구현
+2. QR final generation approval의 별도 Plan/Design과 Queue/Worker ADR 작성
 3. MFA recovery와 idle timeout 운영 정책 확정
 4. keyboard, screen-reader, computed contrast, real-device journey 수동 검증
 5. 선택된 3번 visual direction으로 Platform/Company/Site 화면 refinement

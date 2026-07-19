@@ -63,6 +63,27 @@ reason, request ID, and immutable creation time.
 Only one `PENDING` request may exist for a Site. Terminal requests remain immutable history.
 Approval also requires the current Site version to equal `requested_site_version`.
 
+### Sticker Design and QR inventory sample foundation
+
+The full field and transition contract is defined in
+`docs/02-design/features/qr-inventory-sample-foundation.design.md`.
+
+- `sticker_design_versions`: Tenant/company/Site scope, template code, JSON design config,
+  `DRAFT/APPROVED/ARCHIVED`, maker/checker identities, optimistic version.
+- `qr_batches`: same-Site approved Design reference, opaque Batch code, 1–100 requested quantity,
+  frozen full lifecycle status, requester/sample/final approvers, idempotency key, counters and
+  optimistic version.
+- `qr_batch_samples`: same-Batch scope, provider-neutral storage metadata, SHA-256 checksum,
+  MIME/size, decode/quiet-zone/contrast evidence, `READY/APPROVED/INVALIDATED`, retained actor and
+  timestamp history.
+- `qr_assets`: same-Batch scope, internal identity, encrypted/hashed token fields, human code,
+  lifecycle state and timestamps. No issuance command exists in this slice.
+- `qr_asset_status_logs`: append-only same-Asset transition history.
+
+Authenticated sessions receive scoped RLS reads only. QR Asset token hash, ciphertext, and key
+version do not have browser column privileges. No physical delete or automated retention job is
+exposed; terminal rows are retained until a separately approved retention policy exists.
+
 ## Validation Rules
 
 - Name: trimmed, 1–200 characters.

@@ -1,11 +1,11 @@
 # Taptolk Current State
 
-- 기준일: 2026-07-18
+- 기준일: 2026-07-19
 - 프로젝트 루트: `/Users/benjaminsong/Documents/Taptolk`
 - 최상위 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
 - 현재 단계: Phase 0 소스 기반 및 i18n 완료, Phase 1 Tenant/Admin 기반과
   Admin Auth/MFA 실인증 완료, 계정 생성·Google SSO 코드와 RLS Tenant Catalog 구현,
-  Google provider 외부 설정 대기
+  QR 재고·소량 Batch·샘플 승인 기반을 Staging에 적용, Google provider 외부 설정 대기
 
 ## 1. 구현 상태
 
@@ -32,8 +32,9 @@ e2e/                   axe, health, 320px, locale·Admin Auth browser smoke
 
 Tenant/Admin 데이터·권한·application service, Admin 로그인/MFA와 실제 staging
 AAL2 acceptance를 완료했다. 이메일/Google 계정 생성과 Super Admin Tenant Catalog도
-구현했다. Google provider 외부 설정, 관리자 승인 mutation, 인증된 Site CRUD 화면과
-API, QR, SMS, 스티커 렌더링은 아직 구현하지 않았다.
+구현했다. 인증된 Site CRUD와 QR Design/소량 Batch/샘플 승인 화면·RPC도
+Staging acceptance를 통과했다. QR 대량 생성 최종 승인, Queue/Worker, 실제
+스티커 렌더링·PDF/ZIP, public token, SMS는 아직 구현하지 않았다.
 
 ## 2. 고정 기술 기준
 
@@ -165,11 +166,22 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
   변조 mutation 차단, audit redaction, cleanup residue `0` 검증
 - 하위 scope가 자신의 parent Tenant/Management Company만 읽도록 전용 RLS
   parent-visibility helper 적용
+- `StickerDesignVersion`, `QrBatch`, `QrBatchSample`, `QrAsset`,
+  append-only `QrAssetStatusLog` schema와 Tenant/Company/Site 복합 제약 구현
+- Design 생성→독립 승인→보관, 1–100 소량 Batch 요청, 샘플 첨부→독립 승인→이력 보존
+  무효화, 요청자 취소 RPC를 동일 transaction audit와 연결
+- `/ko|en/admin/qr-inventory` 역할별 UI와 명시적
+  `SAMPLE_APPROVED ≠ GENERATION_APPROVED` 경계 구현
+- actor UUID를 browser DTO에서 제거하고 maker-checker 판단은
+  `created_by_current_actor` / `requested_by_current_actor` boolean으로 축소
+- Staging에서 QR 여정 6개와 기존 Site 여정 4개를 함께 실행해 scope 변조 차단,
+  audit redaction, history preservation, cleanup residue `0` 검증
 
 이는 Phase 1의 안전한 기반이며 전체 Phase 1 완료가 아니다. Docker PostgreSQL에서
 reset과 pgTAP을 실행해야 Phase 1 acceptance로 판정한다. Staging Auth/MFA와 인증된
-Site CRUD·Tenant Isolation E2E는 통과했다. Staging에서는 extension 설치 없이
-catalog, transaction rollback, 실제 browser session으로 RLS·권한·제약을 검증했다.
+Site CRUD·Tenant Isolation, QR inventory/sample E2E는 통과했다. Staging에서는
+extension 설치 없이 catalog, transaction rollback, 실제 browser session으로
+RLS·권한·제약을 검증했다.
 
 ## 7. 환경변수와 외부 서비스
 
@@ -189,7 +201,7 @@ Supabase Staging `taptolk-staging`은 2026-07-18 연결했다.
 - Data API: enabled
 - Automatically expose new tables: disabled
 - Automatic RLS: enabled
-- Migration: 로컬/원격 15개 일치
+- Migration: 로컬/원격 19개 일치
 - Secret/API key: 저장소와 문서에 저장하지 않음
 
 Supabase Production, Vercel, SMS, Sentry 계정은 아직 연결하지 않았다.
@@ -203,23 +215,23 @@ pnpm 10.34.5에서 확인한 결과:
 |---|---|
 | Frozen lockfile install | 통과 |
 | Production dependency audit | 알려진 취약점 0건 |
-| Biome lint | 160 files, 통과 |
+| Biome lint | 최종 `pnpm verify` 통과 |
 | TypeScript | 10 workspace packages / 16 tasks, 통과 |
-| Vitest | 16 files / 71 tests, 통과 |
-| Migration static check | 15 migrations / 8 DB tests, 통과 |
-| Secret scan | 231 text files, 통과 |
+| Vitest | 18 files / 89 tests, 통과 |
+| Migration static check | 19 migrations / 10 DB tests, 통과 |
+| Secret scan | 최종 `pnpm verify` 통과 |
 | Logo integrity | 원본·공개 자산 일치 |
-| WCJ static | W/C/J 100/100/100, 47 sources |
-| Next production build | `/ko`, `/en`, Admin Auth/MFA/Site, locale API와 proxy 포함 통과 |
-| Playwright smoke | Desktop/Mobile 26 tests, 통과 |
-| Authenticated staging E2E | Super/Management/Site Admin 3 tests, 통과 |
+| WCJ static | W/C/J 100/100/100, 49 sources |
+| Next production build | `/ko`, `/en`, Admin Auth/MFA/Site/QR inventory, locale API와 proxy 포함 통과 |
+| Playwright smoke | Desktop/Mobile 28 tests, 통과 |
+| Authenticated staging E2E | Site 4 + QR inventory/sample 6 = 10 tests, 통과 |
 | axe | 위반 0건 |
 
 ## 9. 아직 완료되지 않은 acceptance
 
 - Supabase Local 실제 reset 및 pgTAP 실행: Docker daemon이 없어 실행 불가
 - Staging pgTAP: `pgtap` extension이 없어 미실행; catalog/rollback 검증은 통과
-- Supabase CLI `db push --dry-run`: 임시 login role 발급 지연; migration list는 정상
+- Supabase CLI `db push`: QR foundation과 actor-visibility migration까지 Staging 적용
 - Vercel Preview: 프로젝트 생성·외부 연결 승인 전이므로 미실행
 - Sentry/SMS 실제 연결: 후속 승인 및 자격증명 필요
 - Production Worker runtime: ADR 결정 필요
@@ -229,12 +241,14 @@ pnpm 10.34.5에서 확인한 결과:
 - 이메일/Google 신규 계정의 access-pending 실계정 acceptance 필요
 - MFA recovery와 Admin idle timeout 운영 정책은 후속 구현 필요
 - 인증된 Site CRUD repository/API/UI/E2E: staging acceptance 통과
+- QR inventory/small Batch/sample approval repository/RPC/UI/E2E: staging acceptance 통과
 - Phase 1 migration/tenant isolation pgTAP runtime: Docker DB에서 실행 필요
 - 선택된 3번 Customer Portfolio 방향의 Platform/Company/Site별 화면 refinement
 
 Admin Console은 Platform/Company/Site 관점의 IA, route, dashboard, read model, API,
 Site/QR 권한과 상태 계약까지 설계됐다. Customer Portfolio 기반 3번 시각 방향도
 선택됐다. 현재 role별 Auth entry, Site catalog와 direct lifecycle UI/API, Site
-maker-checker request/approval queue, staging tenant isolation E2E까지 구현됐다. QR 운영
-화면은 아직 없다. Phase 1 전체 완료는 Supabase Local reset과 local pgTAP runtime
-전까지 판정하지 않는다.
+maker-checker request/approval queue와 QR Design/소량 Batch/샘플 승인 화면,
+staging tenant isolation E2E까지 구현됐다. QR 대량 생성 최종 승인과 Queue/Worker,
+Asset 발행·token·인쇄 파일은 아직 없다. Phase 1 전체 완료는 Supabase Local reset과
+local pgTAP runtime 전까지 판정하지 않는다.

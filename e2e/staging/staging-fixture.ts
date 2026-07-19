@@ -224,6 +224,21 @@ export class StagingServiceApi {
     }
   }
 
+  async authUserExists(userId: string): Promise<boolean> {
+    const response = await fetch(
+      `${this.supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`,
+      {
+        headers: this.headers(),
+        method: "GET",
+      },
+    );
+    if (response.status === 404) {
+      return false;
+    }
+    await this.assertResponse(response, "Read ephemeral Auth user cleanup evidence");
+    return true;
+  }
+
   async insert(table: string, rows: readonly Record<string, unknown>[]): Promise<void> {
     const response = await fetch(`${this.supabaseUrl}/rest/v1/${table}`, {
       body: JSON.stringify(rows),
@@ -312,6 +327,9 @@ export async function createStagingFixture(): Promise<StagingFixture> {
 
     if (allSiteIds.length > 0) {
       await api.deleteWhere("audit_logs", postgrestFilter("site_id", allSiteIds));
+      await api.deleteWhere("qr_batch_samples", postgrestFilter("site_id", allSiteIds));
+      await api.deleteWhere("qr_batches", postgrestFilter("site_id", allSiteIds));
+      await api.deleteWhere("sticker_design_versions", postgrestFilter("site_id", allSiteIds));
       await api.deleteWhere("site_lifecycle_requests", postgrestFilter("site_id", allSiteIds));
     }
     if (actorIds.length > 0) {

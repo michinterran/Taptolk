@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   date,
   foreignKey,
@@ -80,6 +81,53 @@ export const siteLifecycleRequestStatus = pgEnum("site_lifecycle_request_status"
   "APPROVED",
   "REJECTED",
   "CANCELLED",
+]);
+export const stickerDesignStatus = pgEnum("sticker_design_status", [
+  "DRAFT",
+  "APPROVED",
+  "ARCHIVED",
+]);
+export const qrBatchStatus = pgEnum("qr_batch_status", [
+  "DRAFT",
+  "SAMPLE_RENDERING",
+  "SAMPLE_READY",
+  "SAMPLE_APPROVED",
+  "FINAL_APPROVAL_PENDING",
+  "GENERATION_APPROVED",
+  "GENERATION_QUEUED",
+  "GENERATING",
+  "GENERATED",
+  "QUALITY_CHECKED",
+  "PRINT_FILE_READY",
+  "SENT_TO_PRINTER",
+  "PRINTED",
+  "SHIPPED",
+  "DELIVERED",
+  "DISTRIBUTING",
+  "COMPLETED",
+  "FAILED",
+  "CANCELLED",
+  "PARTIALLY_COMPLETED",
+]);
+export const qrBatchSampleStatus = pgEnum("qr_batch_sample_status", [
+  "READY",
+  "APPROVED",
+  "INVALIDATED",
+]);
+export const qrAssetStatus = pgEnum("qr_asset_status", [
+  "GENERATED",
+  "PRINT_READY",
+  "PRINTED",
+  "IN_STOCK",
+  "ASSIGNED",
+  "ACTIVATION_PENDING",
+  "ACTIVE",
+  "SUSPENDED",
+  "LOST",
+  "DAMAGED",
+  "REPLACED",
+  "REVOKED",
+  "EXPIRED",
 ]);
 
 function commonColumns() {
@@ -407,6 +455,284 @@ export const siteLifecycleRequests = pgTable(
           and ${table.cancelledAt} is not null
         )
       `,
+    ),
+  ],
+);
+
+export const stickerDesignVersions = pgTable(
+  "sticker_design_versions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    templateCode: text("template_code").notNull(),
+    designConfig: jsonb("design_config").notNull(),
+    status: stickerDesignStatus("status").default("DRAFT").notNull(),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    approvedBy: uuid("approved_by").references(() => authUsers.id, { onDelete: "restrict" }),
+    approvedAt: timestamp("approved_at", { mode: "date", withTimezone: true }),
+    archivedBy: uuid("archived_by").references(() => authUsers.id, { onDelete: "restrict" }),
+    archivedAt: timestamp("archived_at", { mode: "date", withTimezone: true }),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId],
+      foreignColumns: [sites.tenantId, sites.managementCompanyId, sites.id],
+      name: "fk_sticker_design_versions_site",
+    }).onDelete("restrict"),
+    unique("uq_sticker_design_versions_scope_id").on(
+      table.tenantId,
+      table.managementCompanyId,
+      table.siteId,
+      table.id,
+    ),
+    uniqueIndex("uq_sticker_design_versions_site_draft")
+      .on(table.siteId)
+      .where(sql`${table.status} = 'DRAFT'`),
+    uniqueIndex("uq_sticker_design_versions_site_approved")
+      .on(table.siteId)
+      .where(sql`${table.status} = 'APPROVED'`),
+    index("idx_sticker_design_versions_tenant_status_created").on(
+      table.tenantId,
+      table.status,
+      table.createdAt,
+    ),
+    index("idx_sticker_design_versions_site_status_created").on(
+      table.siteId,
+      table.status,
+      table.createdAt,
+    ),
+    check(
+      "chk_sticker_design_versions_template_code",
+      sql`${table.templateCode} ~ '^[A-Z0-9][A-Z0-9_-]{1,63}$'`,
+    ),
+    check(
+      "chk_sticker_design_versions_config",
+      sql`jsonb_typeof(${table.designConfig}) = 'object' and length(${table.designConfig}::text) <= 20000`,
+    ),
+  ],
+);
+
+export const qrBatches = pgTable(
+  "qr_batches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    batchCode: text("batch_code").notNull(),
+    stickerDesignVersionId: uuid("sticker_design_version_id").notNull(),
+    requestedQuantity: integer("requested_quantity").notNull(),
+    generatedQuantity: integer("generated_quantity").default(0).notNull(),
+    renderedQuantity: integer("rendered_quantity").default(0).notNull(),
+    passedQuantity: integer("passed_quantity").default(0).notNull(),
+    failedQuantity: integer("failed_quantity").default(0).notNull(),
+    purpose: text("purpose").notNull(),
+    status: qrBatchStatus("status").default("DRAFT").notNull(),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    sampleApprovedBy: uuid("sample_approved_by").references(() => authUsers.id, {
+      onDelete: "restrict",
+    }),
+    sampleApprovedAt: timestamp("sample_approved_at", { mode: "date", withTimezone: true }),
+    generationApprovedBy: uuid("generation_approved_by").references(() => authUsers.id, {
+      onDelete: "restrict",
+    }),
+    generationApprovedAt: timestamp("generation_approved_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    cancelledBy: uuid("cancelled_by").references(() => authUsers.id, { onDelete: "restrict" }),
+    cancelledAt: timestamp("cancelled_at", { mode: "date", withTimezone: true }),
+    idempotencyKey: uuid("idempotency_key").notNull().unique(),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId],
+      foreignColumns: [sites.tenantId, sites.managementCompanyId, sites.id],
+      name: "fk_qr_batches_site",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [
+        table.tenantId,
+        table.managementCompanyId,
+        table.siteId,
+        table.stickerDesignVersionId,
+      ],
+      foreignColumns: [
+        stickerDesignVersions.tenantId,
+        stickerDesignVersions.managementCompanyId,
+        stickerDesignVersions.siteId,
+        stickerDesignVersions.id,
+      ],
+      name: "fk_qr_batches_sticker_design",
+    }).onDelete("restrict"),
+    unique("uq_qr_batches_scope_id").on(
+      table.tenantId,
+      table.managementCompanyId,
+      table.siteId,
+      table.id,
+    ),
+    unique("uq_qr_batches_batch_code").on(table.batchCode),
+    index("idx_qr_batches_tenant_status_created").on(table.tenantId, table.status, table.createdAt),
+    index("idx_qr_batches_site_status_created").on(table.siteId, table.status, table.createdAt),
+    check("chk_qr_batches_requested_quantity", sql`${table.requestedQuantity} between 1 and 100`),
+    check("chk_qr_batches_purpose", sql`length(trim(${table.purpose})) between 3 and 200`),
+  ],
+);
+
+export const qrBatchSamples = pgTable(
+  "qr_batch_samples",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    batchId: uuid("batch_id").notNull(),
+    status: qrBatchSampleStatus("status").default("READY").notNull(),
+    storageBucket: text("storage_bucket").notNull(),
+    storagePath: text("storage_path").notNull(),
+    checksumSha256: text("checksum_sha256").notNull(),
+    mimeType: text("mime_type").notNull(),
+    byteSize: integer("byte_size").notNull(),
+    decodePassed: boolean("decode_passed").default(false).notNull(),
+    quietZonePassed: boolean("quiet_zone_passed").default(false).notNull(),
+    contrastPassed: boolean("contrast_passed").default(false).notNull(),
+    attachedBy: uuid("attached_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    approvedBy: uuid("approved_by").references(() => authUsers.id, { onDelete: "restrict" }),
+    approvedAt: timestamp("approved_at", { mode: "date", withTimezone: true }),
+    invalidatedBy: uuid("invalidated_by").references(() => authUsers.id, {
+      onDelete: "restrict",
+    }),
+    invalidatedAt: timestamp("invalidated_at", { mode: "date", withTimezone: true }),
+    invalidationReason: text("invalidation_reason"),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId, table.batchId],
+      foreignColumns: [
+        qrBatches.tenantId,
+        qrBatches.managementCompanyId,
+        qrBatches.siteId,
+        qrBatches.id,
+      ],
+      name: "fk_qr_batch_samples_batch",
+    }).onDelete("restrict"),
+    unique("uq_qr_batch_samples_scope_id").on(
+      table.tenantId,
+      table.managementCompanyId,
+      table.siteId,
+      table.batchId,
+      table.id,
+    ),
+    uniqueIndex("uq_qr_batch_samples_active_batch")
+      .on(table.batchId)
+      .where(sql`${table.status} <> 'INVALIDATED'`),
+    index("idx_qr_batch_samples_site_status_created").on(
+      table.siteId,
+      table.status,
+      table.createdAt,
+    ),
+    check("chk_qr_batch_samples_checksum", sql`${table.checksumSha256} ~ '^[0-9a-f]{64}$'`),
+    check("chk_qr_batch_samples_byte_size", sql`${table.byteSize} between 1 and 20000000`),
+  ],
+);
+
+export const qrAssets = pgTable(
+  "qr_assets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    batchId: uuid("batch_id").notNull(),
+    internalUuid: uuid("internal_uuid").defaultRandom().notNull().unique(),
+    publicTokenHash: text("public_token_hash").notNull().unique(),
+    publicTokenCiphertext: text("public_token_ciphertext").notNull(),
+    tokenKeyVersion: integer("token_key_version").notNull(),
+    humanCode: text("human_code").notNull().unique(),
+    status: qrAssetStatus("status").default("GENERATED").notNull(),
+    currentVehicleId: uuid("current_vehicle_id"),
+    currentBindingId: uuid("current_binding_id"),
+    activatedAt: timestamp("activated_at", { mode: "date", withTimezone: true }),
+    suspendedAt: timestamp("suspended_at", { mode: "date", withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
+    expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }),
+    revokeReason: text("revoke_reason"),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId, table.batchId],
+      foreignColumns: [
+        qrBatches.tenantId,
+        qrBatches.managementCompanyId,
+        qrBatches.siteId,
+        qrBatches.id,
+      ],
+      name: "fk_qr_assets_batch",
+    }).onDelete("restrict"),
+    unique("uq_qr_assets_scope_id").on(
+      table.tenantId,
+      table.managementCompanyId,
+      table.siteId,
+      table.batchId,
+      table.id,
+    ),
+    index("idx_qr_assets_tenant_status_created").on(table.tenantId, table.status, table.createdAt),
+    index("idx_qr_assets_site_status_created").on(table.siteId, table.status, table.createdAt),
+    check("chk_qr_assets_key_version", sql`${table.tokenKeyVersion} >= 1`),
+  ],
+);
+
+export const qrAssetStatusLogs = pgTable(
+  "qr_asset_status_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    batchId: uuid("batch_id").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    fromStatus: qrAssetStatus("from_status"),
+    toStatus: qrAssetStatus("to_status").notNull(),
+    reasonCode: text("reason_code").notNull(),
+    reasonText: text("reason_text"),
+    actorType: auditActorType("actor_type").notNull(),
+    actorId: uuid("actor_id"),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [
+        table.tenantId,
+        table.managementCompanyId,
+        table.siteId,
+        table.batchId,
+        table.qrAssetId,
+      ],
+      foreignColumns: [
+        qrAssets.tenantId,
+        qrAssets.managementCompanyId,
+        qrAssets.siteId,
+        qrAssets.batchId,
+        qrAssets.id,
+      ],
+      name: "fk_qr_asset_status_logs_asset",
+    }).onDelete("restrict"),
+    index("idx_qr_asset_status_logs_asset_created").on(table.qrAssetId, table.createdAt),
+    check(
+      "chk_qr_asset_status_logs_reason_code",
+      sql`${table.reasonCode} ~ '^[A-Z0-9][A-Z0-9_]{1,63}$'`,
     ),
   ],
 );
