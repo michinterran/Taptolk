@@ -399,6 +399,10 @@ provider payloads cannot be smuggled through a structurally valid Queue message.
   `jobId`.
 - If delivery-failure acknowledgement also fails, the lease remains recoverable. Bounded results
   expose only job ID and a safe outcome status.
+- Delivery retry timing is an injected Application policy with validated base delay, maximum
+  delay, and jitter ratio. It uses the delivery-attempt counter, exponential growth, a 24-hour
+  absolute ceiling, bounded symmetric jitter, and injected clock/random sources for deterministic
+  testing. No Route, React component, provider adapter, or Queue payload owns retry values.
 - Worker does not trust Tenant/Site IDs in the payload as authorization. It loads the job by
   `jobId`, verifies the stored Batch relationship, and treats payload scope as consistency input.
 - No reason, user identity, actor UUID, contact data, token material, storage metadata, HTML/SVG,
@@ -523,6 +527,8 @@ Implemented in the current Application, DB, and Web approval units:
 - `apps/worker/src/queue-consumer.test.ts`
 - `packages/application/src/qr-generation-dispatch-coordinator.ts`
 - `packages/application/src/qr-generation-dispatch-coordinator.test.ts`
+- `packages/application/src/qr-generation-delivery-retry-policy.ts`
+- `packages/application/src/qr-generation-delivery-retry-policy.test.ts`
 - `packages/application/src/qr-final-generation-approval-service.ts`
 - `packages/application/src/qr-final-generation-approval-service.test.ts`
 - `packages/application/src/index.ts`

@@ -43,6 +43,13 @@ export {
   type QrGenerationJobStatus,
 } from "./qr-final-generation-approval-service.js";
 export {
+  ExponentialQrGenerationDeliveryRetryPolicy,
+  QR_GENERATION_DELIVERY_RETRY_DELAY_MIN_MS,
+  QR_GENERATION_DELIVERY_RETRY_JITTER_RATIO_MAX,
+  type QrGenerationDeliveryRetryPolicyConfig,
+  QrGenerationDeliveryRetryPolicyError,
+} from "./qr-generation-delivery-retry-policy.js";
+export {
   buildQrGenerationQueueMessage,
   QR_GENERATION_QUEUE_JOB_TYPE,
   QR_GENERATION_QUEUE_PUBLISH_ERROR_CODES,
