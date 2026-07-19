@@ -42,6 +42,7 @@ const serverEnvironmentSchema = z
     ),
     PUBLIC_QR_BASE_URL: optionalUrlSchema,
     QR_CALL_COOLDOWN_SECONDS: integerEnvironmentSchema(180),
+    QR_GLOBAL_LIMIT_PER_MINUTE: integerEnvironmentSchema(5, 1, 20),
     QR_GENERATION_DELIVERY_RETRY_BASE_DELAY_MS: integerEnvironmentSchema(5_000, 1_000, 86_400_000),
     QR_GENERATION_DELIVERY_RETRY_JITTER_RATIO: numberEnvironmentSchema(0.2, 0, 0.5),
     QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS: integerEnvironmentSchema(300_000, 1_000, 86_400_000),

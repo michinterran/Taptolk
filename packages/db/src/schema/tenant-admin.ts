@@ -206,6 +206,52 @@ export const ownerOtpDeliveryStatus = pgEnum("owner_otp_delivery_status", [
 ]);
 export const ownerProofStatus = pgEnum("owner_proof_status", ["ISSUED", "CONSUMED", "EXPIRED"]);
 export const ownerSessionStatus = pgEnum("owner_session_status", ["ACTIVE", "REVOKED", "EXPIRED"]);
+export const contactSessionStatus = pgEnum("contact_session_status", [
+  "CREATED",
+  "MESSAGE_SUBMITTED",
+  "NOTIFICATION_QUEUED",
+  "OWNER_NOTIFIED",
+  "OWNER_VIEWED",
+  "OWNER_REPLIED",
+  "CALLER_VIEWED",
+  "RESOLVED",
+  "NOTIFICATION_FAILED",
+  "ESCALATED",
+  "EXPIRED",
+  "BLOCKED",
+  "CANCELLED",
+]);
+export const contactParticipantType = pgEnum("contact_participant_type", [
+  "CALLER",
+  "OWNER",
+  "ADMIN",
+]);
+export const contactMessageType = pgEnum("contact_message_type", [
+  "TEMPLATE",
+  "FREE_TEXT",
+  "SYSTEM",
+]);
+export const messageModerationStatus = pgEnum("message_moderation_status", [
+  "ACCEPTED",
+  "BLOCKED",
+  "EVIDENCE_LOCKED",
+]);
+export const notificationChannel = pgEnum("notification_channel", ["SMS", "WEB_PUSH"]);
+export const notificationPurpose = pgEnum("notification_purpose", [
+  "OWNER_CONTACT",
+  "CALLER_REPLY",
+  "OTP",
+  "ADMIN_ALERT",
+]);
+export const notificationStatus = pgEnum("notification_status", [
+  "QUEUED",
+  "PROCESSING",
+  "SENT",
+  "DELIVERED",
+  "FAILED_RETRYABLE",
+  "FAILED_FINAL",
+  "CANCELLED",
+]);
 export const vehicleImportStatus = pgEnum("vehicle_import_status", [
   "VALIDATED",
   "COMMITTED",
@@ -1425,6 +1471,188 @@ export const ownerSessions = pgTable(
   (table) => [
     index("idx_owner_sessions_owner_status").on(table.ownerId, table.status, table.expiresAt),
     check("chk_owner_sessions_hash", sql`${table.sessionHash} ~ '^[0-9a-f]{64}$'`),
+  ],
+);
+
+export const contactSessions = pgTable(
+  "contact_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    vehicleId: uuid("vehicle_id").notNull(),
+    sessionTokenHash: text("session_token_hash").notNull().unique(),
+    callerAnonymousHash: text("caller_anonymous_hash").notNull(),
+    reasonCode: text("reason_code").notNull(),
+    status: contactSessionStatus("status").default("CREATED").notNull(),
+    callerMessageCount: integer("caller_message_count").default(0).notNull(),
+    ownerMessageCount: integer("owner_message_count").default(0).notNull(),
+    ownerNotifiedAt: timestamp("owner_notified_at", { mode: "date", withTimezone: true }),
+    ownerViewedAt: timestamp("owner_viewed_at", { mode: "date", withTimezone: true }),
+    ownerRepliedAt: timestamp("owner_replied_at", { mode: "date", withTimezone: true }),
+    callerViewedAt: timestamp("caller_viewed_at", { mode: "date", withTimezone: true }),
+    escalatedAt: timestamp("escalated_at", { mode: "date", withTimezone: true }),
+    resolvedAt: timestamp("resolved_at", { mode: "date", withTimezone: true }),
+    expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }).notNull(),
+    blockedReason: text("blocked_reason"),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_contact_sessions_asset",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.vehicleId],
+      foreignColumns: [vehicles.tenantId, vehicles.siteId, vehicles.id],
+      name: "fk_contact_sessions_vehicle",
+    }).onDelete("restrict"),
+    unique("uq_contact_sessions_tenant_id").on(table.tenantId, table.id),
+    index("idx_contact_sessions_qr_open").on(
+      table.qrAssetId,
+      table.callerAnonymousHash,
+      table.reasonCode,
+      table.createdAt,
+    ),
+    index("idx_contact_sessions_tenant_status").on(table.tenantId, table.status, table.createdAt),
+  ],
+);
+
+export const sessionParticipants = pgTable(
+  "session_participants",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    sessionId: uuid("session_id").notNull(),
+    participantType: contactParticipantType("participant_type").notNull(),
+    ownerId: uuid("owner_id").references(() => owners.id, { onDelete: "restrict" }),
+    anonymousTokenHash: text("anonymous_token_hash"),
+    joinedAt: timestamp("joined_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    leftAt: timestamp("left_at", { mode: "date", withTimezone: true }),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.sessionId],
+      foreignColumns: [contactSessions.tenantId, contactSessions.id],
+      name: "fk_session_participants_session",
+    }).onDelete("restrict"),
+    uniqueIndex("uq_session_participants_active_caller")
+      .on(table.sessionId)
+      .where(sql`${table.participantType} = 'CALLER' and ${table.leftAt} is null`),
+  ],
+);
+
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    sessionId: uuid("session_id").notNull(),
+    senderType: contactParticipantType("sender_type").notNull(),
+    senderOwnerId: uuid("sender_owner_id").references(() => owners.id, {
+      onDelete: "restrict",
+    }),
+    messageType: contactMessageType("message_type").notNull(),
+    reasonCode: text("reason_code"),
+    body: text("body").notNull(),
+    bodyHash: text("body_hash").notNull(),
+    replyCode: text("reply_code"),
+    moderationStatus: messageModerationStatus("moderation_status").default("ACCEPTED").notNull(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.sessionId],
+      foreignColumns: [contactSessions.tenantId, contactSessions.id],
+      name: "fk_messages_session",
+    }).onDelete("restrict"),
+    index("idx_messages_session_created").on(table.sessionId, table.createdAt),
+  ],
+);
+
+export const notificationDeliveries = pgTable(
+  "notification_deliveries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    sessionId: uuid("session_id"),
+    ownerId: uuid("owner_id").references(() => owners.id, { onDelete: "restrict" }),
+    channel: notificationChannel("channel").notNull(),
+    purpose: notificationPurpose("purpose").notNull(),
+    destinationHash: text("destination_hash").notNull(),
+    provider: text("provider").default("UNASSIGNED").notNull(),
+    providerMessageId: text("provider_message_id"),
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    status: notificationStatus("status").default("QUEUED").notNull(),
+    retryCount: integer("retry_count").default(0).notNull(),
+    maxRetries: integer("max_retries").default(3).notNull(),
+    scheduledAt: timestamp("scheduled_at", { mode: "date", withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    sentAt: timestamp("sent_at", { mode: "date", withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { mode: "date", withTimezone: true }),
+    failedAt: timestamp("failed_at", { mode: "date", withTimezone: true }),
+    errorCode: text("error_code"),
+    costAmount: numeric("cost_amount", { precision: 12, scale: 4 }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId],
+      foreignColumns: [sites.tenantId, sites.id],
+      name: "fk_notification_deliveries_site",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.sessionId],
+      foreignColumns: [contactSessions.tenantId, contactSessions.id],
+      name: "fk_notification_deliveries_session",
+    }).onDelete("restrict"),
+    index("idx_notification_deliveries_status_scheduled").on(table.status, table.scheduledAt),
+  ],
+);
+
+export const publicContactAttempts = pgTable(
+  "public_contact_attempts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    sessionId: uuid("session_id"),
+    anonymousHash: text("anonymous_hash").notNull(),
+    networkHash: text("network_hash").notNull(),
+    userAgentHash: text("user_agent_hash").notNull(),
+    messageHash: text("message_hash").notNull(),
+    result: text("result").notNull(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_public_contact_attempts_asset",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.sessionId],
+      foreignColumns: [contactSessions.tenantId, contactSessions.id],
+      name: "fk_public_contact_attempts_session",
+    }).onDelete("restrict"),
+    index("idx_public_contact_attempts_anon_qr").on(
+      table.anonymousHash,
+      table.qrAssetId,
+      table.createdAt,
+    ),
+    index("idx_public_contact_attempts_anon_created").on(table.anonymousHash, table.createdAt),
+    index("idx_public_contact_attempts_network_qr").on(
+      table.networkHash,
+      table.qrAssetId,
+      table.createdAt,
+    ),
+    index("idx_public_contact_attempts_qr_created").on(table.qrAssetId, table.createdAt),
   ],
 );
 

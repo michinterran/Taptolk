@@ -56,6 +56,20 @@ export {
   type OwnerVehicleItem,
 } from "./owner-activation-service.js";
 export {
+  type PublicContactCreationResult,
+  type PublicContactHasher,
+  type PublicContactHashPurpose,
+  type PublicContactOwnerMessage,
+  type PublicContactRepository,
+  type PublicContactRepositoryCreateInput,
+  type PublicContactRepositoryCreateResult,
+  type PublicContactSecretFactory,
+  PublicContactService,
+  PublicContactServiceError,
+  type PublicContactSessionReadModel,
+  type PublicQrContactInspection,
+} from "./public-contact-service.js";
+export {
   type QrBatchProgressActor,
   type QrBatchProgressItem,
   type QrBatchProgressRepository,

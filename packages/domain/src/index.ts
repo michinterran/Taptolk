@@ -35,3 +35,19 @@ export {
   type OwnerActivationPolicyErrorCode,
   type OwnerOtpPolicy,
 } from "./owner-activation-policy.js";
+export {
+  assertContactPlateLast4,
+  assertPublicContactRatePolicy,
+  CONTACT_REASON_CODES,
+  type ContactMessageMode,
+  type ContactReasonCode,
+  DEFAULT_PUBLIC_CONTACT_RATE_POLICY,
+  getPublicContactPollingInterval,
+  normalizeContactMessage,
+  normalizeContactReason,
+  PUBLIC_CONTACT_TERMINAL_STATUSES,
+  PublicContactPolicyError,
+  type PublicContactPolicyErrorCode,
+  type PublicContactRatePolicy,
+  type PublicContactStatus,
+} from "./public-contact-policy.js";
