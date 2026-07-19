@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-07-19T15:45:51.073Z",
+  "lastUpdated": "2026-07-19T16:47:31.424Z",
   "activeFeatures": [
     "i18n-foundation",
     "tenant-admin-foundation",
@@ -347,7 +347,7 @@
       }
     },
     "owner-activation": {
-      "phase": "do",
+      "phase": "completed",
       "matchRate": null,
       "iterationCount": 0,
       "documents": {},
@@ -366,24 +366,28 @@
         },
         {
           "phase": "do",
-          "status": "active",
-          "createdAt": "2026-07-19T15:40:13.985Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T15:40:13.985Z",
+          "completedAt": "2026-07-19T16:47:26.165Z"
         },
         {
           "phase": "check",
-          "status": "pending",
-          "createdAt": "2026-07-19T15:40:13.985Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T15:40:13.985Z",
+          "completedAt": "2026-07-19T16:47:28.458Z"
         },
         {
           "phase": "report",
-          "status": "pending",
-          "createdAt": "2026-07-19T15:40:13.985Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T15:40:13.985Z",
+          "completedAt": "2026-07-19T16:47:31.424Z"
         }
       ],
       "timestamps": {
         "started": "2026-07-19T15:40:13.986Z",
-        "lastUpdated": "2026-07-19T15:45:51.073Z"
-      }
+        "lastUpdated": "2026-07-19T16:47:31.424Z"
+      },
+      "completedAt": "2026-07-19T16:47:31.420Z"
     }
   },
   "pipeline": {
@@ -394,7 +398,7 @@
   "session": {
     "startedAt": "2026-07-18T09:15:44.795Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-07-19T15:45:51.073Z"
+    "lastActivity": "2026-07-19T16:47:31.424Z"
   },
   "history": [
     {
@@ -849,6 +853,39 @@
       "phase": "design",
       "nextPhase": "do",
       "timestamp": "2026-07-19T15:45:51.071Z"
+    },
+    {
+      "feature": "owner-activation",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T16:47:26.153Z"
+    },
+    {
+      "feature": "owner-activation",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T16:47:26.164Z"
+    },
+    {
+      "feature": "owner-activation",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T16:47:28.432Z"
+    },
+    {
+      "feature": "owner-activation",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T16:47:28.449Z"
+    },
+    {
+      "feature": "owner-activation",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T16:47:31.422Z"
     }
   ]
 }

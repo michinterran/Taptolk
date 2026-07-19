@@ -25,6 +25,21 @@ const serverEnvironmentSchema = z
     IP_QR_LIMIT_PER_10_MINUTES: integerEnvironmentSchema(3),
     MESSAGE_RETENTION_HOURS: integerEnvironmentSchema(72),
     OWNER_RESPONSE_BASE_URL: optionalUrlSchema,
+    OWNER_OTP_ATTEMPT_LIMIT: integerEnvironmentSchema(5, 1, 10),
+    OWNER_OTP_DAILY_PHONE_LIMIT: integerEnvironmentSchema(10, 1, 100),
+    OWNER_OTP_HOURLY_PHONE_LIMIT: integerEnvironmentSchema(5, 1, 50),
+    OWNER_OTP_NETWORK_WINDOW_LIMIT: integerEnvironmentSchema(10, 1, 100),
+    OWNER_OTP_PROOF_TTL_SECONDS: integerEnvironmentSchema(300, 60, 900),
+    OWNER_OTP_RESEND_SECONDS: integerEnvironmentSchema(60, 30, 300),
+    OWNER_OTP_TTL_SECONDS: integerEnvironmentSchema(180, 60, 600),
+    OWNER_SESSION_TTL_SECONDS: integerEnvironmentSchema(43_200, 300, 86_400),
+    OWNER_STAGING_MOCK_OTP: z.preprocess(
+      emptyStringToUndefined,
+      z
+        .string()
+        .regex(/^[0-9]{6}$/u)
+        .optional(),
+    ),
     PUBLIC_QR_BASE_URL: optionalUrlSchema,
     QR_CALL_COOLDOWN_SECONDS: integerEnvironmentSchema(180),
     QR_GENERATION_DELIVERY_RETRY_BASE_DELAY_MS: integerEnvironmentSchema(5_000, 1_000, 86_400_000),
@@ -94,6 +109,17 @@ const serverEnvironmentSchema = z
       });
     }
 
+    if (
+      environment.OWNER_OTP_HOURLY_PHONE_LIMIT > environment.OWNER_OTP_DAILY_PHONE_LIMIT ||
+      environment.OWNER_OTP_RESEND_SECONDS >= environment.OWNER_OTP_TTL_SECONDS
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Owner OTP policy windows are inconsistent.",
+        path: ["OWNER_OTP_TTL_SECONDS"],
+      });
+    }
+
     if (environment.APP_ENV !== "production") {
       return;
     }
@@ -127,6 +153,13 @@ const serverEnvironmentSchema = z
         code: "custom",
         message: "Production requires an approved SMS provider.",
         path: ["SMS_PROVIDER"],
+      });
+    }
+    if (environment.OWNER_STAGING_MOCK_OTP) {
+      context.addIssue({
+        code: "custom",
+        message: "Production cannot use a staging mock OTP.",
+        path: ["OWNER_STAGING_MOCK_OTP"],
       });
     }
   });

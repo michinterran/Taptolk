@@ -191,6 +191,21 @@ export const qrAssignmentMethod = pgEnum("qr_assignment_method", [
   "OWNER_ACTIVATION",
   "REPLACEMENT",
 ]);
+export const ownerStatus = pgEnum("owner_status", ["ACTIVE", "SUSPENDED", "DELETED"]);
+export const ownerDeviceStatus = pgEnum("owner_device_status", ["ACTIVE", "REVOKED"]);
+export const ownerOtpStatus = pgEnum("owner_otp_status", [
+  "PENDING",
+  "VERIFIED",
+  "LOCKED",
+  "EXPIRED",
+]);
+export const ownerOtpDeliveryStatus = pgEnum("owner_otp_delivery_status", [
+  "PENDING",
+  "SENT",
+  "FAILED",
+]);
+export const ownerProofStatus = pgEnum("owner_proof_status", ["ISSUED", "CONSUMED", "EXPIRED"]);
+export const ownerSessionStatus = pgEnum("owner_session_status", ["ACTIVE", "REVOKED", "EXPIRED"]);
 export const vehicleImportStatus = pgEnum("vehicle_import_status", [
   "VALIDATED",
   "COMMITTED",
@@ -1027,6 +1042,53 @@ export const qrAssetStatusLogs = pgTable(
   ],
 );
 
+export const owners = pgTable(
+  "owners",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authUserId: uuid("auth_user_id")
+      .unique()
+      .references(() => authUsers.id, {
+        onDelete: "restrict",
+      }),
+    phoneHash: text("phone_hash").notNull().unique(),
+    phoneCiphertext: text("phone_ciphertext").notNull(),
+    phoneKeyVersion: integer("phone_key_version").notNull(),
+    phoneLast4: text("phone_last4").notNull(),
+    status: ownerStatus("status").default("ACTIVE").notNull(),
+    verifiedAt: timestamp("verified_at", { mode: "date", withTimezone: true }).notNull(),
+    termsVersion: text("terms_version").notNull(),
+    privacyVersion: text("privacy_version").notNull(),
+    consentedAt: timestamp("consented_at", { mode: "date", withTimezone: true }).notNull(),
+    ...commonColumns(),
+  },
+  (table) => [
+    check("chk_owners_phone_hash", sql`${table.phoneHash} ~ '^[0-9a-f]{64}$'`),
+    check("chk_owners_phone_last4", sql`${table.phoneLast4} ~ '^[0-9]{4}$'`),
+  ],
+);
+
+export const ownerDevices = pgTable(
+  "owner_devices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => owners.id, { onDelete: "restrict" }),
+    deviceHash: text("device_hash").notNull(),
+    status: ownerDeviceStatus("status").default("ACTIVE").notNull(),
+    lastSeenAt: timestamp("last_seen_at", { mode: "date", withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    unique("uq_owner_devices_owner_hash").on(table.ownerId, table.deviceHash),
+    check("chk_owner_devices_hash", sql`${table.deviceHash} ~ '^[0-9a-f]{64}$'`),
+  ],
+);
+
 export const qrActivationCodes = pgTable(
   "qr_activation_codes",
   {
@@ -1040,7 +1102,9 @@ export const qrActivationCodes = pgTable(
     status: qrActivationCodeStatus("status").default("ISSUED").notNull(),
     expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }),
     usedAt: timestamp("used_at", { mode: "date", withTimezone: true }),
-    usedByOwnerId: uuid("used_by_owner_id"),
+    usedByOwnerId: uuid("used_by_owner_id").references(() => owners.id, {
+      onDelete: "restrict",
+    }),
     revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
   },
@@ -1205,15 +1269,16 @@ export const qrBindings = pgTable(
     siteId: uuid("site_id").notNull(),
     qrAssetId: uuid("qr_asset_id").notNull(),
     vehicleId: uuid("vehicle_id").notNull(),
-    ownerId: uuid("owner_id"),
+    ownerId: uuid("owner_id").references(() => owners.id, { onDelete: "restrict" }),
     assignmentMethod: qrAssignmentMethod("assignment_method").notNull(),
     startedAt: timestamp("started_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
     endedAt: timestamp("ended_at", { mode: "date", withTimezone: true }),
     endedReason: text("ended_reason"),
     isPrimary: boolean("is_primary").default(true).notNull(),
-    createdBy: uuid("created_by")
-      .notNull()
-      .references(() => authUsers.id, { onDelete: "restrict" }),
+    createdBy: uuid("created_by").references(() => authUsers.id, { onDelete: "restrict" }),
+    createdByOwnerId: uuid("created_by_owner_id").references(() => owners.id, {
+      onDelete: "restrict",
+    }),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
@@ -1232,6 +1297,134 @@ export const qrBindings = pgTable(
     uniqueIndex("uq_vehicle_primary_active_qr")
       .on(table.vehicleId)
       .where(sql`${table.endedAt} is null and ${table.isPrimary} = true`),
+    check(
+      "chk_qr_bindings_creation_actor",
+      sql`(${table.createdBy} is null) <> (${table.createdByOwnerId} is null)`,
+    ),
+  ],
+);
+
+export const vehicleOwners = pgTable(
+  "vehicle_owners",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    vehicleId: uuid("vehicle_id").notNull(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => owners.id, { onDelete: "restrict" }),
+    isPrimary: boolean("is_primary").default(true).notNull(),
+    activationSource: text("activation_source").default("QR_ACTIVATION").notNull(),
+    startedAt: timestamp("started_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    endedAt: timestamp("ended_at", { mode: "date", withTimezone: true }),
+    endedReason: text("ended_reason"),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.vehicleId],
+      foreignColumns: [vehicles.tenantId, vehicles.siteId, vehicles.id],
+      name: "fk_vehicle_owners_vehicle",
+    }).onDelete("restrict"),
+    unique("uq_vehicle_owners_tenant_id").on(table.tenantId, table.id),
+    uniqueIndex("uq_vehicle_owners_primary_active")
+      .on(table.vehicleId)
+      .where(sql`${table.endedAt} is null and ${table.isPrimary} = true`),
+    index("idx_vehicle_owners_owner_active")
+      .on(table.ownerId, table.startedAt)
+      .where(sql`${table.endedAt} is null`),
+  ],
+);
+
+export const ownerOtpChallenges = pgTable(
+  "owner_otp_challenges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    publicTokenHash: text("public_token_hash").notNull(),
+    phoneHash: text("phone_hash").notNull(),
+    phoneCiphertext: text("phone_ciphertext").notNull(),
+    phoneKeyVersion: integer("phone_key_version").notNull(),
+    phoneLast4: text("phone_last4").notNull(),
+    networkHash: text("network_hash").notNull(),
+    deviceHash: text("device_hash").notNull(),
+    otpHash: text("otp_hash").notNull(),
+    status: ownerOtpStatus("status").default("PENDING").notNull(),
+    deliveryStatus: ownerOtpDeliveryStatus("delivery_status").default("PENDING").notNull(),
+    attemptCount: integer("attempt_count").default(0).notNull(),
+    sendCount: integer("send_count").default(1).notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }).notNull(),
+    resendAfter: timestamp("resend_after", { mode: "date", withTimezone: true }).notNull(),
+    verifiedAt: timestamp("verified_at", { mode: "date", withTimezone: true }),
+    lockedAt: timestamp("locked_at", { mode: "date", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_owner_otp_challenges_asset",
+    }).onDelete("restrict"),
+    index("idx_owner_otp_phone_created").on(table.phoneHash, table.createdAt),
+    index("idx_owner_otp_network_created").on(table.networkHash, table.createdAt),
+    index("idx_owner_otp_device_created").on(table.deviceHash, table.createdAt),
+    index("idx_owner_otp_qr_created").on(table.qrAssetId, table.createdAt),
+  ],
+);
+
+export const ownerPhoneVerificationProofs = pgTable(
+  "owner_phone_verification_proofs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    challengeId: uuid("challenge_id")
+      .notNull()
+      .unique()
+      .references(() => ownerOtpChallenges.id, { onDelete: "restrict" }),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrAssetId: uuid("qr_asset_id").notNull(),
+    phoneHash: text("phone_hash").notNull(),
+    proofHash: text("proof_hash").notNull().unique(),
+    status: ownerProofStatus("status").default("ISSUED").notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { mode: "date", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.qrAssetId],
+      foreignColumns: [qrAssets.tenantId, qrAssets.siteId, qrAssets.id],
+      name: "fk_owner_phone_proofs_asset",
+    }).onDelete("restrict"),
+  ],
+);
+
+export const ownerSessions = pgTable(
+  "owner_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => owners.id, { onDelete: "restrict" }),
+    ownerDeviceId: uuid("owner_device_id")
+      .notNull()
+      .references(() => ownerDevices.id, { onDelete: "restrict" }),
+    sessionHash: text("session_hash").notNull().unique(),
+    status: ownerSessionStatus("status").default("ACTIVE").notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }).notNull(),
+    lastSeenAt: timestamp("last_seen_at", { mode: "date", withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_owner_sessions_owner_status").on(table.ownerId, table.status, table.expiresAt),
+    check("chk_owner_sessions_hash", sql`${table.sessionHash} ~ '^[0-9a-f]{64}$'`),
   ],
 );
 

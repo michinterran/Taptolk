@@ -39,6 +39,23 @@ export {
   ManagementCompanyManagementService,
 } from "./management-company-management-service.js";
 export {
+  type OwnerActivationCompletion,
+  type OwnerActivationHashPurpose,
+  type OwnerActivationInspection,
+  type OwnerActivationProtectedValue,
+  type OwnerActivationProtector,
+  type OwnerActivationRepository,
+  type OwnerActivationSecretFactory,
+  OwnerActivationService,
+  OwnerActivationServiceError,
+  type OwnerActivationSessionCompletion,
+  type OwnerOtpProvider,
+  type OwnerOtpRequestResult,
+  type OwnerOtpVerification,
+  type OwnerOtpVerificationResult,
+  type OwnerVehicleItem,
+} from "./owner-activation-service.js";
+export {
   type QrBatchProgressActor,
   type QrBatchProgressItem,
   type QrBatchProgressRepository,

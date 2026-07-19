@@ -18,3 +18,20 @@ export {
   isResourceWithinScope,
   type ResourceScope,
 } from "./admin-rbac.js";
+export {
+  assertOwnerConsent,
+  assertOwnerDeviceId,
+  assertOwnerOtpPolicy,
+  DEFAULT_OWNER_OTP_POLICY,
+  normalizeOwnerActivationCode,
+  normalizeOwnerOtp,
+  normalizeOwnerPhone,
+  normalizeOwnerVehiclePlate,
+  OWNER_ACTIVATION_CODE_PATTERN,
+  OWNER_OTP_CODE_PATTERN,
+  OWNER_PHONE_PATTERN,
+  OWNER_VEHICLE_PLATE_PATTERN,
+  OwnerActivationPolicyError,
+  type OwnerActivationPolicyErrorCode,
+  type OwnerOtpPolicy,
+} from "./owner-activation-policy.js";

@@ -85,6 +85,219 @@ h3,
   outline-offset: 4px;
 }
 
+.owner-activation-shell {
+  margin: 0 auto;
+  max-width: 42rem;
+  min-height: 100vh;
+  padding: clamp(1rem, 5vw, 3rem);
+}
+
+.owner-activation-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding-block: var(--tt-space-3) var(--tt-space-6);
+}
+
+.owner-activation-logo {
+  display: block;
+  height: auto;
+  max-width: 10rem;
+}
+
+.owner-activation-locale {
+  border: 1px solid var(--tt-color-border);
+  border-radius: 999px;
+  color: var(--tt-color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.5rem 0.75rem;
+  white-space: nowrap;
+}
+
+.owner-activation-card {
+  background: color-mix(in srgb, var(--tt-color-surface) 94%, transparent);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-lg);
+  box-shadow: var(--tt-shadow-card);
+  padding: clamp(1.25rem, 5vw, 2.5rem);
+}
+
+.owner-activation-title {
+  font-size: clamp(2.2rem, 9vw, 4.4rem);
+  letter-spacing: -0.055em;
+}
+
+.owner-activation-title .semantic-line:last-child {
+  color: var(--tt-color-brand-strong);
+}
+
+.owner-activation-description {
+  color: var(--tt-color-text-muted);
+  font-size: 1.05rem;
+  margin: var(--tt-space-5) 0 var(--tt-space-6);
+}
+
+.owner-activation-form {
+  display: grid;
+  gap: var(--tt-space-4);
+}
+
+.owner-activation-form label:not(.owner-activation-consent) {
+  display: grid;
+  gap: var(--tt-space-2);
+}
+
+.owner-activation-label {
+  font-weight: 750;
+}
+
+.owner-activation-form input:not([type="checkbox"]) {
+  background: var(--tt-color-background);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-sm);
+  color: var(--tt-color-text);
+  min-height: 3.25rem;
+  padding: 0.75rem 0.9rem;
+  width: 100%;
+}
+
+.owner-activation-form small,
+.owner-activation-help,
+.owner-activation-security {
+  color: var(--tt-color-text-muted);
+  font-size: 0.86rem;
+}
+
+.owner-activation-primary,
+.owner-activation-secondary,
+.owner-activation-link {
+  border-radius: var(--tt-radius-sm);
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+}
+
+.owner-activation-primary {
+  background: var(--tt-color-brand-strong);
+  border: 1px solid var(--tt-color-brand-strong);
+  color: var(--tt-color-surface);
+}
+
+.owner-activation-secondary {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-brand-strong);
+  color: var(--tt-color-brand-strong);
+}
+
+.owner-activation-link {
+  background: transparent;
+  border: 0;
+  color: var(--tt-color-text-muted);
+}
+
+.owner-activation-primary:disabled,
+.owner-activation-secondary:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.owner-activation-home-link {
+  display: inline-flex;
+  justify-content: center;
+  margin-top: var(--tt-space-4);
+  text-decoration: none;
+}
+
+.owner-vehicle-list {
+  display: grid;
+  gap: var(--tt-space-3);
+  list-style: none;
+  margin: var(--tt-space-5) 0 0;
+  padding: 0;
+}
+
+.owner-vehicle-list li {
+  background: var(--tt-color-background);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-sm);
+  display: grid;
+  gap: var(--tt-space-2);
+  padding: var(--tt-space-4);
+}
+
+.owner-vehicle-list span,
+.owner-vehicle-list small {
+  color: var(--tt-color-text-muted);
+}
+
+.owner-activation-consent {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--tt-space-3);
+}
+
+.owner-activation-consent input {
+  height: 1.3rem;
+  margin-top: 0.15rem;
+  width: 1.3rem;
+}
+
+.owner-activation-error,
+.owner-activation-notice {
+  border-radius: var(--tt-radius-sm);
+  margin-block: var(--tt-space-4);
+  padding: var(--tt-space-3);
+}
+
+.owner-activation-error {
+  background: color-mix(in srgb, var(--tt-color-danger) 12%, var(--tt-color-surface));
+  color: var(--tt-color-danger);
+}
+
+.owner-activation-notice {
+  background: color-mix(in srgb, var(--tt-color-brand) 10%, var(--tt-color-surface));
+}
+
+.owner-activation-success {
+  padding-block: var(--tt-space-5);
+  text-align: center;
+}
+
+.owner-activation-success > span {
+  align-items: center;
+  background: var(--tt-color-brand-strong);
+  border-radius: 50%;
+  color: var(--tt-color-surface);
+  display: inline-flex;
+  font-size: 1.5rem;
+  height: 3.5rem;
+  justify-content: center;
+  width: 3.5rem;
+}
+
+.owner-activation-success h2 {
+  font-size: 1.5rem;
+  margin-top: var(--tt-space-4);
+}
+
+.owner-activation-security {
+  border-top: 1px solid var(--tt-color-border);
+  margin: var(--tt-space-6) 0 0;
+  padding-top: var(--tt-space-4);
+}
+
+@media (max-width: 360px) {
+  .owner-activation-shell {
+    padding-inline: 0.75rem;
+  }
+
+  .owner-activation-card {
+    padding-inline: 1rem;
+  }
+}
+
 .foundation-shell {
   isolation: isolate;
   margin: 0 auto;

@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
@@ -117,6 +117,7 @@ export function loadStagingEnvironment(): Environment {
 
   process.env.APP_ENCRYPTION_KEY_V1 ??= randomBytes(32).toString("base64url");
   process.env.TOKEN_HMAC_KEY ??= randomBytes(32).toString("base64url");
+  process.env.OWNER_STAGING_MOCK_OTP ??= randomInt(0, 1_000_000).toString().padStart(6, "0");
 
   return { secretKey, supabaseUrl };
 }

@@ -3,7 +3,7 @@
 - 기준일: 2026-07-20
 - 프로젝트 루트: `/Users/benjaminsong/Documents/Taptolk`
 - 최상위 기준: `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` v1.1
-- 현재 단계: Phase 0–4 자동화 staging acceptance 완료, Phase 5 Owner Activation 착수
+- 현재 단계: Phase 0–5 자동화 staging acceptance 완료, Phase 6 Public Contact 준비
 
 ## 1. 구현 상태
 
@@ -33,8 +33,9 @@ AAL2 acceptance를 완료했다. 이메일/Google 계정 생성과 Super Admin T
 구현했다. 인증된 Site CRUD와 QR Design/승인/입고/배정 화면·RPC가 staging
 acceptance를 통과했다. 10개 승인 100-item Batch의 실제 Queue/Worker에서 1,000 QR
 생성, chunk commit 후 lease 재개, decode 100%, PDF/CSV/ZIP/manifest checksum과
-residue 0을 검증했다. Owner activation, public contact, SMS notification/reply,
-abuse/escalation, analytics/hardening은 Phase 5–9 범위다.
+residue 0을 검증했다. Owner activation은 Phone OTP, 원자적 Binding, ACTIVE 전이,
+Owner session/PWA와 staging 동시성·격리 acceptance까지 완료했다. Public contact,
+SMS notification/reply, abuse/escalation, analytics/hardening은 Phase 6–9 범위다.
 
 ## 2. 고정 기술 기준
 
@@ -204,7 +205,7 @@ Supabase Staging `taptolk-staging`은 2026-07-18 연결했다.
 - Migration: 로컬/원격 19개 일치
 - Secret/API key: 저장소와 문서에 저장하지 않음
 
-Supabase Production, Vercel, SMS, Sentry 계정은 아직 연결하지 않았다.
+Supabase Production, Vercel, 실제 SMS, Sentry 계정은 아직 연결하지 않았다.
 
 ## 8. 검증 결과
 
