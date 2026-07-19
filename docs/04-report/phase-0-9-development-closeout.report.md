@@ -40,11 +40,13 @@ The QR quantity contract remains `1..100` per Batch. The 1,000-item acceptance w
 | Typecheck | 19/19 PASS |
 | Unit | 53 files, 326 tests PASS |
 | DB static contract | 55 migrations, 22 database tests PASS |
-| Secret scan | 517 text files PASS |
+| Secret scan | 518 text files PASS |
 | WCJ | 100 / C100 / J100 / W100 over 87 files |
 | Production build | PASS |
 | Deferred Cron verifier | PASS; zero active Cron definitions in the default manifest |
 | PDCA registry | 14/14 features completed |
+| GitHub Actions | Run `29705730777` PASS including Linux Chromium browser smoke |
+| Production web deploy | `0e2a15e` READY; KO/EN/health 200, cleanup 503, active Cron 0 |
 
 ## 4. Acceptance Boundary
 
@@ -59,6 +61,10 @@ The deployed web surface must remain fail closed:
 - no Production privacy-cleanup authorization or data mutation;
 - no public Contact provider path without approved SMS and CAPTCHA adapters;
 - no Production secrets in Git, documentation, logs, screenshots, or chat.
+
+The verified fail-closed deployment is available at `https://taptolk.vercel.app`. This URL is
+evidence for the web shell and health boundary only; it is not authorization to run Production
+cleanup or provider journeys.
 
 ## 5. Exact External Completion Order
 

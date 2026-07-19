@@ -17,7 +17,7 @@
       build.
 - [x] Full default staging suite: 28 PASS and one intentional opt-in 1,000-item acceptance skip.
 - [x] 2026-07-20 closeout `pnpm verify:full`: lint 320 files, typecheck 19/19, unit 53
-      files/326 tests, DB structure 55 migrations/22 tests, secret scan 517 text files,
+      files/326 tests, DB structure 55 migrations/22 tests, secret scan 518 text files,
       WCJ 100 over 87 files, production build, and local Chromium/mobile smoke 30/30.
 - [x] Bounded health load and security-header regression gate.
 - [x] Generated 100-item print source: 85mm geometry, decode 100/100, export checksums 4/4.
@@ -33,6 +33,10 @@
 - [x] Deployed commit `896904e` with the default Cron-deferred manifest. Public KO/EN/health
       routes return 200, the unconfigured internal cleanup route fails closed with 503, and the
       staging-data Preview remains protected by Vercel team SSO.
+- [x] Re-deployed verified closeout commit `0e2a15e` to the stable Production web alias.
+      Deployment `dpl_GY6MvpfwEgCadGGuexntBdK9VvNP` is READY; public KO/EN/health return 200,
+      cleanup remains fail closed with 503, and the live project reports zero active Cron
+      definitions.
 - [x] Preserved the approved hourly schedule in the inert
       `apps/web/vercel.production-cron.template.json` and added separate deferred/active
       verification gates.
@@ -41,7 +45,8 @@
       implemented.
 - [x] Repaired the Linux Chromium 320px login/signup overflow regression while preserving
       non-wrapping control labels; targeted 4/4 and complete local smoke 30/30 PASS.
-- [ ] Confirm the repaired GitHub Actions run is green after the closeout commit is pushed.
+- [x] GitHub Actions run `29705730777` passed source/DB/WCJ/build and Linux Chromium browser
+      smoke for closeout commit `0e2a15e`.
 
 ## Manual and external pilot gates
 
