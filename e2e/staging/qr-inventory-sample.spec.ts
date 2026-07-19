@@ -25,9 +25,14 @@ interface BatchRow {
     | "DRAFT"
     | "FINAL_APPROVAL_PENDING"
     | "GENERATION_APPROVED"
+    | "GENERATION_QUEUED"
     | "SAMPLE_APPROVED"
     | "SAMPLE_READY";
   version: number;
+}
+
+interface RaceBatchRow extends BatchRow {
+  batch_code: string;
 }
 
 interface SampleRow {
@@ -47,13 +52,41 @@ interface AuditRow {
 
 interface GenerationJobRow {
   approval_request_id: string;
+  available_at?: string;
   delivery_attempt_count: number;
   execution_attempt_count: number;
   generation_revision: number;
   id: string;
+  last_error_code?: string | null;
+  lease_expires_at?: string | null;
   queue_message_id: string | null;
   qr_batch_id: string;
-  status: "PENDING_DELIVERY";
+  status: "DELIVERY_LEASED" | "PENDING_DELIVERY" | "QUEUED" | "RETRY_WAIT";
+  version?: number;
+}
+
+interface GenerationDeliveryResult {
+  batchId: string;
+  batchStatus: "GENERATION_APPROVED" | "GENERATION_QUEUED";
+  batchVersion: number;
+  deliveryAttemptCount: number;
+  jobId: string;
+  jobStatus: "QUEUED" | "RETRY_WAIT";
+  jobVersion: number;
+}
+
+interface GenerationClaim {
+  batchId: string;
+  createdAt: string;
+  deliveryAttemptCount: number;
+  generationRevision: number;
+  jobId: string;
+  jobStatus: "DELIVERY_LEASED";
+  jobType: "QR_GENERATION";
+  jobVersion: number;
+  leaseExpiresAt: string;
+  siteId: string;
+  tenantId: string;
 }
 
 let fixture: StagingFixture;
@@ -506,6 +539,319 @@ test.describe
         ["QR_BATCH_REQUESTED", "QR_BATCH_FINAL_APPROVAL_REQUESTED", "QR_BATCH_GENERATION_APPROVED"],
         [fixture.actors.siteAdmin.id, fixture.actors.siteAdmin.id, fixture.actors.superAdmin.id],
       );
+    });
+
+    test("the server-only dispatcher leases, retries, and records queue publication atomically", async () => {
+      const pendingJobs = await fixture.api.select<GenerationJobRow>(
+        "qr_generation_jobs",
+        "status=eq.PENDING_DELIVERY&select=id,qr_batch_id,status,delivery_attempt_count,execution_attempt_count,queue_message_id",
+      );
+      expect(pendingJobs).toHaveLength(1);
+      expect(pendingJobs[0].qr_batch_id).toBe(batchId);
+
+      const claimed = await fixture.api.rpc<{ jobs: GenerationClaim[] }>(
+        "claim_pending_qr_generation_jobs",
+        {
+          p_lease_seconds: 30,
+          p_limit: 1,
+        },
+      );
+      expect(claimed.jobs).toHaveLength(1);
+      expect(claimed.jobs[0]).toMatchObject({
+        batchId,
+        deliveryAttemptCount: 1,
+        generationRevision: 1,
+        jobId: pendingJobs[0].id,
+        jobStatus: "DELIVERY_LEASED",
+        jobType: "QR_GENERATION",
+        siteId: fixture.sites.companyAFirst.id,
+        tenantId: fixture.tenantAId,
+      });
+      expect(Object.keys(claimed.jobs[0]).sort()).toEqual(
+        [
+          "batchId",
+          "createdAt",
+          "deliveryAttemptCount",
+          "generationRevision",
+          "jobId",
+          "jobStatus",
+          "jobType",
+          "jobVersion",
+          "leaseExpiresAt",
+          "siteId",
+          "tenantId",
+        ].sort(),
+      );
+
+      const retryAt = new Date(Date.now() + 1_000).toISOString();
+      const failed = await fixture.api.rpc<GenerationDeliveryResult>(
+        "record_qr_generation_delivery_failure",
+        {
+          p_available_at: retryAt,
+          p_error_code: "QUEUE_UNAVAILABLE",
+          p_expected_version: claimed.jobs[0].jobVersion,
+          p_job_id: claimed.jobs[0].jobId,
+        },
+      );
+      expect(failed).toMatchObject({
+        batchId,
+        batchStatus: "GENERATION_APPROVED",
+        deliveryAttemptCount: 1,
+        jobId: claimed.jobs[0].jobId,
+        jobStatus: "RETRY_WAIT",
+      });
+
+      await expect
+        .poll(
+          async () =>
+            (
+              await fixture.api.rpc<{ jobs: GenerationClaim[] }>(
+                "claim_pending_qr_generation_jobs",
+                {
+                  p_lease_seconds: 30,
+                  p_limit: 1,
+                },
+              )
+            ).jobs,
+          { timeout: 5_000 },
+        )
+        .toHaveLength(1);
+
+      const [reclaimedJob] = await fixture.api.select<GenerationJobRow>(
+        "qr_generation_jobs",
+        `id=eq.${claimed.jobs[0].jobId}&select=id,qr_batch_id,status,delivery_attempt_count,execution_attempt_count,queue_message_id,lease_expires_at,version`,
+      );
+      expect(reclaimedJob).toMatchObject({
+        delivery_attempt_count: 2,
+        execution_attempt_count: 0,
+        queue_message_id: null,
+        status: "DELIVERY_LEASED",
+      });
+
+      const published = await fixture.api.rpc<GenerationDeliveryResult>(
+        "record_qr_generation_job_published",
+        {
+          p_expected_version: reclaimedJob.version,
+          p_job_id: reclaimedJob.id,
+          p_queue_message_id: `pgmq:qr-generation.${reclaimedJob.id}`,
+        },
+      );
+      expect(published).toMatchObject({
+        batchId,
+        batchStatus: "GENERATION_QUEUED",
+        deliveryAttemptCount: 2,
+        jobId: reclaimedJob.id,
+        jobStatus: "QUEUED",
+      });
+      expect(Object.keys(published).sort()).toEqual(
+        [
+          "batchId",
+          "batchStatus",
+          "batchVersion",
+          "deliveryAttemptCount",
+          "jobId",
+          "jobStatus",
+          "jobVersion",
+        ].sort(),
+      );
+
+      const [[queuedBatch], [queuedJob]] = await Promise.all([
+        fixture.api.select<BatchRow>(
+          "qr_batches",
+          `id=eq.${batchId}&select=id,site_id,status,requested_by,version`,
+        ),
+        fixture.api.select<GenerationJobRow>(
+          "qr_generation_jobs",
+          `id=eq.${reclaimedJob.id}&select=id,qr_batch_id,status,delivery_attempt_count,execution_attempt_count,queue_message_id,lease_expires_at,last_error_code,version`,
+        ),
+      ]);
+      expect(queuedBatch.status).toBe("GENERATION_QUEUED");
+      expect(queuedJob).toMatchObject({
+        delivery_attempt_count: 2,
+        execution_attempt_count: 0,
+        last_error_code: null,
+        lease_expires_at: null,
+        queue_message_id: `pgmq:qr-generation.${reclaimedJob.id}`,
+        status: "QUEUED",
+      });
+    });
+
+    test("concurrent requester cancellation and Super Admin approval commit exactly one outcome", async ({
+      browser,
+      page,
+    }, testInfo) => {
+      const baseURL = testInfo.project.use.baseURL;
+      if (typeof baseURL !== "string") {
+        throw new Error("Staging race E2E requires the configured base URL.");
+      }
+
+      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "en");
+      await page.goto("/en/admin/qr-inventory");
+      const batchRequestButton = page.getByRole("button", { name: "Request small Batch" });
+      const batchRequestForm = batchRequestButton.locator("xpath=ancestor::form");
+      await batchRequestForm.locator('input[name="quantity"]').fill("12");
+      await batchRequestForm.locator('input[name="purpose"]').fill("Final approval race evidence");
+      await batchRequestForm
+        .locator('textarea[name="reason"]')
+        .fill("Authenticated staging race Batch request");
+      await batchRequestButton.click();
+      await expect(page).toHaveURL(/status=batchRequested/u);
+
+      const [raceBatch] = await fixture.api.select<RaceBatchRow>(
+        "qr_batches",
+        `site_id=eq.${fixture.sites.companyAFirst.id}&status=eq.DRAFT&select=id,batch_code,site_id,status,requested_by,version&order=created_at.desc&limit=1`,
+      );
+      expect(raceBatch.requested_by).toBe(fixture.actors.siteAdmin.id);
+
+      const superContext = await browser.newContext({ baseURL });
+      const superPage = await superContext.newPage();
+      try {
+        await signInAndSatisfyMfa(superPage, fixture.actors.superAdmin, "en");
+        await superPage.goto("/en/admin/qr-inventory");
+        const draftCard = cardWithText(superPage, raceBatch.batch_code)
+          .filter({
+            has: superPage.getByText("Waiting for sample", { exact: true }),
+          })
+          .first();
+        await draftCard.locator("summary").filter({ hasText: "Attach sample artifact" }).click();
+        const attachForm = draftCard.locator("form").filter({
+          has: superPage.getByRole("button", { name: "Attach sample artifact" }),
+        });
+        await attachForm.locator('input[name="storageBucket"]').fill("qr-samples");
+        await attachForm
+          .locator('input[name="storagePath"]')
+          .fill(`${fixture.tenantAId}/${fixture.sites.companyAFirst.id}/race-sample.png`);
+        await attachForm.locator('input[name="checksumSha256"]').fill("c".repeat(64));
+        await attachForm.locator('input[name="byteSize"]').fill("3072");
+        await attachForm.locator('input[name="decodePassed"]').check();
+        await attachForm.locator('input[name="quietZonePassed"]').check();
+        await attachForm.locator('input[name="contrastPassed"]').check();
+        await attachForm
+          .locator('textarea[name="reason"]')
+          .fill("Authenticated staging race sample attachment");
+        await attachForm.getByRole("button", { name: "Attach sample artifact" }).click();
+        await expect(superPage).toHaveURL(/status=sampleAttached/u);
+
+        const sampleApprovalCard = cardWithText(superPage, raceBatch.batch_code)
+          .filter({
+            has: superPage.getByRole("button", { name: "Approve sample independently" }),
+          })
+          .first();
+        await sampleApprovalCard
+          .locator('textarea[name="reason"]')
+          .fill("Authenticated staging race sample approval");
+        await sampleApprovalCard
+          .getByRole("button", { name: "Approve sample independently" })
+          .click();
+        await expect(superPage).toHaveURL(/status=sampleApproved/u);
+
+        await page.goto("/en/admin/qr-inventory");
+        const finalRequestCard = cardWithText(page, raceBatch.batch_code).first();
+        await finalRequestCard
+          .locator("summary")
+          .filter({ hasText: "Request final generation approval" })
+          .click();
+        const finalRequestForm = finalRequestCard.locator("form").filter({
+          has: page.getByRole("button", { name: "Request final generation approval" }),
+        });
+        await finalRequestForm
+          .locator('textarea[name="reason"]')
+          .fill("Authenticated staging race final review request");
+        await finalRequestForm
+          .getByRole("button", { name: "Request final generation approval" })
+          .click();
+        await expect(page).toHaveURL(/status=finalApprovalRequested/u);
+
+        await Promise.all([
+          page.goto("/en/admin/qr-inventory"),
+          superPage.goto("/en/admin/qr-inventory"),
+        ]);
+        const cancellationCard = cardWithText(page, raceBatch.batch_code).first();
+        await cancellationCard
+          .locator("summary")
+          .filter({ hasText: "Cancel Batch request" })
+          .click();
+        const cancellationForm = cancellationCard.locator("form").filter({
+          has: page.getByRole("button", { name: "Cancel Batch request" }),
+        });
+        await cancellationForm
+          .locator('textarea[name="reason"]')
+          .fill("Authenticated staging concurrent cancellation");
+
+        const generationApprovalCard = cardWithText(superPage, raceBatch.batch_code)
+          .filter({
+            has: superPage.getByRole("button", { name: "Approve and prepare generation" }),
+          })
+          .first();
+        await generationApprovalCard
+          .locator('textarea[name="reason"]')
+          .fill("Authenticated staging concurrent generation approval");
+
+        const cancellationOutcome = page.waitForURL(
+          /(?:status=finalApprovalCancelled|error=conflict)/u,
+          { timeout: 15_000 },
+        );
+        const approvalOutcome = superPage.waitForURL(
+          /(?:status=finalGenerationApproved|error=conflict)/u,
+          { timeout: 15_000 },
+        );
+        await Promise.all([
+          cancellationForm.getByRole("button", { name: "Cancel Batch request" }).click(),
+          generationApprovalCard
+            .getByRole("button", { name: "Approve and prepare generation" })
+            .click(),
+        ]);
+        await Promise.all([cancellationOutcome, approvalOutcome]);
+
+        const [committedBatch] = await fixture.api.select<BatchRow>(
+          "qr_batches",
+          `id=eq.${raceBatch.id}&select=id,site_id,status,requested_by,version`,
+        );
+        const jobs = await fixture.api.select<GenerationJobRow>(
+          "qr_generation_jobs",
+          `qr_batch_id=eq.${raceBatch.id}&select=id,qr_batch_id,approval_request_id,status,generation_revision,delivery_attempt_count,execution_attempt_count,queue_message_id`,
+        );
+
+        if (committedBatch.status === "CANCELLED") {
+          await expect(page).toHaveURL(/status=finalApprovalCancelled/u);
+          await expect(superPage).toHaveURL(/error=conflict/u);
+          expect(jobs).toEqual([]);
+          await expectAuditActors(
+            raceBatch.id,
+            [
+              "QR_BATCH_REQUESTED",
+              "QR_BATCH_FINAL_APPROVAL_REQUESTED",
+              "QR_BATCH_CANCELLED_BEFORE_GENERATION",
+            ],
+            [fixture.actors.siteAdmin.id, fixture.actors.siteAdmin.id, fixture.actors.siteAdmin.id],
+          );
+        } else {
+          expect(committedBatch.status).toBe("GENERATION_APPROVED");
+          await expect(superPage).toHaveURL(/status=finalGenerationApproved/u);
+          await expect(page).toHaveURL(/error=conflict/u);
+          expect(jobs).toHaveLength(1);
+          expect(jobs[0]).toMatchObject({
+            generation_revision: 1,
+            qr_batch_id: raceBatch.id,
+            status: "PENDING_DELIVERY",
+          });
+          await expectAuditActors(
+            raceBatch.id,
+            [
+              "QR_BATCH_REQUESTED",
+              "QR_BATCH_FINAL_APPROVAL_REQUESTED",
+              "QR_BATCH_GENERATION_APPROVED",
+            ],
+            [
+              fixture.actors.siteAdmin.id,
+              fixture.actors.siteAdmin.id,
+              fixture.actors.superAdmin.id,
+            ],
+          );
+        }
+      } finally {
+        await superContext.close();
+      }
     });
 
     test("staging cleanup leaves QR, customer, admin, and Auth residue at zero", async () => {

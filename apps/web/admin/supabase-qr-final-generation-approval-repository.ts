@@ -170,10 +170,12 @@ function mapError(error: { code?: string; message?: string }) {
   if (
     error.code === "23505" ||
     error.code === "40001" ||
+    error.code === "55P03" ||
     message.includes("VERSION_CONFLICT") ||
     message.includes("TRANSITION") ||
     message.includes("GENERATION_JOB_EXISTS") ||
-    message.includes("IDEMPOTENCY")
+    message.includes("IDEMPOTENCY") ||
+    message.includes("lock timeout")
   ) {
     return new QrFinalGenerationApprovalRepositoryError("CONFLICT");
   }

@@ -43,6 +43,17 @@ export {
   type QrGenerationJobStatus,
 } from "./qr-final-generation-approval-service.js";
 export {
+  QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS,
+  QR_GENERATION_DISPATCH_CLAIM_LIMIT_MAX,
+  QR_GENERATION_DISPATCH_LEASE_SECONDS_MAX,
+  QR_GENERATION_DISPATCH_LEASE_SECONDS_MIN,
+  type QrGenerationDeliveryClaim,
+  type QrGenerationDeliveryMutationResult,
+  QrGenerationDispatcherError,
+  type QrGenerationDispatcherRepository,
+  QrGenerationDispatcherService,
+} from "./qr-generation-dispatcher-service.js";
+export {
   QR_ASSET_STATUSES,
   QR_BATCH_REQUEST_QUANTITY_MAX,
   QR_BATCH_REQUEST_QUANTITY_MIN,

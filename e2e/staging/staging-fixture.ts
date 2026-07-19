@@ -265,6 +265,19 @@ export class StagingServiceApi {
     return (await response.json()) as T[];
   }
 
+  async rpc<T>(functionName: string, input: Record<string, unknown>): Promise<T> {
+    const response = await fetch(
+      `${this.supabaseUrl}/rest/v1/rpc/${encodeURIComponent(functionName)}`,
+      {
+        body: JSON.stringify(input),
+        headers: this.headers(),
+        method: "POST",
+      },
+    );
+    await this.assertResponse(response, `Execute ${functionName} fixture RPC`);
+    return (await response.json()) as T;
+  }
+
   async site(siteId: string): Promise<SiteRow> {
     const rows = await this.select<SiteRow>(
       "sites",

@@ -338,6 +338,33 @@ They require a dedicated least-privileged server/Worker role or an authenticated
 boundary. `PUBLIC`, `anon`, and browser `authenticated` execution are revoked. Provider calls do
 not happen inside PostgreSQL functions.
 
+The first dispatcher-only implementation uses `service_role` as the reviewed server boundary and
+adds no Queue provider call:
+
+- `claimPending({ limit, leaseSeconds })` accepts `limit` 1–50 and lease 5–300 seconds. It claims
+  eligible `PENDING_DELIVERY`, `RETRY_WAIT`, or expired `DELIVERY_LEASED` rows with
+  `FOR UPDATE SKIP LOCKED`, increments only `delivery_attempt_count`, and returns a redacted
+  delivery DTO.
+- `recordPublished({ jobId, expectedVersion, queueMessageId })` requires the active lease version
+  and atomically moves the job to `QUEUED` and the Batch to `GENERATION_QUEUED`. The provider
+  message ID is validated and stored but never returned to browser or customer DTOs.
+- `recordDeliveryFailure({ jobId, expectedVersion, errorCode, availableAt })` requires the active
+  lease version, stores only an allowlisted error code, clears the lease, and moves the job to
+  `RETRY_WAIT`. The Batch remains `GENERATION_APPROVED`.
+- An expired lease reclaim increments the optimistic version. A late acknowledgement from the
+  previous lease therefore conflicts instead of overwriting the new lease.
+- Final approval and pre-generation cancellation compete for the same Batch row lock. Both DB lock
+  waits are limited to 3 seconds, and a `55P03` lock timeout is reduced to a retryable conflict so
+  an outer request timeout cannot hide the winning commit behind a long loser wait.
+- The Application service validates UUIDs, bounds, provider identifier shape, allowlisted error
+  code shape, and a future retry time no more than 24 hours away. Exact backoff calculation remains
+  operational configuration owned by the later dispatcher runtime.
+
+The claim DTO contains only `jobId`, job type/status/version, Tenant/Site/Batch identity,
+generation revision, delivery attempt count, and creation/lease timestamps. It excludes approval
+request ID, actor identity, reason, provider identity, token material, storage metadata, and
+arbitrary payload.
+
 ## 8. Queue payload
 
 ```json
