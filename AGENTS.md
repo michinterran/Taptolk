@@ -30,6 +30,19 @@ WCJ means `Web Compliance & Journey`.
 - WCJ automated success does not replace keyboard, screen-reader, computed
   contrast, responsive, real-device, and real-journey manual review.
 
+## Session handoff protocol
+
+- Create `docs/handoff-MMDD-HHmm.md` when a major feature unit is complete or
+  when the same error begins repeating and a fresh session would reduce context
+  and token waste.
+- Every handoff records the current branch and commit, completed scope,
+  validation evidence, unresolved risks, exact next step, and any required
+  user-owned external setup. Never include credentials or secret values.
+- Carry this protocol forward verbatim or by explicit reference in every later
+  handoff document.
+- After writing the handoff, notify the user that this is a safe checkpoint and
+  recommend opening a new Codex session with the handoff path.
+
 ## Semantic Korean line breaks
 
 - Headline lines in every supported language are authored as typed semantic line
