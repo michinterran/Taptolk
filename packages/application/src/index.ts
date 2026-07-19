@@ -66,6 +66,15 @@ export {
   QrGenerationQueuePublisherError,
 } from "./qr-generation-dispatch-coordinator.js";
 export {
+  BoundedQrGenerationDispatchRuntime,
+  QR_GENERATION_DISPATCH_DURATION_BUDGET_MS_MAX,
+  QR_GENERATION_DISPATCH_DURATION_BUDGET_MS_MIN,
+  type QrGenerationDispatchRunner,
+  QrGenerationDispatchRuntimeError,
+  type QrGenerationDispatchRuntimePolicy,
+  type QrGenerationDispatchRuntimeResult,
+} from "./qr-generation-dispatch-runtime.js";
+export {
   QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS,
   QR_GENERATION_DISPATCH_CLAIM_LIMIT_MAX,
   QR_GENERATION_DISPATCH_LEASE_SECONDS_MAX,

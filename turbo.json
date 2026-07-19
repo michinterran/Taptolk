@@ -1,6 +1,18 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalPassThroughEnv": ["APP_ENV", "SUPABASE_SECRET_KEY"],
+  "globalPassThroughEnv": [
+    "APP_ENV",
+    "CRON_SECRET",
+    "QR_GENERATION_DELIVERY_RETRY_BASE_DELAY_MS",
+    "QR_GENERATION_DELIVERY_RETRY_JITTER_RATIO",
+    "QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS",
+    "QR_GENERATION_DISPATCH_CLAIM_LIMIT",
+    "QR_GENERATION_DISPATCH_DURATION_BUDGET_MS",
+    "QR_GENERATION_DISPATCH_LEASE_SECONDS",
+    "QR_GENERATION_QUEUE_NAME",
+    "QR_GENERATION_QUEUE_SEND_TIMEOUT_MS",
+    "SUPABASE_SECRET_KEY"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

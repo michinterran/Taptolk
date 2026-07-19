@@ -1,13 +1,14 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-07-19T04:44:41.440Z",
+  "lastUpdated": "2026-07-19T08:34:42.278Z",
   "activeFeatures": [
     "i18n-foundation",
     "tenant-admin-foundation",
     "admin-console-architecture",
     "site-lifecycle-maker-checker",
     "qr-inventory-sample-foundation",
-    "qr-final-generation-approval"
+    "qr-final-generation-approval",
+    "qr-generation-queue-dispatch-runtime"
   ],
   "primaryFeature": "i18n-foundation",
   "features": {
@@ -260,6 +261,49 @@
         "started": "2026-07-19T04:38:04.884Z",
         "lastUpdated": "2026-07-19T04:44:41.440Z"
       }
+    },
+    "qr-generation-queue-dispatch-runtime": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:16:48.711Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:20:27.239Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:29:22.196Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:33:49.022Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:34:42.278Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-19T08:14:54.960Z",
+        "lastUpdated": "2026-07-19T08:34:42.278Z"
+      },
+      "completedAt": "2026-07-19T08:34:42.276Z"
     }
   },
   "pipeline": {
@@ -270,7 +314,7 @@
   "session": {
     "startedAt": "2026-07-18T09:15:44.795Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-07-19T04:44:41.440Z"
+    "lastActivity": "2026-07-19T08:34:42.278Z"
   },
   "history": [
     {
@@ -596,6 +640,71 @@
       "phase": "design",
       "nextPhase": "do",
       "timestamp": "2026-07-19T04:44:41.436Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T08:16:48.707Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T08:16:48.710Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-19T08:16:54.556Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T08:20:27.237Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T08:20:27.238Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T08:29:22.194Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T08:29:22.195Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T08:33:49.019Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T08:33:49.020Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T08:34:42.277Z"
     }
   ]
 }

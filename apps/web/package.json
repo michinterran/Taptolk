@@ -13,6 +13,7 @@
     "@taptolk/application": "workspace:*",
     "@taptolk/auth": "workspace:*",
     "@taptolk/config": "workspace:*",
+    "@taptolk/db": "workspace:*",
     "@taptolk/domain": "workspace:*",
     "@taptolk/observability": "workspace:*",
     "@taptolk/ui": "workspace:*",

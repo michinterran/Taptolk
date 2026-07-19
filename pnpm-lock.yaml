@@ -47,6 +47,9 @@ importers:
       '@taptolk/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@taptolk/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@taptolk/domain':
         specifier: workspace:*
         version: link:../../packages/domain

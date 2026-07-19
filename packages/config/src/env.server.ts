@@ -1,7 +1,9 @@
 import { z } from "zod";
 import {
   appEnvironmentSchema,
+  emptyStringToUndefined,
   integerEnvironmentSchema,
+  numberEnvironmentSchema,
   optionalSecretSchema,
   optionalUrlSchema,
 } from "./env.shared.js";
@@ -24,7 +26,21 @@ const serverEnvironmentSchema = z
     OWNER_RESPONSE_BASE_URL: optionalUrlSchema,
     PUBLIC_QR_BASE_URL: optionalUrlSchema,
     QR_CALL_COOLDOWN_SECONDS: integerEnvironmentSchema(180),
+    QR_GENERATION_DELIVERY_RETRY_BASE_DELAY_MS: integerEnvironmentSchema(5_000, 1_000, 86_400_000),
+    QR_GENERATION_DELIVERY_RETRY_JITTER_RATIO: numberEnvironmentSchema(0.2, 0, 0.5),
+    QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS: integerEnvironmentSchema(300_000, 1_000, 86_400_000),
+    QR_GENERATION_DISPATCH_CLAIM_LIMIT: integerEnvironmentSchema(10, 1, 50),
+    QR_GENERATION_DISPATCH_DURATION_BUDGET_MS: integerEnvironmentSchema(8_000, 1_000, 60_000),
+    QR_GENERATION_DISPATCH_LEASE_SECONDS: integerEnvironmentSchema(60, 5, 300),
     QR_GENERATION_CHUNK_SIZE: integerEnvironmentSchema(50),
+    QR_GENERATION_QUEUE_NAME: z.preprocess(
+      emptyStringToUndefined,
+      z
+        .string()
+        .regex(/^[a-z0-9](?:[a-z0-9_-]{0,62})$/u)
+        .default("qr-generation"),
+    ),
+    QR_GENERATION_QUEUE_SEND_TIMEOUT_MS: integerEnvironmentSchema(3_000, 250, 10_000),
     QUEUE_WORKER_SECRET: optionalSecretSchema,
     RESPONSE_TOKEN_TTL_MINUTES: integerEnvironmentSchema(60),
     SENTRY_AUTH_TOKEN: optionalSecretSchema,
@@ -49,6 +65,28 @@ const serverEnvironmentSchema = z
     TOKEN_HMAC_KEY: optionalSecretSchema,
   })
   .superRefine((environment, context) => {
+    if (
+      environment.QR_GENERATION_QUEUE_SEND_TIMEOUT_MS >
+      environment.QR_GENERATION_DISPATCH_DURATION_BUDGET_MS
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Queue send timeout must not exceed the dispatch duration budget.",
+        path: ["QR_GENERATION_QUEUE_SEND_TIMEOUT_MS"],
+      });
+    }
+
+    if (
+      environment.QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS <
+      environment.QR_GENERATION_DELIVERY_RETRY_BASE_DELAY_MS
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Delivery retry max delay must not be below the base delay.",
+        path: ["QR_GENERATION_DELIVERY_RETRY_MAX_DELAY_MS"],
+      });
+    }
+
     if (environment.APP_ENV !== "production") {
       return;
     }

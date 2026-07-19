@@ -12,9 +12,17 @@ export const optionalSecretSchema = z.preprocess(
   z.string().min(24).optional(),
 );
 
-export function integerEnvironmentSchema(defaultValue: number, minimum = 1) {
+export function integerEnvironmentSchema(defaultValue: number, minimum = 1, maximum?: number) {
+  const numberSchema = z.coerce.number().int().min(minimum);
   return z.preprocess(
     emptyStringToUndefined,
-    z.coerce.number().int().min(minimum).default(defaultValue),
+    (maximum === undefined ? numberSchema : numberSchema.max(maximum)).default(defaultValue),
+  );
+}
+
+export function numberEnvironmentSchema(defaultValue: number, minimum: number, maximum: number) {
+  return z.preprocess(
+    emptyStringToUndefined,
+    z.coerce.number().min(minimum).max(maximum).default(defaultValue),
   );
 }
