@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-07-19T20:13:38.756Z",
+  "lastUpdated": "2026-07-19T21:54:07.345Z",
   "activeFeatures": [
     "i18n-foundation",
     "tenant-admin-foundation",
@@ -106,7 +106,7 @@
       "completedAt": "2026-07-18T09:46:22.319Z"
     },
     "admin-console-architecture": {
-      "phase": "do",
+      "phase": "completed",
       "matchRate": null,
       "iterationCount": 0,
       "documents": {},
@@ -125,24 +125,28 @@
         },
         {
           "phase": "do",
-          "status": "active",
-          "createdAt": "2026-07-18T10:11:00.887Z"
+          "status": "completed",
+          "createdAt": "2026-07-18T10:11:00.887Z",
+          "completedAt": "2026-07-19T21:53:59.868Z"
         },
         {
           "phase": "check",
-          "status": "pending",
-          "createdAt": "2026-07-18T10:11:00.887Z"
+          "status": "completed",
+          "createdAt": "2026-07-18T10:11:00.887Z",
+          "completedAt": "2026-07-19T21:54:03.434Z"
         },
         {
           "phase": "report",
-          "status": "pending",
-          "createdAt": "2026-07-18T10:11:00.887Z"
+          "status": "completed",
+          "createdAt": "2026-07-18T10:11:00.887Z",
+          "completedAt": "2026-07-19T21:54:07.254Z"
         }
       ],
       "timestamps": {
         "started": "2026-07-18T10:11:00.887Z",
-        "lastUpdated": "2026-07-18T10:16:49.159Z"
-      }
+        "lastUpdated": "2026-07-19T21:54:07.254Z"
+      },
+      "completedAt": "2026-07-19T21:54:07.249Z"
     },
     "site-lifecycle-maker-checker": {
       "phase": "completed",
@@ -231,7 +235,7 @@
       "completedAt": "2026-07-19T04:30:59.372Z"
     },
     "qr-final-generation-approval": {
-      "phase": "do",
+      "phase": "completed",
       "matchRate": null,
       "iterationCount": 0,
       "documents": {},
@@ -250,24 +254,28 @@
         },
         {
           "phase": "do",
-          "status": "active",
-          "createdAt": "2026-07-19T04:38:04.882Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T04:38:04.882Z",
+          "completedAt": "2026-07-19T21:53:59.891Z"
         },
         {
           "phase": "check",
-          "status": "pending",
-          "createdAt": "2026-07-19T04:38:04.882Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T04:38:04.882Z",
+          "completedAt": "2026-07-19T21:54:03.524Z"
         },
         {
           "phase": "report",
-          "status": "pending",
-          "createdAt": "2026-07-19T04:38:04.882Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T04:38:04.882Z",
+          "completedAt": "2026-07-19T21:54:07.303Z"
         }
       ],
       "timestamps": {
         "started": "2026-07-19T04:38:04.884Z",
-        "lastUpdated": "2026-07-19T04:44:41.440Z"
-      }
+        "lastUpdated": "2026-07-19T21:54:07.303Z"
+      },
+      "completedAt": "2026-07-19T21:54:07.295Z"
     },
     "qr-generation-queue-dispatch-runtime": {
       "phase": "completed",
@@ -313,7 +321,7 @@
       "completedAt": "2026-07-19T08:34:42.276Z"
     },
     "qr-generation-staging-queue-live-proof": {
-      "phase": "do",
+      "phase": "completed",
       "matchRate": null,
       "iterationCount": 0,
       "documents": {},
@@ -332,24 +340,28 @@
         },
         {
           "phase": "do",
-          "status": "active",
-          "createdAt": "2026-07-19T08:37:47.526Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T08:37:47.526Z",
+          "completedAt": "2026-07-19T21:54:00.052Z"
         },
         {
           "phase": "check",
-          "status": "pending",
-          "createdAt": "2026-07-19T08:37:47.526Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T08:37:47.526Z",
+          "completedAt": "2026-07-19T21:54:03.611Z"
         },
         {
           "phase": "report",
-          "status": "pending",
-          "createdAt": "2026-07-19T08:37:47.526Z"
+          "status": "completed",
+          "createdAt": "2026-07-19T08:37:47.526Z",
+          "completedAt": "2026-07-19T21:54:07.345Z"
         }
       ],
       "timestamps": {
         "started": "2026-07-19T08:37:47.527Z",
-        "lastUpdated": "2026-07-19T08:39:56.425Z"
-      }
+        "lastUpdated": "2026-07-19T21:54:07.345Z"
+      },
+      "completedAt": "2026-07-19T21:54:07.334Z"
     },
     "owner-activation": {
       "phase": "completed",
@@ -438,7 +450,7 @@
   "session": {
     "startedAt": "2026-07-18T09:15:44.795Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-07-19T20:13:38.756Z"
+    "lastActivity": "2026-07-19T21:54:07.345Z"
   },
   "history": [
     {
@@ -1260,6 +1272,105 @@
       "phase": "report",
       "nextPhase": "completed",
       "timestamp": "2026-07-19T20:13:38.756Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T21:53:59.863Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T21:53:59.865Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T21:53:59.887Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T21:53:59.888Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T21:54:00.050Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T21:54:00.051Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T21:54:03.430Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T21:54:03.432Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T21:54:03.520Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T21:54:03.521Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T21:54:03.607Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T21:54:03.608Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T21:54:07.251Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T21:54:07.300Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T21:54:07.340Z"
     }
   ]
 }

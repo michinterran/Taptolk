@@ -16,8 +16,9 @@
 - [x] Linked pgTAP, authenticated staging E2E, WCJ, secret scan, logo integrity, and production
       build.
 - [x] Full default staging suite: 28 PASS and one intentional opt-in 1,000-item acceptance skip.
-- [x] Final verify: lint 312 files, typecheck 19/19, unit 312/312, DB structure 54 migrations/21
-      tests, secret scan 491 files, WCJ 100, production build.
+- [x] 2026-07-20 closeout `pnpm verify:full`: lint 320 files, typecheck 19/19, unit 53
+      files/326 tests, DB structure 55 migrations/22 tests, secret scan 517 text files,
+      WCJ 100 over 87 files, production build, and local Chromium/mobile smoke 30/30.
 - [x] Bounded health load and security-header regression gate.
 - [x] Generated 100-item print source: 85mm geometry, decode 100/100, export checksums 4/4.
 - [x] Production privacy-cleanup Cron source contract: bounded due-tenant selection, deterministic
@@ -35,6 +36,12 @@
 - [x] Preserved the approved hourly schedule in the inert
       `apps/web/vercel.production-cron.template.json` and added separate deferred/active
       verification gates.
+- [x] Closed all 14 tracked PDCA features with analysis/report evidence. Architecture-only
+      completion does not claim that every future Admin information-architecture route is
+      implemented.
+- [x] Repaired the Linux Chromium 320px login/signup overflow regression while preserving
+      non-wrapping control labels; targeted 4/4 and complete local smoke 30/30 PASS.
+- [ ] Confirm the repaired GitHub Actions run is green after the closeout commit is pushed.
 
 ## Manual and external pilot gates
 
@@ -62,6 +69,9 @@
 - [ ] Decide and validate TUS resumable upload for artifacts above the reviewed large-file
       threshold.
 - [ ] Complete production domain, environment, alerting, rollback, and incident owner review.
+- [ ] Install and start an approved Docker-compatible local runtime, then complete a clean
+      local Supabase reset. No Docker, Podman, Colima, OrbStack, or Lima runtime was available
+      during this closeout; linked staging pgTAP is not a substitute for this local reset gate.
 
 ## Approval rule
 

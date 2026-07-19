@@ -905,11 +905,13 @@ h3,
 .admin-form {
   display: grid;
   gap: var(--tt-space-5);
+  min-width: 0;
 }
 
 .admin-field {
   display: grid;
   gap: var(--tt-space-2);
+  min-width: 0;
 }
 
 .admin-field > span {
@@ -960,6 +962,11 @@ h3,
   display: grid;
   gap: var(--tt-space-4);
   margin-top: var(--tt-space-5);
+  min-width: 0;
+}
+
+.admin-auth-alternatives form {
+  min-width: 0;
 }
 
 .admin-auth-divider {
@@ -1735,6 +1742,16 @@ h3,
   .admin-approval-field-grid,
   .admin-approval-field-grid--scope {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 24rem) {
+  .admin-auth-shell {
+    padding-inline: var(--tt-space-4);
+  }
+
+  .admin-auth-card {
+    padding: var(--tt-space-4);
   }
 }
 
