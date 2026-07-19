@@ -369,17 +369,23 @@ arbitrary payload.
 
 ```json
 {
+  "schemaVersion": 1,
   "jobId": "uuid",
   "jobType": "QR_GENERATION",
   "tenantId": "uuid",
   "siteId": "uuid",
-  "resourceId": "batch-uuid",
+  "batchId": "uuid",
   "generationRevision": 1,
-  "attempt": 0,
+  "deliveryAttempt": 1,
   "createdAt": "ISO_DATE",
   "traceId": "uuid"
 }
 ```
+
+The v1 consumer schema is strict. An unknown version, job type, extra field, missing Site, delivery
+attempt below 1, or generation revision below 1 is rejected before handler lookup. This ensures
+token/code/contact data, reasons, storage paths, cookies, authorization headers, credentials, and
+provider payloads cannot be smuggled through a structurally valid Queue message.
 
 - Payload is schema-versioned before Production, either with an explicit `schemaVersion` or a
   versioned job type. The implementation decision must be made before first publish.
@@ -503,6 +509,8 @@ Canonical surface remains `/{locale}/admin/qr-inventory`.
 
 Implemented in the current Application, DB, and Web approval units:
 
+- `apps/worker/src/queue-consumer.ts`
+- `apps/worker/src/queue-consumer.test.ts`
 - `packages/application/src/qr-final-generation-approval-service.ts`
 - `packages/application/src/qr-final-generation-approval-service.test.ts`
 - `packages/application/src/index.ts`

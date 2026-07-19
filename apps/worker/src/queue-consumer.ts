@@ -1,20 +1,27 @@
 import { z } from "zod";
 
-export const queueJobSchema = z.object({
-  attempt: z.number().int().min(0),
-  createdAt: z.string().datetime(),
-  jobId: z.string().uuid(),
-  jobType: z.string().min(1),
-  resourceId: z.string().uuid(),
-  siteId: z.string().uuid().nullable(),
-  tenantId: z.string().uuid(),
-  traceId: z.string().uuid(),
-});
+export const QUEUE_JOB_SCHEMA_VERSION = 1;
+export const QR_GENERATION_QUEUE_JOB_TYPE = "QR_GENERATION";
+
+export const queueJobSchema = z
+  .object({
+    batchId: z.string().uuid(),
+    createdAt: z.string().datetime({ offset: true }),
+    deliveryAttempt: z.number().int().min(1),
+    generationRevision: z.number().int().min(1),
+    jobId: z.string().uuid(),
+    jobType: z.literal(QR_GENERATION_QUEUE_JOB_TYPE),
+    schemaVersion: z.literal(QUEUE_JOB_SCHEMA_VERSION),
+    siteId: z.string().uuid(),
+    tenantId: z.string().uuid(),
+    traceId: z.string().uuid(),
+  })
+  .strict();
 
 export type QueueJob = z.infer<typeof queueJobSchema>;
 
 export type QueueJobHandler = (job: QueueJob) => Promise<void>;
-export type QueueJobRegistry = Readonly<Record<string, QueueJobHandler>>;
+export type QueueJobRegistry = Readonly<Partial<Record<QueueJob["jobType"], QueueJobHandler>>>;
 
 export async function processQueueJob(
   input: unknown,
