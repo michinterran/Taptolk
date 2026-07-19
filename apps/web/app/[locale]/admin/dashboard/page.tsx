@@ -47,6 +47,10 @@ export default async function TenantAdminPage({ params }: { params: Promise<{ lo
             href: `/${locale}/admin/qr-inventory`,
             label: copy["admin.dashboard.qrAction"],
           },
+          {
+            href: `/${locale}/admin/operations`,
+            label: copy["admin.dashboard.operationsAction"],
+          },
         ]}
         nextTitle={copy["admin.dashboard.next.title"]}
         pathname={`/${locale}/admin/dashboard`}

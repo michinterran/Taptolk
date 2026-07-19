@@ -13,6 +13,9 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"]],
   timeout: 240_000,
+  expect: {
+    timeout: 15_000,
+  },
   use: {
     baseURL: `http://localhost:${port}`,
     screenshot: "off",

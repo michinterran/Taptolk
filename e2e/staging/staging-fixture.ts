@@ -116,6 +116,7 @@ export function loadStagingEnvironment(): Environment {
   }
 
   process.env.APP_ENCRYPTION_KEY_V1 ??= randomBytes(32).toString("base64url");
+  process.env.CRON_SECRET ??= randomBytes(32).toString("base64url");
   process.env.TOKEN_HMAC_KEY ??= randomBytes(32).toString("base64url");
   process.env.OWNER_STAGING_MOCK_OTP ??= randomInt(0, 1_000_000).toString().padStart(6, "0");
   process.env.OWNER_RESPONSE_BASE_URL ??= "http://localhost:3200";

@@ -51,6 +51,15 @@ export {
   OwnerResponseService,
 } from "./notification-reply-service.js";
 export {
+  type OperationsDashboardActor,
+  type OperationsDashboardModel,
+  type OperationsDashboardRepository,
+  OperationsDashboardService,
+  type PrivacyCleanupRepository,
+  type PrivacyCleanupResult,
+  PrivacyCleanupService,
+} from "./operations-hardening-service.js";
+export {
   type OwnerActivationCompletion,
   type OwnerActivationHashPurpose,
   type OwnerActivationInspection,

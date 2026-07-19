@@ -15,6 +15,7 @@ const serverEnvironmentSchema = z
     APP_ENV: appEnvironmentSchema.default("local"),
     APP_TIMEZONE: z.string().min(1).default("Asia/Seoul"),
     APP_URL: optionalUrlSchema,
+    BLOCK_REVOCATION_GRACE_HOURS: integerEnvironmentSchema(0, 0, 168),
     CONTACT_SESSION_TTL_MINUTES: integerEnvironmentSchema(60),
     COOKIE_SIGNING_KEY: optionalSecretSchema,
     CRON_SECRET: optionalSecretSchema,
@@ -85,6 +86,7 @@ const serverEnvironmentSchema = z
       z.string().startsWith("sb_secret_").min(20).optional(),
     ),
     TEMP_PHONE_RETENTION_HOURS: integerEnvironmentSchema(24),
+    TOKEN_REVOCATION_GRACE_HOURS: integerEnvironmentSchema(0, 0, 168),
     TOKEN_HMAC_KEY: optionalSecretSchema,
   })
   .superRefine((environment, context) => {
@@ -129,6 +131,7 @@ const serverEnvironmentSchema = z
       "APP_ENCRYPTION_KEY_V1",
       "APP_URL",
       "COOKIE_SIGNING_KEY",
+      "CRON_SECRET",
       "DATABASE_URL",
       "DIRECT_DATABASE_URL",
       "OWNER_RESPONSE_BASE_URL",

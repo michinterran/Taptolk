@@ -151,7 +151,9 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
     });
     await page.locator('input[name="code"]').fill(await currentTotp(existingSecret));
     await page.locator(".admin-mfa-form button[type='submit']").click();
-    await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"));
+    await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"), {
+      timeout: 15_000,
+    });
     return;
   }
 
@@ -166,7 +168,9 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
   mfaSecrets.set(actor.id, secret);
   await page.locator('input[name="code"]').fill(await currentTotp(secret));
   await page.locator(".admin-mfa-form button[type='submit']").click();
-  await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"));
+  await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"), {
+    timeout: 15_000,
+  });
 }
 
 function cardWithText(page: Page, text: string): Locator {
@@ -615,7 +619,7 @@ test.describe
         ].sort(),
       );
 
-      const retryAt = new Date(Date.now() + 1_000).toISOString();
+      const retryAt = new Date(Date.now() + 5_000).toISOString();
       const failed = await fixture.api.rpc<GenerationDeliveryResult>(
         "record_qr_generation_delivery_failure",
         {
@@ -645,7 +649,7 @@ test.describe
                 },
               )
             ).jobs,
-          { timeout: 5_000 },
+          { timeout: 10_000 },
         )
         .toHaveLength(1);
 

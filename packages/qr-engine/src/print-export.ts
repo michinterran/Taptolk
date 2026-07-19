@@ -24,6 +24,19 @@ export interface PrintExportBundle {
   zip: PrintExportArtifact;
 }
 
+export interface PrintPdfInspection {
+  pageCount: number;
+  pages: readonly { height: number; width: number }[];
+}
+
+export async function inspectPrintPdf(bytes: Uint8Array): Promise<PrintPdfInspection> {
+  const document = await PDFDocument.load(bytes);
+  return {
+    pageCount: document.getPageCount(),
+    pages: document.getPages().map((page) => page.getSize()),
+  };
+}
+
 function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
