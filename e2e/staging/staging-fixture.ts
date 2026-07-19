@@ -118,6 +118,8 @@ export function loadStagingEnvironment(): Environment {
   process.env.APP_ENCRYPTION_KEY_V1 ??= randomBytes(32).toString("base64url");
   process.env.TOKEN_HMAC_KEY ??= randomBytes(32).toString("base64url");
   process.env.OWNER_STAGING_MOCK_OTP ??= randomInt(0, 1_000_000).toString().padStart(6, "0");
+  process.env.OWNER_RESPONSE_BASE_URL ??= "http://localhost:3200";
+  process.env.QUEUE_WORKER_SECRET ??= randomBytes(32).toString("base64url");
 
   return { secretKey, supabaseUrl };
 }
@@ -263,6 +265,19 @@ export class StagingServiceApi {
     });
     await this.assertResponse(response, `Select ${table} fixture evidence`);
     return (await response.json()) as T[];
+  }
+
+  async updateWhere(
+    table: string,
+    filter: string,
+    values: Readonly<Record<string, unknown>>,
+  ): Promise<void> {
+    const response = await fetch(`${this.supabaseUrl}/rest/v1/${table}?${filter}`, {
+      body: JSON.stringify(values),
+      headers: this.headers("return=minimal"),
+      method: "PATCH",
+    });
+    await this.assertResponse(response, `Update ${table} fixture evidence`);
   }
 
   async rpc<T>(functionName: string, input: Record<string, unknown>): Promise<T> {

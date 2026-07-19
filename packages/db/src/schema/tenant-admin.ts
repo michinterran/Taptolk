@@ -252,6 +252,7 @@ export const notificationStatus = pgEnum("notification_status", [
   "FAILED_FINAL",
   "CANCELLED",
 ]);
+export const responseTokenScope = pgEnum("response_token_scope", ["CONTACT_REPLY"]);
 export const vehicleImportStatus = pgEnum("vehicle_import_status", [
   "VALIDATED",
   "COMMITTED",
@@ -1596,6 +1597,12 @@ export const notificationDeliveries = pgTable(
     deliveredAt: timestamp("delivered_at", { mode: "date", withTimezone: true }),
     failedAt: timestamp("failed_at", { mode: "date", withTimezone: true }),
     errorCode: text("error_code"),
+    leaseOwner: text("lease_owner"),
+    leaseVersion: integer("lease_version").default(0).notNull(),
+    leaseExpiresAt: timestamp("lease_expires_at", { mode: "date", withTimezone: true }),
+    firstAttemptedAt: timestamp("first_attempted_at", { mode: "date", withTimezone: true }),
+    lastAttemptedAt: timestamp("last_attempted_at", { mode: "date", withTimezone: true }),
+    archivedAt: timestamp("archived_at", { mode: "date", withTimezone: true }),
     costAmount: numeric("cost_amount", { precision: 12, scale: 4 }),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
@@ -1612,6 +1619,37 @@ export const notificationDeliveries = pgTable(
       name: "fk_notification_deliveries_session",
     }).onDelete("restrict"),
     index("idx_notification_deliveries_status_scheduled").on(table.status, table.scheduledAt),
+  ],
+);
+
+export const responseTokens = pgTable(
+  "response_tokens",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    sessionId: uuid("session_id").notNull(),
+    deliveryId: uuid("delivery_id")
+      .notNull()
+      .references(() => notificationDeliveries.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    scope: responseTokenScope("scope").default("CONTACT_REPLY").notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
+    usedAt: timestamp("used_at", { mode: "date", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.sessionId],
+      foreignColumns: [contactSessions.tenantId, contactSessions.id],
+      name: "fk_response_tokens_session",
+    }).onDelete("cascade"),
+    uniqueIndex("uq_response_tokens_active_contact_reply")
+      .on(table.sessionId)
+      .where(
+        sql`${table.scope} = 'CONTACT_REPLY' and ${table.revokedAt} is null and ${table.usedAt} is null`,
+      ),
+    index("idx_response_tokens_hash_active").on(table.tokenHash, table.expiresAt),
   ],
 );
 

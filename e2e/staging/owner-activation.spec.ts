@@ -146,12 +146,7 @@ test.describe
       ).toBeVisible();
       const accessibility = await new AxeBuilder({ page }).analyze();
       expect(accessibility.violations).toEqual([]);
-      await page.evaluate(() => {
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-      });
-      await page.keyboard.press("Tab");
+      await page.locator("body").press("Tab");
       await expect(page.getByLabel("활성화 코드")).toBeFocused();
       await page.getByLabel("활성화 코드").fill(uiFixture.activationCode);
       await page.getByLabel("차량번호").fill("12가3456");

@@ -19,6 +19,19 @@ export {
   type ResourceScope,
 } from "./admin-rbac.js";
 export {
+  assertResponseTokenTtl,
+  DEFAULT_NOTIFICATION_RETRY_DELAYS_SECONDS,
+  DEFAULT_RESPONSE_TOKEN_TTL_SECONDS,
+  getNotificationRetryDelaySeconds,
+  isRetryableSmsProviderError,
+  NotificationReplyPolicyError,
+  normalizeOwnerReply,
+  OWNER_REPLY_CODES,
+  type OwnerReplyCode,
+  SMS_PROVIDER_ERROR_CODES,
+  type SmsProviderErrorCode,
+} from "./notification-reply-policy.js";
+export {
   assertOwnerConsent,
   assertOwnerDeviceId,
   assertOwnerOtpPolicy,

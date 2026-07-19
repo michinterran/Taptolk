@@ -39,6 +39,18 @@ export {
   ManagementCompanyManagementService,
 } from "./management-company-management-service.js";
 export {
+  type NotificationDeliveryClaim,
+  type NotificationDeliveryRepository,
+  NotificationDispatchService,
+  type NotificationHasher,
+  type NotificationSecretFactory,
+  type NotificationSmsProvider,
+  NotificationSmsProviderError,
+  type OwnerResponseInspection,
+  type OwnerResponseRepository,
+  OwnerResponseService,
+} from "./notification-reply-service.js";
+export {
   type OwnerActivationCompletion,
   type OwnerActivationHashPurpose,
   type OwnerActivationInspection,
