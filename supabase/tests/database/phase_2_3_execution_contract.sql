@@ -1,6 +1,6 @@
 begin;
 
-select plan(30);
+select plan(32);
 
 select has_table(
   'public',
@@ -257,6 +257,42 @@ select has_function(
   'validate_sticker_design_config',
   array[]::text[],
   'private design validator enforces canonical sticker zones'
+);
+
+select results_eq(
+  $$
+    select
+      position(
+        'old.status = ''PROCESSING'' and new.status = ''PROCESSING'''
+        in pg_get_functiondef('app_private.guard_qr_generation_job_update()'::regprocedure)
+      ) > 0
+      and position(
+        'new.delivery_attempt_count <> old.delivery_attempt_count'
+        in pg_get_functiondef('app_private.guard_qr_generation_job_update()'::regprocedure)
+      ) > 0
+  $$,
+  array[true],
+  'generation chunk progress can advance counters without opening execution metadata'
+);
+
+select results_eq(
+  $$
+    select
+      position(
+        'old.status = ''GENERATING'' and new.status = ''GENERATING'''
+        in pg_get_functiondef('app_private.guard_qr_batch_update()'::regprocedure)
+      ) > 0
+      and position(
+        'BATCH_PROGRESS_METADATA_IMMUTABLE'
+        in pg_get_functiondef('app_private.guard_qr_batch_update()'::regprocedure)
+      ) > 0
+      and position(
+        'BATCH_PROGRESS_REGRESSION'
+        in pg_get_functiondef('app_private.guard_qr_batch_update()'::regprocedure)
+      ) > 0
+  $$,
+  array[true],
+  'batch chunk progress advances monotonically without opening approval metadata'
 );
 
 select * from finish();

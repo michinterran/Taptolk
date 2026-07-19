@@ -87,6 +87,17 @@ const requiredMigrationContracts = new Map([
       "to service_role",
     ],
   ],
+  [
+    "20260719071000_phase_3_delivery_and_staging_fixture.sql",
+    [
+      "public.advance_qr_batch_delivery",
+      "public.cleanup_staging_e2e_fixture",
+      "SERVICE_ROLE_REQUIRED",
+      "FIXTURE_TENANT_REQUIRED",
+      "from public, anon, authenticated",
+      "to service_role",
+    ],
+  ],
 ]);
 
 if (sqlMigrations.length === 0) {
@@ -145,7 +156,11 @@ if (!databaseTestSources.some((source) => source.includes("policies_are"))) {
   throw new Error("Database tests must assert the exact RLS policy set.");
 }
 
-for (const requiredTest of ["phase_2_3_execution_contract.sql", "phase_2_4_core_schema.sql"]) {
+for (const requiredTest of [
+  "phase_2_3_execution_contract.sql",
+  "phase_2_4_core_schema.sql",
+  "phase_4_delivery_staging_fixture.sql",
+]) {
   const entry = databaseTestEntries.find(({ test }) => test === requiredTest);
   if (!entry) {
     throw new Error(`Required Phase 2-4 database test is missing: ${requiredTest}`);

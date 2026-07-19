@@ -115,6 +115,9 @@ export function loadStagingEnvironment(): Environment {
     );
   }
 
+  process.env.APP_ENCRYPTION_KEY_V1 ??= randomBytes(32).toString("base64url");
+  process.env.TOKEN_HMAC_KEY ??= randomBytes(32).toString("base64url");
+
   return { secretKey, supabaseUrl };
 }
 
@@ -159,10 +162,6 @@ export async function currentTotp(secret: string): Promise<string> {
     ((digest[offset + 2] & 0xff) << 8) |
     (digest[offset + 3] & 0xff);
   return String(binary % 1_000_000).padStart(6, "0");
-}
-
-function postgrestFilter(column: string, values: readonly string[]): string {
-  return `${column}=in.(${values.join(",")})`;
 }
 
 export class StagingServiceApi {
@@ -333,28 +332,19 @@ export async function createStagingFixture(): Promise<StagingFixture> {
   };
   const createdSiteIds = new Set<string>();
   const createdActors: StagingActor[] = [];
+  let cleanupComplete = false;
 
   const cleanup = async () => {
-    const allSiteIds = [companyAFirst.id, companyASecond.id, tenantB.id, ...createdSiteIds];
+    if (cleanupComplete) {
+      return;
+    }
     const actorIds = createdActors.map(({ id }) => id);
-
-    if (allSiteIds.length > 0) {
-      await api.deleteWhere("qr_generation_jobs", postgrestFilter("site_id", allSiteIds));
-      await api.deleteWhere("audit_logs", postgrestFilter("site_id", allSiteIds));
-      await api.deleteWhere("qr_batch_samples", postgrestFilter("site_id", allSiteIds));
-      await api.deleteWhere("qr_batches", postgrestFilter("site_id", allSiteIds));
-      await api.deleteWhere("sticker_design_versions", postgrestFilter("site_id", allSiteIds));
-      await api.deleteWhere("site_lifecycle_requests", postgrestFilter("site_id", allSiteIds));
-    }
-    if (actorIds.length > 0) {
-      await api.deleteWhere("admin_memberships", postgrestFilter("user_id", actorIds));
-    }
-    if (allSiteIds.length > 0) {
-      await api.deleteWhere("sites", postgrestFilter("id", allSiteIds));
-    }
-    await api.deleteWhere("management_companies", postgrestFilter("id", [companyAId, companyBId]));
-    await api.deleteWhere("tenants", postgrestFilter("id", [tenantAId, tenantBId]));
+    await api.rpc("cleanup_staging_e2e_fixture", {
+      p_actor_ids: actorIds,
+      p_tenant_ids: [tenantAId, tenantBId],
+    });
     await Promise.allSettled(actorIds.map((userId) => api.deleteUser(userId)));
+    cleanupComplete = true;
   };
 
   try {

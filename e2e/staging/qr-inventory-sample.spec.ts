@@ -1,3 +1,4 @@
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import {
   auditPayloadIsSafe,
@@ -22,12 +23,18 @@ interface BatchRow {
   site_id: string;
   status:
     | "CANCELLED"
+    | "DELIVERED"
+    | "DISTRIBUTING"
     | "DRAFT"
     | "FINAL_APPROVAL_PENDING"
     | "GENERATION_APPROVED"
     | "GENERATION_QUEUED"
+    | "PRINT_FILE_READY"
+    | "PRINTED"
     | "SAMPLE_APPROVED"
-    | "SAMPLE_READY";
+    | "SAMPLE_READY"
+    | "SENT_TO_PRINTER"
+    | "SHIPPED";
   version: number;
 }
 
@@ -75,6 +82,40 @@ interface GenerationDeliveryResult {
   jobVersion: number;
 }
 
+interface QrAssetRow {
+  batch_id: string;
+  current_binding_id: string | null;
+  current_vehicle_id: string | null;
+  human_code: string;
+  id: string;
+  status: "ASSIGNED" | "IN_STOCK" | "PRINTED" | "PRINT_READY" | "REPLACED" | "REVOKED";
+  version: number;
+}
+
+interface VehicleImportRow {
+  committed_at: string | null;
+  id: string;
+  original_deleted_at: string;
+  row_count: number;
+  source_checksum_sha256: string;
+  status: "COMMITTED" | "VALIDATED";
+  version: number;
+}
+
+interface QrBindingRow {
+  assignment_method: "CSV_IMPORT" | "MANUAL" | "REPLACEMENT";
+  ended_at: string | null;
+  id: string;
+  qr_asset_id: string;
+  vehicle_id: string;
+}
+
+interface InventoryTransactionRow {
+  qr_asset_id: string | null;
+  quantity: number;
+  transaction_type: "ASSIGN" | "RECEIVE" | "REPLACE" | "REVOKE";
+}
+
 interface GenerationClaim {
   batchId: string;
   createdAt: string;
@@ -94,6 +135,9 @@ const mfaSecrets = new Map<string, string>();
 let designId = "";
 let batchId = "";
 let sampleId = "";
+let generationJobId = "";
+let phase4Assets: QrAssetRow[] = [];
+let vehicleImportId = "";
 
 async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en" | "ko") {
   await page.goto(`/${locale}/admin/login`);
@@ -127,6 +171,16 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
 
 function cardWithText(page: Page, text: string): Locator {
   return page.locator(".admin-approval-card").filter({ hasText: text });
+}
+
+function sha256(value: Uint8Array | string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function inventoryAssetForm(page: Page, humanCode: string, buttonName: string): Locator {
+  return cardWithText(page, humanCode)
+    .filter({ has: page.getByRole("button", { name: buttonName }) })
+    .first();
 }
 
 async function expectAuditActors(
@@ -652,6 +706,406 @@ test.describe
         queue_message_id: `pgmq:qr-generation.${reclaimedJob.id}`,
         status: "QUEUED",
       });
+      generationJobId = queuedJob.id;
+    });
+
+    test("service runtime provisions a generated and delivered Batch without retaining fixture secrets", async () => {
+      const generationRevision = 1;
+      const generationContext = await fixture.api.rpc<{
+        already_completed: boolean;
+        requested_quantity: number;
+      }>("start_qr_generation_execution", {
+        p_generation_revision: generationRevision,
+        p_job_id: generationJobId,
+      });
+      expect(generationContext).toMatchObject({
+        already_completed: false,
+        requested_quantity: 20,
+      });
+
+      const humanCodeAlphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+      const generationItems = Array.from(
+        { length: generationContext.requested_quantity },
+        (_, index) => {
+          const publicTokenMaterial = randomBytes(32);
+          const humanCode = Array.from(
+            randomBytes(10),
+            (value) => humanCodeAlphabet[value % humanCodeAlphabet.length],
+          ).join("");
+          return {
+            activation_code_ciphertext: `v1.${randomBytes(32).toString("base64url")}`,
+            activation_code_hash: sha256(randomBytes(32)),
+            activation_key_version: 1,
+            decoded_public_token_hash: sha256(publicTokenMaterial),
+            human_code: humanCode,
+            internal_uuid: randomUUID(),
+            ordinal: index + 1,
+            preview_png_path: `staging-e2e/${batchId}/${index + 1}.png`,
+            print_svg_path: `staging-e2e/${batchId}/${index + 1}.svg`,
+            public_token_ciphertext: `v1.${randomBytes(32).toString("base64url")}`,
+            public_token_hash: sha256(publicTokenMaterial),
+            qr_asset_id: randomUUID(),
+            render_checksum_sha256: sha256(`render:${batchId}:${index + 1}`),
+            token_key_version: 1,
+          };
+        },
+      );
+
+      const chunk = await fixture.api.rpc<{
+        committed_count: number;
+        requested_count: number;
+        total_count: number;
+      }>("commit_qr_generation_chunk", {
+        p_generation_revision: generationRevision,
+        p_items: generationItems,
+        p_job_id: generationJobId,
+      });
+      expect(chunk).toEqual({
+        committed_count: 20,
+        requested_count: 20,
+        total_count: 20,
+      });
+
+      const completed = await fixture.api.rpc<{
+        completed_count: number;
+        status: string;
+      }>("complete_qr_generation_execution", {
+        p_generation_revision: generationRevision,
+        p_job_id: generationJobId,
+      });
+      expect(completed).toMatchObject({ completed_count: 20, status: "COMPLETED" });
+
+      const exportTypes = ["PDF", "CSV", "ZIP", "MANIFEST"] as const;
+      const printExport = await fixture.api.rpc<{ export_count: number; status: string }>(
+        "commit_qr_print_exports",
+        {
+          p_batch_id: batchId,
+          p_export_revision: generationRevision,
+          p_exports: exportTypes.map((exportType) => ({
+            byte_size: 128,
+            checksum_sha256: sha256(`export:${batchId}:${exportType}`),
+            export_type: exportType,
+            storage_path: `staging-e2e/${batchId}/bundle.${exportType.toLowerCase()}`,
+          })),
+        },
+      );
+      expect(printExport).toMatchObject({ export_count: 4, status: "PRINT_FILE_READY" });
+
+      let [deliveryBatch] = await fixture.api.select<BatchRow>(
+        "qr_batches",
+        `id=eq.${batchId}&select=id,site_id,status,requested_by,version`,
+      );
+      for (const targetStatus of ["SENT_TO_PRINTER", "PRINTED", "SHIPPED", "DELIVERED"] as const) {
+        const result = await fixture.api.rpc<{ status: string; version: number }>(
+          "advance_qr_batch_delivery",
+          {
+            p_batch_id: batchId,
+            p_expected_version: deliveryBatch.version,
+            p_reason: `Authenticated staging ${targetStatus.toLowerCase()} transition`,
+            p_request_id: randomUUID(),
+            p_target_status: targetStatus,
+          },
+        );
+        expect(result.status).toBe(targetStatus);
+        deliveryBatch = { ...deliveryBatch, status: targetStatus, version: result.version };
+      }
+
+      phase4Assets = await fixture.api.select<QrAssetRow>(
+        "qr_assets",
+        `batch_id=eq.${batchId}&select=id,batch_id,human_code,status,current_vehicle_id,current_binding_id,version&order=human_code.asc`,
+      );
+      expect(deliveryBatch.status).toBe("DELIVERED");
+      expect(phase4Assets).toHaveLength(20);
+      expect(phase4Assets.every(({ status }) => status === "PRINTED")).toBe(true);
+      expect(
+        await fixture.api.select<{ id: string }>(
+          "qr_activation_codes",
+          `site_id=eq.${fixture.sites.companyAFirst.id}&select=id`,
+        ),
+      ).toHaveLength(20);
+    });
+
+    test("Site Admin receives every QR and rejects duplicate QR and vehicle Bindings", async ({
+      page,
+    }) => {
+      const [manualAsset, duplicateAsset] = phase4Assets;
+      const manualPlate = "12가3456";
+
+      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "en");
+      await page.goto("/en/admin/qr-inventory");
+      const receiveCard = cardWithText(page, fixture.sites.companyAFirst.name)
+        .filter({ has: page.getByRole("button", { name: "Receive Batch" }) })
+        .first();
+      await receiveCard
+        .locator('input[name="reason"]')
+        .fill("Authenticated staging complete Batch receipt");
+      await receiveCard.getByRole("button", { name: "Receive Batch" }).click();
+      await expect(page).toHaveURL(/status=batchReceived/u);
+
+      phase4Assets = await fixture.api.select<QrAssetRow>(
+        "qr_assets",
+        `batch_id=eq.${batchId}&select=id,batch_id,human_code,status,current_vehicle_id,current_binding_id,version&order=human_code.asc`,
+      );
+      expect(phase4Assets.every(({ status }) => status === "IN_STOCK")).toBe(true);
+
+      const manualForm = inventoryAssetForm(page, manualAsset.human_code, "Assign to vehicle");
+      await manualForm.locator('input[name="vehiclePlate"]').fill(manualPlate);
+      await manualForm
+        .locator('input[name="reason"]')
+        .fill("Authenticated staging manual assignment");
+      await manualForm.getByRole("button", { name: "Assign to vehicle" }).click();
+      await expect(page).toHaveURL(/status=assetAssigned/u);
+
+      const [assignedAsset] = await fixture.api.select<QrAssetRow>(
+        "qr_assets",
+        `id=eq.${manualAsset.id}&select=id,batch_id,human_code,status,current_vehicle_id,current_binding_id,version`,
+      );
+      expect(assignedAsset.status).toBe("ASSIGNED");
+
+      const duplicateQrForm = inventoryAssetForm(
+        page,
+        duplicateAsset.human_code,
+        "Assign to vehicle",
+      );
+      await duplicateQrForm.locator('input[name="qrAssetId"]').evaluate((input, value) => {
+        (input as HTMLInputElement).value = value;
+      }, manualAsset.id);
+      await duplicateQrForm.locator('input[name="expectedVersion"]').evaluate((input, value) => {
+        (input as HTMLInputElement).value = value;
+      }, String(assignedAsset.version));
+      await duplicateQrForm.locator('input[name="vehiclePlate"]').fill("34나5678");
+      await duplicateQrForm
+        .locator('input[name="reason"]')
+        .fill("Authenticated staging duplicate QR rejection");
+      await duplicateQrForm.getByRole("button", { name: "Assign to vehicle" }).click();
+      await expect(page).toHaveURL(/error=blocked/u);
+
+      await page.goto("/en/admin/qr-inventory");
+      const duplicateVehicleForm = inventoryAssetForm(
+        page,
+        duplicateAsset.human_code,
+        "Assign to vehicle",
+      );
+      await duplicateVehicleForm.locator('input[name="vehiclePlate"]').fill(manualPlate);
+      await duplicateVehicleForm
+        .locator('input[name="reason"]')
+        .fill("Authenticated staging duplicate vehicle rejection");
+      await duplicateVehicleForm.getByRole("button", { name: "Assign to vehicle" }).click();
+      await expect(page).toHaveURL(/error=conflict/u);
+
+      const bindings = await fixture.api.select<QrBindingRow>(
+        "qr_bindings",
+        `site_id=eq.${fixture.sites.companyAFirst.id}&select=id,qr_asset_id,vehicle_id,assignment_method,ended_at`,
+      );
+      expect(bindings).toHaveLength(1);
+      expect(bindings[0]).toMatchObject({
+        assignment_method: "MANUAL",
+        ended_at: null,
+        qr_asset_id: manualAsset.id,
+      });
+      const [stillStock] = await fixture.api.select<QrAssetRow>(
+        "qr_assets",
+        `id=eq.${duplicateAsset.id}&select=id,batch_id,human_code,status,current_vehicle_id,current_binding_id,version`,
+      );
+      expect(stillStock.status).toBe("IN_STOCK");
+    });
+
+    test("Site Admin validates and atomically commits one CSV assignment", async ({ page }) => {
+      const csvAsset = phase4Assets[1];
+      const csvPlate = "56다7890";
+      const csvSource = `vehicle_plate,qr_human_code\n${csvPlate},${csvAsset.human_code}\n`;
+
+      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "ko");
+      await page.goto("/ko/admin/qr-inventory");
+      const importButton = page.getByRole("button", { name: "CSV 검증" });
+      const importForm = importButton.locator("xpath=ancestor::form");
+      await importForm
+        .locator('select[name="siteScope"]')
+        .selectOption(
+          `${fixture.tenantAId}|${fixture.companyAId}|${fixture.sites.companyAFirst.id}`,
+        );
+      await importForm.locator('input[name="csvFile"]').setInputFiles({
+        buffer: Buffer.from(csvSource, "utf8"),
+        mimeType: "text/csv",
+        name: "vehicle-assignment.csv",
+      });
+      await importForm.locator('input[name="reason"]').fill("Authenticated staging CSV validation");
+      await importButton.click();
+      await expect(page).toHaveURL(/status=importValidated/u);
+
+      const [vehicleImport] = await fixture.api.select<VehicleImportRow>(
+        "vehicle_imports",
+        `site_id=eq.${fixture.sites.companyAFirst.id}&select=id,status,row_count,source_checksum_sha256,original_deleted_at,committed_at,version`,
+      );
+      vehicleImportId = vehicleImport.id;
+      expect(vehicleImport).toMatchObject({
+        committed_at: null,
+        row_count: 1,
+        source_checksum_sha256: sha256(csvSource),
+        status: "VALIDATED",
+      });
+      expect(Date.parse(vehicleImport.original_deleted_at)).not.toBeNaN();
+
+      const [protectedRow] = await fixture.api.select<{
+        plate_ciphertext: string;
+        plate_last4: string;
+        qr_asset_id: string;
+      }>(
+        "vehicle_import_rows",
+        `import_id=eq.${vehicleImportId}&select=plate_ciphertext,plate_last4,qr_asset_id`,
+      );
+      expect(protectedRow).toMatchObject({
+        plate_last4: "7890",
+        qr_asset_id: csvAsset.id,
+      });
+      expect(protectedRow.plate_ciphertext).not.toContain(csvPlate);
+
+      const commitButton = page.getByRole("button", { name: "검증 결과 배정 확정" });
+      const commitForm = commitButton.locator("xpath=ancestor::form");
+      await commitForm
+        .locator('input[name="reason"]')
+        .fill("Authenticated staging atomic CSV commit");
+      await commitButton.click();
+      await expect(page).toHaveURL(/status=importCommitted/u);
+
+      const [committedImport] = await fixture.api.select<VehicleImportRow>(
+        "vehicle_imports",
+        `id=eq.${vehicleImportId}&select=id,status,row_count,source_checksum_sha256,original_deleted_at,committed_at,version`,
+      );
+      const [assignedAsset] = await fixture.api.select<QrAssetRow>(
+        "qr_assets",
+        `id=eq.${csvAsset.id}&select=id,batch_id,human_code,status,current_vehicle_id,current_binding_id,version`,
+      );
+      expect(committedImport.status).toBe("COMMITTED");
+      expect(committedImport.committed_at).not.toBeNull();
+      expect(assignedAsset.status).toBe("ASSIGNED");
+    });
+
+    test("Super Admin replaces then finally revokes QR while preserving all histories", async ({
+      page,
+    }) => {
+      const [manualAsset, csvAsset, replacementAsset] = phase4Assets;
+
+      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await page.goto("/en/admin/qr-inventory");
+      const replacementForm = inventoryAssetForm(
+        page,
+        manualAsset.human_code,
+        "Transfer Binding to replacement",
+      ).locator("form", {
+        has: page.getByRole("button", { name: "Transfer Binding to replacement" }),
+      });
+      await replacementForm
+        .locator('select[name="replacementScope"]')
+        .selectOption({ label: replacementAsset.human_code });
+      await replacementForm
+        .locator('input[name="reason"]')
+        .fill("Authenticated staging Binding replacement");
+      await replacementForm
+        .getByRole("button", { name: "Transfer Binding to replacement" })
+        .click();
+      await expect(page).toHaveURL(/status=assetReplaced/u);
+
+      const revokeForm = inventoryAssetForm(page, replacementAsset.human_code, "Revoke QR").locator(
+        "form",
+        { has: page.getByRole("button", { name: "Revoke QR" }) },
+      );
+      await revokeForm
+        .locator('input[name="reason"]')
+        .fill("Authenticated staging replacement revocation");
+      await revokeForm.getByRole("button", { name: "Revoke QR" }).click();
+      await expect(page).toHaveURL(/status=assetRevoked/u);
+
+      const assets = await fixture.api.select<QrAssetRow>(
+        "qr_assets",
+        `id=in.(${manualAsset.id},${csvAsset.id},${replacementAsset.id})&select=id,batch_id,human_code,status,current_vehicle_id,current_binding_id,version`,
+      );
+      expect(Object.fromEntries(assets.map((asset) => [asset.id, asset.status]))).toEqual({
+        [csvAsset.id]: "ASSIGNED",
+        [manualAsset.id]: "REPLACED",
+        [replacementAsset.id]: "REVOKED",
+      });
+
+      const bindings = await fixture.api.select<QrBindingRow>(
+        "qr_bindings",
+        `qr_asset_id=in.(${manualAsset.id},${csvAsset.id},${replacementAsset.id})&select=id,qr_asset_id,vehicle_id,assignment_method,ended_at&order=created_at.asc`,
+      );
+      expect(bindings).toHaveLength(3);
+      const manualBinding = bindings.find(({ qr_asset_id }) => qr_asset_id === manualAsset.id);
+      const csvBinding = bindings.find(({ qr_asset_id }) => qr_asset_id === csvAsset.id);
+      const replacementBinding = bindings.find(
+        ({ qr_asset_id }) => qr_asset_id === replacementAsset.id,
+      );
+      expect(manualBinding).toMatchObject({ assignment_method: "MANUAL" });
+      expect(manualBinding?.ended_at).not.toBeNull();
+      expect(csvBinding).toMatchObject({ assignment_method: "CSV_IMPORT", ended_at: null });
+      expect(replacementBinding).toMatchObject({ assignment_method: "REPLACEMENT" });
+      expect(replacementBinding?.ended_at).not.toBeNull();
+      expect(replacementBinding?.vehicle_id).toBe(manualBinding?.vehicle_id);
+
+      const transactions = await fixture.api.select<InventoryTransactionRow>(
+        "inventory_transactions",
+        `qr_batch_id=eq.${batchId}&select=transaction_type,quantity,qr_asset_id&order=created_at.asc`,
+      );
+      expect(transactions.map(({ transaction_type }) => transaction_type)).toEqual([
+        "RECEIVE",
+        "ASSIGN",
+        "ASSIGN",
+        "REPLACE",
+        "REVOKE",
+      ]);
+      expect(transactions[0]).toMatchObject({ qr_asset_id: null, quantity: 20 });
+
+      const statusHistory = await fixture.api.select<{
+        qr_asset_id: string;
+        reason_code: string;
+      }>(
+        "qr_asset_status_logs",
+        `qr_asset_id=in.(${manualAsset.id},${csvAsset.id},${replacementAsset.id})&select=qr_asset_id,reason_code&order=created_at.asc`,
+      );
+      const reasonsByAsset = Object.groupBy(statusHistory, ({ qr_asset_id }) => qr_asset_id);
+      expect(reasonsByAsset[manualAsset.id]?.map(({ reason_code }) => reason_code)).toEqual(
+        expect.arrayContaining([
+          "QR_GENERATED",
+          "RENDER_QUALITY_PASSED",
+          "PRINT_CONFIRMED",
+          "BATCH_RECEIVED",
+          "MANUAL_ASSIGNMENT",
+          "QR_REPLACED",
+        ]),
+      );
+      expect(reasonsByAsset[csvAsset.id]?.map(({ reason_code }) => reason_code)).toEqual(
+        expect.arrayContaining(["BATCH_RECEIVED", "CSV_IMPORT_ASSIGNMENT"]),
+      );
+      expect(reasonsByAsset[replacementAsset.id]?.map(({ reason_code }) => reason_code)).toEqual(
+        expect.arrayContaining(["BATCH_RECEIVED", "QR_REPLACEMENT_ASSIGNED", "ADMIN_REVOKE"]),
+      );
+
+      const phase4Actions = [
+        "QR_BATCH_RECEIVED",
+        "QR_ASSET_ASSIGNED",
+        "VEHICLE_IMPORT_VALIDATED",
+        "VEHICLE_IMPORT_COMMITTED",
+        "QR_ASSET_REPLACED",
+        "QR_ASSET_REVOKED",
+      ];
+      const audits = await fixture.api.select<AuditRow>(
+        "audit_logs",
+        `site_id=eq.${fixture.sites.companyAFirst.id}&action=in.(${phase4Actions.join(",")})&select=action,actor_id,before_data,after_data&order=created_at.asc`,
+      );
+      expect(audits.map(({ action }) => action)).toEqual(phase4Actions);
+      expect(audits.map(({ actor_id }) => actor_id)).toEqual([
+        fixture.actors.siteAdmin.id,
+        fixture.actors.siteAdmin.id,
+        fixture.actors.siteAdmin.id,
+        fixture.actors.siteAdmin.id,
+        fixture.actors.superAdmin.id,
+        fixture.actors.superAdmin.id,
+      ]);
+      expect(audits.every((row) => auditPayloadIsSafe([row.before_data, row.after_data]))).toBe(
+        true,
+      );
+      expect(JSON.stringify(audits)).not.toMatch(/12가3456|56다7890/u);
     });
 
     test("concurrent requester cancellation and Super Admin approval commit exactly one outcome", async ({
@@ -842,8 +1296,19 @@ test.describe
       const actorIds = Object.values(fixture.actors).map(({ id }) => id);
       await fixture.cleanup();
 
+      await expectNoRows("vehicle_import_rows", siteIds);
+      await expectNoRows("vehicle_imports", siteIds);
+      await expectNoRows("inventory_transactions", siteIds);
+      await expectNoRows("qr_bindings", siteIds);
+      await expectNoRows("vehicles", siteIds);
+      await expectNoRows("qr_activation_codes", siteIds);
+      await expectNoRows("qr_generation_items", siteIds);
+      await expectNoRows("rendered_assets", siteIds);
+      await expectNoRows("print_exports", siteIds);
+      await expectNoRows("qr_asset_status_logs", siteIds);
       await expectNoRows("qr_generation_jobs", siteIds);
       await expectNoRows("qr_batch_samples", siteIds);
+      await expectNoRows("qr_assets", siteIds);
       await expectNoRows("qr_batches", siteIds);
       await expectNoRows("sticker_design_versions", siteIds);
       await expectNoRows("audit_logs", siteIds);
