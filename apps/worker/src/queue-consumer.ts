@@ -1,9 +1,14 @@
+import {
+  QR_GENERATION_QUEUE_JOB_TYPE,
+  QR_GENERATION_QUEUE_SCHEMA_VERSION,
+  type QrGenerationQueueMessage,
+} from "@taptolk/application";
 import { z } from "zod";
 
-export const QUEUE_JOB_SCHEMA_VERSION = 1;
-export const QR_GENERATION_QUEUE_JOB_TYPE = "QR_GENERATION";
+export const QUEUE_JOB_SCHEMA_VERSION = QR_GENERATION_QUEUE_SCHEMA_VERSION;
+export { QR_GENERATION_QUEUE_JOB_TYPE };
 
-export const queueJobSchema = z
+export const queueJobSchema: z.ZodType<QrGenerationQueueMessage> = z
   .object({
     batchId: z.string().uuid(),
     createdAt: z.string().datetime({ offset: true }),

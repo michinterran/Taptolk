@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@taptolk/application": "workspace:*",
     "@taptolk/config": "workspace:*",
     "@taptolk/observability": "workspace:*",
     "zod": "4.4.3"

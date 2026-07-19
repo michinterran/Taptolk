@@ -387,8 +387,18 @@ attempt below 1, or generation revision below 1 is rejected before handler looku
 token/code/contact data, reasons, storage paths, cookies, authorization headers, credentials, and
 provider payloads cannot be smuggled through a structurally valid Queue message.
 
-- Payload is schema-versioned before Production, either with an explicit `schemaVersion` or a
-  versioned job type. The implementation decision must be made before first publish.
+- The Application layer owns the typed Queue DTO and provider-neutral dispatch coordinator. The
+  Worker imports that public contract and independently validates runtime input with strict Zod.
+- The coordinator receives a publisher port and retry policy. It imports no Queue SDK, credential,
+  Cron route, or resident Worker runtime.
+- Publish success calls `recordPublished` with the active lease version and provider message ID.
+- A typed publish failure stores only `QUEUE_RATE_LIMITED` or `QUEUE_UNAVAILABLE` and uses the
+  injected retry policy to record `RETRY_WAIT`. Unknown errors reduce to `QUEUE_UNAVAILABLE`.
+- If publish succeeds but acknowledgement persistence fails, the coordinator does not falsely
+  record provider failure. The lease remains recoverable so expiry can republish the same stable
+  `jobId`.
+- If delivery-failure acknowledgement also fails, the lease remains recoverable. Bounded results
+  expose only job ID and a safe outcome status.
 - Worker does not trust Tenant/Site IDs in the payload as authorization. It loads the job by
   `jobId`, verifies the stored Batch relationship, and treats payload scope as consistency input.
 - No reason, user identity, actor UUID, contact data, token material, storage metadata, HTML/SVG,
@@ -511,6 +521,8 @@ Implemented in the current Application, DB, and Web approval units:
 
 - `apps/worker/src/queue-consumer.ts`
 - `apps/worker/src/queue-consumer.test.ts`
+- `packages/application/src/qr-generation-dispatch-coordinator.ts`
+- `packages/application/src/qr-generation-dispatch-coordinator.test.ts`
 - `packages/application/src/qr-final-generation-approval-service.ts`
 - `packages/application/src/qr-final-generation-approval-service.test.ts`
 - `packages/application/src/index.ts`
@@ -529,7 +541,6 @@ Implemented in the current Application, DB, and Web approval units:
 Still planned:
 
 - `packages/domain/src/admin-permission-catalog.ts` only if permission semantics change
-- `apps/worker/src/queue-consumer.ts`
 - `apps/worker/src/jobs/qr-generation.ts`
 
 New packages such as `qr-engine` or `sticker-renderer` require a concrete owner, public API, tests,

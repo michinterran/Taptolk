@@ -81,6 +81,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@taptolk/application':
+        specifier: workspace:*
+        version: link:../../packages/application
       '@taptolk/config':
         specifier: workspace:*
         version: link:../../packages/config
