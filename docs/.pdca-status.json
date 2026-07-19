@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-07-19T16:47:31.424Z",
+  "lastUpdated": "2026-07-19T16:51:05.901Z",
   "activeFeatures": [
     "i18n-foundation",
     "tenant-admin-foundation",
@@ -10,7 +10,8 @@
     "qr-final-generation-approval",
     "qr-generation-queue-dispatch-runtime",
     "qr-generation-staging-queue-live-proof",
-    "owner-activation"
+    "owner-activation",
+    "public-contact"
   ],
   "primaryFeature": "i18n-foundation",
   "features": {
@@ -388,6 +389,12 @@
         "lastUpdated": "2026-07-19T16:47:31.424Z"
       },
       "completedAt": "2026-07-19T16:47:31.420Z"
+    },
+    "public-contact": {
+      "phase": "do",
+      "matchRate": null,
+      "iterationCount": 0,
+      "documents": {}
     }
   },
   "pipeline": {
@@ -398,7 +405,7 @@
   "session": {
     "startedAt": "2026-07-18T09:15:44.795Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-07-19T16:47:31.424Z"
+    "lastActivity": "2026-07-19T16:51:05.901Z"
   },
   "history": [
     {
@@ -886,6 +893,32 @@
       "phase": "report",
       "nextPhase": "completed",
       "timestamp": "2026-07-19T16:47:31.422Z"
+    },
+    {
+      "feature": "public-contact",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T16:51:01.412Z"
+    },
+    {
+      "feature": "public-contact",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T16:51:01.413Z"
+    },
+    {
+      "feature": "public-contact",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T16:51:05.900Z"
+    },
+    {
+      "feature": "public-contact",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T16:51:05.901Z"
     }
   ]
 }
