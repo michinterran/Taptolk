@@ -1,174 +1,305 @@
-import {
-  type AdminAuthorizationContext,
-  authorizeAdminAction,
-  type ResourceScope,
-} from "@taptolk/domain";
+import { type AdminAuthorizationContext, authorizeAdminAction } from "@taptolk/domain";
 import { assertAdminAuthorized } from "./authorization-error.js";
+import type { OrganizationStatus } from "./management-company-catalog-service.js";
 
-export interface SiteRecord extends ResourceScope {
-  contractVehicleLimit: number;
+export const SITE_CONTRACT_VEHICLE_LIMIT_MAX = 1_000_000;
+export const DEFAULT_SITE_TIMEZONE = "Asia/Seoul";
+export const SITE_TYPES = ["APARTMENT", "OFFICETEL", "BUILDING", "OTHER"] as const;
+export type SiteType = (typeof SITE_TYPES)[number];
+
+export interface SiteActor {
+  authorization: AdminAuthorizationContext;
+  userId: string;
+}
+
+export interface SiteCommandResult {
   id: string;
-  managementCompanyId: string;
-  name: string;
-  status: "ACTIVE" | "SUSPENDED" | "CLOSED";
-  type: "APARTMENT" | "OFFICETEL" | "BUILDING" | "OTHER";
   version: number;
 }
 
-export interface CreateSiteCommand {
-  actor: AdminAuthorizationContext;
-  actorId: string;
-  contractVehicleLimit: number;
-  managementCompanyId: string;
-  name: string;
-  requestId: string;
-  tenantId: string;
-  type: SiteRecord["type"];
+export interface SiteManagementRepository {
+  changeStatus(input: {
+    expectedVersion: number;
+    nextStatus: OrganizationStatus;
+    reason: string;
+    requestId: string;
+    siteId: string;
+  }): Promise<SiteCommandResult>;
+  create(input: {
+    address: string | null;
+    contractVehicleLimit: number;
+    managementCompanyId: string;
+    name: string;
+    reason: string;
+    requestId: string;
+    tenantId: string;
+    timezone: string;
+    type: SiteType;
+  }): Promise<SiteCommandResult>;
+  updateContract(input: {
+    contractVehicleLimit: number;
+    expectedVersion: number;
+    reason: string;
+    requestId: string;
+    siteId: string;
+  }): Promise<SiteCommandResult>;
+  updateOperational(input: {
+    address: string | null;
+    expectedVersion: number;
+    name: string;
+    reason: string;
+    requestId: string;
+    siteId: string;
+    timezone: string;
+    type: SiteType;
+  }): Promise<SiteCommandResult>;
 }
 
-export interface UpdateSiteCommand {
-  actor: AdminAuthorizationContext;
-  actorId: string;
-  expectedVersion: number;
-  name: string;
-  requestId: string;
-  site: SiteRecord;
+export class SiteManagementError extends Error {
+  readonly code:
+    | "INVALID_ADDRESS"
+    | "INVALID_COMPANY_ID"
+    | "INVALID_CONTRACT_VEHICLE_LIMIT"
+    | "INVALID_NAME"
+    | "INVALID_REASON"
+    | "INVALID_REQUEST_ID"
+    | "INVALID_SITE_ID"
+    | "INVALID_SITE_TYPE"
+    | "INVALID_STATUS_TRANSITION"
+    | "INVALID_TENANT_ID"
+    | "INVALID_TIMEZONE"
+    | "INVALID_USER_ID"
+    | "INVALID_VERSION";
+
+  constructor(code: SiteManagementError["code"]) {
+    super(`Site command rejected: ${code}`);
+    this.name = "SiteManagementError";
+    this.code = code;
+  }
 }
 
-export interface ArchiveSiteCommand {
-  actor: AdminAuthorizationContext;
-  actorId: string;
-  expectedVersion: number;
-  reason: string;
-  requestId: string;
-  site: SiteRecord;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+function assertUuid(
+  value: string,
+  code:
+    | "INVALID_COMPANY_ID"
+    | "INVALID_REQUEST_ID"
+    | "INVALID_SITE_ID"
+    | "INVALID_TENANT_ID"
+    | "INVALID_USER_ID",
+): void {
+  if (!UUID_PATTERN.test(value)) {
+    throw new SiteManagementError(code);
+  }
 }
 
-export interface AuditEventInput {
-  action: "SITE_ARCHIVED" | "SITE_CREATED" | "SITE_UPDATED";
-  actorId: string;
-  afterData: Record<string, unknown>;
-  beforeData?: Record<string, unknown>;
-  requestId: string;
-  resourceId: string;
-  tenantId: string;
-}
-
-export interface SiteUnitOfWork {
-  appendAudit(event: AuditEventInput): Promise<void>;
-  archiveSite(site: SiteRecord, expectedVersion: number): Promise<SiteRecord>;
-  createSite(command: Omit<CreateSiteCommand, "actor">): Promise<SiteRecord>;
-  updateSite(
-    site: SiteRecord,
-    changes: { name: string },
-    expectedVersion: number,
-  ): Promise<SiteRecord>;
-}
-
-export interface SiteTransactionManager {
-  execute<T>(operation: (unitOfWork: SiteUnitOfWork) => Promise<T>): Promise<T>;
-}
-
-function normalizeSiteName(name: string): string {
-  const normalized = name.trim();
+function normalizeName(value: string): string {
+  const normalized = value.trim();
   if (normalized.length < 1 || normalized.length > 200) {
-    throw new Error("Site name must contain 1 to 200 characters.");
+    throw new SiteManagementError("INVALID_NAME");
   }
   return normalized;
 }
 
-function scopeOf(site: SiteRecord): ResourceScope {
-  return {
-    managementCompanyId: site.managementCompanyId,
-    siteId: site.id,
-    tenantId: site.tenantId,
-  };
+function normalizeAddress(value: string): string | null {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return null;
+  }
+  if (normalized.length > 500) {
+    throw new SiteManagementError("INVALID_ADDRESS");
+  }
+  return normalized;
+}
+
+function normalizeTimezone(value: string): string {
+  const normalized = value.trim();
+  if (normalized.length < 1 || normalized.length > 64) {
+    throw new SiteManagementError("INVALID_TIMEZONE");
+  }
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: normalized }).format();
+  } catch {
+    throw new SiteManagementError("INVALID_TIMEZONE");
+  }
+  return normalized;
+}
+
+function normalizeReason(value: string): string {
+  const normalized = value.trim();
+  if (normalized.length < 3 || normalized.length > 500) {
+    throw new SiteManagementError("INVALID_REASON");
+  }
+  return normalized;
+}
+
+function assertSiteType(value: string): asserts value is SiteType {
+  if (!SITE_TYPES.some((type) => type === value)) {
+    throw new SiteManagementError("INVALID_SITE_TYPE");
+  }
+}
+
+function assertVersion(value: number): void {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new SiteManagementError("INVALID_VERSION");
+  }
+}
+
+function assertContractVehicleLimit(value: number): void {
+  if (!Number.isInteger(value) || value < 0 || value > SITE_CONTRACT_VEHICLE_LIMIT_MAX) {
+    throw new SiteManagementError("INVALID_CONTRACT_VEHICLE_LIMIT");
+  }
+}
+
+function authorizeActor(
+  actor: SiteActor,
+  permission:
+    | "site:archive-approve"
+    | "site:create"
+    | "site:suspend-approve"
+    | "site:update-contract"
+    | "site:update-operational",
+  resource: {
+    managementCompanyId: string;
+    siteId?: string;
+    tenantId: string;
+  },
+): void {
+  assertUuid(actor.userId, "INVALID_USER_ID");
+  assertAdminAuthorized(authorizeAdminAction(actor.authorization, permission, resource));
+}
+
+function validateScope(input: {
+  managementCompanyId: string;
+  siteId?: string;
+  tenantId: string;
+}): void {
+  assertUuid(input.tenantId, "INVALID_TENANT_ID");
+  assertUuid(input.managementCompanyId, "INVALID_COMPANY_ID");
+  if (input.siteId) {
+    assertUuid(input.siteId, "INVALID_SITE_ID");
+  }
 }
 
 export class SiteApplicationService {
-  constructor(private readonly transactions: SiteTransactionManager) {}
+  constructor(private readonly repository: SiteManagementRepository) {}
 
-  async create(command: CreateSiteCommand): Promise<SiteRecord> {
-    const resource = {
-      managementCompanyId: command.managementCompanyId,
-      tenantId: command.tenantId,
-    };
-    assertAdminAuthorized(authorizeAdminAction(command.actor, "site:create", resource));
-    if (!Number.isInteger(command.contractVehicleLimit) || command.contractVehicleLimit < 0) {
-      throw new Error("Contract vehicle limit must be a non-negative integer.");
-    }
-
-    return this.transactions.execute(async (unitOfWork) => {
-      const site = await unitOfWork.createSite({
-        actorId: command.actorId,
-        contractVehicleLimit: command.contractVehicleLimit,
-        managementCompanyId: command.managementCompanyId,
-        name: normalizeSiteName(command.name),
-        requestId: command.requestId,
-        tenantId: command.tenantId,
-        type: command.type,
-      });
-      await unitOfWork.appendAudit({
-        action: "SITE_CREATED",
-        actorId: command.actorId,
-        afterData: {
-          name: site.name,
-          status: site.status,
-          type: site.type,
-        },
-        requestId: command.requestId,
-        resourceId: site.id,
-        tenantId: site.tenantId,
-      });
-      return site;
+  async create(input: {
+    actor: SiteActor;
+    address: string;
+    contractVehicleLimit: number;
+    managementCompanyId: string;
+    name: string;
+    reason: string;
+    requestId: string;
+    tenantId: string;
+    timezone: string;
+    type: string;
+  }): Promise<SiteCommandResult> {
+    validateScope(input);
+    authorizeActor(input.actor, "site:create", input);
+    assertUuid(input.requestId, "INVALID_REQUEST_ID");
+    assertSiteType(input.type);
+    assertContractVehicleLimit(input.contractVehicleLimit);
+    return this.repository.create({
+      address: normalizeAddress(input.address),
+      contractVehicleLimit: input.contractVehicleLimit,
+      managementCompanyId: input.managementCompanyId,
+      name: normalizeName(input.name),
+      reason: normalizeReason(input.reason),
+      requestId: input.requestId,
+      tenantId: input.tenantId,
+      timezone: normalizeTimezone(input.timezone),
+      type: input.type,
     });
   }
 
-  async update(command: UpdateSiteCommand): Promise<SiteRecord> {
-    assertAdminAuthorized(
-      authorizeAdminAction(command.actor, "site:update-operational", scopeOf(command.site)),
-    );
-    const nextName = normalizeSiteName(command.name);
-
-    return this.transactions.execute(async (unitOfWork) => {
-      const updated = await unitOfWork.updateSite(
-        command.site,
-        { name: nextName },
-        command.expectedVersion,
-      );
-      await unitOfWork.appendAudit({
-        action: "SITE_UPDATED",
-        actorId: command.actorId,
-        afterData: { name: updated.name, version: updated.version },
-        beforeData: { name: command.site.name, version: command.site.version },
-        requestId: command.requestId,
-        resourceId: updated.id,
-        tenantId: updated.tenantId,
-      });
-      return updated;
+  async updateOperational(input: {
+    actor: SiteActor;
+    address: string;
+    expectedVersion: number;
+    managementCompanyId: string;
+    name: string;
+    reason: string;
+    requestId: string;
+    siteId: string;
+    tenantId: string;
+    timezone: string;
+    type: string;
+  }): Promise<SiteCommandResult> {
+    validateScope(input);
+    authorizeActor(input.actor, "site:update-operational", input);
+    assertUuid(input.requestId, "INVALID_REQUEST_ID");
+    assertVersion(input.expectedVersion);
+    assertSiteType(input.type);
+    return this.repository.updateOperational({
+      address: normalizeAddress(input.address),
+      expectedVersion: input.expectedVersion,
+      name: normalizeName(input.name),
+      reason: normalizeReason(input.reason),
+      requestId: input.requestId,
+      siteId: input.siteId,
+      timezone: normalizeTimezone(input.timezone),
+      type: input.type,
     });
   }
 
-  async archive(command: ArchiveSiteCommand): Promise<SiteRecord> {
-    assertAdminAuthorized(
-      authorizeAdminAction(command.actor, "site:archive-approve", scopeOf(command.site)),
-    );
-    if (command.reason.trim().length < 3) {
-      throw new Error("Archiving a Site requires a reason.");
-    }
+  async updateContract(input: {
+    actor: SiteActor;
+    contractVehicleLimit: number;
+    expectedVersion: number;
+    managementCompanyId: string;
+    reason: string;
+    requestId: string;
+    siteId: string;
+    tenantId: string;
+  }): Promise<SiteCommandResult> {
+    validateScope(input);
+    authorizeActor(input.actor, "site:update-contract", input);
+    assertUuid(input.requestId, "INVALID_REQUEST_ID");
+    assertVersion(input.expectedVersion);
+    assertContractVehicleLimit(input.contractVehicleLimit);
+    return this.repository.updateContract({
+      contractVehicleLimit: input.contractVehicleLimit,
+      expectedVersion: input.expectedVersion,
+      reason: normalizeReason(input.reason),
+      requestId: input.requestId,
+      siteId: input.siteId,
+    });
+  }
 
-    return this.transactions.execute(async (unitOfWork) => {
-      const archived = await unitOfWork.archiveSite(command.site, command.expectedVersion);
-      await unitOfWork.appendAudit({
-        action: "SITE_ARCHIVED",
-        actorId: command.actorId,
-        afterData: { status: archived.status, version: archived.version },
-        beforeData: { status: command.site.status, version: command.site.version },
-        requestId: command.requestId,
-        resourceId: archived.id,
-        tenantId: archived.tenantId,
-      });
-      return archived;
+  async changeStatus(input: {
+    actor: SiteActor;
+    currentStatus: OrganizationStatus;
+    expectedVersion: number;
+    managementCompanyId: string;
+    nextStatus: OrganizationStatus;
+    reason: string;
+    requestId: string;
+    siteId: string;
+    tenantId: string;
+  }): Promise<SiteCommandResult> {
+    validateScope(input);
+    const permission =
+      input.nextStatus === "CLOSED" ? "site:archive-approve" : "site:suspend-approve";
+    authorizeActor(input.actor, permission, input);
+    assertUuid(input.requestId, "INVALID_REQUEST_ID");
+    assertVersion(input.expectedVersion);
+    const validTransition =
+      (input.currentStatus === "ACTIVE" &&
+        (input.nextStatus === "SUSPENDED" || input.nextStatus === "CLOSED")) ||
+      (input.currentStatus === "SUSPENDED" &&
+        (input.nextStatus === "ACTIVE" || input.nextStatus === "CLOSED"));
+    if (!validTransition) {
+      throw new SiteManagementError("INVALID_STATUS_TRANSITION");
+    }
+    return this.repository.changeStatus({
+      expectedVersion: input.expectedVersion,
+      nextStatus: input.nextStatus,
+      reason: normalizeReason(input.reason),
+      requestId: input.requestId,
+      siteId: input.siteId,
     });
   }
 }

@@ -38,6 +38,12 @@ export default async function TenantAdminPage({ params }: { params: Promise<{ lo
         localeTitle={copy["locale.switcher.label"]}
         logoAlt={copy["admin.brand.logoAlt"]}
         nextDescription={copy["admin.dashboard.next.description"]}
+        nextActions={[
+          {
+            href: `/${locale}/admin/sites`,
+            label: copy["admin.dashboard.sitesAction"],
+          },
+        ]}
         nextTitle={copy["admin.dashboard.next.title"]}
         pathname={`/${locale}/admin/dashboard`}
         roleLabel={getAdminRoleLabel(copy, membership.role)}

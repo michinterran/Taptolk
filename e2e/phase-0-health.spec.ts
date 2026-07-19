@@ -180,3 +180,15 @@ test("the management company catalog is never exposed without an authenticated a
   );
   await expect(page.getByText("Management company operations", { exact: true })).toHaveCount(0);
 });
+
+test("the site catalog is never exposed without an authenticated admin session", async ({
+  page,
+}) => {
+  await page.goto("/ko/admin/sites");
+
+  await expect(page).toHaveURL(/\/ko\/admin\/login\?error=configuration$/u);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "승인된 관리자 계정으로 안전하게 시작합니다.",
+  );
+  await expect(page.getByText("역할별 사이트 운영", { exact: true })).toHaveCount(0);
+});

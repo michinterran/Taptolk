@@ -73,6 +73,21 @@ describe("admin RBAC", () => {
     expect(roleHasPermission("PLATFORM_OPERATOR", "site:create-approve")).toBe(false);
   });
 
+  it("keeps direct Site lifecycle and contract authority aligned with the approved matrix", () => {
+    expect(roleHasPermission("SUPER_ADMIN", "site:update-contract")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "site:archive-approve")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "site:update-operational")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "site:suspend-approve")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "site:update-contract")).toBe(false);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "site:archive-approve")).toBe(false);
+    expect(roleHasPermission("MANAGEMENT_ADMIN", "site:create-request")).toBe(true);
+    expect(roleHasPermission("MANAGEMENT_ADMIN", "site:suspend-request")).toBe(true);
+    expect(roleHasPermission("MANAGEMENT_ADMIN", "site:suspend-approve")).toBe(false);
+    expect(roleHasPermission("SITE_ADMIN", "site:update-operational")).toBe(true);
+    expect(roleHasPermission("SITE_ADMIN", "site:update-contract")).toBe(false);
+    expect(roleHasPermission("SITE_OPERATOR", "site:update-operational")).toBe(false);
+  });
+
   it("reserves new-account approval for Super Admin", () => {
     expect(roleHasPermission("SUPER_ADMIN", "membership:approve-account")).toBe(true);
     expect(roleHasPermission("PLATFORM_OPERATOR", "membership:approve-account")).toBe(false);

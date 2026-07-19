@@ -159,6 +159,9 @@ export const sites = pgTable(
     }).onDelete("restrict"),
     unique("uq_sites_tenant_management_id").on(table.tenantId, table.managementCompanyId, table.id),
     unique("uq_sites_tenant_id").on(table.tenantId, table.id),
+    uniqueIndex("uq_sites_active_management_name")
+      .on(table.managementCompanyId, sql`lower(${table.name})`)
+      .where(sql`${table.deletedAt} is null`),
     index("idx_sites_tenant_status").on(table.tenantId, table.status),
     index("idx_sites_management_status").on(table.managementCompanyId, table.status),
     check("chk_sites_name", sql`length(trim(${table.name})) between 1 and 200`),

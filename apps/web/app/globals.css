@@ -884,6 +884,16 @@ h3,
   overflow-wrap: anywhere;
 }
 
+.admin-table-meta {
+  color: var(--tt-color-text-muted);
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin-top: 0.35rem;
+  max-width: 24rem;
+  overflow-wrap: anywhere;
+}
+
 .admin-status-badge {
   border: 1px solid var(--tt-color-border);
   border-radius: 999px;
