@@ -34,3 +34,10 @@ export {
   TenantCatalogService,
   type TenantStatus,
 } from "./tenant-catalog-service.js";
+export {
+  type TenantCommandResult,
+  type TenantManagementActor,
+  TenantManagementError,
+  type TenantManagementRepository,
+  TenantManagementService,
+} from "./tenant-management-service.js";

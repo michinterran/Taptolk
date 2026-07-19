@@ -79,6 +79,18 @@ describe("admin RBAC", () => {
     expect(roleHasPermission("MANAGEMENT_ADMIN", "membership:approve-account")).toBe(false);
   });
 
+  it("reserves Tenant lifecycle mutations for Super Admin", () => {
+    expect(roleHasPermission("SUPER_ADMIN", "tenant:create")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "tenant:update")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "tenant:suspend")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "tenant:close")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "tenant:read")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "tenant:create")).toBe(false);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "tenant:update")).toBe(false);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "tenant:suspend")).toBe(false);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "tenant:close")).toBe(false);
+  });
+
   it("validates role and membership scope as one domain rule", () => {
     expect(isAdminRoleScopeValid("SUPER_ADMIN", { type: "PLATFORM" })).toBe(true);
     expect(

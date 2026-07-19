@@ -162,6 +162,12 @@ export const ko = {
   "admin.signup.passwordConfirmation.label": "비밀번호 확인",
   "admin.signup.submit": "이메일로 계정 만들기",
   "admin.tenants.back": "플랫폼 콘솔로 돌아가기",
+  "admin.tenants.actions": "관리",
+  "admin.tenants.close": "운영 종료",
+  "admin.tenants.create": "테넌트 등록",
+  "admin.tenants.create.description":
+    "고객 계약의 최상위 데이터 격리 단위를 생성합니다. 관리업체와 사이트는 다음 단계에서 별도로 연결합니다.",
+  "admin.tenants.create.title": "새 테넌트 등록",
   "admin.tenants.createdAt": "생성일",
   "admin.tenants.description":
     "현재 세션의 플랫폼 권한과 PostgreSQL RLS를 모두 통과한 테넌트만 조회합니다.",
@@ -169,6 +175,14 @@ export const ko = {
     "첫 고객 계약이 확정되면 감사 로그가 포함된 생성 트랜잭션을 통해 등록합니다.",
   "admin.tenants.empty.title": "등록된 테넌트가 아직 없습니다.",
   "admin.tenants.eyebrow": "플랫폼 고객 관리",
+  "admin.tenants.edit": "정보와 상태 관리",
+  "admin.tenants.edit.description": "현재 version을 기준으로 이름과 식별자를 안전하게 수정합니다.",
+  "admin.tenants.error.conflict":
+    "다른 관리자가 먼저 변경했거나 같은 식별자가 사용 중입니다. 최신 목록을 확인해 주세요.",
+  "admin.tenants.error.forbidden": "이 작업을 수행할 AAL2 슈퍼어드민 권한이 없습니다.",
+  "admin.tenants.error.unavailable":
+    "테넌트 관리 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  "admin.tenants.error.validation": "이름, 식별자, 상태와 처리 사유를 확인해 주세요.",
   "admin.tenants.line1": "전체 테넌트의",
   "admin.tenants.line2": "운영 상태를 확인합니다.",
   "admin.tenants.name": "테넌트",
@@ -176,12 +190,25 @@ export const ko = {
   "admin.tenants.page": "{current} / {total} 페이지",
   "admin.tenants.pagination": "테넌트 페이지 이동",
   "admin.tenants.previous": "이전",
-  "admin.tenants.securityNote": "서버 권한 판정 · RLS 적용",
+  "admin.tenants.reactivate": "운영 재개",
+  "admin.tenants.readOnly":
+    "플랫폼 운영자는 테넌트 현황을 조회할 수 있지만 생성·수정·상태 변경은 슈퍼어드민만 수행합니다.",
+  "admin.tenants.reason": "처리 사유",
+  "admin.tenants.reason.placeholder": "계약 또는 운영 근거를 3자 이상 입력해 주세요.",
+  "admin.tenants.save": "정보 저장",
+  "admin.tenants.securityNote": "AAL2 슈퍼어드민 · 원자적 command · 감사 로그 · RLS",
   "admin.tenants.slug": "식별자",
+  "admin.tenants.slug.help": "소문자 영문, 숫자, 하이픈으로 2–63자",
   "admin.tenants.status": "상태",
   "admin.tenants.status.active": "운영 중",
+  "admin.tenants.status.description":
+    "일시 중지는 재개할 수 있지만 운영 종료는 복구할 수 없습니다.",
   "admin.tenants.status.closed": "종료",
+  "admin.tenants.status.created": "새 테넌트가 감사 로그와 함께 등록되었습니다.",
+  "admin.tenants.status.statusChanged": "테넌트 운영 상태가 변경되었습니다.",
   "admin.tenants.status.suspended": "일시 중지",
+  "admin.tenants.status.updated": "테넌트 기본 정보가 저장되었습니다.",
+  "admin.tenants.suspend": "일시 중지",
   "admin.tenants.total": "총 {count}개 테넌트",
   "foundation.card.modular.description":
     "화면, 정책, 데이터 접근을 분리해 다음 단계의 기능이 안전하게 쌓이도록 구성합니다.",
@@ -389,6 +416,12 @@ export const en = {
   "admin.signup.passwordConfirmation.label": "Confirm password",
   "admin.signup.submit": "Create account with email",
   "admin.tenants.back": "Back to platform console",
+  "admin.tenants.actions": "Manage",
+  "admin.tenants.close": "Close operations",
+  "admin.tenants.create": "Register tenant",
+  "admin.tenants.create.description":
+    "Create the top-level data-isolation boundary for a customer contract. Management companies and sites are connected separately.",
+  "admin.tenants.create.title": "Register a new tenant",
   "admin.tenants.createdAt": "Created",
   "admin.tenants.description":
     "This catalog returns only tenants allowed by both the current platform session and PostgreSQL RLS.",
@@ -396,6 +429,16 @@ export const en = {
     "The first customer will be created through an audited transaction after its contract is approved.",
   "admin.tenants.empty.title": "No tenants have been registered yet.",
   "admin.tenants.eyebrow": "Platform customer management",
+  "admin.tenants.edit": "Manage identity and status",
+  "admin.tenants.edit.description":
+    "Update the name and identifier safely against the current version.",
+  "admin.tenants.error.conflict":
+    "Another admin changed this tenant first, or the identifier is already in use. Refresh the catalog.",
+  "admin.tenants.error.forbidden": "This action requires an AAL2 Super Admin session.",
+  "admin.tenants.error.unavailable":
+    "The tenant management service is unavailable. Please try again shortly.",
+  "admin.tenants.error.validation":
+    "Check the name, identifier, lifecycle state, and decision reason.",
   "admin.tenants.line1": "Review operating status",
   "admin.tenants.line2": "across every tenant.",
   "admin.tenants.name": "Tenant",
@@ -403,12 +446,26 @@ export const en = {
   "admin.tenants.page": "Page {current} of {total}",
   "admin.tenants.pagination": "Tenant pagination",
   "admin.tenants.previous": "Previous",
-  "admin.tenants.securityNote": "Server authorization · RLS enforced",
+  "admin.tenants.reactivate": "Reactivate",
+  "admin.tenants.readOnly":
+    "Platform Operators can review the tenant catalog. Creation, editing, and lifecycle changes are reserved for Super Admins.",
+  "admin.tenants.reason": "Decision reason",
+  "admin.tenants.reason.placeholder":
+    "Enter at least three characters explaining the contract or operating basis.",
+  "admin.tenants.save": "Save identity",
+  "admin.tenants.securityNote": "AAL2 Super Admin · atomic command · audited · RLS",
   "admin.tenants.slug": "Identifier",
+  "admin.tenants.slug.help": "Use 2–63 lowercase letters, numbers, or hyphens",
   "admin.tenants.status": "Status",
   "admin.tenants.status.active": "Active",
+  "admin.tenants.status.description":
+    "Suspension can be reversed. Closing operations is permanent.",
   "admin.tenants.status.closed": "Closed",
+  "admin.tenants.status.created": "The tenant was registered with an audit event.",
+  "admin.tenants.status.statusChanged": "The tenant operating status was changed.",
   "admin.tenants.status.suspended": "Suspended",
+  "admin.tenants.status.updated": "The tenant identity was saved.",
+  "admin.tenants.suspend": "Suspend",
   "admin.tenants.total": "{count} tenants",
   "foundation.card.modular.description":
     "Screen, policy, and data boundaries keep later product work safe to extend.",

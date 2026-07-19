@@ -721,6 +721,117 @@ h3,
   font-size: 0.85rem;
 }
 
+.admin-tenant-create {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--tt-color-brand) 8%, var(--tt-color-surface)),
+    var(--tt-color-surface) 58%
+  );
+  border: 1px solid color-mix(in srgb, var(--tt-color-brand) 35%, var(--tt-color-border));
+  border-radius: var(--tt-radius-lg);
+  box-shadow: var(--tt-shadow-card);
+  margin-bottom: var(--tt-space-5);
+  overflow: hidden;
+}
+
+.admin-tenant-create > summary {
+  cursor: pointer;
+  display: grid;
+  gap: var(--tt-space-1);
+  padding: var(--tt-space-5);
+}
+
+.admin-tenant-create > summary span {
+  font-size: 1.2rem;
+  font-weight: 850;
+}
+
+.admin-tenant-create > summary small {
+  color: var(--tt-color-text-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+  max-width: 48rem;
+}
+
+.admin-tenant-form {
+  border-top: 1px solid var(--tt-color-border);
+  display: grid;
+  gap: var(--tt-space-4);
+  padding: var(--tt-space-5);
+}
+
+.admin-tenant-form > .tt-button {
+  justify-self: start;
+}
+
+.admin-tenant-field-grid {
+  display: grid;
+  gap: var(--tt-space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-catalog-read-only {
+  background: color-mix(in srgb, var(--tt-color-brand) 7%, var(--tt-color-surface));
+  border-left: 4px solid var(--tt-color-brand);
+  color: var(--tt-color-text-muted);
+  margin: 0 0 var(--tt-space-5);
+  padding: var(--tt-space-4) var(--tt-space-5);
+}
+
+.admin-tenant-row-actions {
+  min-width: 12rem;
+}
+
+.admin-tenant-row-actions > summary {
+  color: var(--tt-color-brand-strong);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.admin-tenant-row-actions__body {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-card);
+  display: grid;
+  gap: var(--tt-space-3);
+  margin-top: var(--tt-space-3);
+  min-width: min(32rem, 78vw);
+}
+
+.admin-tenant-row-actions__body p {
+  color: var(--tt-color-text-muted);
+  font-size: 0.84rem;
+  margin: 0;
+}
+
+.admin-tenant-status-form {
+  border-top: 1px solid var(--tt-color-border);
+  display: grid;
+  gap: var(--tt-space-4);
+  padding: var(--tt-space-5);
+}
+
+.admin-tenant-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tt-space-3);
+}
+
+.admin-danger-button {
+  background: var(--tt-color-danger);
+}
+
+.admin-danger-button:hover {
+  background: color-mix(in srgb, var(--tt-color-danger) 85%, black);
+}
+
+.admin-table-closed {
+  color: var(--tt-color-text-muted);
+  font-size: 0.82rem;
+}
+
 .admin-catalog-empty {
   background: var(--tt-color-surface);
   border: 1px dashed var(--tt-color-border);
@@ -989,6 +1100,10 @@ h3,
   .admin-catalog-summary {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .admin-tenant-field-grid {
+    grid-template-columns: 1fr;
   }
 
   .admin-context-grid {

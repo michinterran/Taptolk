@@ -12,6 +12,9 @@ export type AdminRole = (typeof ADMIN_ROLES)[number];
 export const ADMIN_PERMISSIONS = [
   "tenant:create",
   "tenant:read",
+  "tenant:update",
+  "tenant:suspend",
+  "tenant:close",
   "management-company:create",
   "management-company:read",
   "site:create",

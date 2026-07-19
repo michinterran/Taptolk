@@ -144,8 +144,8 @@ select table_privs_are(
   'public',
   'tenants',
   'authenticated',
-  array['INSERT', 'SELECT', 'UPDATE'],
-  'authenticated tenant access excludes destructive and DDL-adjacent privileges'
+  array['SELECT'],
+  'authenticated Tenant table access is read-only; mutations use audited commands'
 );
 
 select table_privs_are(
