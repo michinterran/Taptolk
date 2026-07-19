@@ -68,7 +68,9 @@ export {
   type OwnerVehicleItem,
 } from "./owner-activation-service.js";
 export {
+  type PublicContactCaptchaVerifier,
   type PublicContactCreationResult,
+  type PublicContactEscalationState,
   type PublicContactHasher,
   type PublicContactHashPurpose,
   type PublicContactOwnerMessage,

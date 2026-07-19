@@ -34,6 +34,11 @@ export function createPublicContactService(): PublicContactService | null {
         qrGlobalWindowSeconds: 60,
         sessionTtlSeconds: environment.CONTACT_SESSION_TTL_MINUTES * 60,
       },
+      {
+        async verify() {
+          return environment.APP_ENV !== "production";
+        },
+      },
     );
   } catch {
     logger.error("public_contact.runtime_unavailable", { stage });

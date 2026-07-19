@@ -14,6 +14,10 @@ interface PublicContactFixture {
   publicTokenHash: string;
 }
 
+interface PasswordSession {
+  access_token?: string;
+}
+
 let fixture: StagingFixture;
 let contactFixture: PublicContactFixture;
 let contractId: string;
@@ -64,6 +68,44 @@ function notificationTokenHash(value: string): string {
     .update("notification-response-token", "utf8")
     .digest();
   return createHmac("sha256", purposeKey).update(value, "utf8").digest("hex");
+}
+
+async function authenticatedRpc(
+  actor: StagingFixture["actors"]["siteAdmin"],
+  functionName: string,
+  input: Record<string, unknown>,
+): Promise<unknown> {
+  const environment = loadStagingEnvironment();
+  const tokenResponse = await fetch(
+    `${environment.supabaseUrl}/auth/v1/token?grant_type=password`,
+    {
+      body: JSON.stringify({ email: actor.email, password: actor.password }),
+      headers: {
+        apikey: environment.secretKey,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    },
+  );
+  expect(tokenResponse.ok).toBe(true);
+  const accessToken = ((await tokenResponse.json()) as PasswordSession).access_token;
+  if (!accessToken) {
+    throw new Error("Authenticated staging RPC session is unavailable.");
+  }
+  const response = await fetch(
+    `${environment.supabaseUrl}/rest/v1/rpc/${encodeURIComponent(functionName)}`,
+    {
+      body: JSON.stringify(input),
+      headers: {
+        apikey: environment.secretKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    },
+  );
+  expect(response.ok).toBe(true);
+  return response.json();
 }
 
 test.describe
@@ -117,6 +159,9 @@ test.describe
 
     test.afterAll(async () => {
       if (contactFixture) {
+        await fixture.api.deleteWhere("caller_blocks", `tenant_id=eq.${fixture.tenantAId}`);
+        await fixture.api.deleteWhere("contact_reports", `tenant_id=eq.${fixture.tenantAId}`);
+        await fixture.api.deleteWhere("abuse_events", `tenant_id=eq.${fixture.tenantAId}`);
         await fixture.api.rpc("cleanup_public_contact_staging_fixture", {
           p_public_token_hash: contactFixture.publicTokenHash,
           p_tenant_id: fixture.tenantAId,
@@ -136,6 +181,9 @@ test.describe
         "notification_deliveries",
         "public_contact_attempts",
         "response_tokens",
+        "abuse_events",
+        "contact_reports",
+        "caller_blocks",
         "owners",
       ] as const;
       for (const table of residueTables) {
@@ -171,7 +219,8 @@ test.describe
       ).toBeVisible();
       const accessibility = await new AxeBuilder({ page }).analyze();
       expect(accessibility.violations).toEqual([]);
-      await page.locator("body").press("Tab");
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      await page.keyboard.press("Tab");
       await expect(page.getByRole("button", { name: "이 차량이 맞습니다" })).toBeFocused();
       await expect(page.getByText("•••• 7098")).toBeVisible();
       await page.getByRole("button", { name: "이 차량이 맞습니다" }).click();
@@ -426,5 +475,96 @@ test.describe
           `tenant_id=eq.${fixture.tenantAId}&status=eq.PROCESSING&select=id`,
         ),
       ).toEqual([]);
+    });
+
+    test("180-second escalation, scoped report disposition, and caller block are exact", async ({
+      page,
+    }) => {
+      await page.goto(`/ko/q/${encodeURIComponent(contactFixture.publicToken)}`);
+      await page.getByRole("button", { name: "이 차량이 맞습니다" }).click();
+      await page.getByRole("button", { name: "라이트 켜짐" }).click();
+      await page.getByRole("button", { name: "요청 접수하기" }).click();
+      await expect(page).toHaveURL(/\/ko\/c\/current$/u);
+
+      const [session] = await fixture.api.select<{ id: string }>(
+        "contact_sessions",
+        `qr_asset_id=eq.${contactFixture.assetId}&select=id&order=created_at.desc&limit=1`,
+      );
+      if (!session) {
+        throw new Error("Escalation staging session is unavailable.");
+      }
+      await fixture.api.updateWhere("contact_sessions", `id=eq.${session.id}`, {
+        created_at: new Date().toISOString(),
+        status: "OWNER_NOTIFIED",
+      });
+      expect((await page.request.post("/api/public/contact-sessions/escalation")).status()).toBe(
+        400,
+      );
+      await fixture.api.updateWhere("contact_sessions", `id=eq.${session.id}`, {
+        created_at: new Date(Date.now() - 181_000).toISOString(),
+      });
+      await page.reload();
+      await expect(page.getByRole("button", { name: "관리사무소에 알리기" })).toBeVisible();
+      await page.getByRole("button", { name: "관리사무소에 알리기" }).click();
+      await expect(page.getByText("관리사무소 알림을 접수했습니다.")).toBeVisible();
+      expect((await page.request.post("/api/public/contact-sessions/escalation")).status()).toBe(
+        400,
+      );
+
+      const officeAlerts = await fixture.api.select<{ id: string }>(
+        "notification_deliveries",
+        `session_id=eq.${session.id}&purpose=eq.ADMIN_ALERT&select=id`,
+      );
+      expect(officeAlerts).toHaveLength(1);
+      const reportResponse = await page.request.post("/api/public/contact-sessions/report", {
+        data: { reasonCode: "OWNER_REPLY_CONCERN" },
+        headers: { Origin: "http://localhost:3200" },
+      });
+      expect(reportResponse.status()).toBe(200);
+      const [report] = await fixture.api.select<{ id: string; status: string }>(
+        "contact_reports",
+        `session_id=eq.${session.id}&select=id,status`,
+      );
+      expect(report).toEqual(expect.objectContaining({ status: "OPEN" }));
+      if (!report) {
+        throw new Error("Contact report staging row is unavailable.");
+      }
+      await authenticatedRpc(fixture.actors.siteAdmin, "process_contact_report", {
+        p_block_hours: 24,
+        p_reason: "Reviewed staging caller evidence",
+        p_report_id: report.id,
+        p_status: "BLOCKED",
+      });
+      expect(
+        await fixture.api.select<{ id: string }>(
+          "caller_blocks",
+          `tenant_id=eq.${fixture.tenantAId}&select=id`,
+        ),
+      ).toHaveLength(1);
+
+      const blockedResponse = await page.request.post("/api/public/contact-sessions", {
+        data: {
+          locale: "ko",
+          message: "차량 창문이 열려 있습니다.",
+          messageMode: "TEMPLATE",
+          plateLast4: "7098",
+          publicToken: contactFixture.publicToken,
+          reasonCode: "WINDOW_OPEN",
+        },
+        headers: { Origin: "http://localhost:3200" },
+      });
+      expect(blockedResponse.status()).toBe(429);
+      expect(
+        await fixture.api.select<{ id: string }>(
+          "abuse_events",
+          `tenant_id=eq.${fixture.tenantAId}&event_type=eq.REPEATED_REQUEST&select=id`,
+        ),
+      ).toHaveLength(1);
+      expect(
+        await fixture.api.select<{ id: string }>(
+          "audit_logs",
+          `tenant_id=eq.${fixture.tenantAId}&action=in.(SITE_OFFICE_ALERT_REQUESTED,CONTACT_REPORT_PROCESSED)&select=id`,
+        ),
+      ).toHaveLength(2);
     });
   });

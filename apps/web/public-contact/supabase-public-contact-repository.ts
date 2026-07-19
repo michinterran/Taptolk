@@ -124,35 +124,85 @@ export function createSupabasePublicContactRepository(
 ): PublicContactRepository {
   return {
     async create(input): Promise<PublicContactRepositoryCreateResult> {
-      const row = resultData(
-        await client.rpc("create_public_contact_session", {
+      const blockCheck = await client.rpc("is_public_contact_blocked", {
+        p_anonymous_hash: input.anonymousTokenHash,
+        p_network_hash: input.networkHash,
+        p_public_token_hash: input.publicTokenHash,
+      });
+      if (blockCheck.error) {
+        throw mapError(blockCheck.error);
+      }
+      if (blockCheck.data === true) {
+        await client.rpc("record_public_abuse_event", {
           p_input: {
-            anonymous_global_limit: input.policy.anonymousGlobalLimit,
-            anonymous_global_window_seconds: input.policy.anonymousGlobalWindowSeconds,
-            anonymous_token_hash: input.anonymousTokenHash,
-            duplicate_merge_seconds: input.policy.duplicateMergeSeconds,
-            idempotency_key: input.idempotencyKey,
-            ip_qr_limit: input.policy.ipQrLimit,
-            ip_qr_window_seconds: input.policy.ipQrWindowSeconds,
-            message: input.message,
-            message_hash: input.messageHash,
-            message_mode: input.messageMode,
+            anonymous_hash: input.anonymousTokenHash,
+            event_type: "REPEATED_REQUEST",
             network_hash: input.networkHash,
-            plate_last4: input.plateLast4,
             public_token_hash: input.publicTokenHash,
-            qr_global_limit: input.policy.qrGlobalLimit,
-            qr_global_window_seconds: input.policy.qrGlobalWindowSeconds,
-            reason_code: input.reasonCode,
-            session_token_hash: input.sessionTokenHash,
-            session_ttl_seconds: input.policy.sessionTtlSeconds,
-            user_agent_hash: input.userAgentHash,
+            reason_code: "ACTIVE_CALLER_BLOCK",
           },
-        }),
-      );
+        });
+        throw new PublicContactRepositoryError("LIMITED");
+      }
+      const result = await client.rpc("create_public_contact_session", {
+        p_input: {
+          anonymous_global_limit: input.policy.anonymousGlobalLimit,
+          anonymous_global_window_seconds: input.policy.anonymousGlobalWindowSeconds,
+          anonymous_token_hash: input.anonymousTokenHash,
+          duplicate_merge_seconds: input.policy.duplicateMergeSeconds,
+          idempotency_key: input.idempotencyKey,
+          ip_qr_limit: input.policy.ipQrLimit,
+          ip_qr_window_seconds: input.policy.ipQrWindowSeconds,
+          message: input.message,
+          message_hash: input.messageHash,
+          message_mode: input.messageMode,
+          network_hash: input.networkHash,
+          plate_last4: input.plateLast4,
+          public_token_hash: input.publicTokenHash,
+          qr_global_limit: input.policy.qrGlobalLimit,
+          qr_global_window_seconds: input.policy.qrGlobalWindowSeconds,
+          reason_code: input.reasonCode,
+          session_token_hash: input.sessionTokenHash,
+          session_ttl_seconds: input.policy.sessionTtlSeconds,
+          user_agent_hash: input.userAgentHash,
+        },
+      });
+      if (result.error && (result.error.message ?? "").includes("RATE_LIMIT")) {
+        await client.rpc("record_public_abuse_event", {
+          p_input: {
+            anonymous_hash: input.anonymousTokenHash,
+            event_type: "RATE_LIMITED",
+            network_hash: input.networkHash,
+            public_token_hash: input.publicTokenHash,
+            reason_code: "CONTACT_RATE_LIMITED",
+          },
+        });
+      }
+      const row = resultData(result);
       if (typeof row.merged !== "boolean") {
         throw new PublicContactRepositoryError("UNAVAILABLE");
       }
       return { ...sessionReadModel(row), merged: row.merged };
+    },
+    async escalation(input) {
+      const row = resultData(
+        await client.rpc("read_contact_escalation_state", {
+          p_anonymous_token_hash: input.anonymousTokenHash,
+          p_session_token_hash: input.sessionTokenHash,
+        }),
+      );
+      if (
+        !["WAITING", "REMINDER", "OFFICE_AVAILABLE"].includes(String(row.stage)) ||
+        typeof row.office_available !== "boolean" ||
+        typeof row.elapsed_seconds !== "number"
+      ) {
+        throw new PublicContactRepositoryError("UNAVAILABLE");
+      }
+      return {
+        elapsedSeconds: row.elapsed_seconds,
+        officeAvailable: row.office_available,
+        stage: row.stage as "OFFICE_AVAILABLE" | "REMINDER" | "WAITING",
+      };
     },
     async inspect(input): Promise<PublicQrContactInspection> {
       const row = resultData(
@@ -180,6 +230,18 @@ export function createSupabasePublicContactRepository(
         },
       };
     },
+    async officeAlert(input) {
+      const row = resultData(
+        await client.rpc("request_contact_office_alert", {
+          p_anonymous_token_hash: input.anonymousTokenHash,
+          p_session_token_hash: input.sessionTokenHash,
+        }),
+      );
+      if (row.status !== "ESCALATED") {
+        throw new PublicContactRepositoryError("UNAVAILABLE");
+      }
+      return { status: "ESCALATED" };
+    },
     async read(input): Promise<PublicContactSessionReadModel> {
       return sessionReadModel(
         resultData(
@@ -189,6 +251,33 @@ export function createSupabasePublicContactRepository(
           }),
         ),
       );
+    },
+    async recordAbuse(input) {
+      const result = await client.rpc("record_public_abuse_event", {
+        p_input: {
+          anonymous_hash: input.anonymousTokenHash,
+          event_type: input.eventType,
+          network_hash: input.networkHash,
+          public_token_hash: input.publicTokenHash,
+          reason_code: input.reasonCode,
+        },
+      });
+      if (result.error) {
+        throw mapError(result.error);
+      }
+    },
+    async report(input) {
+      const row = resultData(
+        await client.rpc("report_contact_session", {
+          p_anonymous_token_hash: input.anonymousTokenHash,
+          p_reason_code: input.reasonCode,
+          p_session_token_hash: input.sessionTokenHash,
+        }),
+      );
+      if (row.status !== "OPEN" || typeof row.report_id !== "string") {
+        throw new PublicContactRepositoryError("UNAVAILABLE");
+      }
+      return { reportId: row.report_id, status: "OPEN" };
     },
   };
 }

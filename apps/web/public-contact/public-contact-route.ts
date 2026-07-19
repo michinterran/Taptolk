@@ -22,12 +22,19 @@ const inspectSchema = z
 
 const createSchema = z
   .object({
+    captchaToken: z.string().min(1).max(4_000).optional(),
     locale: z.enum(["ko", "en"]),
     message: z.string().min(1).max(500),
     messageMode: z.enum(["TEMPLATE", "FREE_TEXT"]),
     plateLast4: z.string().regex(/^[0-9]{4}$/u),
     publicToken: z.string().min(16).max(500),
     reasonCode: z.string().min(2).max(64),
+  })
+  .strict();
+
+const reportSchema = z
+  .object({
+    reasonCode: z.string().min(3).max(64),
   })
   .strict();
 
@@ -119,9 +126,11 @@ export async function createPublicContact(request: Request): Promise<NextRespons
     const anonymousToken =
       readCookie(request, CALLER_ANONYMOUS_COOKIE_NAME) ?? createPublicContactAnonymousToken();
     const existingSessionToken = readCookie(request, CONTACT_SESSION_COOKIE_NAME) ?? undefined;
+    const { captchaToken, ...contactInput } = input;
     const result = await serviceOrThrow().create({
-      ...input,
+      ...contactInput,
       anonymousToken,
+      ...(captchaToken ? { captchaToken } : {}),
       ...(existingSessionToken ? { existingSessionToken } : {}),
       networkFingerprint:
         request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -171,6 +180,57 @@ export async function readCurrentPublicContact(request: Request): Promise<NextRe
     }
     return safeJson({
       data: await serviceOrThrow().read({ anonymousToken, sessionToken }),
+    });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+function recoveryTokens(request: Request): {
+  anonymousToken: string;
+  sessionToken: string;
+} | null {
+  const anonymousToken = readCookie(request, CALLER_ANONYMOUS_COOKIE_NAME);
+  const sessionToken = readCookie(request, CONTACT_SESSION_COOKIE_NAME);
+  return anonymousToken && sessionToken ? { anonymousToken, sessionToken } : null;
+}
+
+export async function readPublicContactEscalation(request: Request): Promise<NextResponse> {
+  try {
+    const tokens = recoveryTokens(request);
+    if (!tokens) {
+      return safeJson({ error: { code: "UNAUTHORIZED" } }, 401);
+    }
+    return safeJson({ data: await serviceOrThrow().escalation(tokens) });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function requestPublicContactOfficeAlert(request: Request): Promise<NextResponse> {
+  try {
+    if (!sameOrigin(request)) {
+      throw new PublicContactRouteError();
+    }
+    const tokens = recoveryTokens(request);
+    if (!tokens) {
+      return safeJson({ error: { code: "UNAUTHORIZED" } }, 401);
+    }
+    return safeJson({ data: await serviceOrThrow().officeAlert(tokens) });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function reportPublicContact(request: Request): Promise<NextResponse> {
+  try {
+    const input = reportSchema.parse(await readBody(request));
+    const tokens = recoveryTokens(request);
+    if (!tokens) {
+      return safeJson({ error: { code: "UNAUTHORIZED" } }, 401);
+    }
+    return safeJson({
+      data: await serviceOrThrow().report({ ...tokens, reasonCode: input.reasonCode }),
     });
   } catch (error) {
     return errorResponse(error);

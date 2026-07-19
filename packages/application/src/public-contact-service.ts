@@ -36,6 +36,12 @@ export interface PublicContactOwnerMessage {
   replyCode: string | null;
 }
 
+export interface PublicContactEscalationState {
+  elapsedSeconds: number;
+  officeAvailable: boolean;
+  stage: "OFFICE_AVAILABLE" | "REMINDER" | "WAITING";
+}
+
 export interface PublicContactCreationResult extends PublicContactSessionReadModel {
   merged: boolean;
   sessionToken: string;
@@ -58,13 +64,47 @@ export interface PublicContactSecretFactory {
   createSessionToken(): string;
 }
 
+export interface PublicContactCaptchaVerifier {
+  verify(input: {
+    anonymousTokenHash: string;
+    captchaToken?: string;
+    networkHash: string;
+  }): Promise<boolean>;
+}
+
+const allowPublicContactCaptcha: PublicContactCaptchaVerifier = {
+  async verify() {
+    return true;
+  },
+};
+
 export interface PublicContactRepository {
   create(input: PublicContactRepositoryCreateInput): Promise<PublicContactRepositoryCreateResult>;
   inspect(input: { publicTokenHash: string }): Promise<PublicQrContactInspection>;
+  escalation(input: {
+    anonymousTokenHash: string;
+    sessionTokenHash: string;
+  }): Promise<PublicContactEscalationState>;
+  officeAlert(input: {
+    anonymousTokenHash: string;
+    sessionTokenHash: string;
+  }): Promise<{ status: "ESCALATED" }>;
   read(input: {
     anonymousTokenHash: string;
     sessionTokenHash: string;
   }): Promise<PublicContactSessionReadModel>;
+  recordAbuse(input: {
+    anonymousTokenHash: string;
+    eventType: "CAPTCHA_FAILED";
+    networkHash: string;
+    publicTokenHash: string;
+    reasonCode: string;
+  }): Promise<void>;
+  report(input: {
+    anonymousTokenHash: string;
+    reasonCode: string;
+    sessionTokenHash: string;
+  }): Promise<{ reportId: string; status: "OPEN" }>;
 }
 
 export interface PublicContactRepositoryCreateInput {
@@ -94,6 +134,7 @@ export class PublicContactService {
     private readonly hasher: PublicContactHasher,
     private readonly secrets: PublicContactSecretFactory,
     policy: PublicContactRatePolicy = DEFAULT_PUBLIC_CONTACT_RATE_POLICY,
+    private readonly captcha: PublicContactCaptchaVerifier = allowPublicContactCaptcha,
   ) {
     assertPublicContactRatePolicy(policy);
     this.policy = Object.freeze({ ...policy });
@@ -107,6 +148,7 @@ export class PublicContactService {
 
   async create(input: {
     anonymousToken: string;
+    captchaToken?: string;
     existingSessionToken?: string;
     message: string;
     messageMode: ContactMessageMode;
@@ -128,6 +170,24 @@ export class PublicContactService {
     const sessionTokenHash = await this.hasher.hash(sessionToken, "session-token");
     const anonymousTokenHash = await this.hashOpaque(input.anonymousToken, "anonymous-token");
     const messageHash = await this.hasher.hash(message, "message");
+    const networkHash = await this.hashFingerprint(input.networkFingerprint, "network");
+    const publicTokenHash = await this.hashOpaque(input.publicToken, "public-token");
+    if (
+      !(await this.captcha.verify({
+        anonymousTokenHash,
+        ...(input.captchaToken ? { captchaToken: input.captchaToken } : {}),
+        networkHash,
+      }))
+    ) {
+      await this.repository.recordAbuse({
+        anonymousTokenHash,
+        eventType: "CAPTCHA_FAILED",
+        networkHash,
+        publicTokenHash,
+        reasonCode: "CAPTCHA_VERIFICATION_FAILED",
+      });
+      throw new PublicContactServiceError("CAPTCHA_REQUIRED");
+    }
     const result = await this.repository.create({
       anonymousTokenHash,
       idempotencyKey: await this.hasher.hash(
@@ -137,10 +197,10 @@ export class PublicContactService {
       message,
       messageHash,
       messageMode: input.messageMode,
-      networkHash: await this.hashFingerprint(input.networkFingerprint, "network"),
+      networkHash,
       plateLast4: input.plateLast4,
       policy: this.policy,
-      publicTokenHash: await this.hashOpaque(input.publicToken, "public-token"),
+      publicTokenHash,
       reasonCode,
       sessionTokenHash,
       userAgentHash: await this.hashFingerprint(input.userAgent, "user-agent"),
@@ -156,6 +216,45 @@ export class PublicContactService {
       anonymousTokenHash: await this.hashOpaque(input.anonymousToken, "anonymous-token"),
       sessionTokenHash: await this.hashOpaque(input.sessionToken, "session-token"),
     });
+  }
+
+  async escalation(input: {
+    anonymousToken: string;
+    sessionToken: string;
+  }): Promise<PublicContactEscalationState> {
+    return this.repository.escalation(await this.recoveryHashes(input));
+  }
+
+  async officeAlert(input: {
+    anonymousToken: string;
+    sessionToken: string;
+  }): Promise<{ status: "ESCALATED" }> {
+    return this.repository.officeAlert(await this.recoveryHashes(input));
+  }
+
+  async report(input: {
+    anonymousToken: string;
+    reasonCode: string;
+    sessionToken: string;
+  }): Promise<{ reportId: string; status: "OPEN" }> {
+    const reasonCode = input.reasonCode.trim();
+    if (reasonCode.length < 3 || reasonCode.length > 64) {
+      throw new PublicContactServiceError("INVALID_REPORT");
+    }
+    return this.repository.report({
+      ...(await this.recoveryHashes(input)),
+      reasonCode,
+    });
+  }
+
+  private async recoveryHashes(input: {
+    anonymousToken: string;
+    sessionToken: string;
+  }): Promise<{ anonymousTokenHash: string; sessionTokenHash: string }> {
+    return {
+      anonymousTokenHash: await this.hashOpaque(input.anonymousToken, "anonymous-token"),
+      sessionTokenHash: await this.hashOpaque(input.sessionToken, "session-token"),
+    };
   }
 
   private async hashOpaque(
@@ -187,7 +286,9 @@ export class PublicContactService {
 }
 
 export class PublicContactServiceError extends Error {
-  constructor(readonly code: "INVALID_FINGERPRINT" | "INVALID_SECRET") {
+  constructor(
+    readonly code: "CAPTCHA_REQUIRED" | "INVALID_FINGERPRINT" | "INVALID_REPORT" | "INVALID_SECRET",
+  ) {
     super(`Public contact service rejected: ${code}`);
     this.name = "PublicContactServiceError";
   }

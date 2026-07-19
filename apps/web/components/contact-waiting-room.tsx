@@ -17,24 +17,46 @@ interface SessionData {
   status: PublicContactStatus;
 }
 
-async function loadSession(): Promise<SessionData> {
-  const response = await fetch("/api/public/contact-sessions/current", {
-    cache: "no-store",
-    credentials: "same-origin",
-  });
-  if (!response.ok) {
-    throw new Error(response.status === 401 ? "UNAUTHORIZED" : "UNAVAILABLE");
+interface EscalationData {
+  officeAvailable: boolean;
+  stage: "OFFICE_AVAILABLE" | "REMINDER" | "WAITING";
+}
+
+async function loadSession(): Promise<{
+  escalation: EscalationData;
+  session: SessionData;
+}> {
+  const [sessionResponse, escalationResponse] = await Promise.all([
+    fetch("/api/public/contact-sessions/current", {
+      cache: "no-store",
+      credentials: "same-origin",
+    }),
+    fetch("/api/public/contact-sessions/escalation", {
+      cache: "no-store",
+      credentials: "same-origin",
+    }),
+  ]);
+  if (!sessionResponse.ok || !escalationResponse.ok) {
+    throw new Error(
+      sessionResponse.status === 401 || escalationResponse.status === 401
+        ? "UNAUTHORIZED"
+        : "UNAVAILABLE",
+    );
   }
-  const payload = (await response.json()) as { data?: SessionData };
-  if (!payload.data) {
+  const sessionPayload = (await sessionResponse.json()) as { data?: SessionData };
+  const escalationPayload = (await escalationResponse.json()) as { data?: EscalationData };
+  if (!sessionPayload.data || !escalationPayload.data) {
     throw new Error("UNAVAILABLE");
   }
-  return payload.data;
+  return { escalation: escalationPayload.data, session: sessionPayload.data };
 }
 
 export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
   const [session, setSession] = useState<SessionData | null>(null);
   const [error, setError] = useState(false);
+  const [escalation, setEscalation] = useState<EscalationData | null>(null);
+  const [officeAlertSent, setOfficeAlertSent] = useState(false);
+  const [officeAlertWorking, setOfficeAlertWorking] = useState(false);
   const [_failures, setFailures] = useState(0);
   const [startedAt] = useState(() => Date.now());
 
@@ -48,13 +70,14 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
         if (!active) {
           return;
         }
-        setSession(next);
+        setSession(next.session);
+        setEscalation(next.escalation);
         setError(false);
         setFailures(0);
         const delay = getPublicContactPollingInterval({
           elapsedSeconds: Math.max(0, (Date.now() - startedAt) / 1000),
           hidden: document.hidden,
-          status: next.status,
+          status: next.session.status,
         });
         if (delay !== null) {
           timer = setTimeout(() => void poll(), delay);
@@ -98,7 +121,29 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
         ? copy.waitExpired
         : session?.status === "OWNER_REPLIED" || (session?.ownerMessages.length ?? 0) > 0
           ? copy.waitReply
-          : copy.waitQueued;
+          : escalation?.stage === "REMINDER"
+            ? copy.waitReminder
+            : copy.waitQueued;
+
+  async function requestOfficeAlert() {
+    setOfficeAlertWorking(true);
+    setError(false);
+    try {
+      const response = await fetch("/api/public/contact-sessions/escalation", {
+        credentials: "same-origin",
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("UNAVAILABLE");
+      }
+      setOfficeAlertSent(true);
+      setEscalation({ officeAvailable: false, stage: "OFFICE_AVAILABLE" });
+    } catch {
+      setError(true);
+    } finally {
+      setOfficeAlertWorking(false);
+    }
+  }
 
   return (
     <div className="public-contact-shell">
@@ -123,6 +168,17 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
             {message.body}
           </blockquote>
         ))}
+        {escalation?.officeAvailable && !officeAlertSent ? (
+          <button
+            className="public-contact-primary"
+            disabled={officeAlertWorking}
+            type="button"
+            onClick={() => void requestOfficeAlert()}
+          >
+            {copy.officeAlert}
+          </button>
+        ) : null}
+        {officeAlertSent ? <p className="public-contact-notice">{copy.officeAlertSent}</p> : null}
         {error ? (
           <div className="public-contact-error" role="alert">
             <p>{copy.errorUnavailable}</p>

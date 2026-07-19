@@ -16,6 +16,8 @@ export interface PublicContactCopy {
   line1: string;
   line2: string;
   loading: string;
+  officeAlert: string;
+  officeAlertSent: string;
   ownerPrivacy: string;
   preparing: string;
   reasonDescription: string;
@@ -34,6 +36,7 @@ export interface PublicContactCopy {
   waitLine1: string;
   waitLine2: string;
   waitQueued: string;
+  waitReminder: string;
   waitReply: string;
   waitResolved: string;
 }
@@ -53,6 +56,8 @@ const ko: PublicContactCopy = {
   line1: "전화번호 노출 없이",
   line2: "차주에게 메시지를 전달합니다.",
   loading: "QR과 차량 상태를 확인하고 있습니다.",
+  officeAlert: "관리사무소에 알리기",
+  officeAlertSent: "관리사무소 알림을 접수했습니다.",
   ownerPrivacy: "차주의 이름과 전화번호는 표시되지 않습니다.",
   preparing: "요청을 접수하는 중",
   reasonDescription: "가장 가까운 상황 하나를 선택해 주세요.",
@@ -91,6 +96,7 @@ const ko: PublicContactCopy = {
   waitLine1: "차주 알림을",
   waitLine2: "안전하게 준비하고 있습니다.",
   waitQueued: "차주 알림을 준비하는 중",
+  waitReminder: "답변이 지연되고 있습니다. 잠시만 더 기다려 주세요.",
   waitReply: "차주가 답장했습니다.",
   waitResolved: "요청이 완료되었습니다.",
 };
@@ -110,6 +116,8 @@ const en: PublicContactCopy = {
   line1: "Send a message to the owner",
   line2: "without exposing a phone number.",
   loading: "Checking the QR and vehicle status.",
+  officeAlert: "Notify the site office",
+  officeAlertSent: "The site office notification was accepted.",
   ownerPrivacy: "The owner's name and phone number are never shown.",
   preparing: "Accepting your request",
   reasonDescription: "Choose the one option closest to the situation.",
@@ -148,6 +156,7 @@ const en: PublicContactCopy = {
   waitLine1: "Preparing a secure",
   waitLine2: "notification for the owner.",
   waitQueued: "Preparing the owner notification",
+  waitReminder: "The response is delayed. Please wait a little longer.",
   waitReply: "The owner replied.",
   waitResolved: "The request is complete.",
 };
