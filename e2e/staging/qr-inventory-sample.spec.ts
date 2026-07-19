@@ -20,7 +20,13 @@ interface BatchRow {
   id: string;
   requested_by: string;
   site_id: string;
-  status: "CANCELLED" | "DRAFT" | "SAMPLE_APPROVED" | "SAMPLE_READY";
+  status:
+    | "CANCELLED"
+    | "DRAFT"
+    | "FINAL_APPROVAL_PENDING"
+    | "GENERATION_APPROVED"
+    | "SAMPLE_APPROVED"
+    | "SAMPLE_READY";
   version: number;
 }
 
@@ -37,6 +43,17 @@ interface AuditRow {
   actor_id: string | null;
   after_data: unknown;
   before_data: unknown;
+}
+
+interface GenerationJobRow {
+  approval_request_id: string;
+  delivery_attempt_count: number;
+  execution_attempt_count: number;
+  generation_revision: number;
+  id: string;
+  queue_message_id: string | null;
+  qr_batch_id: string;
+  status: "PENDING_DELIVERY";
 }
 
 let fixture: StagingFixture;
@@ -118,7 +135,7 @@ test.describe
       await page.goto("/ko/admin/qr-inventory");
       await expect(
         page.getByText(
-          "샘플 승인은 대량 생성을 시작하지 않습니다. 대량 생성은 후속 Super Admin 최종 승인과 Queue/Worker가 연결된 뒤에만 가능합니다.",
+          "샘플 승인과 최종 승인은 서로 다른 단계입니다. Super Admin 최종 승인은 durable 생성 작업을 준비하지만, 아직 Queue 전달이나 QR 생성을 시작하지 않습니다.",
         ),
       ).toBeVisible();
 
@@ -355,6 +372,142 @@ test.describe
       await expectAuditActors(batchId, ["QR_BATCH_REQUESTED"], [fixture.actors.siteAdmin.id]);
     });
 
+    test("a new passing sample can enter requester final review after invalidation", async ({
+      page,
+    }) => {
+      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await page.goto("/en/admin/qr-inventory");
+      const batchCard = cardWithText(page, fixture.sites.companyAFirst.name)
+        .filter({
+          has: page.getByText("Waiting for sample", { exact: true }),
+        })
+        .first();
+      await batchCard.getByText("Attach sample artifact", { exact: true }).first().click();
+      const attachForm = batchCard.locator("form").filter({
+        has: page.getByRole("button", { name: "Attach sample artifact" }),
+      });
+      await attachForm.locator('input[name="storageBucket"]').fill("qr-samples");
+      await attachForm
+        .locator('input[name="storagePath"]')
+        .fill(`${fixture.tenantAId}/${fixture.sites.companyAFirst.id}/sample-v2.png`);
+      await attachForm.locator('input[name="checksumSha256"]').fill("b".repeat(64));
+      await attachForm.locator('input[name="byteSize"]').fill("4096");
+      await attachForm.locator('input[name="decodePassed"]').check();
+      await attachForm.locator('input[name="quietZonePassed"]').check();
+      await attachForm.locator('input[name="contrastPassed"]').check();
+      await attachForm
+        .locator('textarea[name="reason"]')
+        .fill("Authenticated staging replacement sample attachment");
+      await attachForm.getByRole("button", { name: "Attach sample artifact" }).click();
+      await expect(page).toHaveURL(/status=sampleAttached/u);
+
+      const approvalCard = page.locator(".admin-approval-card").filter({
+        has: page.getByRole("button", { name: "Approve sample independently" }),
+      });
+      await approvalCard
+        .locator('textarea[name="reason"]')
+        .fill("Authenticated staging replacement sample approval");
+      await approvalCard.getByRole("button", { name: "Approve sample independently" }).click();
+      await expect(page).toHaveURL(/status=sampleApproved/u);
+
+      const samples = await fixture.api.select<SampleRow>(
+        "qr_batch_samples",
+        `batch_id=eq.${batchId}&select=id,status,approved_by,invalidated_by,version&order=created_at.asc`,
+      );
+      expect(samples).toHaveLength(2);
+      expect(samples.map(({ status }) => status)).toEqual(["INVALIDATED", "APPROVED"]);
+    });
+
+    test("the original requester sends the Batch to final approval without starting generation", async ({
+      page,
+    }) => {
+      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "en");
+      await page.goto("/en/admin/qr-inventory");
+      const batchCard = cardWithText(page, fixture.sites.companyAFirst.name)
+        .filter({
+          has: page.getByText("Sample approved", { exact: true }),
+        })
+        .first();
+      await batchCard
+        .locator("summary")
+        .filter({ hasText: "Request final generation approval" })
+        .click();
+      const requestForm = batchCard.locator("form").filter({
+        has: page.getByRole("button", { name: "Request final generation approval" }),
+      });
+      await requestForm
+        .locator('textarea[name="reason"]')
+        .fill("Authenticated staging requester final review");
+      await requestForm.getByRole("button", { name: "Request final generation approval" }).click();
+      await expect(page).toHaveURL(/status=finalApprovalRequested/u);
+      await expect(
+        page.getByText(
+          "The final generation approval request was added to the Super Admin review queue.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+
+      const batches = await fixture.api.select<BatchRow>(
+        "qr_batches",
+        `id=eq.${batchId}&select=id,site_id,status,requested_by,version`,
+      );
+      expect(batches[0].status).toBe("FINAL_APPROVAL_PENDING");
+      expect(
+        await fixture.api.select<GenerationJobRow>(
+          "qr_generation_jobs",
+          `qr_batch_id=eq.${batchId}&select=id,qr_batch_id,approval_request_id,status,generation_revision,delivery_attempt_count,execution_attempt_count,queue_message_id`,
+        ),
+      ).toEqual([]);
+    });
+
+    test("an independent Super Admin records exactly one durable generation job", async ({
+      page,
+    }) => {
+      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await page.goto("/en/admin/qr-inventory");
+      const approvalCard = cardWithText(page, fixture.sites.companyAFirst.name)
+        .filter({
+          has: page.getByRole("button", { name: "Approve and prepare generation" }),
+        })
+        .first();
+      await expect(approvalCard).toBeVisible();
+      await approvalCard
+        .locator('textarea[name="reason"]')
+        .fill("Authenticated staging independent final generation approval");
+      await approvalCard.getByRole("button", { name: "Approve and prepare generation" }).click();
+      await expect(page).toHaveURL(/status=finalGenerationApproved/u);
+      await expect(
+        page.getByText(
+          "Final approval and a durable generation job were recorded. Queue delivery and QR generation have not started.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+
+      const [batch] = await fixture.api.select<BatchRow>(
+        "qr_batches",
+        `id=eq.${batchId}&select=id,site_id,status,requested_by,version`,
+      );
+      const jobs = await fixture.api.select<GenerationJobRow>(
+        "qr_generation_jobs",
+        `qr_batch_id=eq.${batchId}&select=id,qr_batch_id,approval_request_id,status,generation_revision,delivery_attempt_count,execution_attempt_count,queue_message_id`,
+      );
+      expect(batch.status).toBe("GENERATION_APPROVED");
+      expect(jobs).toHaveLength(1);
+      expect(jobs[0]).toMatchObject({
+        delivery_attempt_count: 0,
+        execution_attempt_count: 0,
+        generation_revision: 1,
+        qr_batch_id: batchId,
+        queue_message_id: null,
+        status: "PENDING_DELIVERY",
+      });
+      await expectAuditActors(
+        batchId,
+        ["QR_BATCH_REQUESTED", "QR_BATCH_FINAL_APPROVAL_REQUESTED", "QR_BATCH_GENERATION_APPROVED"],
+        [fixture.actors.siteAdmin.id, fixture.actors.siteAdmin.id, fixture.actors.superAdmin.id],
+      );
+    });
+
     test("staging cleanup leaves QR, customer, admin, and Auth residue at zero", async () => {
       const siteIds = [
         fixture.sites.companyAFirst.id,
@@ -364,6 +517,7 @@ test.describe
       const actorIds = Object.values(fixture.actors).map(({ id }) => id);
       await fixture.cleanup();
 
+      await expectNoRows("qr_generation_jobs", siteIds);
       await expectNoRows("qr_batch_samples", siteIds);
       await expectNoRows("qr_batches", siteIds);
       await expectNoRows("sticker_design_versions", siteIds);

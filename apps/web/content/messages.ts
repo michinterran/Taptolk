@@ -313,7 +313,7 @@ export const ko = {
   "admin.qr.createdAt": "생성 시각",
   "admin.qr.decode": "QR 디코딩 통과",
   "admin.qr.description":
-    "Site별 스티커 디자인 버전과 소량 QR Batch의 샘플 검토 이력을 Tenant scope와 PostgreSQL RLS로 관리합니다.",
+    "Site별 스티커 디자인, 샘플 검토, 고객 최종 승인 요청과 Super Admin 생성 승인을 Tenant scope와 PostgreSQL RLS로 관리합니다.",
   "admin.qr.design.approval.description":
     "디자인 작성자와 다른 관리자가 Site scope와 설정을 다시 확인해야 승인할 수 있습니다.",
   "admin.qr.design.approval.title": "디자인 독립 검토 큐",
@@ -338,12 +338,19 @@ export const ko = {
     "QR 샘플 운영 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.qr.error.validation":
     "Site, 상태, 수량, 디자인 설정, 아티팩트 정보와 처리 사유를 확인해 주세요.",
-  "admin.qr.eyebrow": "QR 재고·샘플 승인 기반",
+  "admin.qr.eyebrow": "QR 재고·샘플·최종 승인",
+  "admin.qr.final.approve": "승인 및 생성 작업 준비",
+  "admin.qr.final.approval.description":
+    "독립 Super Admin이 Site, 수량, 디자인과 샘플 근거를 확인합니다. 승인은 생성 작업을 준비하지만 Queue 전달이나 QR 생성을 뜻하지 않습니다.",
+  "admin.qr.final.approval.title": "대량 생성 최종 승인 큐",
+  "admin.qr.final.request": "대량 생성 최종 승인 요청",
+  "admin.qr.final.request.description":
+    "샘플이 승인된 Batch의 원 요청자만 Super Admin 최종 검토를 요청할 수 있습니다.",
   "admin.qr.finalApprovalNotice":
-    "샘플 승인은 대량 생성을 시작하지 않습니다. 대량 생성은 후속 Super Admin 최종 승인과 Queue/Worker가 연결된 뒤에만 가능합니다.",
+    "샘플 승인과 최종 승인은 서로 다른 단계입니다. Super Admin 최종 승인은 durable 생성 작업을 준비하지만, 아직 Queue 전달이나 QR 생성을 시작하지 않습니다.",
   "admin.qr.invalidate": "샘플 무효화",
-  "admin.qr.line1": "대량 생성 전에",
-  "admin.qr.line2": "스티커 샘플을 독립 검토합니다.",
+  "admin.qr.line1": "샘플 검토와 최종 승인을 분리하고",
+  "admin.qr.line2": "대량 생성 준비를 안전하게 기록합니다.",
   "admin.qr.mimeType": "파일 형식",
   "admin.qr.noApprovedDesign": "Batch 요청에 사용할 승인된 활성 디자인이 없습니다.",
   "admin.qr.noSite": "현재 범위에 활성 Site가 없습니다.",
@@ -366,6 +373,12 @@ export const ko = {
   "admin.qr.status.designApproved": "Sticker Design Version이 독립 검토 후 승인되었습니다.",
   "admin.qr.status.designArchived": "Sticker Design Version이 이력을 유지한 채 보관되었습니다.",
   "admin.qr.status.designCreated": "Sticker Design DRAFT가 검토 대기열에 추가되었습니다.",
+  "admin.qr.status.finalApprovalCancelled":
+    "대량 생성 승인 전 Batch가 이력을 유지한 채 취소되었습니다.",
+  "admin.qr.status.finalApprovalRequested":
+    "대량 생성 최종 승인 요청이 Super Admin 검토 큐에 추가되었습니다.",
+  "admin.qr.status.finalGenerationApproved":
+    "최종 승인과 생성 작업 준비가 기록되었습니다. Queue 전달과 QR 생성은 아직 시작되지 않았습니다.",
   "admin.qr.status.sampleApproved": "샘플이 승인되었습니다. 대량 생성은 아직 시작되지 않았습니다.",
   "admin.qr.status.sampleAttached": "샘플 아티팩트와 품질 근거가 연결되었습니다.",
   "admin.qr.status.sampleInvalidated": "샘플이 이력을 유지한 채 무효화되었습니다.",
@@ -374,7 +387,7 @@ export const ko = {
   "admin.qr.templateCode": "템플릿 코드",
   "admin.qr.tenant": "테넌트",
   "admin.qr.waiting.design": "디자인 검토 대기",
-  "admin.qr.waiting.final": "Super Admin 대량 생성 최종 승인 전 단계입니다.",
+  "admin.qr.waiting.final": "원 요청자의 대량 생성 최종 승인 요청이 필요합니다.",
   "admin.qr.waiting.sample": "샘플 아티팩트 연결과 품질검사가 필요합니다.",
   "admin.sites.actions": "관리",
   "admin.sites.address": "주소",
@@ -832,7 +845,7 @@ export const en = {
   "admin.qr.createdAt": "Created",
   "admin.qr.decode": "QR decode passed",
   "admin.qr.description":
-    "Manage Site-owned sticker design versions and small QR Batch sample history through Tenant scope and PostgreSQL RLS.",
+    "Manage Site designs, sample review, customer final-approval requests, and Super Admin generation approval through Tenant scope and PostgreSQL RLS.",
   "admin.qr.design.approval.description":
     "An admin other than the creator must recheck Site scope and configuration before approval.",
   "admin.qr.design.approval.title": "Independent design review queue",
@@ -857,12 +870,19 @@ export const en = {
     "The QR sample operations service is unavailable. Please try again shortly.",
   "admin.qr.error.validation":
     "Check the Site, state, quantity, design configuration, artifact metadata, and reason.",
-  "admin.qr.eyebrow": "QR inventory and sample approval foundation",
+  "admin.qr.eyebrow": "QR inventory, sample, and final approval",
+  "admin.qr.final.approve": "Approve and prepare generation",
+  "admin.qr.final.approval.description":
+    "An independent Super Admin reviews the Site, quantity, design, and sample evidence. Approval prepares a durable job; it does not mean queued or generated.",
+  "admin.qr.final.approval.title": "Bulk-generation final approval queue",
+  "admin.qr.final.request": "Request final generation approval",
+  "admin.qr.final.request.description":
+    "Only the original requester of a sample-approved Batch can request final Super Admin review.",
   "admin.qr.finalApprovalNotice":
-    "Sample approval does not start bulk generation. Generation remains blocked until a later Super Admin final-approval command and Queue/Worker are connected.",
+    "Sample approval and final approval are separate steps. Super Admin final approval prepares a durable generation job but does not start Queue delivery or QR generation.",
   "admin.qr.invalidate": "Invalidate sample",
-  "admin.qr.line1": "Independently review each sticker sample",
-  "admin.qr.line2": "before bulk generation can begin.",
+  "admin.qr.line1": "Separate sample review from final approval",
+  "admin.qr.line2": "and record a safe handoff for bulk generation.",
   "admin.qr.mimeType": "File type",
   "admin.qr.noApprovedDesign": "No active approved design is available for a Batch request.",
   "admin.qr.noSite": "No active Site is available in this scope.",
@@ -888,6 +908,12 @@ export const en = {
   "admin.qr.status.designArchived":
     "The Sticker Design Version was archived without deleting its history.",
   "admin.qr.status.designCreated": "The Sticker Design DRAFT was added to design review.",
+  "admin.qr.status.finalApprovalCancelled":
+    "The Batch was cancelled before generation approval without deleting its history.",
+  "admin.qr.status.finalApprovalRequested":
+    "The final generation approval request was added to the Super Admin review queue.",
+  "admin.qr.status.finalGenerationApproved":
+    "Final approval and a durable generation job were recorded. Queue delivery and QR generation have not started.",
   "admin.qr.status.sampleApproved": "The sample was approved. Bulk generation has not started.",
   "admin.qr.status.sampleAttached": "The sample artifact and quality evidence were connected.",
   "admin.qr.status.sampleInvalidated": "The sample was invalidated without deleting its history.",
@@ -896,7 +922,7 @@ export const en = {
   "admin.qr.templateCode": "Template code",
   "admin.qr.tenant": "Tenant",
   "admin.qr.waiting.design": "Waiting for design review",
-  "admin.qr.waiting.final": "Waiting for a later Super Admin bulk-generation approval.",
+  "admin.qr.waiting.final": "The original requester must request final generation approval.",
   "admin.qr.waiting.sample": "A sample artifact and quality checks are required.",
   "admin.sites.actions": "Manage",
   "admin.sites.address": "Address",

@@ -1,6 +1,6 @@
 # qr-final-generation-approval - Design
 
-> Version: 1.0.0 | Date: 2026-07-19 | Status: Implementation in progress — Application slice
+> Version: 1.0.0 | Date: 2026-07-19 | Status: Implementation in progress — Application + DB slices
 > Level: Dynamic
 > Plan: `docs/01-plan/features/qr-final-generation-approval.plan.md`
 
@@ -11,8 +11,8 @@ redacted audit, durable generation job intent를 함께 commit하도록 설계�
 provider publish는 transaction 밖의 dispatcher가 수행한다.
 
 이 문서는 다음을 승인 가능한 구현 계약으로 고정한다. 현재 Do 단계는
-Application command/read-model과 unit test까지만 시작했으며 PostgreSQL, Queue, Worker,
-Route, UI는 아직 구현하지 않는다.
+Application command/read-model과 PostgreSQL 승인·durable job intent까지 구현했으며,
+Queue, Worker, Route, UI는 아직 구현하지 않는다.
 
 ```text
 Customer final-approval request
@@ -474,25 +474,28 @@ Canonical surface remains `/{locale}/admin/qr-inventory`.
 
 ## 13. Implementation files
 
-Implemented in the current Application-only unit:
+Implemented in the current Application, DB, and Web approval units:
 
 - `packages/application/src/qr-final-generation-approval-service.ts`
 - `packages/application/src/qr-final-generation-approval-service.test.ts`
 - `packages/application/src/index.ts`
+- `packages/db/src/schema/tenant-admin.ts`
+- `packages/db/src/schema/index.ts`
+- `supabase/migrations/20260719050000_qr_final_generation_approval.sql`
+- `supabase/tests/database/qr_final_generation_approval.sql`
+- `apps/web/admin/supabase-qr-final-generation-approval-repository.ts`
+- `apps/web/admin/qr-final-generation-approval-actions.ts`
+- `apps/web/app/[locale]/admin/qr-inventory/page.tsx`
+- `apps/web/components/qr-inventory-sample-view.tsx`
+- `apps/web/content/messages.ts`
+- `e2e/staging/qr-inventory-sample.spec.ts`
+- `e2e/staging/staging-fixture.ts`
 
 Still planned:
 
 - `packages/domain/src/admin-permission-catalog.ts` only if permission semantics change
-- `packages/db/src/schema/tenant-admin.ts`
-- `supabase/migrations/*_qr_final_generation_approval.sql`
-- `supabase/tests/database/qr_final_generation_approval.sql`
-- `apps/web/admin/supabase-qr-final-generation-approval-repository.ts`
-- `apps/web/admin/qr-final-generation-approval-actions.ts`
-- `apps/web/components/qr-inventory-sample-view.tsx`
-- `apps/web/content/messages.ts`
 - `apps/worker/src/queue-consumer.ts`
 - `apps/worker/src/jobs/qr-generation.ts`
-- `e2e/staging/qr-final-generation-approval.spec.ts`
 
 New packages such as `qr-engine` or `sticker-renderer` require a concrete owner, public API, tests,
 and actual Phase 3 use. Empty placeholder packages remain forbidden.
@@ -510,8 +513,12 @@ Before implementation completion may be reported:
 - ADR benchmark and Production runtime gates
 - manual keyboard, screen-reader, computed contrast, responsive, and real-journey review
 
-The Application-only unit does not satisfy those full implementation gates. Do remains active
-until the explicitly approved remaining layers are implemented and verified.
+The Application, DB, and Web approval units do not satisfy those full implementation gates. Do
+remains active until the explicitly approved remaining layers are implemented and verified. The
+migration is applied to staging, the authenticated requester-to-Super-Admin journey passes with
+zero fixture residue, and `pnpm verify` passes. Docker-local reset/runtime pgTAP,
+approval-cancellation race coverage, Queue/Worker failure injection, and manual assistive and
+responsive review remain open.
 
 ## 15. Review checklist
 
@@ -522,5 +529,5 @@ until the explicitly approved remaining layers are implemented and verified.
 - [x] Publish failure, execution failure, partial completion, cancellation, abort, and retry differ.
 - [x] Queue payload and logs satisfy the secret/PII prohibition.
 - [x] Runtime class and Production benchmark gates are recorded in an ADR.
-- [x] Current Application slice remains migration-, provider-, Queue-, Worker-, renderer-, Asset-,
-  and token-free.
+- [x] Current DB slice remains provider-, Queue-, Worker-, renderer-, Asset-, and token-free.
+- [x] Current UI distinguishes requested, approved/prepared, queued, and generated meanings.

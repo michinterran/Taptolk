@@ -1,7 +1,8 @@
-import { QrInventorySampleService } from "@taptolk/application";
+import { QrFinalGenerationApprovalService, QrInventorySampleService } from "@taptolk/application";
 import { getAdminLandingArea } from "@taptolk/auth";
 import { roleHasPermission } from "@taptolk/domain";
 import { notFound, redirect } from "next/navigation";
+import { createSupabaseQrFinalGenerationApprovalRepository } from "../../../../admin/supabase-qr-final-generation-approval-repository";
 import { createSupabaseQrInventorySampleRepository } from "../../../../admin/supabase-qr-inventory-sample-repository";
 import { toAdminAuthorizationContext } from "../../../../auth/admin-authorization";
 import { getLocalizedAdminPath } from "../../../../auth/admin-routing";
@@ -37,11 +38,15 @@ export default async function QrInventoryPage({
   }
   const membership = context.decision.membership;
   const authorization = toAdminAuthorizationContext(membership, context.mfaLevel === "aal2");
-  const model = await new QrInventorySampleService(
-    createSupabaseQrInventorySampleRepository(client),
-  ).list({
-    actor: { authorization, userId: context.userId },
-  });
+  const actor = { authorization, userId: context.userId };
+  const [model, finalApprovalModel] = await Promise.all([
+    new QrInventorySampleService(createSupabaseQrInventorySampleRepository(client)).list({
+      actor,
+    }),
+    new QrFinalGenerationApprovalService(
+      createSupabaseQrFinalGenerationApprovalRepository(client),
+    ).list({ actor }),
+  ]);
   const copy = getMessages(locale);
   const errorMessages: Readonly<Record<string, string>> = {
     blocked: copy["admin.qr.error.blocked"],
@@ -56,6 +61,9 @@ export default async function QrInventoryPage({
     designApproved: copy["admin.qr.status.designApproved"],
     designArchived: copy["admin.qr.status.designArchived"],
     designCreated: copy["admin.qr.status.designCreated"],
+    finalApprovalCancelled: copy["admin.qr.status.finalApprovalCancelled"],
+    finalApprovalRequested: copy["admin.qr.status.finalApprovalRequested"],
+    finalGenerationApproved: copy["admin.qr.status.finalGenerationApproved"],
     sampleApproved: copy["admin.qr.status.sampleApproved"],
     sampleAttached: copy["admin.qr.status.sampleAttached"],
     sampleInvalidated: copy["admin.qr.status.sampleInvalidated"],
@@ -71,6 +79,10 @@ export default async function QrInventoryPage({
         canApproveDesign={roleHasPermission(membership.role, "sticker-design:approve")}
         canArchiveDesign={roleHasPermission(membership.role, "sticker-design:archive")}
         canCreateDesign={roleHasPermission(membership.role, "sticker-design:create")}
+        canApproveFinalGeneration={roleHasPermission(
+          membership.role,
+          "qr-batch:generation-approve",
+        )}
         canOperateSample={roleHasPermission(membership.role, "qr-batch:sample-approve")}
         canRequestBatch={roleHasPermission(membership.role, "qr-batch:request")}
         copy={{
@@ -133,6 +145,11 @@ export default async function QrInventoryPage({
           emptyQueue: copy["admin.qr.emptyQueue"],
           eyebrow: copy["admin.qr.eyebrow"],
           finalApprovalNotice: copy["admin.qr.finalApprovalNotice"],
+          finalApprovalApprove: copy["admin.qr.final.approve"],
+          finalApprovalDescription: copy["admin.qr.final.approval.description"],
+          finalApprovalRequest: copy["admin.qr.final.request"],
+          finalApprovalRequestDescription: copy["admin.qr.final.request.description"],
+          finalApprovalTitle: copy["admin.qr.final.approval.title"],
           invalidate: copy["admin.qr.invalidate"],
           localeLabels: {
             en: copy["locale.english"],
@@ -168,6 +185,7 @@ export default async function QrInventoryPage({
           waitingSample: copy["admin.qr.waiting.sample"],
         }}
         errorMessage={error ? errorMessages[error] : undefined}
+        finalApprovalModel={finalApprovalModel}
         locale={locale}
         model={model}
         statusMessage={status ? statusMessages[status] : undefined}

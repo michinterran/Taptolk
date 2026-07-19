@@ -129,6 +129,17 @@ export const qrAssetStatus = pgEnum("qr_asset_status", [
   "REVOKED",
   "EXPIRED",
 ]);
+export const qrGenerationJobStatus = pgEnum("qr_generation_job_status", [
+  "PENDING_DELIVERY",
+  "DELIVERY_LEASED",
+  "QUEUED",
+  "PROCESSING",
+  "RETRY_WAIT",
+  "COMPLETED",
+  "FAILED",
+  "ABORTED",
+  "PARTIALLY_COMPLETED",
+]);
 
 function commonColumns() {
   return {
@@ -644,6 +655,136 @@ export const qrBatchSamples = pgTable(
     ),
     check("chk_qr_batch_samples_checksum", sql`${table.checksumSha256} ~ '^[0-9a-f]{64}$'`),
     check("chk_qr_batch_samples_byte_size", sql`${table.byteSize} between 1 and 20000000`),
+  ],
+);
+
+export const qrGenerationJobs = pgTable(
+  "qr_generation_jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    qrBatchId: uuid("qr_batch_id").notNull(),
+    jobType: text("job_type").default("QR_GENERATION").notNull(),
+    generationRevision: integer("generation_revision").default(1).notNull(),
+    approvalRequestId: uuid("approval_request_id").notNull(),
+    status: qrGenerationJobStatus("status").default("PENDING_DELIVERY").notNull(),
+    deliveryAttemptCount: integer("delivery_attempt_count").default(0).notNull(),
+    executionAttemptCount: integer("execution_attempt_count").default(0).notNull(),
+    maxExecutionAttempts: integer("max_execution_attempts").default(5).notNull(),
+    availableAt: timestamp("available_at", { mode: "date", withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    leaseExpiresAt: timestamp("lease_expires_at", { mode: "date", withTimezone: true }),
+    queueMessageId: text("queue_message_id"),
+    processedCount: integer("processed_count").default(0).notNull(),
+    passedCount: integer("passed_count").default(0).notNull(),
+    failedCount: integer("failed_count").default(0).notNull(),
+    lastErrorCode: text("last_error_code"),
+    queuedAt: timestamp("queued_at", { mode: "date", withTimezone: true }),
+    startedAt: timestamp("started_at", { mode: "date", withTimezone: true }),
+    completedAt: timestamp("completed_at", { mode: "date", withTimezone: true }),
+    failedAt: timestamp("failed_at", { mode: "date", withTimezone: true }),
+    abortedAt: timestamp("aborted_at", { mode: "date", withTimezone: true }),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId, table.qrBatchId],
+      foreignColumns: [
+        qrBatches.tenantId,
+        qrBatches.managementCompanyId,
+        qrBatches.siteId,
+        qrBatches.id,
+      ],
+      name: "fk_qr_generation_jobs_batch",
+    }).onDelete("restrict"),
+    unique("uq_qr_generation_jobs_tenant_id").on(table.tenantId, table.id),
+    unique("uq_qr_generation_jobs_approval_request").on(table.tenantId, table.approvalRequestId),
+    unique("uq_qr_generation_jobs_revision").on(
+      table.tenantId,
+      table.qrBatchId,
+      table.generationRevision,
+      table.jobType,
+    ),
+    index("idx_qr_generation_jobs_tenant_status_available").on(
+      table.tenantId,
+      table.status,
+      table.availableAt,
+      table.createdAt,
+    ),
+    index("idx_qr_generation_jobs_batch_revision").on(table.qrBatchId, table.generationRevision),
+    check("chk_qr_generation_jobs_job_type", sql`${table.jobType} = 'QR_GENERATION'`),
+    check("chk_qr_generation_jobs_revision", sql`${table.generationRevision} >= 1`),
+    check(
+      "chk_qr_generation_jobs_attempts",
+      sql`
+        ${table.deliveryAttemptCount} >= 0
+        and ${table.executionAttemptCount} >= 0
+        and ${table.maxExecutionAttempts} = 5
+        and ${table.executionAttemptCount} <= ${table.maxExecutionAttempts}
+      `,
+    ),
+    check(
+      "chk_qr_generation_jobs_counts",
+      sql`
+        ${table.processedCount} >= 0
+        and ${table.passedCount} >= 0
+        and ${table.failedCount} >= 0
+        and ${table.passedCount} + ${table.failedCount} <= ${table.processedCount}
+      `,
+    ),
+    check(
+      "chk_qr_generation_jobs_error_code",
+      sql`${table.lastErrorCode} is null or ${table.lastErrorCode} ~ '^[A-Z0-9][A-Z0-9_]{1,63}$'`,
+    ),
+    check(
+      "chk_qr_generation_jobs_state_metadata",
+      sql`
+        (
+          ${table.status} = 'PENDING_DELIVERY'
+          and ${table.queueMessageId} is null
+          and ${table.queuedAt} is null
+          and ${table.startedAt} is null
+          and ${table.completedAt} is null
+          and ${table.failedAt} is null
+          and ${table.abortedAt} is null
+        )
+        or (
+          ${table.status} = 'DELIVERY_LEASED'
+          and ${table.queueMessageId} is null
+          and ${table.leaseExpiresAt} is not null
+          and ${table.completedAt} is null
+          and ${table.failedAt} is null
+          and ${table.abortedAt} is null
+        )
+        or (
+          ${table.status} in ('QUEUED', 'PROCESSING', 'RETRY_WAIT')
+          and ${table.completedAt} is null
+          and ${table.failedAt} is null
+          and ${table.abortedAt} is null
+        )
+        or (
+          ${table.status} = 'COMPLETED'
+          and ${table.completedAt} is not null
+          and ${table.failedAt} is null
+          and ${table.abortedAt} is null
+        )
+        or (
+          ${table.status} in ('FAILED', 'PARTIALLY_COMPLETED')
+          and ${table.failedAt} is not null
+          and ${table.completedAt} is null
+          and ${table.abortedAt} is null
+        )
+        or (
+          ${table.status} = 'ABORTED'
+          and ${table.abortedAt} is not null
+          and ${table.completedAt} is null
+          and ${table.failedAt} is null
+        )
+      `,
+    ),
   ],
 );
 

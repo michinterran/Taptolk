@@ -326,6 +326,7 @@ export async function createStagingFixture(): Promise<StagingFixture> {
     const actorIds = createdActors.map(({ id }) => id);
 
     if (allSiteIds.length > 0) {
+      await api.deleteWhere("qr_generation_jobs", postgrestFilter("site_id", allSiteIds));
       await api.deleteWhere("audit_logs", postgrestFilter("site_id", allSiteIds));
       await api.deleteWhere("qr_batch_samples", postgrestFilter("site_id", allSiteIds));
       await api.deleteWhere("qr_batches", postgrestFilter("site_id", allSiteIds));

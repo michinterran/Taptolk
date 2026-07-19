@@ -1,11 +1,18 @@
 import type {
   QrBatchItem,
   QrBatchStatus,
+  QrFinalApprovalBatchItem,
+  QrFinalGenerationApprovalReadModel,
   QrInventorySampleReadModel,
   StickerDesignStatus,
   StickerDesignVersionItem,
 } from "@taptolk/application";
 import { SemanticHeading } from "@taptolk/ui";
+import {
+  approveQrBatchFinalGeneration,
+  cancelQrBatchBeforeGenerationApproval,
+  requestQrBatchFinalApproval,
+} from "../admin/qr-final-generation-approval-actions";
 import {
   approveQrBatchSample,
   approveStickerDesignVersion,
@@ -55,6 +62,11 @@ interface QrInventoryCopy {
   emptyQueue: string;
   eyebrow: string;
   finalApprovalNotice: string;
+  finalApprovalApprove: string;
+  finalApprovalDescription: string;
+  finalApprovalRequest: string;
+  finalApprovalRequestDescription: string;
+  finalApprovalTitle: string;
   invalidate: string;
   localeLabels: Readonly<Record<AppLocale, string>>;
   localeTitle: string;
@@ -90,12 +102,14 @@ interface QrInventoryCopy {
 interface QrInventorySampleViewProps {
   backHref: string;
   canApproveDesign: boolean;
+  canApproveFinalGeneration: boolean;
   canArchiveDesign: boolean;
   canCreateDesign: boolean;
   canOperateSample: boolean;
   canRequestBatch: boolean;
   copy: QrInventoryCopy;
   errorMessage?: string | undefined;
+  finalApprovalModel: QrFinalGenerationApprovalReadModel;
   locale: AppLocale;
   model: QrInventorySampleReadModel;
   statusMessage?: string | undefined;
@@ -214,6 +228,30 @@ function BatchFields({
   );
 }
 
+function FinalApprovalFields({
+  batch,
+  copy,
+  locale,
+}: {
+  batch: Pick<QrFinalApprovalBatchItem, "id" | "version">;
+  copy: QrInventoryCopy;
+  locale: AppLocale;
+}) {
+  return (
+    <>
+      <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+      <input aria-label={copy.batchCode} name="batchId" type="hidden" value={batch.id} />
+      <input
+        aria-label={copy.actions}
+        name="expectedBatchVersion"
+        type="hidden"
+        value={batch.version}
+      />
+      <input aria-label={copy.actions} name="requestId" type="hidden" value={crypto.randomUUID()} />
+    </>
+  );
+}
+
 function ReasonField({ copy, id }: { copy: QrInventoryCopy; id: string }) {
   return (
     <label className="admin-field" htmlFor={id}>
@@ -285,12 +323,16 @@ function BatchCard({
   batch,
   canOperateSample,
   canCancel,
+  canCancelFinalApproval,
+  canRequestFinalApproval,
   copy,
   locale,
 }: {
   batch: QrBatchItem;
   canCancel: boolean;
+  canCancelFinalApproval: boolean;
   canOperateSample: boolean;
+  canRequestFinalApproval: boolean;
   copy: QrInventoryCopy;
   locale: AppLocale;
 }) {
@@ -431,6 +473,79 @@ function BatchCard({
           </form>
         </details>
       ) : null}
+      {canRequestFinalApproval ? (
+        <details className="admin-rejection-panel">
+          <summary>{copy.finalApprovalRequest}</summary>
+          <form action={requestQrBatchFinalApproval} className="admin-rejection-form">
+            <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
+            <ReasonField copy={copy} id={`final-request-${batch.id}`} />
+            <button className="tt-button admin-approval-primary-action" type="submit">
+              {copy.finalApprovalRequest}
+            </button>
+          </form>
+        </details>
+      ) : null}
+      {canCancelFinalApproval ? (
+        <details className="admin-rejection-panel">
+          <summary>{copy.batchCancel}</summary>
+          <form action={cancelQrBatchBeforeGenerationApproval} className="admin-rejection-form">
+            <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
+            <ReasonField copy={copy} id={`final-cancel-${batch.id}`} />
+            <button className="tt-button admin-danger-action" type="submit">
+              {copy.batchCancel}
+            </button>
+          </form>
+        </details>
+      ) : null}
+    </article>
+  );
+}
+
+function FinalGenerationApprovalCard({
+  batch,
+  copy,
+  locale,
+  templateCode,
+}: {
+  batch: QrFinalApprovalBatchItem;
+  copy: QrInventoryCopy;
+  locale: AppLocale;
+  templateCode: string;
+}) {
+  return (
+    <article className="admin-approval-card">
+      <header className="admin-approval-card__header">
+        <div>
+          <span className="admin-approval-card__label">{batch.batchCode}</span>
+          <h3>{batch.siteName}</h3>
+        </div>
+        <span className="admin-status-badge admin-status-badge--suspended">
+          {copy.batchStatusLabels[batch.status]}
+        </span>
+      </header>
+      <dl className="admin-approval-meta">
+        <div>
+          <dt>{copy.batchQuantity}</dt>
+          <dd>{batch.requestedQuantity.toLocaleString(locale === "ko" ? "ko-KR" : "en")}</dd>
+        </div>
+        <div>
+          <dt>{copy.templateCode}</dt>
+          <dd>{templateCode}</dd>
+        </div>
+        <div>
+          <dt>{copy.createdAt}</dt>
+          <dd>
+            <time dateTime={batch.createdAt}>{formatDate(locale, batch.createdAt)}</time>
+          </dd>
+        </div>
+      </dl>
+      <form action={approveQrBatchFinalGeneration} className="admin-approval-form">
+        <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
+        <ReasonField copy={copy} id={`final-approve-${batch.id}`} />
+        <button className="tt-button admin-approval-primary-action" type="submit">
+          {copy.finalApprovalApprove}
+        </button>
+      </form>
     </article>
   );
 }
@@ -438,12 +553,14 @@ function BatchCard({
 export function QrInventorySampleView({
   backHref,
   canApproveDesign,
+  canApproveFinalGeneration,
   canArchiveDesign,
   canCreateDesign,
   canOperateSample,
   canRequestBatch,
   copy,
   errorMessage,
+  finalApprovalModel,
   locale,
   model,
   statusMessage,
@@ -715,6 +832,33 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
+      {canApproveFinalGeneration ? (
+        <section aria-labelledby="final-approval-title" className="admin-lifecycle-queue">
+          <header>
+            <h2 id="final-approval-title">{copy.finalApprovalTitle}</h2>
+            <p>{copy.finalApprovalDescription}</p>
+          </header>
+          {finalApprovalModel.finalApprovalQueue.length > 0 ? (
+            <div className="admin-approval-list">
+              {finalApprovalModel.finalApprovalQueue.map((batch) => {
+                const inventoryBatch = model.batches.find((item) => item.id === batch.id);
+                return inventoryBatch ? (
+                  <FinalGenerationApprovalCard
+                    batch={batch}
+                    copy={copy}
+                    key={batch.id}
+                    locale={locale}
+                    templateCode={inventoryBatch.templateCode}
+                  />
+                ) : null;
+              })}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.emptyQueue}</p>
+          )}
+        </section>
+      ) : null}
+
       <section aria-labelledby="batch-catalog-title" className="admin-lifecycle-queue">
         <header>
           <h2 id="batch-catalog-title">{copy.batchTitle}</h2>
@@ -726,7 +870,9 @@ export function QrInventorySampleView({
               <BatchCard
                 batch={batch}
                 canCancel={model.cancellableBatchIds.has(batch.id)}
+                canCancelFinalApproval={finalApprovalModel.cancellableBatchIds.has(batch.id)}
                 canOperateSample={canOperateSample}
+                canRequestFinalApproval={finalApprovalModel.requestableBatchIds.has(batch.id)}
                 copy={copy}
                 key={batch.id}
                 locale={locale}

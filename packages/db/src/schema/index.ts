@@ -13,6 +13,8 @@ export {
   contracts,
   managementCompanies,
   organizationStatus,
+  qrGenerationJobStatus,
+  qrGenerationJobs,
   siteLifecycleAction,
   siteLifecycleRequestStatus,
   siteLifecycleRequests,
