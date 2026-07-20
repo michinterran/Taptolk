@@ -5,7 +5,7 @@
 ## 1. Outcome
 
 The code-owned Phase 0-9 development scope is complete at the automated and linked-staging
-evidence boundary. All 14 tracked PDCA features are closed, the linked PostgreSQL contracts and
+evidence boundary. All 15 tracked PDCA features are closed, the linked PostgreSQL contracts and
 authenticated staging journeys pass, and the monorepo passes its complete verification gate.
 
 This is not a Production pilot approval. The separate Production data project, SMS and CAPTCHA
@@ -44,7 +44,7 @@ The QR quantity contract remains `1..100` per Batch. The 1,000-item acceptance w
 | WCJ | 100 / C100 / J100 / W100 over 87 files |
 | Production build | PASS |
 | Deferred Cron verifier | PASS; zero active Cron definitions in the default manifest |
-| PDCA registry | 14/14 features completed |
+| PDCA registry | 15/15 features completed |
 | GitHub Actions | Run `29705730777` PASS including Linux Chromium browser smoke |
 | Production web deploy | `0e2a15e` READY; KO/EN/health 200, cleanup 503, active Cron 0 |
 
@@ -83,3 +83,34 @@ cleanup or provider journeys.
 
 If a quantity above 100 per Batch is requested, stop and obtain separate quantity-policy design
 approval before changing schema, UI, Worker, Queue, or export contracts.
+
+## 6. 2026-07-20 Public Surface Addendum
+
+The prior Production root was technically healthy but still presented a Phase/Foundation
+development screen. The public experience now has a localized product landing and a role-based
+onboarding route. It explains the verified QR-mediated caller and owner journeys without adding a
+tokenless contact path, and it separates customer administrator and Taptolk platform
+administrator login entry points before authentication.
+
+The two login surfaces share the existing sign-in, callback, MFA, central RBAC, repository, and
+PostgreSQL RLS boundaries. The split changes public routing and typed introduction copy only; it
+does not create a second authorization system or imply that external Production providers are
+configured.
+
+Revalidation after the change produced:
+
+- linked pgTAP: all 22 database test files PASS;
+- `pnpm verify`: lint 324 files, typecheck 19/19, unit 53 files/326 tests, DB static 55
+  migrations/22 tests, secret scan 526 text files, WCJ 100 over 91 files, and Production build
+  PASS;
+- focused landing/onboarding browser checks: KO/EN, Axe, semantic copy, and 320 CSS pixel
+  overflow PASS.
+- authenticated staging full-suite revalidation: 28 PASS and one intentional opt-in 10x100
+  acceptance skip in one run.
+
+The decision remains `AUTOMATED_DEVELOPMENT_READY / EXTERNAL_PILOT_GATES_PENDING`. In particular,
+formal Phase 1 completion still requires an operator-approved Docker-compatible runtime and a
+clean local Supabase reset. Production Supabase region, SMS/CAPTCHA providers, secrets,
+monitoring/rollback/incident owners, and actual-service Cron activation remain explicit external
+decisions. Active Cron remains zero on Hobby, and the per-Batch quantity contract remains
+`1..100`.

@@ -66,7 +66,8 @@ function checkStaticRules(files) {
   const journeyState = sourceAt(files, "packages/ui/src/patterns/journey-state.ts");
   const routePolicy = sourceAt(files, "apps/web/policies/route-policy.ts");
   const errorPage = sourceAt(files, "apps/web/app/[locale]/error.tsx");
-  const foundationPage = sourceAt(files, "apps/web/app/[locale]/page.tsx");
+  const landingPage = sourceAt(files, "apps/web/app/[locale]/page.tsx");
+  const onboardingPage = sourceAt(files, "apps/web/app/[locale]/onboarding/page.tsx");
   const localeModule = sourceAt(files, "apps/web/i18n/locale.ts");
   const localeSwitcher = sourceAt(files, "apps/web/components/locale-switcher.tsx");
   const localeRoute = sourceAt(files, "apps/web/app/api/locale/route.ts");
@@ -246,9 +247,19 @@ function checkStaticRules(files) {
     );
   }
 
-  if (!foundationPage.includes("<JourneyStatus") || !foundationPage.includes("<SemanticHeading")) {
+  if (
+    !landingPage.includes("<SemanticHeading") ||
+    !landingPage.includes("/onboarding") ||
+    !onboardingPage.includes("<SemanticHeading") ||
+    !onboardingPage.includes("/admin/login") ||
+    !onboardingPage.includes("/admin/platform/login")
+  ) {
     findings.push(
-      finding("J005", "apps/web/app/[locale]/page.tsx", "Shared journey primitives are not used."),
+      finding(
+        "J005",
+        "apps/web/app/[locale]/onboarding/page.tsx",
+        "Public landing or role-separated onboarding entry markers are incomplete.",
+      ),
     );
   }
 

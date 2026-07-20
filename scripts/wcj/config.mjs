@@ -67,6 +67,6 @@ export const WCJ_RULES = Object.freeze([
     category: "J",
     id: "J005",
     severity: "major",
-    title: "Foundation page uses shared journey primitives",
+    title: "Public landing and onboarding preserve role-separated journeys",
   },
 ]);

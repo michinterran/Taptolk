@@ -40,13 +40,29 @@
 - [x] Preserved the approved hourly schedule in the inert
       `apps/web/vercel.production-cron.template.json` and added separate deferred/active
       verification gates.
-- [x] Closed all 14 tracked PDCA features with analysis/report evidence. Architecture-only
+- [x] Closed all 15 tracked PDCA features with analysis/report evidence. Architecture-only
       completion does not claim that every future Admin information-architecture route is
       implemented.
 - [x] Repaired the Linux Chromium 320px login/signup overflow regression while preserving
       non-wrapping control labels; targeted 4/4 and complete local smoke 30/30 PASS.
 - [x] GitHub Actions run `29705730777` passed source/DB/WCJ/build and Linux Chromium browser
       smoke for closeout commit `0e2a15e`.
+- [x] GitHub Actions run `29705909265` passed the same required gates for handoff commit
+      `3c420d1`.
+- [x] Replaced the internal Phase/Foundation root screen with localized public landing and
+      role-based onboarding pages. Caller and owner guidance remains QR/token led; customer
+      administrator and Taptolk platform administrator login entry points are visibly separate
+      before the shared central auth/RBAC/RLS boundary.
+- [x] Public landing/onboarding WCJ and browser coverage: no internal development copy,
+      KO/EN parity, semantic headings, Axe clean, and no horizontal overflow at 320 CSS pixels.
+- [x] 2026-07-20 public-surface revalidation: linked pgTAP all 22 files PASS; `pnpm verify`
+      PASS with lint 324 files, typecheck 19/19, unit 53 files/326 tests, DB structure 55
+      migrations/22 tests, secret scan 526 text files, WCJ 100 over 91 files, and Production
+      build.
+- [x] Authenticated staging full-suite revalidation after the public-surface and TOTP fixture
+      changes: 28 PASS and one intentional opt-in 10x100 acceptance skip. Owner activation,
+      public contact, QR concurrency/residue cleanup, and Site tenant-isolation journeys all
+      passed in one run.
 
 ## Manual and external pilot gates
 
@@ -76,7 +92,8 @@
 - [ ] Complete production domain, environment, alerting, rollback, and incident owner review.
 - [ ] Install and start an approved Docker-compatible local runtime, then complete a clean
       local Supabase reset. No Docker, Podman, Colima, OrbStack, or Lima runtime was available
-      during this closeout; linked staging pgTAP is not a substitute for this local reset gate.
+      in the 2026-07-20 recheck; linked staging pgTAP is not a substitute for this local reset
+      gate. Do not install or select a runtime until the operator names and approves one.
 
 ## Approval rule
 

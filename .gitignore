@@ -17,6 +17,8 @@ yarn-error.log*
 *.tsbuildinfo
 playwright-report/
 test-results/
+.playwright-cli/
+output/
 wcj-report.json
 
 supabase/.branches/

@@ -1,16 +1,50 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("foundation page meets the WCJ browser baseline", async ({ page }) => {
+test("public landing meets the WCJ browser baseline and exposes no development copy", async ({
+  page,
+}) => {
   await page.goto("/ko");
 
   await expect(page.locator("main")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
-    "전화번호를 노출하지 않고 차주에게 필요한 말을 전합니다.",
+    "번호를 묻지 않고, 차량에 필요한 말을 전합니다.",
   );
   await expect(page.locator("h1 br")).toHaveCount(0);
-  await expect(page.locator(".semantic-line")).toHaveCount(2);
-  await expect(page.getByRole("status")).toHaveAttribute("aria-live", "polite");
+  await expect(page.locator("h1 .semantic-line")).toHaveCount(2);
+  await expect(page.getByText("Phase 0", { exact: false })).toHaveCount(0);
+  await expect(page.getByText("기초 구조", { exact: false })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "고객 관리자 로그인" })).toHaveAttribute(
+    "href",
+    "/ko/admin/login",
+  );
+  await expect(page.getByRole("link", { name: "플랫폼 어드민 로그인" })).toHaveAttribute(
+    "href",
+    "/ko/admin/platform/login",
+  );
+
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(accessibility.violations).toEqual([]);
+});
+
+test("role onboarding keeps token-led users and administrator entrances separate", async ({
+  page,
+}) => {
+  await page.goto("/ko/onboarding");
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "지금 하려는 일에 맞는 안전한 입구를 선택하세요.",
+  );
+  await expect(page.getByText("차량의 Taptolk QR을 카메라로 스캔하세요.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "고객 관리자 로그인" })).toHaveAttribute(
+    "href",
+    "/ko/admin/login",
+  );
+  await expect(page.getByRole("link", { name: "플랫폼 어드민 로그인" })).toHaveAttribute(
+    "href",
+    "/ko/admin/platform/login",
+  );
+  await expect(page.locator('a[href^="/ko/q/"]')).toHaveCount(0);
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations).toEqual([]);
@@ -40,14 +74,21 @@ test("scheduled privacy cleanup fails closed without server configuration", asyn
   expect(JSON.stringify(body)).not.toMatch(/tenantId|tenant_id|phone|token|secret|authorization/iu);
 });
 
-test("foundation page is usable at narrow viewport widths", async ({ page }) => {
+test("landing and onboarding are usable at narrow viewport widths", async ({ page }) => {
   await page.setViewportSize({ height: 667, width: 320 });
   await page.goto("/ko");
 
-  const overflow = await page.evaluate(
+  const landingOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
   );
-  expect(overflow).toBe(false);
+  expect(landingOverflow).toBe(false);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  await page.goto("/ko/onboarding");
+  const onboardingOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(onboardingOverflow).toBe(false);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
@@ -71,7 +112,7 @@ test("foreign browser preference falls back to English", async ({ browser }) => 
   await expect(page).toHaveURL(/\/en$/u);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
-    "Reach the driver when it matters without exposing a phone number.",
+    "Reach the vehicle, not the owner's phone number.",
   );
   await context.close();
 });
@@ -120,6 +161,28 @@ test("admin sign-in foundation is bilingual and meets the accessibility baseline
   await expect(page).toHaveURL(/\/en\/admin\/login$/u);
   await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
     "Start securely with an approved admin account.",
+  );
+});
+
+test("platform administrator has a separate localized login entry", async ({ page }) => {
+  await page.goto("/ko/admin/platform/login");
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "전체 서비스 운영을 위한 별도 보안 입구입니다.",
+  );
+  await expect(page.getByRole("button", { name: "플랫폼 어드민 로그인" })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "고객 관리자 로그인" })).toHaveAttribute(
+    "href",
+    "/ko/admin/login",
+  );
+
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(accessibility.violations).toEqual([]);
+
+  await page.getByRole("link", { name: "영어로 보기" }).click();
+  await expect(page).toHaveURL(/\/en\/admin\/platform\/login$/u);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "A separate secure entry for full-service operations.",
   );
 });
 

@@ -63,6 +63,7 @@ const ENV_FILE = path.join(process.cwd(), "apps/web/.env.local");
 const LINKED_PROJECT_FILE = path.join(process.cwd(), "supabase/.temp/project-ref");
 const SENSITIVE_AUDIT_KEY =
   /authorization|cookie|phone|message|otp|token|secret|password|api.?key/iu;
+const TOTP_MINIMUM_VALIDITY_SECONDS = 8;
 
 function parseEnvironmentFile(source: string): Readonly<Record<string, string>> {
   const values: Record<string, string> = {};
@@ -151,7 +152,7 @@ function base32Decode(secret: string): Buffer {
 export async function currentTotp(secret: string): Promise<string> {
   const currentSeconds = Math.floor(Date.now() / 1_000);
   const remainingSeconds = 30 - (currentSeconds % 30);
-  if (remainingSeconds < 3) {
+  if (remainingSeconds < TOTP_MINIMUM_VALIDITY_SECONDS) {
     await new Promise((resolve) => setTimeout(resolve, (remainingSeconds + 1) * 1_000));
   }
 

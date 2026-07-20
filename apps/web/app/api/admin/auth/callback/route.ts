@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getLocalizedAdminPath } from "../../../../../auth/admin-routing";
+import { getLocalizedAdminPath, readAdminLoginArea } from "../../../../../auth/admin-routing";
 import {
   type AdminRegistrationFlow,
   getAdminAuthErrorPath,
@@ -16,6 +16,7 @@ export async function GET(request: Request) {
   const localeValue = url.searchParams.get("locale");
   const locale = isAppLocale(localeValue) ? localeValue : "en";
   const flow = readFlow(url.searchParams.get("flow"));
+  const area = readAdminLoginArea(url.searchParams.get("area"));
   const code = url.searchParams.get("code");
   const client = await createAdminServerClient();
 
@@ -27,6 +28,6 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.redirect(
-    new URL(getAdminAuthErrorPath(locale, flow, "oauth_unavailable"), request.url),
+    new URL(getAdminAuthErrorPath(locale, flow, "oauth_unavailable", area), request.url),
   );
 }
