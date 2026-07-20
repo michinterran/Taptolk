@@ -63,6 +63,15 @@
       changes: 28 PASS and one intentional opt-in 10x100 acceptance skip. Owner activation,
       public contact, QR concurrency/residue cleanup, and Site tenant-isolation journeys all
       passed in one run.
+- [x] GitHub Actions run `29716589923` passed source/DB/WCJ/build and Linux Chromium browser
+      smoke for public-surface commit `6a78fd9`.
+- [x] Production deployment `dpl_BAgu1XGxQeN97nab1op8ZGovyoQ3` is READY and aliased to
+      `https://taptolk.vercel.app`. KO/EN landing, onboarding, customer login, platform login,
+      and health return 200; unconfigured cleanup remains 503. Production browser verification
+      found no console error or horizontal overflow at 1440 and 320 CSS pixels.
+- [x] The Production deployment used the default Cron-deferred manifest. The active manifest has
+      zero Cron definitions; the inert hourly template remains unchanged and the strict deferred
+      verifier passes.
 
 ## Manual and external pilot gates
 

@@ -61,6 +61,12 @@ None. A contrast issue discovered in the first focused Axe pass was fixed before
   including concurrency and residue-zero cleanup.
 - Final authenticated staging full suite: 28 PASS and one intentional opt-in 10x100 acceptance
   skip.
+- GitHub Actions `29716589923`: PASS including Linux Chromium browser smoke.
+- Production deployment `dpl_BAgu1XGxQeN97nab1op8ZGovyoQ3`: READY and aliased to
+  `https://taptolk.vercel.app`.
+- Production routes: KO/EN landing, onboarding, customer login, platform login, and health 200;
+  unconfigured cleanup 503 fail-closed.
+- Production browser: no console errors and no horizontal overflow at 1440 or 320 CSS pixels.
 - Local Supabase reset: not run because no Docker-compatible runtime is installed or active; this
   remains an external approval gate and is not replaced by linked pgTAP.
 
