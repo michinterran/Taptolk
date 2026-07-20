@@ -9,9 +9,8 @@ evidence boundary. All 15 tracked PDCA features are closed, the linked PostgreSQ
 authenticated staging journeys pass, and the monorepo passes its complete verification gate.
 
 This is not a Production pilot approval. The separate Production data project, SMS and CAPTCHA
-providers, local migration reset runtime, real devices, assistive-technology review, physical
-print proof, monitoring, incident ownership, and actual-service Cron rehearsal remain external
-operator gates.
+providers, real devices, assistive-technology review, physical print proof, monitoring, incident
+ownership, and actual-service Cron rehearsal remain external operator gates.
 
 ## 2. Completed Development Boundary
 
@@ -33,15 +32,17 @@ The QR quantity contract remains `1..100` per Batch. The 1,000-item acceptance w
 
 | Gate | Result |
 | --- | --- |
-| Linked pgTAP | All 22 database test files PASS |
-| Authenticated linked-staging E2E | 28 PASS, one intentional opt-in 10x100 skip |
+| Clean local Supabase reset | PASS twice with the approved Docker Desktop 4.82.0 runtime |
+| Local pgTAP | All 23 database test files; 587 tests PASS |
+| Linked pgTAP | All 23 database test files PASS |
+| Authenticated linked-staging E2E | 28 focused journey tests PASS; one intentional opt-in 10x100 skip |
 | Local browser smoke | 30/30 PASS across Chromium and mobile profiles |
 | Lint | 320 files PASS |
 | Typecheck | 19/19 PASS |
 | Unit | 53 files, 326 tests PASS |
-| DB static contract | 55 migrations, 22 database tests PASS |
-| Secret scan | 518 text files PASS |
-| WCJ | 100 / C100 / J100 / W100 over 87 files |
+| DB static contract | 56 migrations, 23 database tests PASS |
+| Secret scan | 530 text files PASS |
+| WCJ | 100 / C100 / J100 / W100 over 91 files |
 | Production build | PASS |
 | Deferred Cron verifier | PASS; zero active Cron definitions in the default manifest |
 | PDCA registry | 15/15 features completed |
@@ -50,10 +51,10 @@ The QR quantity contract remains `1..100` per Batch. The 1,000-item acceptance w
 
 ## 4. Acceptance Boundary
 
-The formal Phase 1 and Production pilot claims remain conditional because a clean local Supabase
-reset could not be executed without an approved Docker-compatible runtime, and the Production
-project/provider/manual gates are not configured. Linked staging evidence is current and complete,
-but it does not erase those explicit acceptance conditions.
+The clean local Supabase reset acceptance condition is now satisfied. The formal Production pilot
+claim remains conditional because the Production project/provider/manual gates are not configured.
+Local and linked database evidence is current and complete, but it does not erase those separate
+external acceptance conditions.
 
 The deployed web surface must remain fail closed:
 
@@ -68,18 +69,16 @@ cleanup or provider journeys.
 
 ## 5. Exact External Completion Order
 
-1. Install and start an approved Docker-compatible local runtime and run a clean local Supabase
-   reset plus the complete pgTAP suite.
-2. Approve a separate Production Supabase project and region, then apply and verify migrations.
-3. Select Production SMS and CAPTCHA providers and authorize their adapters before configuring
+1. Approve a separate Production Supabase project and region, then apply and verify migrations.
+2. Select Production SMS and CAPTCHA providers and authorize their adapters before configuring
    secrets.
-4. Complete representative device, VoiceOver/TalkBack, computed-contrast, keyboard, and 85mm
+3. Complete representative device, VoiceOver/TalkBack, computed-contrast, keyboard, and 85mm
    print review.
-5. Assign Production monitoring, rollback, incident, and pilot-window owners.
-6. At actual service launch only, move the Vercel project to an hourly-Cron-capable plan, activate
+4. Assign Production monitoring, rollback, incident, and pilot-window owners.
+5. At actual service launch only, move the Vercel project to an hourly-Cron-capable plan, activate
    the reviewed template, and execute the runbook's authorized aggregate-only run, same-hour
    replay, duplicate-zero proof, secret rotation, monitoring, and rollback rehearsal.
-7. Mark the pilot `READY` only after every open item in the pilot checklist is signed off.
+6. Mark the pilot `READY` only after every open item in the pilot checklist is signed off.
 
 If a quantity above 100 per Batch is requested, stop and obtain separate quantity-policy design
 approval before changing schema, UI, Worker, Queue, or export contracts.
@@ -108,9 +107,19 @@ Revalidation after the change produced:
 - authenticated staging full-suite revalidation: 28 PASS and one intentional opt-in 10x100
   acceptance skip in one run.
 
+The later clean-local checkpoint produced:
+
+- Docker Desktop 4.82.0 daemon verification and two clean local Supabase resets PASS;
+- local pgTAP: all 23 files and 587 tests PASS;
+- repeatable `qr-generation` Queue baseline security pgTAP: 12/12 PASS;
+- linked staging migration apply and all 23 linked pgTAP files PASS;
+- post-reset authenticated staging focused suites: 28 PASS, with the approved 10x100 acceptance
+  still intentionally opt-in;
+- DB static contract: 56 migrations and 23 database tests; secret scan: 530 text files;
+  WCJ: 100 over 91 files; Production build PASS.
+
 The decision remains `AUTOMATED_DEVELOPMENT_READY / EXTERNAL_PILOT_GATES_PENDING`. In particular,
-formal Phase 1 completion still requires an operator-approved Docker-compatible runtime and a
-clean local Supabase reset. Production Supabase region, SMS/CAPTCHA providers, secrets,
-monitoring/rollback/incident owners, and actual-service Cron activation remain explicit external
-decisions. Active Cron remains zero on Hobby, and the per-Batch quantity contract remains
-`1..100`.
+the clean-local Phase 1 gate is now satisfied. Production Supabase project/region, SMS/CAPTCHA
+providers, secrets, monitoring/rollback/incident owners, and actual-service Cron activation
+remain explicit external decisions. Active Cron remains zero on Hobby, and the per-Batch quantity
+contract remains `1..100`.

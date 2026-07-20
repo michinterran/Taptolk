@@ -44,9 +44,11 @@ None. A contrast issue discovered in the first focused Axe pass was fixed before
 | Design match rate | 100% |
 | Full unit suite | 53 files, 326 tests PASS |
 | WCJ | 100; C100/J100/W100; 91 files |
-| Linked pgTAP | All 22 files PASS |
-| DB static contract | 55 migrations, 22 database tests PASS |
-| Secret scan | 526 text files PASS |
+| Clean local Supabase reset | PASS twice |
+| Local pgTAP | 23 files, 587 tests PASS |
+| Linked pgTAP | All 23 files PASS |
+| DB static contract | 56 migrations, 23 database tests PASS |
+| Secret scan | 530 text files PASS |
 | Production build | PASS |
 
 ## 5. Validation
@@ -55,20 +57,24 @@ None. A contrast issue discovered in the first focused Axe pass was fixed before
 - Focused browser coverage: KO/EN landing, onboarding, customer/platform login distinction, Axe,
   semantic heading source, and 320 CSS pixel overflow PASS.
 - `pnpm verify`: PASS.
-- Complete linked pgTAP: all 22 database test files PASS.
+- Clean local Supabase reset: PASS twice with the operator-approved Docker Desktop 4.82.0
+  runtime.
+- Complete local pgTAP: all 23 database test files and 587 tests PASS.
+- Complete linked pgTAP: all 23 database test files PASS through `pnpm db:test:linked`.
 - Complete public-contact authenticated staging serial file: 5/5 PASS.
 - Complete QR-inventory authenticated staging serial file: 15/15 PASS on a clean fixture,
   including concurrency and residue-zero cleanup.
-- Final authenticated staging full suite: 28 PASS and one intentional opt-in 10x100 acceptance
-  skip.
+- Post-reset authenticated staging focused suites: 28 PASS across Phase 9 hardening, public
+  contact, QR inventory, Site tenant isolation, and owner activation. The 10x100 acceptance
+  remains an intentional opt-in skip.
 - GitHub Actions `29716589923`: PASS including Linux Chromium browser smoke.
 - Production deployment `dpl_BAgu1XGxQeN97nab1op8ZGovyoQ3`: READY and aliased to
   `https://taptolk.vercel.app`.
 - Production routes: KO/EN landing, onboarding, customer login, platform login, and health 200;
   unconfigured cleanup 503 fail-closed.
 - Production browser: no console errors and no horizontal overflow at 1440 or 320 CSS pixels.
-- Local Supabase reset: not run because no Docker-compatible runtime is installed or active; this
-  remains an external approval gate and is not replaced by linked pgTAP.
+- Post-MFA customer and platform administration redirects accept the role-selection landing at
+  `/{locale}/admin` as well as their authorized destination routes.
 
 ## 6. Release Boundary
 
@@ -81,8 +87,8 @@ configured.
 
 ## 7. Follow-up Items
 
-- [ ] Obtain the operator's explicit choice and installation/start approval for one
-      Docker-compatible local runtime, then run a clean local Supabase reset and complete pgTAP.
+- [x] Obtain the operator's explicit Docker-compatible runtime approval, install/start only that
+      runtime, then run a clean local Supabase reset and complete pgTAP.
 - [ ] Complete the remaining external/manual pilot checklist in its recorded order.
 - [ ] Request Pro or Enterprise approval only at actual hourly Cron activation time.
 - [ ] Require separate quantity-policy design approval before any per-Batch quantity above 100.

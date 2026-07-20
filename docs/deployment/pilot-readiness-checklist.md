@@ -72,6 +72,16 @@
 - [x] The Production deployment used the default Cron-deferred manifest. The active manifest has
       zero Cron definitions; the inert hourly template remains unchanged and the strict deferred
       verifier passes.
+- [x] Installed and started the operator-approved Docker Desktop 4.82.0 runtime, verified its
+      Docker-compatible daemon, and completed a clean local Supabase reset twice.
+- [x] Clean local pgTAP: all 23 database test files and 587 tests PASS. The repeatable Queue
+      baseline creates `qr-generation` with browser-role denial, service-role access, and RLS;
+      its focused pgTAP is 12/12 PASS.
+- [x] Applied the repeatable Queue baseline to linked staging and revalidated all 23 linked
+      pgTAP files PASS through the repository's `pnpm db:test:linked` gate.
+- [x] Post-reset authenticated staging revalidation: 28 focused journey tests PASS across Phase
+      9 hardening, public contact, QR inventory, Site tenant isolation, and owner activation.
+      The separate approved 10x100 acceptance remains an intentional opt-in skip.
 
 ## Manual and external pilot gates
 
@@ -99,10 +109,9 @@
 - [ ] Decide and validate TUS resumable upload for artifacts above the reviewed large-file
       threshold.
 - [ ] Complete production domain, environment, alerting, rollback, and incident owner review.
-- [ ] Install and start an approved Docker-compatible local runtime, then complete a clean
-      local Supabase reset. No Docker, Podman, Colima, OrbStack, or Lima runtime was available
-      in the 2026-07-20 recheck; linked staging pgTAP is not a substitute for this local reset
-      gate. Do not install or select a runtime until the operator names and approves one.
+- [x] Install and start an approved Docker-compatible local runtime, then complete a clean
+      local Supabase reset. The operator approved Docker Desktop; version 4.82.0 is installed,
+      its daemon responds, and the clean reset plus complete local pgTAP suite pass.
 
 ## Approval rule
 
