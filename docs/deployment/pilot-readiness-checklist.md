@@ -4,7 +4,8 @@
 
 ## Automated staging gates
 
-- [x] Per-Batch quantity remains 1-100; no single 1,000-item Batch contract.
+- [x] Per-Batch quantity remains 1-100 across RPC, Application, Drizzle, and PostgreSQL CHECK;
+      no single 1,000-item Batch contract.
 - [x] Ten approved 100-item Batches generated 1,000 assets through Worker and `qr-generation`.
 - [x] Intentional chunk stop, lease expiry, and resume completed without ordinal/token/QR
       Asset/activation duplicates.
@@ -82,6 +83,14 @@
 - [x] Post-reset authenticated staging revalidation: 28 focused journey tests PASS across Phase
       9 hardening, public contact, QR inventory, Site tenant isolation, and owner activation.
       The separate approved 10x100 acceptance remains an intentional opt-in skip.
+- [x] 2026-07-20 Task 0 quantity-contract reconciliation: migration
+      `20260720210000_qr_batch_quantity_contract.sql` aborts instead of deleting if any existing
+      Batch exceeds 100; local and linked preflight counts were zero. Clean local reset passed
+      twice, local and linked pgTAP passed all 23 files/590 tests, and `pnpm verify` passed with
+      57 migrations, 23 database tests, and 327 unit tests.
+- [x] Re-ran the explicit 10x100 staging acceptance after Task 0: 10 Batches, quantity 100 each,
+      total 1,000, duplicate 0, decode 1,000/1,000, export/checksum 40/40, poison active 0, and
+      fixture/Queue/Auth/Storage residue 0.
 
 ## Manual and external pilot gates
 
