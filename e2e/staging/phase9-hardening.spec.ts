@@ -56,9 +56,14 @@ test.describe("Phase 9 bounded hardening gates", () => {
       taptolkLogoDataUri: `data:image/png;base64,${logo.toString("base64")}`,
       templateCode: "ROUND_WHITE_MINIMAL_V1",
     });
-    const decoded = await Promise.all(
-      Array.from({ length: 100 }, () => decodeQrFromImage(rendered.png)),
-    );
+    const decoded: Array<string | null> = [];
+    for (let offset = 0; offset < 100; offset += 4) {
+      decoded.push(
+        ...(await Promise.all(
+          Array.from({ length: Math.min(4, 100 - offset) }, () => decodeQrFromImage(rendered.png)),
+        )),
+      );
+    }
     expect(decoded.filter((value) => value === publicUrl)).toHaveLength(100);
     expect(
       Object.values(STICKER_TEMPLATES).every(

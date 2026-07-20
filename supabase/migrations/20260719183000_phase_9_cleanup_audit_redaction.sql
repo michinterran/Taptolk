@@ -21,10 +21,13 @@ begin
   definition := pg_get_functiondef(
     'public.run_privacy_cleanup(uuid,integer,integer,integer,uuid)'::regprocedure
   );
-  if position(unsafe_audit in definition) = 0 then
+  if position(safe_audit in definition) > 0 then
+    null;
+  elsif position(unsafe_audit in definition) > 0 then
+    execute replace(definition, unsafe_audit, safe_audit);
+  else
     raise exception using errcode = 'P0001', message = 'CLEANUP_AUDIT_PATCH_TARGET_MISSING';
   end if;
-  execute replace(definition, unsafe_audit, safe_audit);
 end;
 $migration$;
 

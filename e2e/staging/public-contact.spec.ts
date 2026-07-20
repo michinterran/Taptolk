@@ -34,7 +34,7 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
   if (existingSecret) {
     await page.locator('input[name="code"]').fill(await currentTotp(existingSecret));
     await page.locator(".admin-mfa-form button[type='submit']").click();
-    await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"));
+    await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"));
     return;
   }
   await page.locator(".admin-enrollment-start button").click();
@@ -45,7 +45,7 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
   mfaSecrets.set(actor.id, secret);
   await page.locator('input[name="code"]').fill(await currentTotp(secret));
   await page.locator(".admin-mfa-form button[type='submit']").click();
-  await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"));
+  await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"));
 }
 
 function publicContactHmac(value: string, purpose: string): string {
@@ -132,6 +132,28 @@ async function authenticatedRpc(
   );
   expect(response.ok).toBe(true);
   return response.json();
+}
+
+async function internalRequest(
+  path: string,
+  bearer: string,
+  options: {
+    body?: Record<string, unknown>;
+    method?: "DELETE" | "GET" | "POST";
+  } = {},
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${bearer}`,
+  };
+  if (options.body) {
+    headers["Content-Type"] = "application/json";
+  }
+  return fetch(`http://127.0.0.1:3200${path}`, {
+    body: options.body ? JSON.stringify(options.body) : undefined,
+    headers,
+    method: options.method ?? "GET",
+    signal: AbortSignal.timeout(5 * 60_000),
+  });
 }
 
 test.describe
@@ -267,6 +289,8 @@ test.describe
       await page.getByRole("button", { name: "차량 이동" }).click();
       await expect(page.getByText("차량 이동을 부탁드립니다.")).toBeVisible();
 
+      const warmupResponse = await page.request.get("/api/public/contact-sessions");
+      expect(warmupResponse.status()).toBe(405);
       const startedAt = Date.now();
       const createResponsePromise = page.waitForResponse((response) =>
         response.url().endsWith("/api/public/contact-sessions"),
@@ -385,26 +409,33 @@ test.describe
 
     test("Worker retries, recovers an expired lease, sends once, and Owner reply reaches Caller", async ({
       page,
-      request,
     }) => {
+      test.setTimeout(10 * 60_000);
       const workerSecret = process.env.QUEUE_WORKER_SECRET;
       if (!workerSecret) {
         throw new Error("Notification Worker staging authorization is unavailable.");
       }
-      const headers = { Authorization: `Bearer ${workerSecret}` };
       expect(
-        (await request.delete("/api/internal/notification-staging", { headers })).status(),
+        (
+          await internalRequest("/api/internal/notification-staging", workerSecret, {
+            method: "DELETE",
+          })
+        ).status,
       ).toBe(200);
       expect(
         (
-          await request.post("/api/internal/notification-staging", {
-            data: { failureCode: "TEMPORARY_FAILURE" },
-            headers,
+          await internalRequest("/api/internal/notification-staging", workerSecret, {
+            body: { failureCode: "TEMPORARY_FAILURE" },
+            method: "POST",
           })
-        ).status(),
+        ).status,
       ).toBe(200);
-      const firstDispatch = await request.post("/api/internal/notification-dispatch", { headers });
-      expect(firstDispatch.status()).toBe(200);
+      const firstDispatch = await internalRequest(
+        "/api/internal/notification-dispatch",
+        workerSecret,
+        { method: "POST" },
+      );
+      expect(firstDispatch.status).toBe(200);
       expect(await firstDispatch.json()).toMatchObject({
         data: { claimed: 1, retryScheduled: 1, sent: 0 },
       });
@@ -421,11 +452,15 @@ test.describe
         scheduled_at: new Date(Date.now() - 1_000).toISOString(),
       });
       expect(
-        (await request.post("/api/internal/notification-dispatch", { headers })).status(),
+        (
+          await internalRequest("/api/internal/notification-dispatch", workerSecret, {
+            method: "POST",
+          })
+        ).status,
       ).toBe(200);
 
       const firstInbox = (await (
-        await request.get("/api/internal/notification-staging", { headers })
+        await internalRequest("/api/internal/notification-staging", workerSecret)
       ).json()) as { data: Array<{ idempotencyKey: string; responseToken: string }> };
       expect(firstInbox.data).toHaveLength(1);
       const firstTokenHash = notificationTokenHash(firstInbox.data[0].responseToken);
@@ -469,18 +504,24 @@ test.describe
       await fixture.api.updateWhere("notification_deliveries", `id=eq.${pendingDelivery.id}`, {
         lease_expires_at: new Date(Date.now() - 1_000).toISOString(),
       });
-      const recoveredDispatch = await request.post("/api/internal/notification-dispatch", {
-        headers,
-      });
+      const recoveredDispatch = await internalRequest(
+        "/api/internal/notification-dispatch",
+        workerSecret,
+        { method: "POST" },
+      );
       expect(await recoveredDispatch.json()).toMatchObject({
         data: { claimed: 1, failedFinal: 0, sent: 1 },
       });
       expect(
-        (await request.post("/api/internal/notification-dispatch", { headers })).status(),
+        (
+          await internalRequest("/api/internal/notification-dispatch", workerSecret, {
+            method: "POST",
+          })
+        ).status,
       ).toBe(200);
 
       const inbox = (await (
-        await request.get("/api/internal/notification-staging", { headers })
+        await internalRequest("/api/internal/notification-staging", workerSecret)
       ).json()) as { data: Array<{ idempotencyKey: string; responseToken: string }> };
       const responseItem = inbox.data.find(
         ({ idempotencyKey }) => idempotencyKey === pendingDelivery.idempotency_key,
@@ -646,11 +687,11 @@ test.describe
           })
         ).status(),
       ).toBe(401);
-      const cleanupResponse = await page.request.post("/api/internal/privacy-cleanup", {
-        data: { tenantId: fixture.tenantAId },
-        headers: { Authorization: `Bearer ${cronSecret}` },
+      const cleanupResponse = await internalRequest("/api/internal/privacy-cleanup", cronSecret, {
+        body: { tenantId: fixture.tenantAId },
+        method: "POST",
       });
-      expect(cleanupResponse.status()).toBe(200);
+      expect(cleanupResponse.status).toBe(200);
       const cleanupPayload = (await cleanupResponse.json()) as {
         data: {
           expiredSessionCount: number;

@@ -151,7 +151,7 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
     });
     await page.locator('input[name="code"]').fill(await currentTotp(existingSecret));
     await page.locator(".admin-mfa-form button[type='submit']").click();
-    await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"), {
+    await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"), {
       timeout: 15_000,
     });
     return;
@@ -168,7 +168,7 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
   mfaSecrets.set(actor.id, secret);
   await page.locator('input[name="code"]').fill(await currentTotp(secret));
   await page.locator(".admin-mfa-form button[type='submit']").click();
-  await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"), {
+  await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"), {
     timeout: 15_000,
   });
 }

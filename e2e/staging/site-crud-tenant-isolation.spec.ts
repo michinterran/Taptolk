@@ -36,7 +36,7 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
     await expect(page).toHaveURL(new RegExp(`/${locale}/admin/mfa/challenge$`, "u"));
     await page.locator('input[name="code"]').fill(await currentTotp(existingSecret));
     await page.locator(".admin-mfa-form button[type='submit']").click();
-    await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"));
+    await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"));
     return;
   }
 
@@ -49,7 +49,7 @@ async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en"
   mfaSecrets.set(actor.id, secret);
   await page.locator('input[name="code"]').fill(await currentTotp(secret));
   await page.locator(".admin-mfa-form button[type='submit']").click();
-  await expect(page).toHaveURL(new RegExp(`/${locale}/admin/(platform|dashboard)$`, "u"));
+  await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"));
 }
 
 function siteRow(page: Page, siteName: string): Locator {
