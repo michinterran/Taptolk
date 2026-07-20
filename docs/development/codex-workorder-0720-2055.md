@@ -201,7 +201,7 @@ Codex는 **변경하지 말고**, 각각이 Batch 단위인지 여러 Batch를 �
 
 ---
 
-## 3. Task 1 — Server-only Stage Policy + CI 누출 방지 Guard
+## 3. Task 1 — Server-only Stage Policy + CI 누출 방지 Guard (✅ 구현·자동 검증 완료)
 
 ### 3.1 현재 상태 (코드 확인 결과)
 
@@ -243,11 +243,26 @@ environment capability가 **도달 가능하면 CI가 실패**해야 한다
 
 ### 3.4 Task 1 완료 기준
 
-- [ ] 타입 있는 server-only stage 모듈, 브라우저 import 시 빌드 실패
-- [ ] 브라우저 입력으로 stage 변경 불가함을 증명하는 unit test
-- [ ] fail-closed 기본값 테스트
-- [ ] CI guard 스크립트 + `verify` 체인 편입
-- [ ] `corepack pnpm verify` PASS
+- [x] 타입 있는 server-only stage 모듈, 브라우저 import 시 빌드 실패
+- [x] 브라우저 입력으로 stage 변경 불가함을 증명하는 unit test
+- [x] fail-closed 기본값 테스트
+- [x] CI guard 스크립트 + `verify` 체인 편입
+- [x] `corepack pnpm verify` PASS
+
+### 3.5 실행 결과 (2026-07-20)
+
+- 구현 커밋: `9c768b5`.
+- `@taptolk/config/stage/server`가 `TAPTOLK_STAGE`만 읽으며, 미설정·공백·오입력은
+  `SERVICE`로 fail-closed한다.
+- 임시 Client Component에서 stage 모듈 import를 연결한 Next production build가
+  `server-only cannot be imported from a Client Component`로 실패함을 확인한 뒤 검증용
+  파일을 제거했다.
+- stage unit 7개와 전체 unit 54파일·334테스트가 PASS했다.
+- `verify:service-stage`는 `SERVICE` 구성에서 registry와 test-only marker를 대조하며,
+  중앙 stage guard와 `NOT_FOUND` 동작 선언이 없는 표면을 거부한다.
+- 최종 linked pgTAP 23파일·590테스트, authenticated staging E2E 28개,
+  `corepack pnpm verify`가 PASS했다. 별도 10x100 acceptance는 의도적 opt-in skip을
+  유지했다.
 
 ---
 

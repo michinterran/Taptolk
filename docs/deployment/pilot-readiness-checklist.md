@@ -105,6 +105,14 @@
       detected local build/cache artifacts. No oversized upload or environment file was deployed.
       The completed deployment retained the default Cron-deferred manifest and zero active Cron
       definitions.
+- [x] Implemented workorder Task 1 server-only stage policy and Service leak guard. Missing or
+      invalid stage configuration fails closed to `SERVICE`; browser-controlled input is ignored;
+      an actual Client Component import fails the Next build; the `SERVICE` guard is included in
+      `pnpm verify`.
+- [x] Task 1 post-change regression: linked pgTAP 23 files/590 tests, authenticated staging E2E
+      28 PASS with one intentional 10x100 opt-in skip, and `pnpm verify` PASS with lint 329,
+      typecheck 19/19, unit 54 files/334 tests, DB 57/23, secret scan 544, WCJ 100/92, and
+      build 11/11.
 
 ## Manual and external pilot gates
 

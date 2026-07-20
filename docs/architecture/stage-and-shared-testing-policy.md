@@ -1,6 +1,6 @@
 # Development/Test and Service Stage Policy
 
-> Status: Approved direction / implementation pending
+> Status: Approved direction / Task 1 server boundary implemented
 > Current official stage: `DEVELOPMENT_TEST`
 > Date: 2026-07-20
 
@@ -163,3 +163,24 @@ capability becomes reachable under the Service configuration.
 - A Service-configured build exposes no Test Lab or mock-provider capability.
 - No real phone number, message, OTP, QR/activation/response token, cookie, authorization header,
   credential, or secret appears in Git, documentation, logs, screenshots, or chat.
+
+## 10. Task 1 implementation boundary
+
+The first implementation slice is complete:
+
+- `@taptolk/config/stage/server` is the typed server-only entry point.
+- Only `TAPTOLK_STAGE=DEVELOPMENT_TEST` enables test capabilities.
+- Missing, blank, or unrecognized configuration resolves to `SERVICE` with an explicit
+  fail-closed status.
+- The module reads only the server process environment. Browser variables, query parameters,
+  cookies, and headers are not inputs.
+- A Client Component import fails the Next production build through the `server-only` marker.
+- `config/service-stage-test-surfaces.json` is the registry for future test-only routes,
+  providers, fixture commands, and environment capabilities.
+- `pnpm verify:service-stage` runs under `SERVICE`, rejects unregistered test-only markers,
+  requires the central stage guard and `NOT_FOUND` Service behavior, and is part of
+  `pnpm verify`.
+
+No Test Lab route, access grant, persona, or mock capability was added by this slice. Those remain
+subject to the later implementation order and their own RBAC, RLS, audit, cleanup, pgTAP, and
+authenticated staging gates.
