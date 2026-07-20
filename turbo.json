@@ -39,6 +39,7 @@
     "SMS_PROVIDER",
     "SUPABASE_SECRET_KEY",
     "TAPTOLK_QR_ACCEPTANCE_LABEL",
+    "TAPTOLK_STAGE",
     "TOKEN_HMAC_KEY"
   ],
   "tasks": {

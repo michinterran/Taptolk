@@ -36,8 +36,9 @@
     "verify:production-cron": "node scripts/verify-production-cron.mjs",
     "verify:production-cron:active": "node scripts/verify-production-cron.mjs --require-active",
     "verify:production-cron:deferred": "node scripts/verify-production-cron.mjs --require-deferred",
+    "verify:service-stage": "TAPTOLK_STAGE=SERVICE node scripts/verify-service-stage.mjs",
     "verify:secrets": "node scripts/check-no-secrets.mjs",
-    "verify": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm db:check && corepack pnpm verify:secrets && corepack pnpm verify:logo && corepack pnpm verify:production-cron && corepack pnpm validate:wcj && corepack pnpm build",
+    "verify": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm db:check && corepack pnpm verify:secrets && corepack pnpm verify:logo && corepack pnpm verify:service-stage && corepack pnpm verify:production-cron && corepack pnpm validate:wcj && corepack pnpm build",
     "verify:full": "corepack pnpm verify && corepack pnpm e2e:smoke"
   },
   "devDependencies": {
