@@ -1,6 +1,6 @@
 begin;
 
-select plan(63);
+select plan(66);
 
 select enum_has_labels(
   'public',
@@ -535,6 +535,166 @@ select has_trigger(
   'qr_asset_status_logs',
   'trg_qr_asset_status_logs_immutable',
   'QR Asset lifecycle history is append-only'
+);
+
+insert into auth.users (id)
+values
+  ('f0000000-0000-4000-8000-000000000001'),
+  ('f0000000-0000-4000-8000-000000000002');
+
+insert into public.tenants (id, name, slug)
+values (
+  'f0000000-0000-4000-8000-000000000010',
+  'Task 0 quantity contract',
+  'task0-quantity-contract'
+);
+
+insert into public.management_companies (id, tenant_id, name)
+values (
+  'f0000000-0000-4000-8000-000000000020',
+  'f0000000-0000-4000-8000-000000000010',
+  'Task 0 management'
+);
+
+insert into public.sites (id, tenant_id, management_company_id, name)
+values (
+  'f0000000-0000-4000-8000-000000000030',
+  'f0000000-0000-4000-8000-000000000010',
+  'f0000000-0000-4000-8000-000000000020',
+  'Task 0 site'
+);
+
+insert into public.admin_memberships (
+  id,
+  user_id,
+  tenant_id,
+  management_company_id,
+  site_id,
+  role,
+  scope_type,
+  status,
+  accepted_at
+)
+values (
+  'f0000000-0000-4000-8000-000000000040',
+  'f0000000-0000-4000-8000-000000000001',
+  'f0000000-0000-4000-8000-000000000010',
+  'f0000000-0000-4000-8000-000000000020',
+  'f0000000-0000-4000-8000-000000000030',
+  'SITE_ADMIN',
+  'SITE',
+  'ACTIVE',
+  statement_timestamp()
+);
+
+insert into public.sticker_design_versions (
+  id,
+  tenant_id,
+  management_company_id,
+  site_id,
+  template_code,
+  design_config,
+  status,
+  created_by,
+  approved_by,
+  approved_at
+)
+values (
+  'f0000000-0000-4000-8000-000000000050',
+  'f0000000-0000-4000-8000-000000000010',
+  'f0000000-0000-4000-8000-000000000020',
+  'f0000000-0000-4000-8000-000000000030',
+  'ROUND_WHITE_MINIMAL_V1',
+  '{
+    "schemaVersion": "1",
+    "zones": {
+      "customerLogo": "OPTIONAL_TOP",
+      "qr": "CENTER_WHITE_PLATE",
+      "taptolkLogo": "IMMUTABLE_BOTTOM"
+    },
+    "qrOptions": {
+      "errorCorrectionLevel": "H",
+      "marginModules": 4
+    }
+  }'::jsonb,
+  'APPROVED',
+  'f0000000-0000-4000-8000-000000000002',
+  'f0000000-0000-4000-8000-000000000001',
+  statement_timestamp()
+);
+
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"f0000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal2"}',
+  true
+);
+
+select throws_ok(
+  $$
+    select public.request_qr_batch(
+      'f0000000-0000-4000-8000-000000000030',
+      1,
+      'f0000000-0000-4000-8000-000000000050',
+      1,
+      101,
+      'Task 0 upper boundary rejection',
+      'Task 0 quantity contract verification',
+      'f0000000-0000-4000-8000-000000000061',
+      'f0000000-0000-4000-8000-000000000062'
+    )
+  $$,
+  '22023',
+  'INVALID_QUANTITY',
+  'request_qr_batch rejects 101 items with INVALID_QUANTITY'
+);
+
+select lives_ok(
+  $$
+    select public.request_qr_batch(
+      'f0000000-0000-4000-8000-000000000030',
+      1,
+      'f0000000-0000-4000-8000-000000000050',
+      1,
+      100,
+      'Task 0 upper boundary acceptance',
+      'Task 0 quantity contract verification',
+      'f0000000-0000-4000-8000-000000000063',
+      'f0000000-0000-4000-8000-000000000064'
+    )
+  $$,
+  'request_qr_batch accepts the 100-item upper boundary'
+);
+
+select throws_ok(
+  $$
+    insert into public.qr_batches (
+      id,
+      tenant_id,
+      management_company_id,
+      site_id,
+      batch_code,
+      sticker_design_version_id,
+      requested_quantity,
+      purpose,
+      requested_by,
+      idempotency_key
+    )
+    values (
+      'f0000000-0000-4000-8000-000000000070',
+      'f0000000-0000-4000-8000-000000000010',
+      'f0000000-0000-4000-8000-000000000020',
+      'f0000000-0000-4000-8000-000000000030',
+      'TASK0_DIRECT_101',
+      'f0000000-0000-4000-8000-000000000050',
+      101,
+      'Task 0 direct insert rejection',
+      'f0000000-0000-4000-8000-000000000001',
+      'f0000000-0000-4000-8000-000000000071'
+    )
+  $$,
+  '23514',
+  null,
+  'qr_batches CHECK rejects a direct 101-item insert'
 );
 
 select * from finish();

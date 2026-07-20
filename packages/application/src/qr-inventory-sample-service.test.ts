@@ -176,13 +176,45 @@ describe("QrInventorySampleService", () => {
         expectedSiteVersion: 1,
         idempotencyKey: IDS.batch,
         purpose: "Resident distribution",
-        quantity: 10_001,
+        quantity: 101,
         reason: "Initial sample review",
         siteStatus: "ACTIVE",
         stickerDesignVersionId: IDS.design,
         ...scope,
       }),
     ).rejects.toEqual(new QrInventorySampleError("INVALID_QUANTITY"));
+  });
+
+  it("accepts the 100-item upper Batch boundary", async () => {
+    const repo = repository();
+    const service = new QrInventorySampleService(repo);
+
+    await expect(
+      service.requestBatch({
+        actor: actor("SITE_ADMIN"),
+        auditRequestId: IDS.request,
+        designStatus: "APPROVED",
+        expectedDesignVersion: 1,
+        expectedSiteVersion: 1,
+        idempotencyKey: IDS.batch,
+        purpose: "Resident distribution",
+        quantity: 100,
+        reason: "Upper boundary review",
+        siteStatus: "ACTIVE",
+        stickerDesignVersionId: IDS.design,
+        ...scope,
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        resourceId: IDS.design,
+        version: 1,
+      }),
+    );
+    expect(repo.requestBatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        quantity: 100,
+      }),
+    );
   });
 
   it("normalizes passing sample artifact metadata", async () => {

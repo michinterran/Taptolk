@@ -63,7 +63,7 @@ export const QR_ASSET_STATUSES = [
 export type QrAssetStatus = (typeof QR_ASSET_STATUSES)[number];
 
 export const QR_BATCH_REQUEST_QUANTITY_MIN = 1;
-export const QR_BATCH_REQUEST_QUANTITY_MAX = 10_000;
+export const QR_BATCH_REQUEST_QUANTITY_MAX = 100;
 export const QR_SAMPLE_BYTE_SIZE_MAX = 20_000_000;
 export const QR_SAMPLE_MIME_TYPES = ["image/png", "image/svg+xml", "application/pdf"] as const;
 export type QrSampleMimeType = (typeof QR_SAMPLE_MIME_TYPES)[number];

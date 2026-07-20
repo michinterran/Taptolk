@@ -804,7 +804,7 @@ export const qrBatches = pgTable(
     unique("uq_qr_batches_batch_code").on(table.batchCode),
     index("idx_qr_batches_tenant_status_created").on(table.tenantId, table.status, table.createdAt),
     index("idx_qr_batches_site_status_created").on(table.siteId, table.status, table.createdAt),
-    check("chk_qr_batches_requested_quantity", sql`${table.requestedQuantity} between 1 and 10000`),
+    check("chk_qr_batches_requested_quantity", sql`${table.requestedQuantity} between 1 and 100`),
     check("chk_qr_batches_purpose", sql`length(trim(${table.purpose})) between 3 and 200`),
   ],
 );
