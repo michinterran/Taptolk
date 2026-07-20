@@ -152,7 +152,7 @@ test("admin sign-in foundation is bilingual and meets the accessibility baseline
     "href",
     "/ko/admin/signup",
   );
-  await expect(page.getByRole("status")).toContainText("인증 환경 연결이 필요합니다.");
+  await expect(page.getByRole("status")).toContainText("로그인 준비 중입니다.");
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations).toEqual([]);

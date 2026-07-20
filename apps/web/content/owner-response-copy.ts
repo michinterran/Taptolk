@@ -34,7 +34,7 @@ export const OWNER_RESPONSE_COPY: Record<AppLocale, OwnerResponseCopy> = {
       MOVE_IN_5_MINUTES: "5분 안에 이동할게요",
       MOVING_NOW: "지금 이동할게요",
     },
-    security: "전화번호와 호출자 신원은 서로에게 공개되지 않습니다.",
+    security: "전화번호와 방문자 신원은 서로에게 공개되지 않습니다.",
     submit: "답장 보내기",
     success: "답장이 전달되었습니다.",
     vehicle: "등록 차량 끝자리",

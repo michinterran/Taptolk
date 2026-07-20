@@ -74,7 +74,7 @@ const ko: PublicContactCopy = {
   },
   reasonTitle: "어떤 도움이 필요한가요?",
   retry: "다시 시도",
-  security: "요청 토큰과 익명 식별값은 브라우저 보안 쿠키와 서버 해시로만 처리합니다.",
+  security: "연락에 필요한 정보는 안전하게 보호되며, 전화번호는 서로에게 공개되지 않습니다.",
   send: "요청 접수하기",
   siteLabel: "관리 장소",
   templateMessages: {
@@ -134,7 +134,7 @@ const en: PublicContactCopy = {
   },
   reasonTitle: "What does the vehicle owner need to know?",
   retry: "Try again",
-  security: "Request tokens and anonymous identity are handled only as secure cookies and hashes.",
+  security: "Your contact details stay protected, and phone numbers are never shared between you.",
   send: "Submit request",
   siteLabel: "Managed location",
   templateMessages: {

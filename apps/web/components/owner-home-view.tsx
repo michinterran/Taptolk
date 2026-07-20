@@ -55,7 +55,14 @@ export function OwnerHomeView({ copy, locale }: { copy: OwnerActivationCopy; loc
       {/* biome-ignore lint/performance/noImgElement: the immutable logo must be served byte-for-byte */}
       <img className="owner-activation-logo" src="/brand/taptolk-logo.png" alt="Taptolk" />
       <SemanticHeading className="owner-activation-title" lines={[copy.vehiclesTitle]} />
-      {unavailable ? <p className="owner-activation-error">{copy.errorUnavailable}</p> : null}
+      {unavailable ? (
+        <>
+          <p className="owner-activation-error">{copy.errorUnavailable}</p>
+          <a className="owner-activation-primary owner-activation-home-link" href={`/${locale}`}>
+            {copy.homeLink}
+          </a>
+        </>
+      ) : null}
       {vehicles === null && !unavailable ? (
         <p className="owner-activation-notice">{copy.loading}</p>
       ) : null}

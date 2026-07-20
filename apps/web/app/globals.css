@@ -705,7 +705,7 @@ h3,
   white-space: nowrap;
 }
 
-.public-site-nav a:last-child {
+.public-site-nav a:first-child {
   color: var(--tt-color-brand-strong);
 }
 
@@ -718,8 +718,8 @@ h3,
   display: grid;
   gap: clamp(3rem, 8vw, 8rem);
   grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
-  min-height: min(50rem, calc(100vh - 8rem));
-  padding-block: clamp(5rem, 11vw, 10rem);
+  min-height: min(46rem, calc(100vh - 9rem));
+  padding-block: clamp(3rem, 7vw, 6.5rem) clamp(4.5rem, 9vw, 8.5rem);
 }
 
 .landing-hero__copy {
@@ -819,35 +819,15 @@ h3,
   width: min(26vw, 22rem);
 }
 
-.landing-signal-card__route {
-  align-items: center;
-  display: flex;
-  gap: 0;
-  left: 15%;
+.landing-signal-card__scene {
+  --landing-scene-line: color-mix(in srgb, var(--tt-color-surface) 80%, transparent);
+  --landing-scene-soft: color-mix(in srgb, var(--tt-color-surface) 36%, transparent);
+  display: block;
+  height: auto;
+  inset-inline: 7%;
   position: absolute;
-  right: 15%;
-  top: 38%;
-}
-
-.landing-signal-card__route::before,
-.landing-signal-card__route::after {
-  border-top: 2px dashed color-mix(in srgb, var(--tt-color-surface) 48%, transparent);
-  content: "";
-  flex: 1;
-}
-
-.landing-signal-card__route span {
-  background: var(--tt-color-logo-orange);
-  border: 0.38rem solid var(--tt-color-text);
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tt-color-surface) 55%, transparent);
-  height: 1.25rem;
-  width: 1.25rem;
-}
-
-.landing-signal-card__route span:nth-child(2) {
-  background: var(--tt-color-brand);
-  margin-inline: auto;
+  top: 9%;
+  width: 86%;
 }
 
 .landing-signal-card > p {
@@ -2300,22 +2280,30 @@ h3,
 
 @media (max-width: 28rem) {
   .public-site-header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: var(--tt-space-5);
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--tt-space-4);
   }
 
   .public-site-header__controls {
-    align-items: flex-start;
-    display: grid;
-    gap: var(--tt-space-4);
-    width: 100%;
+    display: contents;
+  }
+
+  .locale-switcher {
+    margin-left: auto;
   }
 
   .public-site-nav {
+    flex-basis: 100%;
     flex-wrap: wrap;
     gap: var(--tt-space-3) var(--tt-space-4);
-    order: 2;
+    order: 3;
+  }
+
+  .landing-hero {
+    min-height: auto;
+    padding-block: 2.25rem 3.5rem;
   }
 
   .landing-title,

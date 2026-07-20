@@ -11,6 +11,7 @@ export interface OwnerActivationCopy {
   errorInvalid: string;
   errorLimited: string;
   errorUnavailable: string;
+  homeLink: string;
   inspect: string;
   line1: string;
   line2: string;
@@ -41,12 +42,14 @@ const ko: OwnerActivationCopy = {
   activationCodeHint: "스티커와 함께 전달받은 코드를 입력해 주세요.",
   back: "이전 단계",
   consent: "이용약관과 개인정보 처리방침에 동의합니다.",
-  consentDescription: "차량 연결과 익명 연락 제공에 필요한 범위에서만 정보를 사용합니다.",
+  consentDescription:
+    "차량 연결과 전화번호를 공개하지 않는 연락 제공에 필요한 범위에서만 정보를 사용합니다.",
   description: "차량과 휴대전화 확인을 마치면 이 QR로 안전하게 연락받을 수 있습니다.",
   errorConflict: "이미 다른 연결이 완료되었습니다. 관리사무소에 확인해 주세요.",
   errorInvalid: "입력값 또는 활성화 상태를 다시 확인해 주세요.",
   errorLimited: "요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.",
   errorUnavailable: "안전한 연결을 준비할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  homeLink: "Taptolk 홈으로",
   inspect: "QR 상태 확인",
   line1: "차량 QR을",
   line2: "안전하게 활성화합니다.",
@@ -79,12 +82,13 @@ const en: OwnerActivationCopy = {
   back: "Previous step",
   consent: "I agree to the Terms and Privacy Policy.",
   consentDescription:
-    "Your information is used only to link this vehicle and provide anonymous contact.",
+    "Your information is used only to link this vehicle and relay contact without sharing phone numbers.",
   description: "Verify the vehicle and phone to receive essential messages through this QR code.",
   errorConflict: "Another activation has already completed. Contact the site office.",
   errorInvalid: "Check the activation status and the information you entered.",
   errorLimited: "The request limit was reached. Please try again later.",
   errorUnavailable: "A secure connection is unavailable. Please try again shortly.",
+  homeLink: "Go to Taptolk home",
   inspect: "Check QR status",
   line1: "Activate your vehicle QR",
   line2: "with a secure verification.",

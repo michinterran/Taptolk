@@ -1,5 +1,6 @@
 import { SemanticHeading } from "@taptolk/ui";
 import { notFound } from "next/navigation";
+import { LandingHeroVisual } from "../../components/landing-hero-visual";
 import { PublicSiteHeader } from "../../components/public-site-header";
 import { getMessages } from "../../content/messages";
 import { isAppLocale } from "../../i18n/locale";
@@ -74,11 +75,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         </div>
 
         <aside aria-label={copy["landing.signal.label"]} className="landing-signal-card">
-          <div aria-hidden="true" className="landing-signal-card__route">
-            <span />
-            <span />
-            <span />
-          </div>
+          <LandingHeroVisual />
           <p>{copy["landing.signal.kicker"]}</p>
           <strong>{copy["landing.signal.title"]}</strong>
           <span>{copy["landing.signal.description"]}</span>
