@@ -1,7 +1,7 @@
 # Development/Test and Service Stage Policy
 
-> Status: Approved direction / implementation pending  
-> Current official stage: `DEVELOPMENT_TEST`  
+> Status: Approved direction / implementation pending
+> Current official stage: `DEVELOPMENT_TEST`
 > Date: 2026-07-20
 
 ## 1. Purpose
