@@ -42,13 +42,13 @@ None. A contrast issue discovered in the first focused Axe pass was fixed before
 | --- | --- |
 | PDCA iterations | 1 |
 | Design match rate | 100% |
-| Full unit suite | 53 files, 326 tests PASS |
-| WCJ | 100; C100/J100/W100; 91 files |
+| Full unit suite | 53 files, 327 tests PASS |
+| WCJ | 100; C100/J100/W100; 92 files |
 | Clean local Supabase reset | PASS twice |
-| Local pgTAP | 23 files, 587 tests PASS |
-| Linked pgTAP | All 23 files PASS |
-| DB static contract | 56 migrations, 23 database tests PASS |
-| Secret scan | 530 text files PASS |
+| Local pgTAP | 23 files, 590 tests PASS |
+| Linked pgTAP | 23 files, 590 tests PASS |
+| DB static contract | 57 migrations, 23 database tests PASS |
+| Secret scan | 539 text files PASS |
 | Production build | PASS |
 
 ## 5. Validation
@@ -75,6 +75,16 @@ None. A contrast issue discovered in the first focused Axe pass was fixed before
 - Production browser: no console errors and no horizontal overflow at 1440 or 320 CSS pixels.
 - Post-MFA customer and platform administration redirects accept the role-selection landing at
   `/{locale}/admin` as well as their authorized destination routes.
+- Refined KO/EN product copy and the landing hero without changing the QR/token-led journey,
+  administrator authorization boundary, or the EN `caller` terminology.
+- Integrated authenticated staging revalidation: 28/28 default tests PASS; the separately
+  approved 10x100 acceptance remains an intentional opt-in skip.
+- GitHub Actions `29748841968` and `29749378649`: PASS including Linux Chromium browser smoke.
+- Production deployment `dpl_DTvj4RjQ68MnVYAXQKR6KexiEEM7`: READY and aliased to the stable
+  URL. KO/EN landing, customer login, platform login, and health return 200; cleanup returns 503
+  fail-closed.
+- The deployed source uses the explicit `.vercelignore` boundary and the default Cron-deferred
+  manifest. Active Production Cron definitions remain zero.
 
 ## 6. Release Boundary
 

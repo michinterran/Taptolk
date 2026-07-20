@@ -96,12 +96,10 @@ The three analysis-only items in section 2.6 were inspected and not changed.
   - WCJ 100 / C100 / J100 / W100 over 91 files;
   - Production build PASS.
 - Authenticated Staging:
-  - default suite reached 25 PASS, then one Management Admin MFA navigation timed out; one test
-    was skipped and two did not run;
-  - the affected Site CRUD/tenant-isolation suite was immediately rerun independently and passed
-    4/4, including the failed Management Admin journey;
-  - this transient TOTP/MFA timing failure is recorded and is not represented as a one-run full
-    suite PASS.
+  - the later integrated rerun completed all 28 default tests in one run;
+  - the separately approved 10x100 acceptance remained the single intentional opt-in skip;
+  - owner activation, public contact, QR inventory, Site CRUD/tenant isolation, and Phase 9
+    hardening all passed.
 - Explicit `corepack pnpm e2e:staging:qr-generation-acceptance`:
   - 10 Batches;
   - 100 items per Batch;

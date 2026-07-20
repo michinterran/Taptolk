@@ -91,6 +91,20 @@
 - [x] Re-ran the explicit 10x100 staging acceptance after Task 0: 10 Batches, quantity 100 each,
       total 1,000, duplicate 0, decode 1,000/1,000, export/checksum 40/40, poison active 0, and
       fixture/Queue/Auth/Storage residue 0.
+- [x] Revalidated the integrated Task 0 and public-copy tree: clean local reset twice; local and
+      linked pgTAP 23 files/590 tests; authenticated staging E2E 28 PASS with only the explicit
+      10x100 opt-in skip; local `pnpm verify` PASS.
+- [x] GitHub Actions `29748841968` passed the public-copy/design commit and `29749378649` passed
+      the bounded Vercel source commit, including source/DB/WCJ/build and Linux Chromium smoke.
+      The latest CI gate includes 53 unit files/327 tests, 57 migrations/23 database tests,
+      secret scan 539 files, WCJ 100 over 92 files, and build 11/11.
+- [x] Production deployment `dpl_DTvj4RjQ68MnVYAXQKR6KexiEEM7` is READY and aliased to
+      `https://taptolk.vercel.app`. KO/EN landing, customer login, platform login, and health
+      return 200; unauthenticated cleanup returns 503 fail-closed.
+- [x] Added an explicit `.vercelignore` deployment boundary after a pre-deployment size check
+      detected local build/cache artifacts. No oversized upload or environment file was deployed.
+      The completed deployment retained the default Cron-deferred manifest and zero active Cron
+      definitions.
 
 ## Manual and external pilot gates
 
