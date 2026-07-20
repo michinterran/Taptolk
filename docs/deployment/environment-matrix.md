@@ -1,5 +1,17 @@
 # Environment Matrix
 
+## Operating stage definition
+
+The product has two explicit operating stages:
+
+- `DEVELOPMENT_TEST`: Local plus shared staging. Synthetic data, approved shared testers, mock or
+  sandbox providers, manual internal cleanup testing, and active Production Cron `0`.
+- `SERVICE`: Separate Production. Approved live data, least-privilege business roles, approved
+  providers, monitoring/rollback ownership, and separately authorized scheduling.
+
+The complete shared-tester and role-persona contract is defined in
+`docs/architecture/stage-and-shared-testing-policy.md`. A shared URL never grants a role.
+
 | 항목 | Local | Staging | Production |
 |---|---|---|---|
 | Web | localhost | Vercel Preview | Vercel Production |
@@ -10,7 +22,7 @@
 | Privacy cleanup Cron | manual/internal test | authenticated manual acceptance | Vercel hourly GET, operator approval pending |
 | Sentry | console 또는 disabled | staging environment | production environment |
 | 데이터 | synthetic only | test data only | approved live data |
-| 배포 승인 | 개발자 로컬 | 사용자 승인 필요 | 사용자 승인 + release gate |
+| 배포 승인 | 개발자 로컬 | 승인된 공유 테스트 정책 | 사용자 승인 + release gate |
 
 Vercel Function region은 Supabase region이 결정된 뒤 같은 지역 또는 가장 가까운
 지역으로 설정한다.
