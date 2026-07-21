@@ -5,10 +5,13 @@ export const MANAGEMENT_COMPANY_PAGE_SIZE = 20;
 export type OrganizationStatus = "ACTIVE" | "SUSPENDED" | "CLOSED";
 
 export interface ManagementCompanyCatalogItem {
+  activeQrCount: number;
   businessNumber: string | null;
+  contractVehicleLimit: number;
   createdAt: string;
   id: string;
   name: string;
+  siteCount: number;
   status: OrganizationStatus;
   tenantId: string;
   tenantName: string;
@@ -32,6 +35,7 @@ export interface ManagementCompanyCatalogRepository {
   list(input: {
     limit: number;
     offset: number;
+    search?: string;
   }): Promise<{ items: readonly ManagementCompanyCatalogItem[]; total: number }>;
   listActiveTenants(): Promise<readonly ManagementCompanyTenantOption[]>;
 }
@@ -42,6 +46,7 @@ export class ManagementCompanyCatalogService {
   async list(input: {
     actor: AdminAuthorizationContext;
     page?: number;
+    search?: string;
   }): Promise<ManagementCompanyCatalogPage> {
     if (input.actor.scope.type !== "PLATFORM") {
       throw new AdminAuthorizationError("OUT_OF_SCOPE");
@@ -56,6 +61,7 @@ export class ManagementCompanyCatalogService {
       this.repository.list({
         limit: MANAGEMENT_COMPANY_PAGE_SIZE,
         offset: (page - 1) * MANAGEMENT_COMPANY_PAGE_SIZE,
+        ...(input.search?.trim() ? { search: input.search.trim().slice(0, 100) } : {}),
       }),
       this.repository.listActiveTenants(),
     ]);

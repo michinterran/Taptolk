@@ -824,7 +824,7 @@ test.describe
       }
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
       await expect(page.getByText("현장 확인이 필요한 점검 항목이 있습니다")).toBeVisible();
-      await expect(page.getByText("허용 사이트")).toBeVisible();
+      await expect(page.getByText("현재 데이터 범위", { exact: true })).toBeVisible();
       const operationsBody = await (await page.request.get("/ko/admin/operations")).text();
       expect(operationsBody).not.toMatch(
         /destination_hash|anonymous_hash|network_hash|session_token|response_token/iu,

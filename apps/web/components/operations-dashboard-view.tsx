@@ -1,173 +1,252 @@
+import {
+  ArrowRight,
+  BellRinging,
+  ChartLineUp,
+  CheckCircle,
+  MapPin,
+  QrCode,
+  WarningCircle,
+} from "@phosphor-icons/react/dist/ssr";
 import type { OperationsDashboardModel } from "@taptolk/application";
 import { SemanticHeading } from "@taptolk/ui";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { OperationsCopy } from "../content/operations-copy";
 import type { AppLocale } from "../i18n/config";
 
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="operations-metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
-  );
+function scopeQuery(companyId?: string, siteId?: string, days?: number): string {
+  const query = new URLSearchParams();
+  if (companyId) query.set("company", companyId);
+  if (siteId) query.set("site", siteId);
+  if (days) query.set("days", String(days));
+  const value = query.toString();
+  return value ? `?${value}` : "";
 }
 
-function percent(part: number, total: number): number {
-  if (total <= 0) {
-    return 0;
-  }
-  return Math.max(0, Math.min(100, Math.round((part / total) * 100)));
-}
-
-function FlowBar({
+function MetricCard({
+  href,
+  icon,
   label,
   value,
-  variant = "violet",
 }: {
+  href: string;
+  icon: ReactNode;
   label: string;
-  value: number;
-  variant?: "green" | "orange" | "red" | "violet";
+  value: string;
 }) {
   return (
-    <div className={`operations-flow-bar operations-flow-bar--${variant}`}>
+    <a className="operations-metric operations-metric--link" href={href}>
+      <span className="operations-metric__icon">{icon}</span>
       <span>{label}</span>
-      <i aria-hidden="true" style={{ "--operations-flow-value": `${value}%` } as CSSProperties} />
-      <strong>{value}%</strong>
-    </div>
+      <strong>{value}</strong>
+      <ArrowRight aria-hidden="true" size={16} />
+    </a>
   );
 }
 
 export function OperationsDashboardView({
-  backHref,
+  companyId,
   copy,
   locale,
   model,
+  siteId,
 }: {
-  backHref: string;
+  companyId?: string;
   copy: OperationsCopy;
   locale: AppLocale;
   model: OperationsDashboardModel;
+  siteId?: string;
 }) {
   const number = new Intl.NumberFormat(locale);
-  const decimal = new Intl.NumberFormat(locale, {
-    maximumFractionDigits: 4,
-    minimumFractionDigits: 0,
-  });
+  const decimal = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+  const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
   const responseSeconds =
     model.medianOwnerResponseMs === null
       ? "-"
       : `${decimal.format(model.medianOwnerResponseMs / 1_000)}s`;
-  const deliveryBase = Math.max(model.notificationSentCount, 1);
-  const contactBase = Math.max(model.contactCount, 1);
-  const groups = [
-    {
-      metrics: [
-        [copy.contactCount, number.format(model.contactCount)],
-        [copy.unresolved, number.format(model.unresolvedCount)],
-        [copy.escalated, number.format(model.escalatedCount)],
-        [copy.medianResponse, responseSeconds],
-      ],
-      title: copy.todayGroup,
-    },
-    {
-      metrics: [
-        [copy.sent, number.format(model.notificationSentCount)],
-        [copy.retrying, number.format(model.notificationRetryCount)],
-        [copy.failed, number.format(model.notificationFailedCount)],
-        [copy.cost, decimal.format(model.notificationRecordedCost)],
-      ],
-      title: copy.deliveryGroup,
-    },
-    {
-      metrics: [
-        [copy.openReports, number.format(model.openReportCount)],
-        [copy.activeBlocks, number.format(model.activeBlockCount)],
-      ],
-      title: copy.safetyGroup,
-    },
-    {
-      metrics: [
-        [copy.siteCount, number.format(model.siteCount)],
-        [copy.activeQr, number.format(model.activeQrCount)],
-        [copy.batches, number.format(model.completedBatchCount)],
-      ],
-      title: copy.inventoryGroup,
-    },
-  ] as const;
+  const reportHref = `/${locale}/admin/reports${scopeQuery(companyId, siteId, model.windowDays)}`;
+  const maximum = Math.max(
+    1,
+    ...model.dailySeries.flatMap((point) => [
+      point.contactCount,
+      point.notificationSentCount,
+      point.unresolvedCount,
+    ]),
+  );
+  const scopeLabel = model.scopeSiteName ?? model.scopeManagementCompanyName ?? copy.scopeAll;
 
   return (
-    <div className="operations-shell">
-      <a className="operations-back" href={backHref}>
-        {copy.back}
-      </a>
-      <header className="operations-hero">
-        <p className="eyebrow">{copy.eyebrow}</p>
-        <SemanticHeading className="operations-title" lines={[copy.line1, copy.line2]} />
-        <p>{copy.description}</p>
-      </header>
-      <section className="operations-flow-panel" aria-label={copy.todayGroup}>
-        <article>
-          <h2>{copy.todayGroup}</h2>
-          <FlowBar label={copy.contactCount} value={percent(model.contactCount, contactBase)} />
-          <FlowBar
-            label={copy.unresolved}
-            value={percent(model.unresolvedCount, contactBase)}
-            variant="orange"
-          />
-          <FlowBar
-            label={copy.escalated}
-            value={percent(model.escalatedCount, contactBase)}
-            variant="red"
-          />
-        </article>
-        <article>
-          <h2>{copy.deliveryGroup}</h2>
-          <FlowBar
-            label={copy.sent}
-            value={100 - percent(model.notificationFailedCount, deliveryBase)}
-            variant="green"
-          />
-          <FlowBar
-            label={copy.retrying}
-            value={percent(model.notificationRetryCount, deliveryBase)}
-            variant="orange"
-          />
-          <FlowBar
-            label={copy.failed}
-            value={percent(model.notificationFailedCount, deliveryBase)}
-            variant="red"
-          />
-        </article>
-      </section>
-      {groups.map((group) => (
-        <section className="operations-group" key={group.title}>
-          <h2>{group.title}</h2>
-          <div className="operations-grid">
-            {group.metrics.map(([label, value]) => (
-              <MetricCard key={label} label={label} value={value} />
-            ))}
+    <div className="operations-shell operations-command-center">
+      <header className="admin-compact-heading">
+        <div>
+          <p className="eyebrow">{copy.eyebrow}</p>
+          <SemanticHeading className="admin-compact-title" lines={[copy.line1, copy.line2]} />
+          <p>{copy.description}</p>
+        </div>
+        <dl className="operations-scope-summary">
+          <div>
+            <dt>{copy.scope}</dt>
+            <dd>{scopeLabel}</dd>
           </div>
-        </section>
-      ))}
-      {model.notificationMissingCostCount > 0 ? (
-        <p className="operations-warning" role="status">
-          {number.format(model.notificationMissingCostCount)} {copy.missingCost}
-        </p>
-      ) : null}
+          <div>
+            <dt>{copy.freshAt}</dt>
+            <dd>
+              <time dateTime={model.freshAt}>
+                {new Intl.DateTimeFormat(locale, {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                }).format(new Date(model.freshAt))}
+              </time>
+            </dd>
+          </div>
+        </dl>
+      </header>
+
+      <nav className="operations-period-nav" aria-label={copy.period}>
+        <span>{copy.period}</span>
+        {[7, 14, 30].map((days) => (
+          <a
+            aria-current={model.windowDays === days ? "page" : undefined}
+            href={`/${locale}/admin/operations${scopeQuery(companyId, siteId, days)}`}
+            key={days}
+          >
+            {days}
+            {copy.days}
+          </a>
+        ))}
+      </nav>
+
+      <section className="operations-kpi-strip" aria-label={copy.todayGroup}>
+        <MetricCard
+          href={`${reportHref}#response-quality`}
+          icon={<ChartLineUp aria-hidden="true" size={20} />}
+          label={copy.contactCount}
+          value={number.format(model.contactCount)}
+        />
+        <MetricCard
+          href={`${reportHref}#response-quality`}
+          icon={<WarningCircle aria-hidden="true" size={20} />}
+          label={copy.unresolved}
+          value={number.format(model.unresolvedCount)}
+        />
+        <MetricCard
+          href={`${reportHref}#delivery-quality`}
+          icon={<BellRinging aria-hidden="true" size={20} />}
+          label={copy.sent}
+          value={number.format(model.notificationSentCount)}
+        />
+        <MetricCard
+          href={`${reportHref}#delivery-quality`}
+          icon={<WarningCircle aria-hidden="true" size={20} />}
+          label={copy.failed}
+          value={number.format(model.notificationFailedCount)}
+        />
+        <MetricCard
+          href={`${reportHref}#safety`}
+          icon={<CheckCircle aria-hidden="true" size={20} />}
+          label={copy.openReports}
+          value={number.format(model.openReportCount)}
+        />
+        <MetricCard
+          href={`${reportHref}#qr-readiness`}
+          icon={<QrCode aria-hidden="true" size={20} />}
+          label={copy.activeQr}
+          value={number.format(model.activeQrCount)}
+        />
+      </section>
+
+      <section className="operations-trend-panel" aria-labelledby="operations-trend-title">
+        <header>
+          <div>
+            <h2 id="operations-trend-title">{copy.trend}</h2>
+            <p>{copy.trendDescription}</p>
+          </div>
+          <div className="operations-chart-legend">
+            <span className="operations-chart-legend--contact">{copy.contactCount}</span>
+            <span className="operations-chart-legend--sent">{copy.sent}</span>
+            <span className="operations-chart-legend--unresolved">{copy.unresolved}</span>
+          </div>
+        </header>
+        <div className="operations-column-chart" role="img" aria-label={copy.trendDescription}>
+          {model.dailySeries.map((point) => (
+            <div className="operations-column-chart__day" key={point.date}>
+              <div className="operations-column-chart__bars">
+                <i
+                  className="operations-column-chart__bar operations-column-chart__bar--contact"
+                  style={
+                    { "--chart-value": `${(point.contactCount / maximum) * 100}%` } as CSSProperties
+                  }
+                  title={`${copy.contactCount}: ${number.format(point.contactCount)}`}
+                />
+                <i
+                  className="operations-column-chart__bar operations-column-chart__bar--sent"
+                  style={
+                    {
+                      "--chart-value": `${(point.notificationSentCount / maximum) * 100}%`,
+                    } as CSSProperties
+                  }
+                  title={`${copy.sent}: ${number.format(point.notificationSentCount)}`}
+                />
+                <i
+                  className="operations-column-chart__bar operations-column-chart__bar--unresolved"
+                  style={
+                    {
+                      "--chart-value": `${(point.unresolvedCount / maximum) * 100}%`,
+                    } as CSSProperties
+                  }
+                  title={`${copy.unresolved}: ${number.format(point.unresolvedCount)}`}
+                />
+              </div>
+              <time dateTime={point.date}>{date.format(new Date(`${point.date}T00:00:00Z`))}</time>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="operations-site-panel" aria-labelledby="site-comparison-title">
+        <header>
+          <div>
+            <h2 id="site-comparison-title">{copy.siteComparison}</h2>
+            <p>{copy.siteComparisonDescription}</p>
+          </div>
+          <strong>{number.format(model.siteCount)}</strong>
+        </header>
+        <div className="admin-command-table-wrap">
+          <table className="admin-command-table operations-site-table">
+            <thead>
+              <tr>
+                <th scope="col">{copy.siteCount}</th>
+                <th scope="col">{copy.contactCount}</th>
+                <th scope="col">{copy.unresolved}</th>
+                <th scope="col">{copy.activeQr}</th>
+                <th scope="col">{copy.detail}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {model.sitePerformance.map((site) => (
+                <tr key={site.siteId}>
+                  <th scope="row">
+                    <MapPin aria-hidden="true" size={16} /> {site.siteName}
+                  </th>
+                  <td>{number.format(site.contactCount)}</td>
+                  <td>{number.format(site.unresolvedCount)}</td>
+                  <td>{number.format(site.activeQrCount)}</td>
+                  <td>
+                    <a href={`/${locale}/admin/sites/${site.siteId}`}>{copy.detail}</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <aside className="operations-manual">
         <h2>{copy.manualGates}</h2>
         <p>{copy.manualGatesDescription}</p>
+        <span>
+          {copy.medianResponse}: {responseSeconds}
+        </span>
       </aside>
-      <p className="operations-freshness">
-        {copy.freshAt}:{" "}
-        <time dateTime={model.freshAt}>
-          {new Intl.DateTimeFormat(locale, {
-            dateStyle: "medium",
-            timeStyle: "medium",
-          }).format(new Date(model.freshAt))}
-        </time>
-      </p>
     </div>
   );
 }

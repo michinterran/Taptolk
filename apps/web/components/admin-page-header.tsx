@@ -1,4 +1,18 @@
+import {
+  BuildingsIcon,
+  ChartBarIcon,
+  ChartLineUpIcon,
+  CirclesFourIcon,
+  HouseIcon,
+  IdentificationCardIcon,
+  MapPinAreaIcon,
+  QrCodeIcon,
+  ShieldCheckIcon,
+  SignOutIcon,
+  UserCircleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { getAdminLandingArea } from "@taptolk/auth";
+import type { ReactNode } from "react";
 import { signOutAdmin } from "../auth/actions";
 import { loadAdminContext } from "../auth/admin-context";
 import { getAdminRoleLabel, getAdminScopeLabel } from "../content/admin-copy";
@@ -12,6 +26,12 @@ interface AdminPageHeaderProps {
   localeTitle: string;
   logoAlt: string;
   pathname: string;
+}
+
+interface AdminNavigationItem {
+  href: string;
+  icon: ReactNode;
+  label: string;
 }
 
 export async function AdminPageHeader({
@@ -28,41 +48,92 @@ export async function AdminPageHeader({
     const { membership } = context.decision;
     const isPlatform = getAdminLandingArea(membership.role) === "platform";
     const workspaceHref = `/${locale}/admin/${isPlatform ? "platform" : "dashboard"}`;
-    const navigation = isPlatform
+    const navigation: readonly AdminNavigationItem[] = isPlatform
       ? [
-          { href: `/${locale}/admin/platform`, label: copy["admin.nav.overview"] },
-          { href: `/${locale}/admin/platform/tenants`, label: copy["admin.nav.tenants"] },
+          {
+            href: `/${locale}/admin/platform`,
+            icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.overview"],
+          },
           {
             href: `/${locale}/admin/platform/management-companies`,
+            icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
             label: copy["admin.nav.managementCompanies"],
           },
-          { href: `/${locale}/admin/sites`, label: copy["admin.nav.sites"] },
-          { href: `/${locale}/admin/qr-inventory`, label: copy["admin.nav.qr"] },
-          { href: `/${locale}/admin/operations`, label: copy["admin.nav.operations"] },
-          { href: `/${locale}/admin/reports`, label: copy["admin.nav.reports"] },
-          { href: `/${locale}/admin/platform/revenue`, label: copy["admin.nav.revenue"] },
+          {
+            href: `/${locale}/admin/qr-inventory`,
+            icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.qr"],
+          },
+          {
+            href: `/${locale}/admin/operations`,
+            icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.operations"],
+          },
+          {
+            href: `/${locale}/admin/reports`,
+            icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.reports"],
+          },
+          {
+            href: `/${locale}/admin/platform/revenue`,
+            icon: <CirclesFourIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.revenue"],
+          },
           ...(membership.role === "SUPER_ADMIN"
             ? [
                 {
-                  href: `/${locale}/admin/platform/access`,
+                  href: `/${locale}/admin/accounts`,
+                  icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
                   label: copy["admin.nav.access"],
                 },
               ]
             : []),
         ]
       : [
-          { href: `/${locale}/admin/dashboard`, label: copy["admin.nav.overview"] },
-          { href: `/${locale}/admin/sites`, label: copy["admin.nav.sites"] },
-          { href: `/${locale}/admin/qr-inventory`, label: copy["admin.nav.qr"] },
-          { href: `/${locale}/admin/operations`, label: copy["admin.nav.operations"] },
-          { href: `/${locale}/admin/reports`, label: copy["admin.nav.reports"] },
+          {
+            href: `/${locale}/admin/dashboard`,
+            icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.overview"],
+          },
+          {
+            href: `/${locale}/admin/sites`,
+            icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.sites"],
+          },
+          {
+            href: `/${locale}/admin/qr-inventory`,
+            icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.qr"],
+          },
+          {
+            href: `/${locale}/admin/operations`,
+            icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.operations"],
+          },
+          {
+            href: `/${locale}/admin/reports`,
+            icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+            label: copy["admin.nav.reports"],
+          },
+          ...(["MANAGEMENT_ADMIN", "SITE_ADMIN"].includes(membership.role)
+            ? [
+                {
+                  href: `/${locale}/admin/accounts`,
+                  icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.access"],
+                },
+              ]
+            : []),
         ];
+    const profileHref = `/${locale}/admin/profile`;
+    const isProfile = pathname === profileHref;
     const currentItem =
       navigation.find((item) => pathname === item.href) ??
       navigation.find(
         (item) => item.href !== workspaceHref && pathname.startsWith(`${item.href}/`),
       ) ??
-      navigation[0];
+      (isProfile ? undefined : navigation[0]);
 
     return (
       <>
@@ -74,17 +145,9 @@ export async function AdminPageHeader({
 
           <div className="admin-console-identity">
             <span>{copy["admin.nav.workspace"]}</span>
-            <strong>{getAdminRoleLabel(copy, membership.role)}</strong>
-            <div className="admin-console-profile">
-              <span>{copy["admin.shared.account"]}</span>
-              <strong title={context.email ?? undefined}>{context.email ?? "-"}</strong>
-              <form action={signOutAdmin}>
-                <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
-                <button className="admin-console-signout" type="submit">
-                  {copy["admin.shared.signOut"]}
-                </button>
-              </form>
-            </div>
+            <strong>
+              {isPlatform ? copy["admin.platform.eyebrow"] : copy["admin.dashboard.eyebrow"]}
+            </strong>
           </div>
 
           <nav aria-label={copy["admin.nav.label"]} className="admin-console-nav">
@@ -97,12 +160,21 @@ export async function AdminPageHeader({
                   href={item.href}
                   key={item.href}
                 >
-                  <span aria-hidden="true" />
+                  {item.icon}
                   {item.label}
                 </a>
               );
             })}
           </nav>
+
+          <a
+            aria-current={isProfile ? "page" : undefined}
+            className="admin-console-profile-link"
+            href={profileHref}
+          >
+            <IdentificationCardIcon aria-hidden="true" weight="duotone" />
+            {copy["admin.shared.account"]}
+          </a>
 
           <dl className="admin-console-session">
             <div>
@@ -121,9 +193,23 @@ export async function AdminPageHeader({
         </aside>
 
         <header className="admin-console-topbar">
-          <div className="admin-console-location">
-            <span>{copy["admin.nav.current"]}</span>
-            <strong>{currentItem?.label ?? copy["admin.nav.overview"]}</strong>
+          <div className="admin-console-topbar__leading">
+            <a className="admin-console-scope" href={workspaceHref}>
+              {isPlatform ? (
+                <CirclesFourIcon aria-hidden="true" weight="duotone" />
+              ) : (
+                <MapPinAreaIcon aria-hidden="true" weight="duotone" />
+              )}
+              <span>{getAdminScopeLabel(copy, membership.scopeType)}</span>
+            </a>
+            <div className="admin-console-location">
+              <span>{copy["admin.nav.current"]}</span>
+              <strong>
+                {isProfile
+                  ? copy["admin.shared.account"]
+                  : (currentItem?.label ?? copy["admin.nav.overview"])}
+              </strong>
+            </div>
           </div>
           <div className="admin-console-account-actions">
             <LocaleSwitcher
@@ -132,6 +218,28 @@ export async function AdminPageHeader({
               pathname={pathname}
               title={localeTitle}
             />
+            <details className="admin-console-account-menu">
+              <summary aria-label={copy["admin.shared.account"]}>
+                <UserCircleIcon aria-hidden="true" weight="duotone" />
+                <span>
+                  <strong>{getAdminRoleLabel(copy, membership.role)}</strong>
+                  <small title={context.email ?? undefined}>{context.email ?? "-"}</small>
+                </span>
+              </summary>
+              <div>
+                <a href={`/${locale}/admin/profile`}>
+                  <IdentificationCardIcon aria-hidden="true" weight="duotone" />
+                  {copy["admin.shared.account"]}
+                </a>
+                <form action={signOutAdmin}>
+                  <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
+                  <button type="submit">
+                    <SignOutIcon aria-hidden="true" weight="duotone" />
+                    {copy["admin.shared.signOut"]}
+                  </button>
+                </form>
+              </div>
+            </details>
           </div>
         </header>
       </>

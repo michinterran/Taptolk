@@ -450,7 +450,9 @@ export function SiteCatalogView({
                 return (
                   <tr key={site.id}>
                     <td>
-                      <strong>{site.name}</strong>
+                      <a className="admin-row-primary" href={`/${locale}/admin/sites/${site.id}`}>
+                        {site.name}
+                      </a>
                       <small className="admin-table-meta">
                         {site.address ?? copy.notAvailable} · {site.timezone}
                       </small>

@@ -23,8 +23,11 @@ export interface AdminOverviewCopy {
   approvalQueue: string;
   attentionDescription: string;
   attentionTitle: string;
+  activationRate: string;
   batches: string;
+  company: string;
   contactCount: string;
+  contractCapacity: string;
   customerPortfolio: string;
   customerPortfolioDescription: string;
   customerPortfolioTitle: string;
@@ -62,7 +65,9 @@ export interface AdminOverviewCopy {
   tableOpenIssues: string;
   tableQrActivation: string;
   tableRequests: string;
+  tenant: string;
   unresolved: string;
+  viewDetails: string;
   workspaceDescription: string;
   workspaceEyebrow: string;
   workspaceLine1: string;
@@ -93,8 +98,11 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     approvalQueue: "Approvals waiting",
     attentionDescription: "These live signals may require an operator decision.",
     attentionTitle: "Items needing attention",
+    activationRate: "Activation rate",
     batches: "Completed QR batches",
+    company: "Management company",
     contactCount: "Contact requests · 24h",
+    contractCapacity: "Vehicle capacity",
     customerPortfolio: "Customer portfolio",
     customerPortfolioDescription:
       "Contract customers > management companies > managed locations are handled as one operating hierarchy.",
@@ -135,7 +143,9 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     tableOpenIssues: "Open issues",
     tableQrActivation: "QR activation",
     tableRequests: "Requests",
+    tenant: "Contract customer",
     unresolved: "Unresolved requests",
+    viewDetails: "View details",
     workspaceDescription:
       "Manage QR inventory and vehicle-contact operations for the sites approved under your company.",
     workspaceEyebrow: "Management company workspace",
@@ -165,8 +175,11 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     approvalQueue: "승인 대기",
     attentionDescription: "운영 담당자의 확인이나 판단이 필요한 실시간 신호입니다.",
     attentionTitle: "확인이 필요한 항목",
+    activationRate: "가동률",
     batches: "제작 완료 QR 묶음",
+    company: "관리회사",
     contactCount: "차량 연락 요청 · 24시간",
+    contractCapacity: "계약 차량 용량",
     customerPortfolio: "고객 포트폴리오",
     customerPortfolioDescription:
       "계약 고객 > 관리회사 > 관리 현장 구조로 운영 범위와 책임을 정리합니다.",
@@ -207,7 +220,9 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     tableOpenIssues: "미처리",
     tableQrActivation: "QR 활성",
     tableRequests: "요청",
+    tenant: "계약 고객",
     unresolved: "미해결 요청",
+    viewDetails: "상세 보기",
     workspaceDescription:
       "계약 회사에 승인된 관리 현장의 QR 재고와 차량 연락 운영을 한곳에서 관리합니다.",
     workspaceEyebrow: "관리회사 운영 공간",

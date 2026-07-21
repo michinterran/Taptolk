@@ -459,15 +459,15 @@ export function createSupabaseQrInventorySampleRepository(
         sites: (siteResult.data ?? []).map(mapSite),
       };
     },
-    async requestBatch(input) {
+    async requestBatchSeries(input) {
       return assertCommandResult(
-        "request_batch",
-        await client.rpc("request_qr_batch", {
+        "request_batch_series",
+        await client.rpc("request_qr_batch_series", {
           p_expected_design_version: input.expectedDesignVersion,
           p_expected_site_version: input.expectedSiteVersion,
           p_idempotency_key: input.idempotencyKey,
           p_purpose: input.purpose,
-          p_quantity: input.quantity,
+          p_total_quantity: input.quantity,
           p_reason: input.reason,
           p_request_id: input.auditRequestId,
           p_site_id: input.siteId,

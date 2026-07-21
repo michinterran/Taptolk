@@ -7,7 +7,9 @@ export interface OperationsCopy {
   batches: string;
   contactCount: string;
   cost: string;
+  days: string;
   description: string;
+  detail: string;
   deliveryGroup: string;
   escalated: string;
   eyebrow: string;
@@ -21,10 +23,17 @@ export interface OperationsCopy {
   medianResponse: string;
   missingCost: string;
   openReports: string;
+  period: string;
   retrying: string;
   safetyGroup: string;
   sent: string;
   siteCount: string;
+  siteComparison: string;
+  siteComparisonDescription: string;
+  scope: string;
+  scopeAll: string;
+  trend: string;
+  trendDescription: string;
   todayGroup: string;
   unresolved: string;
 }
@@ -37,8 +46,10 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     batches: "Completed QR batches",
     contactCount: "Contact requests",
     cost: "Recorded provider cost",
+    days: "days",
     description:
       "Review the last 24 hours of contact, delivery, safety, and inventory signals within your authorized site scope.",
+    detail: "View location",
     deliveryGroup: "Notification delivery",
     escalated: "Site office alerts",
     eyebrow: "Operations health",
@@ -53,10 +64,18 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     medianResponse: "Median owner response",
     missingCost: "sent deliveries without recorded cost",
     openReports: "Open reports",
+    period: "Trend period",
     retrying: "Retrying",
     safetyGroup: "Safety and review",
     sent: "Sent or delivered",
     siteCount: "Authorized sites",
+    siteComparison: "Managed-location comparison",
+    siteComparisonDescription:
+      "Prioritize locations by unresolved contacts, then open their authorized workspace.",
+    scope: "Current data scope",
+    scopeAll: "All authorized locations",
+    trend: "Contact and delivery trend",
+    trendDescription: "Daily request, unresolved, sent, and failed counts for the selected period.",
     todayGroup: "Last 24 hours",
     unresolved: "Unresolved requests",
   },
@@ -67,8 +86,10 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     batches: "완료된 QR 제작 묶음",
     contactCount: "차량 연락 요청",
     cost: "기록된 발송 비용",
+    days: "일",
     description:
       "승인된 관리 현장 범위에서 최근 24시간의 연락, 알림, 안전 검토와 QR 운영 신호를 확인합니다.",
+    detail: "현장 보기",
     deliveryGroup: "알림 전달",
     escalated: "관리사무소 알림",
     eyebrow: "운영 건전성",
@@ -83,10 +104,18 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     medianResponse: "차주 응답 중앙값",
     missingCost: "비용이 기록되지 않은 발송 건",
     openReports: "미처리 신고",
+    period: "추이 기간",
     retrying: "재시도 중",
     safetyGroup: "안전·검토",
     sent: "전송·도달",
     siteCount: "관리 현장",
+    siteComparison: "관리 현장별 비교",
+    siteComparisonDescription:
+      "미해결 연락이 많은 현장을 우선 확인하고 승인된 현장 화면으로 이동합니다.",
+    scope: "현재 데이터 범위",
+    scopeAll: "승인된 전체 관리 현장",
+    trend: "연락·알림 추이",
+    trendDescription: "선택한 기간의 일별 요청, 미해결, 전송, 실패 건수를 비교합니다.",
     todayGroup: "최근 24시간",
     unresolved: "미해결 요청",
   },

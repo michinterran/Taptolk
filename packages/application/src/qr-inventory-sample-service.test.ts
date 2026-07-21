@@ -72,7 +72,7 @@ function repository(): QrInventorySampleRepository {
     createDesign: vi.fn().mockResolvedValue(result),
     invalidateSample: vi.fn().mockResolvedValue(result),
     list: vi.fn().mockResolvedValue({ batches: [], designs: [], sites: [] }),
-    requestBatch: vi.fn().mockResolvedValue(result),
+    requestBatchSeries: vi.fn().mockResolvedValue(result),
   };
 }
 
@@ -164,7 +164,30 @@ describe("QrInventorySampleService", () => {
     ).rejects.toEqual(new QrInventorySampleError("INVALID_DESIGN_STATUS"));
   });
 
-  it("enforces the reviewed 1-100 quantity policy", async () => {
+  it("preserves the 1-100 per-Batch policy by accepting a larger atomic series", async () => {
+    const repo = repository();
+    const service = new QrInventorySampleService(repo);
+
+    await service.requestBatch({
+      actor: actor("SITE_ADMIN"),
+      auditRequestId: IDS.request,
+      designStatus: "APPROVED",
+      expectedDesignVersion: 1,
+      expectedSiteVersion: 1,
+      idempotencyKey: IDS.batch,
+      purpose: "Resident distribution",
+      quantity: 1_000,
+      reason: "Production series review",
+      siteStatus: "ACTIVE",
+      stickerDesignVersionId: IDS.design,
+      ...scope,
+    });
+    expect(repo.requestBatchSeries).toHaveBeenCalledWith(
+      expect.objectContaining({ quantity: 1_000 }),
+    );
+  });
+
+  it("rejects a series above the existing 10000 item engine boundary", async () => {
     const service = new QrInventorySampleService(repository());
 
     await expect(
@@ -176,7 +199,7 @@ describe("QrInventorySampleService", () => {
         expectedSiteVersion: 1,
         idempotencyKey: IDS.batch,
         purpose: "Resident distribution",
-        quantity: 101,
+        quantity: 10_001,
         reason: "Initial sample review",
         siteStatus: "ACTIVE",
         stickerDesignVersionId: IDS.design,
@@ -210,7 +233,7 @@ describe("QrInventorySampleService", () => {
         version: 1,
       }),
     );
-    expect(repo.requestBatch).toHaveBeenCalledWith(
+    expect(repo.requestBatchSeries).toHaveBeenCalledWith(
       expect.objectContaining({
         quantity: 100,
       }),

@@ -39,6 +39,11 @@ describe("OperationsDashboardService", () => {
         openReportCount: 0,
         siteCount: 1,
         unresolvedCount: 1,
+        dailySeries: [],
+        scopeManagementCompanyName: null,
+        scopeSiteName: null,
+        sitePerformance: [],
+        windowDays: 14,
       })),
     };
     await new OperationsDashboardService(repository).read({
@@ -47,7 +52,7 @@ describe("OperationsDashboardService", () => {
         userId: "33333333-3333-4333-8333-333333333333",
       },
     });
-    expect(repository.read).toHaveBeenCalledOnce();
+    expect(repository.read).toHaveBeenCalledWith({});
   });
 });
 

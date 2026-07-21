@@ -7,6 +7,7 @@ import { getLocalizedAdminPath } from "../../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../../auth/page-guard";
 import { createAdminServerClient } from "../../../../../../auth/server-client";
 import { ManagementCompanyCatalogView } from "../../../../../../components/management-company-catalog-view";
+import { ADMIN_COMPANY_PORTFOLIO_COPY } from "../../../../../../content/admin-company-portfolio-copy";
 import { getMessages } from "../../../../../../content/messages";
 import { isAppLocale } from "../../../../../../i18n/locale";
 
@@ -27,6 +28,7 @@ export default async function ManagementCompaniesPage({
   searchParams: Promise<{
     error?: string | string[];
     page?: string | string[];
+    q?: string | string[];
     status?: string | string[];
   }>;
 }) {
@@ -45,6 +47,7 @@ export default async function ManagementCompaniesPage({
   }
 
   const membership = context.decision.membership;
+  const search = readValue(query.q);
   const catalog = await new ManagementCompanyCatalogService(
     createSupabaseManagementCompanyCatalogRepository(client),
   ).list({
@@ -54,6 +57,7 @@ export default async function ManagementCompaniesPage({
       scope: { type: "PLATFORM" },
     },
     page: readPage(query.page),
+    ...(search ? { search } : {}),
   });
   const copy = getMessages(locale);
   const errorMessages: Readonly<Record<string, string>> = {
@@ -110,7 +114,6 @@ export default async function ManagementCompaniesPage({
           reasonPlaceholder: copy["admin.companies.reason.placeholder"],
           save: copy["admin.companies.save"],
           securityNote: copy["admin.companies.securityNote"],
-          signOut: copy["admin.shared.signOut"],
           status: copy["admin.companies.status"],
           statusDescription: copy["admin.companies.status.description"],
           statusLabels: {
@@ -120,11 +123,12 @@ export default async function ManagementCompaniesPage({
           },
           suspend: copy["admin.companies.suspend"],
           tenant: copy["admin.companies.tenant"],
-          titleLines: [copy["admin.companies.line1"], copy["admin.companies.line2"]],
           total: copy["admin.companies.total"],
         }}
         errorMessage={error ? errorMessages[error] : undefined}
         locale={locale}
+        portfolioCopy={ADMIN_COMPANY_PORTFOLIO_COPY[locale]}
+        search={search}
         statusMessage={status ? statusMessages[status] : undefined}
       />
     </main>

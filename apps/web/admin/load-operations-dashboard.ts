@@ -1,6 +1,10 @@
 import "server-only";
 
-import { type OperationsDashboardModel, OperationsDashboardService } from "@taptolk/application";
+import {
+  type OperationsDashboardModel,
+  type OperationsDashboardScope,
+  OperationsDashboardService,
+} from "@taptolk/application";
 import { toAdminAuthorizationContext } from "../auth/admin-authorization";
 import type { requireReadyAdminContext } from "../auth/page-guard";
 import { createAdminServerClient } from "../auth/server-client";
@@ -10,6 +14,7 @@ type ReadyAdminContext = Awaited<ReturnType<typeof requireReadyAdminContext>>;
 
 export async function loadOperationsDashboard(
   context: ReadyAdminContext,
+  scope: OperationsDashboardScope = {},
 ): Promise<OperationsDashboardModel | null> {
   const client = await createAdminServerClient();
   if (!client) {
@@ -24,5 +29,6 @@ export async function loadOperationsDashboard(
       ),
       userId: context.userId,
     },
+    scope,
   });
 }

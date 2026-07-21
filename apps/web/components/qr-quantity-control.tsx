@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 
-const PRESETS = [10, 25, 50, 75, 100] as const;
+const PRESETS = [100, 400, 1_000, 5_000, 10_000] as const;
 
 export function QrQuantityControl({
   label,
@@ -17,19 +17,19 @@ export function QrQuantityControl({
   const [quantity, setQuantity] = useState(100);
 
   function update(next: number) {
-    setQuantity(Math.max(1, Math.min(100, next)));
+    setQuantity(Math.max(1, Math.min(10_000, next)));
   }
 
   return (
     <div className="qr-quantity-control">
       <label htmlFor={id}>{label}</label>
       <div className="qr-quantity-control__row">
-        <button type="button" aria-label={`${label} -`} onClick={() => update(quantity - 1)}>
+        <button type="button" aria-label={`${label} -`} onClick={() => update(quantity - 100)}>
           −
         </button>
         <input
           id={id}
-          max={100}
+          max={10_000}
           min={1}
           name={name}
           onChange={(event) => update(Number(event.target.value))}
@@ -37,7 +37,7 @@ export function QrQuantityControl({
           type="number"
           value={quantity}
         />
-        <button type="button" aria-label={`${label} +`} onClick={() => update(quantity + 1)}>
+        <button type="button" aria-label={`${label} +`} onClick={() => update(quantity + 100)}>
           +
         </button>
         <select

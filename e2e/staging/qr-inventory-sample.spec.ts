@@ -200,13 +200,18 @@ test.describe
       await page.goto("/ko/admin/qr-inventory");
       await expect(
         page.getByText(
-          "샘플 승인과 최종 승인은 서로 다른 단계입니다. Super Admin 최종 승인은 durable 생성 작업을 준비하지만, 아직 Queue 전달이나 QR 생성을 시작하지 않습니다.",
+          "샘플 승인과 최종 승인은 서로 다른 단계입니다. 최종 승인은 안전한 생성 작업을 준비하며, 제작 대기열 전달과 QR 생성은 다음 단계에서 시작됩니다.",
         ),
       ).toBeVisible();
 
-      await page.getByText("Sticker Design Version 만들기", { exact: true }).click();
-      const createButton = page.getByRole("button", { name: "디자인 DRAFT 생성" });
-      const createForm = createButton.locator("xpath=ancestor::form");
+      const createPanel = page
+        .locator("details.admin-qr-wizard-panel")
+        .filter({ has: page.getByText("QR 스티커 디자인 만들기", { exact: true }) });
+      await expect(createPanel).toBeVisible();
+      await createPanel.locator("summary").click();
+      const createForm = createPanel.locator("form");
+      const createButton = createForm.getByRole("button", { name: "디자인 DRAFT 생성" });
+      await expect(createForm).toBeVisible();
       const siteSelect = createForm.locator('select[name="siteScope"]');
       await siteSelect
         .locator("option")
@@ -215,8 +220,8 @@ test.describe
           (option as HTMLOptionElement).value = value;
         }, `${fixture.tenantBId}|${fixture.companyBId}|${fixture.sites.tenantB.id}|1|ACTIVE`);
       await createForm
-        .locator('select[name="templateCode"]')
-        .selectOption("ROUND_WHITE_MINIMAL_V1");
+        .locator('input[name="templateCode"][value="ROUND_WHITE_MINIMAL_V1"]')
+        .check();
       await createForm
         .locator('textarea[name="reason"]')
         .fill("Authenticated staging cross tenant denial");
@@ -224,15 +229,20 @@ test.describe
       await expect(page).toHaveURL(/error=forbidden/u);
 
       await page.goto("/ko/admin/qr-inventory");
-      await page.getByText("Sticker Design Version 만들기", { exact: true }).click();
-      const validButton = page.getByRole("button", { name: "디자인 DRAFT 생성" });
-      const validForm = validButton.locator("xpath=ancestor::form");
+      const validPanel = page
+        .locator("details.admin-qr-wizard-panel")
+        .filter({ has: page.getByText("QR 스티커 디자인 만들기", { exact: true }) });
+      await expect(validPanel).toBeVisible();
+      await validPanel.locator("summary").click();
+      const validForm = validPanel.locator("form");
+      const validButton = validForm.getByRole("button", { name: "디자인 DRAFT 생성" });
+      await expect(validForm).toBeVisible();
       await validForm
         .locator('select[name="siteScope"]')
         .selectOption(
           `${fixture.tenantAId}|${fixture.companyAId}|${fixture.sites.companyAFirst.id}|1|ACTIVE`,
         );
-      await validForm.locator('select[name="templateCode"]').selectOption("ROUND_WHITE_MINIMAL_V1");
+      await validForm.locator('input[name="templateCode"][value="ROUND_WHITE_MINIMAL_V1"]').check();
       await validForm
         .locator('textarea[name="reason"]')
         .fill("Authenticated staging Design creation");
@@ -292,7 +302,7 @@ test.describe
     test("Site Admin requests only its exact-Site Batch", async ({ page }) => {
       await signInAdmin(page, fixture.actors.siteAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
-      const requestButton = page.getByRole("button", { name: "Request small Batch" });
+      const requestButton = page.getByRole("button", { name: "Request production quantity" });
       const requestForm = requestButton.locator("xpath=ancestor::form");
       await requestForm.locator('input[name="siteId"]').evaluate((input, siteId) => {
         (input as HTMLInputElement).value = siteId;
@@ -309,7 +319,7 @@ test.describe
       await expect(page).toHaveURL(/error=forbidden/u);
 
       await page.goto("/en/admin/qr-inventory");
-      const validButton = page.getByRole("button", { name: "Request small Batch" });
+      const validButton = page.getByRole("button", { name: "Request production quantity" });
       const validForm = validButton.locator("xpath=ancestor::form");
       await validForm.locator('input[name="quantity"]').fill("20");
       await validForm.locator('input[name="purpose"]').fill("Resident sample distribution");
@@ -421,7 +431,11 @@ test.describe
         ["QR_BATCH_SAMPLE_ATTACHED", "QR_BATCH_SAMPLE_APPROVED", "QR_BATCH_SAMPLE_INVALIDATED"],
         [fixture.actors.superAdmin.id, fixture.actors.superAdmin.id, fixture.actors.superAdmin.id],
       );
-      await expectAuditActors(batchId, ["QR_BATCH_REQUESTED"], [fixture.actors.siteAdmin.id]);
+      await expectAuditActors(
+        batchId,
+        ["QR_BATCH_SERIES_ITEM_REQUESTED"],
+        [fixture.actors.siteAdmin.id],
+      );
     });
 
     test("a new passing sample can enter requester final review after invalidation", async ({
@@ -546,7 +560,11 @@ test.describe
       });
       await expectAuditActors(
         batchId,
-        ["QR_BATCH_REQUESTED", "QR_BATCH_FINAL_APPROVAL_REQUESTED", "QR_BATCH_GENERATION_APPROVED"],
+        [
+          "QR_BATCH_SERIES_ITEM_REQUESTED",
+          "QR_BATCH_FINAL_APPROVAL_REQUESTED",
+          "QR_BATCH_GENERATION_APPROVED",
+        ],
         [fixture.actors.siteAdmin.id, fixture.actors.siteAdmin.id, fixture.actors.superAdmin.id],
       );
     });
@@ -817,7 +835,7 @@ test.describe
       await receiveCard
         .locator('input[name="reason"]')
         .fill("Authenticated staging complete Batch receipt");
-      await receiveCard.getByRole("button", { name: "Receive Batch" }).click();
+      await receiveCard.evaluate((form) => (form as HTMLFormElement).requestSubmit());
       await expect(page).toHaveURL(/status=batchReceived/u);
 
       phase4Assets = await fixture.api.select<QrAssetRow>(
@@ -1097,7 +1115,9 @@ test.describe
 
       await signInAdmin(page, fixture.actors.siteAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
-      const batchRequestButton = page.getByRole("button", { name: "Request small Batch" });
+      const batchRequestButton = page.getByRole("button", {
+        name: "Request production quantity",
+      });
       const batchRequestForm = batchRequestButton.locator("xpath=ancestor::form");
       await batchRequestForm.locator('input[name="quantity"]').fill("12");
       await batchRequestForm.locator('input[name="purpose"]').fill("Final approval race evidence");
@@ -1230,7 +1250,7 @@ test.describe
           await expectAuditActors(
             raceBatch.id,
             [
-              "QR_BATCH_REQUESTED",
+              "QR_BATCH_SERIES_ITEM_REQUESTED",
               "QR_BATCH_FINAL_APPROVAL_REQUESTED",
               "QR_BATCH_CANCELLED_BEFORE_GENERATION",
             ],
@@ -1249,7 +1269,7 @@ test.describe
           await expectAuditActors(
             raceBatch.id,
             [
-              "QR_BATCH_REQUESTED",
+              "QR_BATCH_SERIES_ITEM_REQUESTED",
               "QR_BATCH_FINAL_APPROVAL_REQUESTED",
               "QR_BATCH_GENERATION_APPROVED",
             ],

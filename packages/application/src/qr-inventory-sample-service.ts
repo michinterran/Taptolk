@@ -64,6 +64,7 @@ export type QrAssetStatus = (typeof QR_ASSET_STATUSES)[number];
 
 export const QR_BATCH_REQUEST_QUANTITY_MIN = 1;
 export const QR_BATCH_REQUEST_QUANTITY_MAX = 100;
+export const QR_BATCH_SERIES_TOTAL_MAX = 10_000;
 export const QR_SAMPLE_BYTE_SIZE_MAX = 20_000_000;
 export const QR_SAMPLE_MIME_TYPES = ["image/png", "image/svg+xml", "application/pdf"] as const;
 export type QrSampleMimeType = (typeof QR_SAMPLE_MIME_TYPES)[number];
@@ -219,7 +220,7 @@ export interface QrInventorySampleRepository {
     designs: readonly StickerDesignVersionItem[];
     sites: readonly QrInventorySiteOption[];
   }>;
-  requestBatch(input: {
+  requestBatchSeries(input: {
     auditRequestId: string;
     expectedDesignVersion: number;
     expectedSiteVersion: number;
@@ -329,7 +330,7 @@ function assertQuantity(value: number): void {
   if (
     !Number.isInteger(value) ||
     value < QR_BATCH_REQUEST_QUANTITY_MIN ||
-    value > QR_BATCH_REQUEST_QUANTITY_MAX
+    value > QR_BATCH_SERIES_TOTAL_MAX
   ) {
     throw new QrInventorySampleError("INVALID_QUANTITY");
   }
@@ -572,7 +573,7 @@ export class QrInventorySampleService {
     if (input.designStatus !== "APPROVED") {
       throw new QrInventorySampleError("INVALID_DESIGN_STATUS");
     }
-    return this.repository.requestBatch({
+    return this.repository.requestBatchSeries({
       auditRequestId: input.auditRequestId,
       expectedDesignVersion: input.expectedDesignVersion,
       expectedSiteVersion: input.expectedSiteVersion,

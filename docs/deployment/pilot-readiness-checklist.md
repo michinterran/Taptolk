@@ -189,6 +189,16 @@
       logo integrity, service-stage guard, WCJ 100 over 108 files, and production build.
       `pnpm verify:production-cron:deferred` also passed, keeping active Production Cron
       definitions at zero.
+- [x] 2026-07-22 Admin Command Center overhaul: compact role-aware shell, management-company to
+      managed-location workspaces, scoped operations and report analysis, versioned revenue
+      projection, administrator directory/profile, and a renderer-backed six-step QR production
+      workflow are implemented. Total QR requests up to 10,000 are atomically split into child
+      Batches of no more than 100, preserving the approved per-Batch contract. Clean local reset
+      passed through 65 migrations; local and linked `taptolk-staging` pgTAP passed all 29 files;
+      authenticated staging E2E passed 31 tests with one intentional opt-in 10x100 skip; and
+      `pnpm verify` passed with lint 381 files, typecheck 19/19, unit 60 files/391 tests, DB
+      65 migrations/29 tests, secret scan 633 files, WCJ 100 over 124 files, and Production build.
+      Production deployment was not performed and active Production Cron definitions remain zero.
 
 ## Manual and external pilot gates
 

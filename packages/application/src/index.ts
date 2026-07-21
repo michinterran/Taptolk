@@ -11,6 +11,18 @@ export {
   type PendingAdminAccount,
 } from "./admin-account-approval-service.js";
 export {
+  type AdminDirectoryActor,
+  type AdminDirectoryItem,
+  type AdminDirectoryMembershipStatus,
+  type AdminDirectoryRepository,
+  AdminDirectoryService,
+} from "./admin-directory-service.js";
+export {
+  type AdminProfileModel,
+  type AdminProfileRepository,
+  AdminProfileService,
+} from "./admin-profile-service.js";
+export {
   AdminAuthorizationError,
   assertAdminAuthorized,
 } from "./authorization-error.js";
@@ -39,6 +51,12 @@ export {
   ManagementCompanyManagementService,
 } from "./management-company-management-service.js";
 export {
+  type ManagementCompanyWorkspace,
+  type ManagementCompanyWorkspaceRepository,
+  ManagementCompanyWorkspaceService,
+  type ManagementCompanyWorkspaceSite,
+} from "./management-company-workspace-service.js";
+export {
   type NotificationDeliveryClaim,
   type NotificationDeliveryRepository,
   NotificationDispatchService,
@@ -52,10 +70,13 @@ export {
   OwnerResponseService,
 } from "./notification-reply-service.js";
 export {
+  type OperationsDailyPoint,
   type OperationsDashboardActor,
   type OperationsDashboardModel,
   type OperationsDashboardRepository,
+  type OperationsDashboardScope,
   OperationsDashboardService,
+  type OperationsSitePerformance,
   type PrivacyCleanupRepository,
   type PrivacyCleanupResult,
   PrivacyCleanupService,
@@ -174,6 +195,7 @@ export {
   QR_BATCH_REQUEST_QUANTITY_MAX,
   QR_BATCH_REQUEST_QUANTITY_MIN,
   QR_BATCH_SAMPLE_STATUSES,
+  QR_BATCH_SERIES_TOTAL_MAX,
   QR_BATCH_STATUSES,
   QR_SAMPLE_BYTE_SIZE_MAX,
   QR_SAMPLE_MIME_TYPES,
@@ -203,6 +225,13 @@ export {
   type QrSampleArtifactRepository,
   QrSampleArtifactService,
 } from "./qr-sample-artifact-service.js";
+export {
+  type RevenueActor,
+  type RevenueCommandCenterModel,
+  type RevenueCommandCenterRepository,
+  RevenueCommandCenterService,
+  type RevenueCompanyItem,
+} from "./revenue-command-center-service.js";
 export {
   type ScheduledPrivacyCleanupClock,
   type ScheduledPrivacyCleanupRepository,
@@ -243,6 +272,12 @@ export {
   type SiteManagementRepository,
   type SiteType,
 } from "./site-service.js";
+export {
+  type SiteWorkspace,
+  type SiteWorkspaceBatch,
+  type SiteWorkspaceRepository,
+  SiteWorkspaceService,
+} from "./site-workspace-service.js";
 export {
   type ListTenantCatalogCommand,
   TENANT_CATALOG_MAX_PAGE_SIZE,

@@ -105,21 +105,26 @@ test.describe
 
       await expect(page).toHaveURL(/\/ko\/admin\/dashboard$/u);
       const customerSidebar = page.getByRole("complementary");
-      await expect(customerSidebar.getByText("사이트 관리자", { exact: true })).toBeVisible();
+      await expect(
+        page.locator(".admin-console-account-menu").getByText("사이트 관리자", { exact: true }),
+      ).toBeVisible();
       await expect(customerSidebar.getByText("사이트 범위", { exact: true })).toBeVisible();
       await expect(customerSidebar.getByText("비밀번호 인증", { exact: true })).toBeVisible();
       const customerNavigation = page.getByRole("navigation", {
         name: "관리자 운영 메뉴",
       });
-      await expect(customerNavigation.getByRole("link", { name: "운영 홈" })).toBeVisible();
-      await expect(customerNavigation.getByRole("link", { name: "운영 현황" })).toBeVisible();
-      await expect(customerNavigation.getByRole("link", { name: "사업장" })).toBeVisible();
-      await expect(customerNavigation.getByRole("link", { name: "QR 제작·재고" })).toBeVisible();
-      await expect(customerNavigation.getByRole("link", { name: "고객사" })).toHaveCount(0);
-      await expect(customerNavigation.getByRole("link", { name: "계정 승인" })).toHaveCount(0);
+      await expect(customerNavigation.getByRole("link", { name: "대시보드" })).toBeVisible();
+      await expect(customerNavigation.getByRole("link", { name: "관리 현장" })).toBeVisible();
+      await expect(customerNavigation.getByRole("link", { name: "QR 제작 관리" })).toBeVisible();
+      await expect(customerNavigation.getByRole("link", { name: "운영 모니터링" })).toBeVisible();
+      await expect(customerNavigation.getByRole("link", { name: "관리회사" })).toHaveCount(0);
+      await expect(customerNavigation.getByRole("link", { name: "매출 관리" })).toHaveCount(0);
       await expect(page.getByRole("heading", { name: "운영 한눈에 보기" })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "주요 업무" })).toBeVisible();
-      await expect(page.locator("aside").getByRole("button", { name: "로그아웃" })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "고객과 계약 상태를 한눈에 관리하세요" }),
+      ).toBeVisible();
+      await page.locator(".admin-console-account-menu > summary").click();
+      await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
 
       await page.goto("/ko/admin/platform");
       await expect(page).toHaveURL(/\/ko\/admin\/dashboard$/u);
@@ -130,22 +135,27 @@ test.describe
 
       await expect(page).toHaveURL(/\/ko\/admin\/platform$/u);
       const platformSidebar = page.getByRole("complementary");
-      await expect(platformSidebar.getByText("슈퍼어드민", { exact: true })).toBeVisible();
+      await expect(
+        page.locator(".admin-console-account-menu").getByText("슈퍼어드민", { exact: true }),
+      ).toBeVisible();
       await expect(platformSidebar.getByText("전체 플랫폼", { exact: true })).toBeVisible();
       await expect(platformSidebar.getByText("비밀번호 인증", { exact: true })).toBeVisible();
       const platformNavigation = page.getByRole("navigation", {
         name: "관리자 운영 메뉴",
       });
-      await expect(platformNavigation.getByRole("link", { name: "운영 홈" })).toBeVisible();
-      await expect(platformNavigation.getByRole("link", { name: "운영 현황" })).toBeVisible();
-      await expect(platformNavigation.getByRole("link", { name: "고객사" })).toBeVisible();
+      await expect(platformNavigation.getByRole("link", { name: "대시보드" })).toBeVisible();
       await expect(platformNavigation.getByRole("link", { name: "관리회사" })).toBeVisible();
-      await expect(platformNavigation.getByRole("link", { name: "사업장" })).toBeVisible();
-      await expect(platformNavigation.getByRole("link", { name: "QR 제작·재고" })).toBeVisible();
-      await expect(platformNavigation.getByRole("link", { name: "계정 승인" })).toBeVisible();
+      await expect(platformNavigation.getByRole("link", { name: "QR 제작 관리" })).toBeVisible();
+      await expect(platformNavigation.getByRole("link", { name: "운영 모니터링" })).toBeVisible();
+      await expect(platformNavigation.getByRole("link", { name: "리포트" })).toBeVisible();
+      await expect(platformNavigation.getByRole("link", { name: "매출 관리" })).toBeVisible();
+      await expect(platformNavigation.getByRole("link", { name: "계정·권한" })).toBeVisible();
       await expect(page.getByRole("heading", { name: "운영 한눈에 보기" })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "주요 업무" })).toBeVisible();
-      await expect(page.locator("aside").getByRole("button", { name: "로그아웃" })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "고객과 계약 상태를 한눈에 관리하세요" }),
+      ).toBeVisible();
+      await page.locator(".admin-console-account-menu > summary").click();
+      await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
 
       await page.goto("/ko/admin/dashboard");
       await expect(page).toHaveURL(/\/ko\/admin\/platform$/u);

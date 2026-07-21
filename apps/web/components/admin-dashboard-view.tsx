@@ -1,4 +1,4 @@
-import type { OperationsDashboardModel } from "@taptolk/application";
+import type { ManagementCompanyCatalogItem, OperationsDashboardModel } from "@taptolk/application";
 import { SemanticHeading } from "@taptolk/ui";
 import type { CSSProperties } from "react";
 import type { AdminOverviewCopy } from "../content/admin-overview-copy";
@@ -18,6 +18,7 @@ interface DashboardContext {
 
 interface AdminDashboardViewProps {
   canApproveAccounts: boolean;
+  companyPortfolio?: readonly ManagementCompanyCatalogItem[];
   context: DashboardContext;
   copy: AdminOverviewCopy;
   locale: AppLocale;
@@ -29,28 +30,12 @@ interface AdminDashboardViewProps {
   variant: DashboardVariant;
 }
 
-interface DashboardAction {
-  description: string;
-  href: string;
-  label: string;
-}
-
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <article className="admin-overview-metric">
       <span>{label}</span>
       <strong>{value}</strong>
     </article>
-  );
-}
-
-function ActionCard({ action }: { action: DashboardAction }) {
-  return (
-    <a className="admin-overview-action" href={action.href}>
-      <span>{action.label}</span>
-      <p>{action.description}</p>
-      <i aria-hidden="true">→</i>
-    </a>
   );
 }
 
@@ -91,6 +76,7 @@ export function AdminDashboardView({
   logoAlt,
   model,
   pathname,
+  companyPortfolio = [],
   variant,
 }: AdminDashboardViewProps) {
   const number = new Intl.NumberFormat(locale);
@@ -100,76 +86,6 @@ export function AdminDashboardView({
     variant === "platform"
       ? ([copy.platformLine1, copy.platformLine2] as const)
       : ([copy.workspaceLine1, copy.workspaceLine2] as const);
-  const actions: DashboardAction[] =
-    variant === "platform"
-      ? [
-          {
-            description: copy.actionManagementCompaniesDescription,
-            href: `${prefix}/platform/management-companies`,
-            label: copy.actionManagementCompanies,
-          },
-          {
-            description: copy.actionSitesDescription,
-            href: `${prefix}/sites`,
-            label: copy.actionSites,
-          },
-          {
-            description: copy.actionQrDescription,
-            href: `${prefix}/qr-inventory`,
-            label: copy.actionQr,
-          },
-          {
-            description: copy.actionOperationsDescription,
-            href: `${prefix}/operations`,
-            label: copy.actionOperations,
-          },
-          {
-            description: copy.actionReportsDescription,
-            href: `${prefix}/reports`,
-            label: copy.actionReports,
-          },
-          {
-            description: copy.actionRevenueDescription,
-            href: `${prefix}/platform/revenue`,
-            label: copy.actionRevenue,
-          },
-          {
-            description: copy.actionCustomersDescription,
-            href: `${prefix}/platform/tenants`,
-            label: copy.actionCustomers,
-          },
-          ...(canApproveAccounts
-            ? [
-                {
-                  description: copy.actionApprovalsDescription,
-                  href: `${prefix}/platform/access`,
-                  label: copy.actionApprovals,
-                },
-              ]
-            : []),
-        ]
-      : [
-          {
-            description: copy.actionOperationsDescription,
-            href: `${prefix}/operations`,
-            label: copy.actionOperations,
-          },
-          {
-            description: copy.actionSitesDescription,
-            href: `${prefix}/sites`,
-            label: copy.actionSites,
-          },
-          {
-            description: copy.actionQrDescription,
-            href: `${prefix}/qr-inventory`,
-            label: copy.actionQr,
-          },
-          {
-            description: copy.actionReportsDescription,
-            href: `${prefix}/reports`,
-            label: copy.actionReports,
-          },
-        ];
   const attentionItems = [
     { count: model.unresolvedCount, label: copy.unresolved },
     { count: model.escalatedCount, label: copy.escalated },
@@ -196,58 +112,20 @@ export function AdminDashboardView({
     model.escalatedCount +
     model.notificationFailedCount +
     model.openReportCount;
-  const qrActivationRate = percent(model.activeQrCount, Math.max(model.activeQrCount + 100, 1));
-  const requestResolutionRate =
-    100 - percent(model.unresolvedCount, Math.max(model.contactCount, 1));
   const deliverySuccessRate =
     100 -
     percent(
       model.notificationFailedCount + model.notificationRetryCount,
       Math.max(model.notificationSentCount, 1),
     );
-  const healthScore =
-    totalSignals === 0
-      ? 100
-      : Math.max(
-          0,
-          100 -
-            percent(
-              model.unresolvedCount + model.escalatedCount + model.notificationFailedCount,
-              totalSignals,
-            ),
-        );
-  const portfolioRows = [
-    {
-      action: copy.actionCustomers,
-      health: healthScore,
-      href: variant === "platform" ? `${prefix}/platform/tenants` : `${prefix}/sites`,
-      locations: number.format(model.siteCount),
-      name: copy.customerPortfolio,
-      openIssues: number.format(model.unresolvedCount + model.openReportCount),
-      qr: qrActivationRate,
-      requests: number.format(model.contactCount),
-    },
-    {
-      action: copy.actionQr,
-      health: qrActivationRate,
-      href: `${prefix}/qr-inventory`,
-      locations: number.format(model.siteCount),
-      name: copy.actionQr,
-      openIssues: number.format(model.completedBatchCount),
-      qr: qrActivationRate,
-      requests: number.format(model.activeQrCount),
-    },
-    {
-      action: copy.actionOperations,
-      health: requestResolutionRate,
-      href: `${prefix}/operations`,
-      locations: number.format(model.siteCount),
-      name: copy.operationFlow,
-      openIssues: number.format(model.unresolvedCount + model.escalatedCount),
-      qr: deliverySuccessRate,
-      requests: number.format(model.contactCount),
-    },
-  ] as const;
+  const customerRows = model.sitePerformance.map((site) => ({
+    activeQr: site.activeQrCount,
+    contactCount: site.contactCount,
+    health: 100 - percent(site.unresolvedCount, Math.max(site.contactCount, 1)),
+    href: `${prefix}/sites/${site.siteId}`,
+    name: site.siteName,
+    unresolvedCount: site.unresolvedCount,
+  }));
 
   return (
     <>
@@ -259,17 +137,17 @@ export function AdminDashboardView({
         pathname={pathname}
       />
 
-      <section className="admin-overview-hero">
-        <div className="admin-overview-hero__copy">
+      <header className="admin-compact-heading admin-overview-heading">
+        <div>
           <p className="eyebrow">
             {variant === "platform" ? copy.platformEyebrow : copy.workspaceEyebrow}
           </p>
-          <SemanticHeading className="admin-overview-title" lines={titleLines} />
+          <SemanticHeading className="admin-compact-title" lines={titleLines} />
           <p className="admin-overview-description">
             {variant === "platform" ? copy.platformDescription : copy.workspaceDescription}
           </p>
         </div>
-        <dl className="admin-overview-context">
+        <dl className="admin-heading-context">
           <div>
             <dt>{context.roleTitle}</dt>
             <dd>{context.roleLabel}</dd>
@@ -283,7 +161,7 @@ export function AdminDashboardView({
             <dd>{context.securityValue}</dd>
           </div>
         </dl>
-      </section>
+      </header>
 
       <section className="admin-overview-section" aria-labelledby="operations-overview-title">
         <header className="admin-overview-section__header">
@@ -319,42 +197,86 @@ export function AdminDashboardView({
             </div>
           </header>
           <div className="admin-command-table-wrap">
-            <table className="admin-command-table">
-              <thead>
-                <tr>
-                  <th scope="col">{copy.tableName}</th>
-                  <th scope="col">{copy.tableLocations}</th>
-                  <th scope="col">{copy.tableRequests}</th>
-                  <th scope="col">{copy.tableQrActivation}</th>
-                  <th scope="col">{copy.tableOpenIssues}</th>
-                  <th scope="col">{copy.tableHealth}</th>
-                  <th scope="col">{copy.tableAction}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {portfolioRows.map((row) => (
-                  <tr key={row.name}>
-                    <th scope="row">{row.name}</th>
-                    <td>{row.locations}</td>
-                    <td>{row.requests}</td>
-                    <td>
-                      <BarMeter label={copy.activeQr} value={row.qr} />
-                    </td>
-                    <td>{row.openIssues}</td>
-                    <td>
-                      <BarMeter
-                        label={copy.statusHealthy}
-                        tone={row.health >= 80 ? "green" : row.health >= 50 ? "orange" : "red"}
-                        value={row.health}
-                      />
-                    </td>
-                    <td>
-                      <a href={row.href}>{row.action} →</a>
-                    </td>
+            {variant === "platform" ? (
+              <table className="admin-command-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{copy.company}</th>
+                    <th scope="col">{copy.tenant}</th>
+                    <th scope="col">{copy.tableLocations}</th>
+                    <th scope="col">{copy.contractCapacity}</th>
+                    <th scope="col">{copy.activeQr}</th>
+                    <th scope="col">{copy.activationRate}</th>
+                    <th scope="col">{copy.tableHealth}</th>
+                    <th scope="col">{copy.tableAction}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {companyPortfolio.map((company) => {
+                    const rate = percent(company.activeQrCount, company.contractVehicleLimit);
+                    return (
+                      <tr key={company.id}>
+                        <th scope="row">{company.name}</th>
+                        <td>{company.tenantName}</td>
+                        <td>{number.format(company.siteCount)}</td>
+                        <td>{number.format(company.contractVehicleLimit)}</td>
+                        <td>{number.format(company.activeQrCount)}</td>
+                        <td>
+                          <BarMeter label={copy.activationRate} value={rate} />
+                        </td>
+                        <td>
+                          <span
+                            className={`admin-health-pill ${company.status === "ACTIVE" ? "is-healthy" : "is-attention"}`}
+                          >
+                            {company.status === "ACTIVE"
+                              ? copy.statusHealthy
+                              : copy.statusAttention}
+                          </span>
+                        </td>
+                        <td>
+                          <a href={`${prefix}/platform/management-companies/${company.id}`}>
+                            {copy.viewDetails} →
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <table className="admin-command-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{copy.tableName}</th>
+                    <th scope="col">{copy.tableRequests}</th>
+                    <th scope="col">{copy.activeQr}</th>
+                    <th scope="col">{copy.tableOpenIssues}</th>
+                    <th scope="col">{copy.tableHealth}</th>
+                    <th scope="col">{copy.tableAction}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customerRows.map((row) => (
+                    <tr key={row.name}>
+                      <th scope="row">{row.name}</th>
+                      <td>{number.format(row.contactCount)}</td>
+                      <td>{number.format(row.activeQr)}</td>
+                      <td>{number.format(row.unresolvedCount)}</td>
+                      <td>
+                        <BarMeter
+                          label={copy.statusHealthy}
+                          tone={row.health >= 80 ? "green" : row.health >= 50 ? "orange" : "red"}
+                          value={row.health}
+                        />
+                      </td>
+                      <td>
+                        <a href={row.href}>{copy.viewDetails} →</a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
@@ -440,53 +362,6 @@ export function AdminDashboardView({
             <span>{copy.actionSites}</span>
           </div>
         </article>
-      </section>
-
-      <section
-        className={`admin-overview-attention${attentionItems.length === 0 ? " is-healthy" : ""}`}
-        aria-labelledby="attention-title"
-      >
-        <header>
-          <div>
-            <span className="admin-overview-status">
-              {attentionItems.length === 0 ? copy.statusHealthy : copy.statusAttention}
-            </span>
-            <h2 id="attention-title">
-              {attentionItems.length === 0 ? copy.healthyTitle : copy.attentionTitle}
-            </h2>
-            <p>
-              {attentionItems.length === 0 ? copy.healthyDescription : copy.attentionDescription}
-            </p>
-          </div>
-          <a className="admin-overview-attention__link" href={`${prefix}/operations`}>
-            {copy.actionOperations}
-            <span aria-hidden="true">→</span>
-          </a>
-        </header>
-        {attentionItems.length > 0 ? (
-          <div className="admin-overview-attention__items">
-            {attentionItems.map((item) => (
-              <article key={item.label}>
-                <span>{item.label}</span>
-                <strong>{number.format(item.count)}</strong>
-              </article>
-            ))}
-          </div>
-        ) : null}
-      </section>
-
-      <section className="admin-overview-section" aria-labelledby="workspace-actions-title">
-        <header className="admin-overview-section__header">
-          <div>
-            <h2 id="workspace-actions-title">{copy.actionsTitle}</h2>
-            <p>{copy.actionsDescription}</p>
-          </div>
-        </header>
-        <div className="admin-overview-actions admin-overview-actions--compact">
-          {actions.map((action) => (
-            <ActionCard action={action} key={action.href} />
-          ))}
-        </div>
       </section>
     </>
   );

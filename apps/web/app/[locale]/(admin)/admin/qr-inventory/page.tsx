@@ -21,6 +21,7 @@ import { BrandAssetUploadView } from "../../../../../components/brand-asset-uplo
 import { QrBatchProgressView } from "../../../../../components/qr-batch-progress-view";
 import { QrInventoryAssignmentView } from "../../../../../components/qr-inventory-assignment-view";
 import { QrInventorySampleView } from "../../../../../components/qr-inventory-sample-view";
+import { ADMIN_QR_WORKFLOW_COPY } from "../../../../../content/admin-qr-workflow-copy";
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
 
@@ -266,6 +267,7 @@ export default async function QrInventoryPage({
         locale={locale}
         model={model}
         statusMessage={status ? statusMessages[status] : undefined}
+        workflowCopy={ADMIN_QR_WORKFLOW_COPY[locale]}
       />
       <QrBatchProgressView
         copy={{

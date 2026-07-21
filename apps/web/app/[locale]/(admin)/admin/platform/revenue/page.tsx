@@ -1,8 +1,11 @@
+import { RevenueCommandCenterService } from "@taptolk/application";
 import { getAdminLandingArea } from "@taptolk/auth";
 import { notFound, redirect } from "next/navigation";
-import { loadOperationsDashboard } from "../../../../../../admin/load-operations-dashboard";
+import { createSupabaseRevenueCommandCenterRepository } from "../../../../../../admin/supabase-revenue-command-center-repository";
+import { toAdminAuthorizationContext } from "../../../../../../auth/admin-authorization";
 import { getLocalizedAdminPath } from "../../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../../auth/page-guard";
+import { createAdminServerClient } from "../../../../../../auth/server-client";
 import { AdminPageHeader } from "../../../../../../components/admin-page-header";
 import { AdminRevenueView } from "../../../../../../components/admin-revenue-view";
 import { ADMIN_REVENUE_COPY } from "../../../../../../content/admin-revenue-copy";
@@ -24,10 +27,21 @@ export default async function PlatformRevenuePage({
     redirect(getLocalizedAdminPath(locale, "/dashboard"));
   }
 
-  const model = await loadOperationsDashboard(context);
-  if (!model) {
+  const client = await createAdminServerClient();
+  if (!client) {
     redirect(getLocalizedAdminPath(locale, "/login?error=configuration"));
   }
+  const model = await new RevenueCommandCenterService(
+    createSupabaseRevenueCommandCenterRepository(client),
+  ).read({
+    actor: {
+      authorization: toAdminAuthorizationContext(
+        context.decision.membership,
+        context.mfaLevel === "aal2",
+      ),
+      userId: context.userId,
+    },
+  });
 
   const copy = getMessages(locale);
 
@@ -44,7 +58,7 @@ export default async function PlatformRevenuePage({
         pathname={`/${locale}/admin/platform/revenue`}
       />
       <AdminRevenueView
-        backHref={getLocalizedAdminPath(locale, "/platform")}
+        canEdit={context.decision.membership.role === "SUPER_ADMIN"}
         copy={ADMIN_REVENUE_COPY[locale]}
         locale={locale}
         model={model}

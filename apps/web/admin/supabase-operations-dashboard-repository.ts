@@ -1,6 +1,11 @@
 import "server-only";
 
-import type { OperationsDashboardModel, OperationsDashboardRepository } from "@taptolk/application";
+import type {
+  OperationsDailyPoint,
+  OperationsDashboardModel,
+  OperationsDashboardRepository,
+  OperationsSitePerformance,
+} from "@taptolk/application";
 import type { createAdminServerClient } from "../auth/server-client";
 
 type AdminServerClient = NonNullable<Awaited<ReturnType<typeof createAdminServerClient>>>;
@@ -33,6 +38,51 @@ function mapNumber(row: Record<string, unknown>, field: string): number {
   return value;
 }
 
+function mapDailySeries(value: unknown): readonly OperationsDailyPoint[] {
+  if (!Array.isArray(value)) {
+    throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
+  }
+  return value.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
+    }
+    const row = item as Record<string, unknown>;
+    if (typeof row.date !== "string") {
+      throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
+    }
+    return {
+      contactCount: mapNumber(row, "contact_count"),
+      date: row.date,
+      escalatedCount: mapNumber(row, "escalated_count"),
+      notificationFailedCount: mapNumber(row, "notification_failed_count"),
+      notificationSentCount: mapNumber(row, "notification_sent_count"),
+      unresolvedCount: mapNumber(row, "unresolved_count"),
+    };
+  });
+}
+
+function mapSitePerformance(value: unknown): readonly OperationsSitePerformance[] {
+  if (!Array.isArray(value)) {
+    throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
+  }
+  return value.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
+    }
+    const row = item as Record<string, unknown>;
+    if (typeof row.site_id !== "string" || typeof row.site_name !== "string") {
+      throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
+    }
+    return {
+      activeQrCount: mapNumber(row, "active_qr_count"),
+      contactCount: mapNumber(row, "contact_count"),
+      siteId: row.site_id,
+      siteName: row.site_name,
+      unresolvedCount: mapNumber(row, "unresolved_count"),
+    };
+  });
+}
+
 function mapOperationsDashboard(value: unknown): OperationsDashboardModel {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
@@ -58,6 +108,11 @@ function mapOperationsDashboard(value: unknown): OperationsDashboardModel {
     openReportCount: mapNumber(row, "open_report_count"),
     siteCount: mapNumber(row, "site_count"),
     unresolvedCount: mapNumber(row, "unresolved_count"),
+    dailySeries: mapDailySeries(row.daily_series),
+    scopeManagementCompanyName: mapNullableString(row.scope_management_company_name),
+    scopeSiteName: mapNullableString(row.scope_site_name),
+    sitePerformance: mapSitePerformance(row.site_performance),
+    windowDays: mapNumber(row, "window_days"),
   };
 }
 
@@ -65,8 +120,12 @@ export function createSupabaseOperationsDashboardRepository(
   client: AdminServerClient,
 ): OperationsDashboardRepository {
   return {
-    async read() {
-      const result = await client.rpc("read_operations_dashboard");
+    async read(scope) {
+      const result = await client.rpc("read_operations_command_center", {
+        p_days: scope.days ?? 14,
+        p_management_company_id: scope.managementCompanyId ?? null,
+        p_site_id: scope.siteId ?? null,
+      });
       if (result.error) {
         throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
       }

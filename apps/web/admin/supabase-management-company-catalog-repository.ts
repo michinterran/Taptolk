@@ -25,7 +25,13 @@ function readTenantName(value: unknown): string | null {
   return typeof name === "string" ? name : null;
 }
 
-function mapCompanyRow(row: unknown): ManagementCompanyCatalogItem {
+function mapCompanyRow(
+  row: unknown,
+  metrics: ReadonlyMap<
+    string,
+    { activeQrCount: number; contractVehicleLimit: number; siteCount: number }
+  >,
+): ManagementCompanyCatalogItem {
   if (!row || typeof row !== "object") {
     throw new Error("Management Company catalog returned an invalid row.");
   }
@@ -44,10 +50,13 @@ function mapCompanyRow(row: unknown): ManagementCompanyCatalogItem {
     throw new Error("Management Company catalog returned an invalid row shape.");
   }
   return {
+    activeQrCount: metrics.get(candidate.id)?.activeQrCount ?? 0,
     businessNumber: candidate.business_number,
+    contractVehicleLimit: metrics.get(candidate.id)?.contractVehicleLimit ?? 0,
     createdAt: candidate.created_at,
     id: candidate.id,
     name: candidate.name,
+    siteCount: metrics.get(candidate.id)?.siteCount ?? 0,
     status: candidate.status,
     tenantId: candidate.tenant_id,
     tenantName,
@@ -59,14 +68,18 @@ export function createSupabaseManagementCompanyCatalogRepository(
   client: AdminServerClient,
 ): ManagementCompanyCatalogRepository {
   return {
-    async list({ limit, offset }) {
-      const result = await client
+    async list({ limit, offset, search }) {
+      let query = client
         .from("management_companies")
         .select(
           "id, tenant_id, name, business_number, status, version, created_at, tenants!inner(name)",
           { count: "exact" },
         )
-        .is("deleted_at", null)
+        .is("deleted_at", null);
+      if (search) {
+        query = query.ilike("name", `%${search.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`);
+      }
+      const result = await query
         .order("created_at", { ascending: false })
         .order("id", { ascending: true })
         .range(offset, offset + limit - 1);
@@ -76,8 +89,50 @@ export function createSupabaseManagementCompanyCatalogRepository(
         });
         throw new Error("Unable to load the Management Company catalog.");
       }
+      const rows = result.data ?? [];
+      const companyIds = rows.map((row) => row.id);
+      const metrics = new Map<
+        string,
+        { activeQrCount: number; contractVehicleLimit: number; siteCount: number }
+      >();
+      if (companyIds.length > 0) {
+        const [siteResult, qrResult] = await Promise.all([
+          client
+            .from("sites")
+            .select("id, management_company_id, contract_vehicle_limit")
+            .in("management_company_id", companyIds)
+            .is("deleted_at", null),
+          client
+            .from("qr_assets")
+            .select("management_company_id")
+            .in("management_company_id", companyIds)
+            .eq("status", "ACTIVE"),
+        ]);
+        if (siteResult.error || qrResult.error) {
+          logger.error("admin.management_company_catalog.metrics_failed", {
+            errorCode: siteResult.error?.code ?? qrResult.error?.code,
+          });
+          throw new Error("Unable to load Management Company metrics.");
+        }
+        for (const companyId of companyIds) {
+          metrics.set(companyId, { activeQrCount: 0, contractVehicleLimit: 0, siteCount: 0 });
+        }
+        for (const site of siteResult.data ?? []) {
+          const current = metrics.get(site.management_company_id);
+          if (current) {
+            current.siteCount += 1;
+            current.contractVehicleLimit += site.contract_vehicle_limit;
+          }
+        }
+        for (const asset of qrResult.data ?? []) {
+          const current = metrics.get(asset.management_company_id);
+          if (current) {
+            current.activeQrCount += 1;
+          }
+        }
+      }
       return {
-        items: (result.data ?? []).map(mapCompanyRow),
+        items: rows.map((row) => mapCompanyRow(row, metrics)),
         total: result.count ?? 0,
       };
     },

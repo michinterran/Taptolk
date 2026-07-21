@@ -8,6 +8,29 @@ export interface OperationsDashboardActor {
   userId: string;
 }
 
+export interface OperationsDailyPoint {
+  contactCount: number;
+  date: string;
+  escalatedCount: number;
+  notificationFailedCount: number;
+  notificationSentCount: number;
+  unresolvedCount: number;
+}
+
+export interface OperationsSitePerformance {
+  activeQrCount: number;
+  contactCount: number;
+  siteId: string;
+  siteName: string;
+  unresolvedCount: number;
+}
+
+export interface OperationsDashboardScope {
+  days?: number;
+  managementCompanyId?: string;
+  siteId?: string;
+}
+
 export interface OperationsDashboardModel {
   activeBlockCount: number;
   activeQrCount: number;
@@ -25,28 +48,53 @@ export interface OperationsDashboardModel {
   openReportCount: number;
   siteCount: number;
   unresolvedCount: number;
+  dailySeries: readonly OperationsDailyPoint[];
+  scopeManagementCompanyName: string | null;
+  scopeSiteName: string | null;
+  sitePerformance: readonly OperationsSitePerformance[];
+  windowDays: number;
 }
 
 export interface OperationsDashboardRepository {
-  read(): Promise<OperationsDashboardModel>;
+  read(scope: OperationsDashboardScope): Promise<OperationsDashboardModel>;
 }
 
 export class OperationsDashboardService {
   constructor(private readonly repository: OperationsDashboardRepository) {}
 
-  async read(input: { actor: OperationsDashboardActor }): Promise<OperationsDashboardModel> {
+  async read(input: {
+    actor: OperationsDashboardActor;
+    scope?: OperationsDashboardScope;
+  }): Promise<OperationsDashboardModel> {
     if (!UUID_PATTERN.test(input.actor.userId)) {
       throw new Error("INVALID_ID");
     }
-    const scope = input.actor.authorization.scope;
+    const requested = input.scope ?? {};
+    if (
+      (requested.managementCompanyId && !UUID_PATTERN.test(requested.managementCompanyId)) ||
+      (requested.siteId && !UUID_PATTERN.test(requested.siteId)) ||
+      (requested.days !== undefined &&
+        (!Number.isInteger(requested.days) || requested.days < 7 || requested.days > 90))
+    ) {
+      throw new Error("INVALID_OPERATIONS_SCOPE");
+    }
+    const actorScope = input.actor.authorization.scope;
     assertAdminAuthorized(
       authorizeAdminAction(input.actor.authorization, "audit:read", {
-        ...(scope.managementCompanyId ? { managementCompanyId: scope.managementCompanyId } : {}),
-        ...(scope.siteId ? { siteId: scope.siteId } : {}),
-        tenantId: scope.tenantId ?? "platform-operations",
+        ...(requested.managementCompanyId
+          ? { managementCompanyId: requested.managementCompanyId }
+          : actorScope.managementCompanyId
+            ? { managementCompanyId: actorScope.managementCompanyId }
+            : {}),
+        ...(requested.siteId
+          ? { siteId: requested.siteId }
+          : actorScope.siteId
+            ? { siteId: actorScope.siteId }
+            : {}),
+        tenantId: actorScope.tenantId ?? "platform-operations",
       }),
     );
-    return this.repository.read();
+    return this.repository.read(requested);
   }
 }
 

@@ -8,7 +8,6 @@ import {
   type StickerDesignStatus,
   type StickerDesignVersionItem,
 } from "@taptolk/application";
-import { SemanticHeading } from "@taptolk/ui";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import {
@@ -26,12 +25,10 @@ import {
   invalidateQrBatchSample,
   requestQrBatch,
 } from "../admin/qr-inventory-sample-actions";
-import { signOutAdmin } from "../auth/actions";
+import type { AdminQrWorkflowCopy } from "../content/admin-qr-workflow-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
 import { QrQuantityControl } from "./qr-quantity-control";
-
-const QR_PREVIEW_CELLS = Array.from({ length: 25 }, (_, index) => `qr-preview-cell-${index}`);
 
 interface QrInventoryCopy {
   actions: string;
@@ -139,6 +136,7 @@ interface QrInventorySampleViewProps {
   model: QrInventorySampleReadModel;
   statusMessage?: string | undefined;
   brandAssetUpload?: ReactNode;
+  workflowCopy: AdminQrWorkflowCopy;
 }
 
 function formatDate(locale: AppLocale, value: string): string {
@@ -291,24 +289,6 @@ function ReasonField({ copy, id }: { copy: QrInventoryCopy; id: string }) {
         required
       />
     </label>
-  );
-}
-
-function StickerPreview({ copy }: { copy: QrInventoryCopy }) {
-  return (
-    <figure className="admin-qr-sticker-preview">
-      <div className="admin-qr-sticker-preview__disc">
-        <div className="admin-qr-sticker-preview__mark" aria-hidden="true" />
-        <div className="admin-qr-sticker-preview__qr" aria-hidden="true">
-          {QR_PREVIEW_CELLS.map((key) => (
-            <span key={key} />
-          ))}
-        </div>
-        {/* biome-ignore lint/performance/noImgElement: approved logo must bypass image transformation */}
-        <img alt={copy.logoAlt} src="/brand/taptolk-logo.png" />
-      </div>
-      <figcaption>{copy.wizardPreview}</figcaption>
-    </figure>
   );
 }
 
@@ -587,7 +567,6 @@ function FinalGenerationApprovalCard({
 }
 
 export function QrInventorySampleView({
-  backHref,
   canApproveDesign,
   canApproveFinalGeneration,
   canArchiveDesign,
@@ -601,6 +580,7 @@ export function QrInventorySampleView({
   locale,
   model,
   statusMessage,
+  workflowCopy,
 }: QrInventorySampleViewProps) {
   return (
     <>
@@ -612,21 +592,12 @@ export function QrInventorySampleView({
         pathname={`/${locale}/admin/qr-inventory`}
       />
 
-      <section className="admin-section-hero">
+      <section className="admin-compact-heading">
         <div>
-          <a className="admin-back-link" href={backHref}>
-            {copy.back}
-          </a>
           <p className="eyebrow">{copy.eyebrow}</p>
-          <SemanticHeading className="admin-section-title" lines={copy.titleLines} />
-          <p className="admin-dashboard-description">{copy.description}</p>
+          <h1>{workflowCopy.title}</h1>
+          <p>{workflowCopy.description}</p>
         </div>
-        <form action={signOutAdmin}>
-          <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
-          <button className="tt-button tt-button--secondary" type="submit">
-            {copy.signOut}
-          </button>
-        </form>
       </section>
 
       {statusMessage ? (
@@ -643,30 +614,25 @@ export function QrInventorySampleView({
         <strong>{copy.finalApprovalNotice}</strong>
       </aside>
 
-      <section className="admin-qr-wizard" aria-labelledby="qr-wizard-title">
+      <section
+        className="admin-qr-wizard admin-qr-wizard--workflow"
+        aria-labelledby="qr-wizard-title"
+      >
         <div className="admin-qr-wizard__copy">
           <p className="eyebrow">{copy.wizardTemplate}</p>
-          <h2 id="qr-wizard-title">{copy.wizardTitle}</h2>
-          <p>{copy.wizardTemplateDescription}</p>
+          <h2 id="qr-wizard-title">{workflowCopy.title}</h2>
+          <p>{workflowCopy.description}</p>
           <div className="admin-qr-wizard__steps">
-            <WizardStep
-              description={copy.wizardStep1Description}
-              index={1}
-              title={copy.wizardStep1}
-            />
-            <WizardStep
-              description={copy.wizardStep2Description}
-              index={2}
-              title={copy.wizardStep2}
-            />
-            <WizardStep
-              description={copy.wizardStep3Description}
-              index={3}
-              title={copy.wizardStep3}
-            />
+            {workflowCopy.steps.map((step, index) => (
+              <WizardStep
+                description={step.description}
+                index={index + 1}
+                key={step.title}
+                title={step.title}
+              />
+            ))}
           </div>
         </div>
-        <StickerPreview copy={copy} />
       </section>
 
       {brandAssetUpload ? (
@@ -702,16 +668,30 @@ export function QrInventorySampleView({
                     ))}
                   </select>
                 </label>
-                <label className="admin-field" htmlFor="design-template">
-                  <span>{copy.templateCode}</span>
-                  <select id="design-template" name="templateCode" required>
-                    {STICKER_TEMPLATE_CODES.map((templateCode) => (
-                      <option key={templateCode} value={templateCode}>
-                        {templateCode}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <fieldset className="admin-template-options">
+                  <legend>{workflowCopy.templateLegend}</legend>
+                  {STICKER_TEMPLATE_CODES.map((templateCode, index) => (
+                    <label className="admin-template-option" key={templateCode}>
+                      <input
+                        aria-label={workflowCopy.templateLabels[templateCode]}
+                        defaultChecked={index === 0}
+                        name="templateCode"
+                        required
+                        type="radio"
+                        value={templateCode}
+                      />
+                      <span className="admin-template-option__preview">
+                        {/* biome-ignore lint/performance/noImgElement: protected route returns a generated production renderer preview */}
+                        <img
+                          alt={`${workflowCopy.templateLabels[templateCode]} · ${workflowCopy.previewAlt}`}
+                          src={`/api/admin/qr-preview?template=${templateCode}`}
+                        />
+                      </span>
+                      <strong>{workflowCopy.templateLabels[templateCode]}</strong>
+                      <small>{workflowCopy.templateDescriptions[templateCode]}</small>
+                    </label>
+                  ))}
+                </fieldset>
                 <label className="admin-field" htmlFor="design-brand-asset">
                   <span>{copy.designLogo}</span>
                   <select id="design-brand-asset" name="brandAssetId">

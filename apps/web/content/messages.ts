@@ -296,9 +296,9 @@ export const ko = {
   "admin.qr.batch.purpose": "배포 목적",
   "admin.qr.batch.purpose.placeholder": "예: 입주민 차량 스티커 샘플",
   "admin.qr.batch.quantity": "요청 수량",
-  "admin.qr.batch.request": "소량 Batch 요청",
+  "admin.qr.batch.request": "제작 수량 요청",
   "admin.qr.batch.request.description":
-    "승인된 관리 현장 디자인으로 한 번에 1~100개 QR 스티커 제작 묶음을 요청합니다.",
+    "승인된 관리 현장 디자인으로 총 제작 수량을 요청합니다. 서버가 각 제작 묶음을 100개 이하로 나눕니다.",
   "admin.qr.batch.request.title": "QR 제작 묶음 요청",
   "admin.qr.batch.splitNotice":
     "400개, 1,000개처럼 더 많은 수량은 100개 단위 제작 묶음으로 나누어 연속 요청합니다. 단일 Batch 한도는 계속 1~100개입니다.",
@@ -361,13 +361,13 @@ export const ko = {
   "admin.qr.eyebrow": "QR 제작 마법사",
   "admin.qr.final.approve": "승인 및 생성 작업 준비",
   "admin.qr.final.approval.description":
-    "독립 Super Admin이 Site, 수량, 디자인과 샘플 근거를 확인합니다. 승인은 생성 작업을 준비하지만 Queue 전달이나 QR 생성을 뜻하지 않습니다.",
+    "다른 슈퍼어드민이 관리 현장, 수량, 디자인과 샘플 검사 결과를 확인합니다. 승인이 끝나면 안전하게 제작 준비 단계로 이동합니다.",
   "admin.qr.final.approval.title": "대량 생성 최종 승인 큐",
   "admin.qr.final.request": "대량 생성 최종 승인 요청",
   "admin.qr.final.request.description":
     "샘플이 승인된 Batch의 원 요청자만 Super Admin 최종 검토를 요청할 수 있습니다.",
   "admin.qr.finalApprovalNotice":
-    "샘플 승인과 최종 승인은 서로 다른 단계입니다. Super Admin 최종 승인은 durable 생성 작업을 준비하지만, 아직 Queue 전달이나 QR 생성을 시작하지 않습니다.",
+    "샘플 승인과 최종 승인은 서로 다른 단계입니다. 최종 승인은 안전한 생성 작업을 준비하며, 제작 대기열 전달과 QR 생성은 다음 단계에서 시작됩니다.",
   "admin.qr.invalidate": "샘플 무효화",
   "admin.qr.line1": "디자인부터 제작 요청까지,",
   "admin.qr.line2": "QR 스티커를 한 흐름으로 만듭니다.",
@@ -448,7 +448,8 @@ export const ko = {
   "admin.qr.status.batchReceived": "Batch 수량이 검증되어 IN_STOCK으로 입고되었습니다.",
   "admin.qr.status.brandAssetUploaded": "브랜드 로고가 검증되어 안전하게 등록되었습니다.",
   "admin.qr.status.batchCancelled": "QR Batch 요청이 취소되었습니다.",
-  "admin.qr.status.batchRequested": "소량 QR Batch가 샘플 검토 대기열에 추가되었습니다.",
+  "admin.qr.status.batchRequested":
+    "요청 수량이 100개 이하의 제작 묶음으로 나뉘어 샘플 검토 대기열에 추가되었습니다.",
   "admin.qr.status.designApproved": "Sticker Design Version이 독립 검토 후 승인되었습니다.",
   "admin.qr.status.designArchived": "Sticker Design Version이 이력을 유지한 채 보관되었습니다.",
   "admin.qr.status.designCreated": "Sticker Design DRAFT가 검토 대기열에 추가되었습니다.",
@@ -473,7 +474,8 @@ export const ko = {
   "admin.qr.wizard.brand.description":
     "관리 현장 로고를 먼저 등록하면 스티커 미리보기에 함께 반영됩니다.",
   "admin.qr.wizard.preview": "85mm 원형 스티커 미리보기",
-  "admin.qr.wizard.quantityHint": "1~100개 단위로 제작 묶음을 요청합니다.",
+  "admin.qr.wizard.quantityHint":
+    "총 1~10,000개를 요청하면 서버가 100개 이하의 제작 묶음으로 안전하게 나눕니다.",
   "admin.qr.wizard.step1": "현장 선택",
   "admin.qr.wizard.step1.description": "계약 고객, 관리회사, 관리 현장을 확인합니다.",
   "admin.qr.wizard.step2": "디자인 선택",
@@ -1059,9 +1061,9 @@ export const en = {
   "admin.qr.batch.purpose": "Distribution purpose",
   "admin.qr.batch.purpose.placeholder": "For example, resident vehicle sticker sample",
   "admin.qr.batch.quantity": "Requested quantity",
-  "admin.qr.batch.request": "Request small Batch",
+  "admin.qr.batch.request": "Request production quantity",
   "admin.qr.batch.request.description":
-    "Request one 1–100 QR sticker production lot from an approved managed-location design.",
+    "Request the total production quantity for an approved managed-location design. The server splits it into lots of 100 or fewer.",
   "admin.qr.batch.request.title": "Request a QR production lot",
   "admin.qr.batch.splitNotice":
     "Larger needs such as 400 or 1,000 stickers are handled as consecutive 100-unit production lots. A single Batch remains limited to 1–100.",
@@ -1124,13 +1126,13 @@ export const en = {
   "admin.qr.eyebrow": "QR production wizard",
   "admin.qr.final.approve": "Approve and prepare generation",
   "admin.qr.final.approval.description":
-    "An independent Super Admin reviews the Site, quantity, design, and sample evidence. Approval prepares a durable job; it does not mean queued or generated.",
+    "A second Super Admin reviews the managed location, quantity, design, and sample results. Approval safely moves the request into production preparation.",
   "admin.qr.final.approval.title": "Bulk-generation final approval queue",
   "admin.qr.final.request": "Request final generation approval",
   "admin.qr.final.request.description":
     "Only the original requester of a sample-approved Batch can request final Super Admin review.",
   "admin.qr.finalApprovalNotice":
-    "Sample approval and final approval are separate steps. Super Admin final approval prepares a durable generation job but does not start Queue delivery or QR generation.",
+    "Sample approval and final approval are separate steps. Final approval safely prepares the generation job; queue delivery and QR generation begin in the next step.",
   "admin.qr.invalidate": "Invalidate sample",
   "admin.qr.line1": "Move from design to production",
   "admin.qr.line2": "in one clear QR sticker flow.",
@@ -1214,7 +1216,8 @@ export const en = {
   "admin.qr.status.batchReceived": "The Batch quantity was verified and received into IN_STOCK.",
   "admin.qr.status.brandAssetUploaded": "The brand logo was validated and registered safely.",
   "admin.qr.status.batchCancelled": "The QR Batch request was cancelled.",
-  "admin.qr.status.batchRequested": "The small QR Batch was added to sample review.",
+  "admin.qr.status.batchRequested":
+    "The requested quantity was split into production lots of 100 or fewer and added to sample review.",
   "admin.qr.status.designApproved":
     "The Sticker Design Version was approved by an independent reviewer.",
   "admin.qr.status.designArchived":
@@ -1243,7 +1246,8 @@ export const en = {
   "admin.qr.wizard.brand.description":
     "Upload the managed-location logo first so it can be reflected in the sticker preview.",
   "admin.qr.wizard.preview": "85mm round sticker preview",
-  "admin.qr.wizard.quantityHint": "Request production lots in 1–100 unit increments.",
+  "admin.qr.wizard.quantityHint":
+    "Request 1–10,000 total units; the server atomically splits them into production batches of 100 or fewer.",
   "admin.qr.wizard.step1": "Choose location",
   "admin.qr.wizard.step1.description":
     "Confirm the contract customer, management company, and managed location.",
