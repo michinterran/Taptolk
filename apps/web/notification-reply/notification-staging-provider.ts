@@ -1,8 +1,12 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { type NotificationSmsProvider, NotificationSmsProviderError } from "@taptolk/application";
-import type { SmsProviderErrorCode } from "@taptolk/domain";
+import {
+  type OwnerContactNotification,
+  type OwnerNotificationProvider,
+  OwnerNotificationProviderError,
+} from "@taptolk/application";
+import type { NotificationProviderErrorCode } from "@taptolk/domain";
 import type { NotificationReplyCrypto } from "./notification-reply-crypto";
 
 export interface StagingInboxItem {
@@ -12,7 +16,7 @@ export interface StagingInboxItem {
 
 interface StagingProviderState {
   inbox: Map<string, StagingInboxItem>;
-  nextFailure: SmsProviderErrorCode | null;
+  nextFailure: NotificationProviderErrorCode | null;
 }
 
 const root = globalThis as typeof globalThis & {
@@ -34,7 +38,9 @@ function getState(): StagingProviderState {
 
 const state = getState();
 
-export function configureNotificationStagingFailure(code: SmsProviderErrorCode | null): void {
+export function configureNotificationStagingFailure(
+  code: NotificationProviderErrorCode | null,
+): void {
   state.nextFailure = code;
 }
 
@@ -47,26 +53,31 @@ export function clearNotificationStagingInbox(): void {
   state.nextFailure = null;
 }
 
-export class StagingNotificationSmsProvider implements NotificationSmsProvider {
+export class StagingOwnerNotificationProvider implements OwnerNotificationProvider {
   constructor(private readonly crypto: NotificationReplyCrypto) {}
 
   async send(input: {
-    body: string;
     idempotencyKey: string;
+    notification: OwnerContactNotification;
     toCiphertext: string;
   }): Promise<{ providerMessageId: string }> {
     const destination = this.crypto.decryptOwnerPhone(input.toCiphertext);
     if (!/^010[0-9]{8}$/u.test(destination)) {
-      throw new NotificationSmsProviderError("INVALID_RECIPIENT");
+      throw new OwnerNotificationProviderError("INVALID_RECIPIENT");
     }
     if (state.nextFailure) {
       const code = state.nextFailure;
       state.nextFailure = null;
-      throw new NotificationSmsProviderError(code);
+      throw new OwnerNotificationProviderError(code);
     }
-    const responseToken = input.body.match(/\/respond\/([A-Za-z0-9_-]{32,100})/u)?.[1];
+    if (input.notification.templateKey !== "OWNER_CONTACT_REQUEST_V1") {
+      throw new OwnerNotificationProviderError("PERMANENT_FAILURE");
+    }
+    const responseToken = input.notification.variables.responseUrl.match(
+      /\/respond\/([A-Za-z0-9_-]{32,100})$/u,
+    )?.[1];
     if (!responseToken) {
-      throw new NotificationSmsProviderError("PERMANENT_FAILURE");
+      throw new OwnerNotificationProviderError("PERMANENT_FAILURE");
     }
     if (!state.inbox.has(input.idempotencyKey)) {
       state.inbox.set(input.idempotencyKey, {
@@ -82,8 +93,8 @@ export class StagingNotificationSmsProvider implements NotificationSmsProvider {
   }
 }
 
-export class UnavailableNotificationSmsProvider implements NotificationSmsProvider {
+export class UnavailableOwnerNotificationProvider implements OwnerNotificationProvider {
   async send(): Promise<never> {
-    throw new NotificationSmsProviderError("AUTH_ERROR");
+    throw new OwnerNotificationProviderError("AUTH_ERROR");
   }
 }

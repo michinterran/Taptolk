@@ -23,13 +23,13 @@ export {
   DEFAULT_NOTIFICATION_RETRY_DELAYS_SECONDS,
   DEFAULT_RESPONSE_TOKEN_TTL_SECONDS,
   getNotificationRetryDelaySeconds,
-  isRetryableSmsProviderError,
+  isRetryableNotificationProviderError,
+  NOTIFICATION_PROVIDER_ERROR_CODES,
+  type NotificationProviderErrorCode,
   NotificationReplyPolicyError,
   normalizeOwnerReply,
   OWNER_REPLY_CODES,
   type OwnerReplyCode,
-  SMS_PROVIDER_ERROR_CODES,
-  type SmsProviderErrorCode,
 } from "./notification-reply-policy.js";
 export {
   assertOwnerConsent,

@@ -1,33 +1,40 @@
 import {
   assertResponseTokenTtl,
+  type ContactReasonCode,
   DEFAULT_RESPONSE_TOKEN_TTL_SECONDS,
   getNotificationRetryDelaySeconds,
-  isRetryableSmsProviderError,
+  isRetryableNotificationProviderError,
+  type NotificationProviderErrorCode,
   normalizeOwnerReply,
   type OwnerReplyCode,
-  type SmsProviderErrorCode,
 } from "@taptolk/domain";
+
+export interface OwnerContactNotification {
+  locale: "en" | "ko";
+  templateKey: "OWNER_CONTACT_REQUEST_V1";
+  variables: {
+    reasonCode: ContactReasonCode;
+    responseUrl: string;
+  };
+}
 
 export interface NotificationDeliveryClaim {
   deliveryId: string;
   destinationCiphertext: string;
   idempotencyKey: string;
   leaseVersion: number;
-  locale: "en" | "ko";
-  messageBody: string;
-  responseToken: string;
+  notification: OwnerContactNotification;
 }
 
 export interface NotificationDeliveryRepository {
   claim(input: {
     leaseSeconds: number;
     limit: number;
-    responseTokenHashes: readonly string[];
     workerId: string;
   }): Promise<readonly NotificationDeliveryClaim[]>;
   fail(input: {
     deliveryId: string;
-    errorCode: SmsProviderErrorCode;
+    errorCode: NotificationProviderErrorCode;
     final: boolean;
     leaseVersion: number;
     nextAttemptAt: string | null;
@@ -41,10 +48,10 @@ export interface NotificationDeliveryRepository {
   }): Promise<void>;
 }
 
-export interface NotificationSmsProvider {
+export interface OwnerNotificationProvider {
   send(input: {
-    body: string;
     idempotencyKey: string;
+    notification: OwnerContactNotification;
     toCiphertext: string;
   }): Promise<{ providerMessageId: string }>;
 }
@@ -57,19 +64,17 @@ export interface NotificationHasher {
   hash(value: string, purpose: "response-token"): Promise<string>;
 }
 
-export class NotificationSmsProviderError extends Error {
-  constructor(readonly code: SmsProviderErrorCode) {
-    super(`SMS provider rejected request: ${code}`);
-    this.name = "NotificationSmsProviderError";
+export class OwnerNotificationProviderError extends Error {
+  constructor(readonly code: NotificationProviderErrorCode) {
+    super(`Owner notification provider rejected request: ${code}`);
+    this.name = "OwnerNotificationProviderError";
   }
 }
 
 export class NotificationDispatchService {
   constructor(
     private readonly repository: NotificationDeliveryRepository,
-    private readonly provider: NotificationSmsProvider,
-    private readonly hasher: NotificationHasher,
-    private readonly secrets: NotificationSecretFactory,
+    private readonly provider: OwnerNotificationProvider,
     private readonly now: () => Date = () => new Date(),
   ) {}
 
@@ -89,12 +94,8 @@ export class NotificationDispatchService {
     ) {
       throw new Error("INVALID_NOTIFICATION_DISPATCH_INPUT");
     }
-    const tokens = Array.from({ length: input.limit }, () => this.secrets.createResponseToken());
     const claims = await this.repository.claim({
       ...input,
-      responseTokenHashes: await Promise.all(
-        tokens.map((token) => this.hasher.hash(token, "response-token")),
-      ),
     });
     let sent = 0;
     let retryScheduled = 0;
@@ -102,8 +103,8 @@ export class NotificationDispatchService {
     for (const claim of claims) {
       try {
         const result = await this.provider.send({
-          body: claim.messageBody,
           idempotencyKey: claim.idempotencyKey,
+          notification: claim.notification,
           toCiphertext: claim.destinationCiphertext,
         });
         await this.repository.sent({
@@ -114,8 +115,8 @@ export class NotificationDispatchService {
         });
         sent += 1;
       } catch (error) {
-        const code = error instanceof NotificationSmsProviderError ? error.code : "UNKNOWN";
-        const retryable = isRetryableSmsProviderError(code);
+        const code = error instanceof OwnerNotificationProviderError ? error.code : "UNKNOWN";
+        const retryable = isRetryableNotificationProviderError(code);
         const attempt = claim.leaseVersion;
         const nextAttemptAt = retryable
           ? new Date(

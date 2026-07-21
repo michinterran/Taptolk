@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-07-20T04:07:20.508Z",
+  "lastUpdated": "2026-07-21T03:32:15.524Z",
   "activeFeatures": [
     "i18n-foundation",
     "tenant-admin-foundation",
@@ -16,7 +16,8 @@
     "escalation-abuse",
     "analytics-hardening",
     "production-privacy-cleanup-cron",
-    "public-landing-onboarding"
+    "public-landing-onboarding",
+    "kakao-alimtalk-ephemeral-contact"
   ],
   "primaryFeature": "i18n-foundation",
   "features": {
@@ -484,6 +485,49 @@
         "lastUpdated": "2026-07-20T04:07:20.508Z"
       },
       "completedAt": "2026-07-20T04:07:20.475Z"
+    },
+    "kakao-alimtalk-ephemeral-contact": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:11:04.522Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:11:04.546Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:30:15.711Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:32:15.509Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:32:15.524Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-21T03:07:35.705Z",
+        "lastUpdated": "2026-07-21T03:32:15.524Z"
+      },
+      "completedAt": "2026-07-21T03:32:15.522Z"
     }
   },
   "pipeline": {
@@ -494,7 +538,7 @@
   "session": {
     "startedAt": "2026-07-18T09:15:44.795Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-07-20T04:07:20.508Z"
+    "lastActivity": "2026-07-21T03:32:15.524Z"
   },
   "history": [
     {
@@ -1480,6 +1524,71 @@
       "phase": "report",
       "nextPhase": "completed",
       "timestamp": "2026-07-20T04:07:20.496Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-21T03:11:04.516Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-21T03:11:04.517Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-21T03:11:04.534Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-21T03:11:04.543Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-21T03:11:04.545Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-21T03:30:15.709Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-21T03:30:15.711Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-21T03:32:15.506Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-21T03:32:15.508Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-21T03:32:15.523Z"
     }
   ]
 }

@@ -1,5 +1,8 @@
 import { parseServerEnvironment } from "@taptolk/config";
-import { SMS_PROVIDER_ERROR_CODES, type SmsProviderErrorCode } from "@taptolk/domain";
+import {
+  NOTIFICATION_PROVIDER_ERROR_CODES,
+  type NotificationProviderErrorCode,
+} from "@taptolk/domain";
 import { NextResponse } from "next/server";
 import {
   clearNotificationStagingInbox,
@@ -39,11 +42,13 @@ export async function POST(request: Request) {
   const input = (await request.json()) as { failureCode?: string | null };
   if (
     input.failureCode !== null &&
-    !SMS_PROVIDER_ERROR_CODES.includes(input.failureCode as SmsProviderErrorCode)
+    !NOTIFICATION_PROVIDER_ERROR_CODES.includes(input.failureCode as NotificationProviderErrorCode)
   ) {
     return NextResponse.json({ error: { code: "INVALID" } }, { status: 400 });
   }
-  configureNotificationStagingFailure((input.failureCode as SmsProviderErrorCode | null) ?? null);
+  configureNotificationStagingFailure(
+    (input.failureCode as NotificationProviderErrorCode | null) ?? null,
+  );
   return NextResponse.json({ data: { configured: true } });
 }
 

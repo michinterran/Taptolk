@@ -9,6 +9,7 @@ import type {
   OwnerResponseInspection,
   OwnerResponseRepository,
 } from "@taptolk/application";
+import { CONTACT_REASON_CODES, type ContactReasonCode } from "@taptolk/domain";
 import type { createAdminServiceClient } from "../auth/service-client";
 
 type ServiceClient = NonNullable<ReturnType<typeof createAdminServiceClient>>;
@@ -72,19 +73,23 @@ export function createSupabaseNotificationDeliveryRepository(input: {
           }),
         );
         const responseUrl = `${input.baseUrl.replace(/\/$/u, "")}/ko/respond/${responseToken}`;
+        const reasonCode = text(claimed.reason_code);
+        if (!CONTACT_REASON_CODES.includes(reasonCode as ContactReasonCode)) {
+          throw new Error("NOTIFICATION_REPOSITORY_UNAVAILABLE");
+        }
         claims.push({
           deliveryId,
           destinationCiphertext: text(claimed.destination_ciphertext),
           idempotencyKey: text(claimed.idempotency_key),
           leaseVersion,
-          locale: "ko",
-          messageBody: [
-            "[Taptolk] 차량 연락 요청",
-            `등록 차량 끝자리 ${text(claimed.vehicle_plate_last4)}에 요청이 도착했습니다.`,
-            `확인 및 답장: ${responseUrl}`,
-            "유효시간: 60분",
-          ].join("\n"),
-          responseToken,
+          notification: {
+            locale: "ko",
+            templateKey: "OWNER_CONTACT_REQUEST_V1",
+            variables: {
+              reasonCode: reasonCode as ContactReasonCode,
+              responseUrl,
+            },
+          },
         });
       }
       return claims;

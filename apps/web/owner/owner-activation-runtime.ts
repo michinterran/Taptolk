@@ -29,7 +29,7 @@ export function createOwnerActivationService(): OwnerActivationService | null {
     stage = "PROVIDER";
     const mockProvider =
       environment.APP_ENV !== "production" &&
-      environment.SMS_PROVIDER === "mock" &&
+      environment.OWNER_VERIFICATION_PROVIDER === "mock" &&
       environment.OWNER_STAGING_MOCK_OTP;
     stage = "SERVICE";
     return new OwnerActivationService(

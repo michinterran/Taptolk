@@ -33,6 +33,7 @@ const serverEnvironmentSchema = z
     OWNER_OTP_PROOF_TTL_SECONDS: integerEnvironmentSchema(300, 60, 900),
     OWNER_OTP_RESEND_SECONDS: integerEnvironmentSchema(60, 30, 300),
     OWNER_OTP_TTL_SECONDS: integerEnvironmentSchema(180, 60, 600),
+    OWNER_NOTIFICATION_PROVIDER: z.enum(["mock", "kakao-alimtalk"]).default("mock"),
     OWNER_SESSION_TTL_SECONDS: integerEnvironmentSchema(43_200, 300, 86_400),
     OWNER_STAGING_MOCK_OTP: z.preprocess(
       emptyStringToUndefined,
@@ -41,6 +42,7 @@ const serverEnvironmentSchema = z
         .regex(/^[0-9]{6}$/u)
         .optional(),
     ),
+    OWNER_VERIFICATION_PROVIDER: z.enum(["mock", "unavailable"]).default("mock"),
     PUBLIC_QR_BASE_URL: optionalUrlSchema,
     PRIVACY_CLEANUP_DURATION_BUDGET_MS: integerEnvironmentSchema(45_000, 1_000, 55_000),
     PRIVACY_CLEANUP_TENANT_LIMIT: integerEnvironmentSchema(25, 1, 100),
@@ -71,17 +73,6 @@ const serverEnvironmentSchema = z
     RESPONSE_TOKEN_TTL_MINUTES: integerEnvironmentSchema(60),
     SENTRY_AUTH_TOKEN: optionalSecretSchema,
     SENTRY_DSN: optionalUrlSchema,
-    SMS_API_KEY: optionalSecretSchema,
-    SMS_API_SECRET: optionalSecretSchema,
-    SMS_PROVIDER: z.enum(["mock", "console", "naver-sens", "solapi"]).default("mock"),
-    SMS_SENDER_NUMBER: z.preprocess(
-      (value) => (value === "" ? undefined : value),
-      z.string().min(8).optional(),
-    ),
-    SMS_SERVICE_ID: z.preprocess(
-      (value) => (value === "" ? undefined : value),
-      z.string().min(1).optional(),
-    ),
     STICKER_RENDER_CHUNK_SIZE: integerEnvironmentSchema(25),
     SUPABASE_SECRET_KEY: z.preprocess(
       (value) => (value === "" ? undefined : value),
@@ -154,11 +145,18 @@ const serverEnvironmentSchema = z
       }
     }
 
-    if (environment.SMS_PROVIDER === "mock" || environment.SMS_PROVIDER === "console") {
+    if (environment.OWNER_NOTIFICATION_PROVIDER === "mock") {
       context.addIssue({
         code: "custom",
-        message: "Production requires an approved SMS provider.",
-        path: ["SMS_PROVIDER"],
+        message: "Production requires an approved owner notification provider.",
+        path: ["OWNER_NOTIFICATION_PROVIDER"],
+      });
+    }
+    if (environment.OWNER_VERIFICATION_PROVIDER === "mock") {
+      context.addIssue({
+        code: "custom",
+        message: "Production requires an approved owner verification provider.",
+        path: ["OWNER_VERIFICATION_PROVIDER"],
       });
     }
     if (environment.OWNER_STAGING_MOCK_OTP) {

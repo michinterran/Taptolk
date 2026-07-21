@@ -37,17 +37,21 @@ Owner PWA UI
   → RLS-protected Owner DTO
 ```
 
-The SMS boundary is:
+The Owner verification boundary is:
 
 ```text
 OwnerActivationService
   → OwnerOtpProvider
       → StagingMockOwnerOtpProvider
-      → future Supabase Send SMS Hook / domestic provider
+      → UnavailableOwnerOtpProvider in Production
+      → future approved identity-verification provider
 ```
 
-The provider receives the raw six-digit OTP only in memory. Repository calls receive purpose-
+The staging provider receives the raw six-digit OTP only in memory. Repository calls receive purpose-
 separated hashes and encrypted phone data, never the raw OTP or phone.
+
+Kakao AlimTalk informational templates are not treated as phone-ownership verification. Selecting
+the Production verification provider remains a separate user-owned external gate.
 
 ### 2.2 Component Design
 

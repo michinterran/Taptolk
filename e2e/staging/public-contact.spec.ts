@@ -338,9 +338,9 @@ test.describe
           "messages",
           `tenant_id=eq.${fixture.tenantAId}&select=id`,
         ),
-        fixture.api.select<{ id: string; status: string }>(
+        fixture.api.select<{ channel: string; id: string; status: string }>(
           "notification_deliveries",
-          `tenant_id=eq.${fixture.tenantAId}&select=id,status`,
+          `tenant_id=eq.${fixture.tenantAId}&select=id,status,channel`,
         ),
         fixture.api.select<{ id: string }>(
           "public_contact_attempts",
@@ -353,7 +353,9 @@ test.describe
       ]);
       expect(sessions).toHaveLength(1);
       expect(messages).toHaveLength(1);
-      expect(deliveries).toEqual([expect.objectContaining({ status: "QUEUED" })]);
+      expect(deliveries).toEqual([
+        expect.objectContaining({ channel: "KAKAO_ALIMTALK", status: "QUEUED" }),
+      ]);
       expect(createdAttempts).toHaveLength(1);
       expect(mergedAttempts).toHaveLength(1);
 
@@ -480,9 +482,10 @@ test.describe
       const [pendingDelivery] = await fixture.api.select<{
         id: string;
         idempotency_key: string;
+        session_id: string;
       }>(
         "notification_deliveries",
-        `tenant_id=eq.${fixture.tenantAId}&status=eq.QUEUED&select=id,idempotency_key&order=created_at.desc&limit=1`,
+        `tenant_id=eq.${fixture.tenantAId}&status=eq.QUEUED&select=id,idempotency_key,session_id&order=created_at.desc&limit=1`,
       );
       const staleWorker = "expired-worker-01";
       const staleClaims = await fixture.api.rpc<
@@ -550,6 +553,45 @@ test.describe
       await ownerPage.close();
       await page.reload();
       await expect(page.getByText("지금 이동하겠습니다.")).toBeVisible();
+      await page.getByRole("button", { name: "요청 완료하기" }).click();
+      await expect(page.getByText("요청이 완료되었습니다.")).toBeVisible();
+      expect((await page.request.get("/api/public/contact-sessions/current")).status()).toBe(401);
+      const terminalCookies = await page.context().cookies();
+      expect(terminalCookies.some(({ name }) => name === "tt_caller_anon")).toBe(false);
+      expect(terminalCookies.some(({ name }) => name === "tt_contact_session")).toBe(false);
+      expect(
+        await fixture.api.select<{ id: string }>(
+          "contact_sessions",
+          `id=eq.${pendingDelivery.session_id}&status=eq.RESOLVED&select=id`,
+        ),
+      ).toHaveLength(1);
+      expect(
+        await fixture.api.select<{ body: string; body_hash: string }>(
+          "messages",
+          `session_id=eq.${pendingDelivery.session_id}&select=body,body_hash`,
+        ),
+      ).toEqual([
+        { body: "[REDACTED]", body_hash: "0".repeat(64) },
+        { body: "[REDACTED]", body_hash: "0".repeat(64) },
+      ]);
+      expect(
+        await fixture.api.select<{ id: string }>(
+          "response_tokens",
+          `session_id=eq.${pendingDelivery.session_id}&revoked_at=not.is.null&select=id`,
+        ),
+      ).toHaveLength(2);
+      expect(
+        await fixture.api.select<{ id: string }>(
+          "session_participants",
+          `session_id=eq.${pendingDelivery.session_id}&left_at=is.null&select=id`,
+        ),
+      ).toEqual([]);
+      expect(
+        await fixture.api.select<{ id: string }>(
+          "audit_logs",
+          `resource_id=eq.${pendingDelivery.session_id}&action=eq.PUBLIC_CONTACT_RESOLVED&select=id`,
+        ),
+      ).toHaveLength(1);
       expect(
         await fixture.api.select<{ id: string }>(
           "notification_deliveries",
@@ -716,6 +758,16 @@ test.describe
         body: "[REDACTED]",
         body_hash: messageBefore?.body_hash,
       });
+      const expiredSessionMessages = await fixture.api.select<{
+        body: string;
+        body_hash: string;
+      }>("messages", `session_id=eq.${session.id}&select=body,body_hash`);
+      expect(expiredSessionMessages.length).toBeGreaterThan(0);
+      expect(
+        expiredSessionMessages.every(
+          ({ body, body_hash }) => body === "[REDACTED]" && body_hash === "0".repeat(64),
+        ),
+      ).toBe(true);
       expect(
         await fixture.api.select<{ id: string }>(
           "contact_sessions",

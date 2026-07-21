@@ -5,8 +5,8 @@ import { parseServerEnvironment } from "@taptolk/config";
 import { createAdminServiceClient } from "../auth/service-client";
 import { NotificationReplyCrypto } from "./notification-reply-crypto";
 import {
-  StagingNotificationSmsProvider,
-  UnavailableNotificationSmsProvider,
+  StagingOwnerNotificationProvider,
+  UnavailableOwnerNotificationProvider,
 } from "./notification-staging-provider";
 import {
   createSupabaseNotificationDeliveryRepository,
@@ -38,7 +38,8 @@ export function createNotificationDispatchService(): NotificationDispatchService
     return null;
   }
   const stagingMock =
-    value.environment.APP_ENV !== "production" && value.environment.SMS_PROVIDER === "mock";
+    value.environment.APP_ENV !== "production" &&
+    value.environment.OWNER_NOTIFICATION_PROVIDER === "mock";
   return new NotificationDispatchService(
     createSupabaseNotificationDeliveryRepository({
       baseUrl: value.environment.OWNER_RESPONSE_BASE_URL as string,
@@ -47,10 +48,8 @@ export function createNotificationDispatchService(): NotificationDispatchService
       secrets: value.crypto,
     }),
     stagingMock
-      ? new StagingNotificationSmsProvider(value.crypto)
-      : new UnavailableNotificationSmsProvider(),
-    value.crypto,
-    value.crypto,
+      ? new StagingOwnerNotificationProvider(value.crypto)
+      : new UnavailableOwnerNotificationProvider(),
   );
 }
 

@@ -57,10 +57,15 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
   const [escalation, setEscalation] = useState<EscalationData | null>(null);
   const [officeAlertSent, setOfficeAlertSent] = useState(false);
   const [officeAlertWorking, setOfficeAlertWorking] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [completeWorking, setCompleteWorking] = useState(false);
   const [_failures, setFailures] = useState(0);
   const [startedAt] = useState(() => Date.now());
 
   useEffect(() => {
+    if (completed) {
+      return;
+    }
     let active = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -112,10 +117,10 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
       }
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [startedAt]);
+  }, [completed, startedAt]);
 
   const statusCopy =
-    session?.status === "RESOLVED"
+    completed || session?.status === "RESOLVED"
       ? copy.waitResolved
       : session?.status === "EXPIRED" || session?.status === "CANCELLED"
         ? copy.waitExpired
@@ -142,6 +147,27 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
       setError(true);
     } finally {
       setOfficeAlertWorking(false);
+    }
+  }
+
+  async function completeRequest() {
+    setCompleteWorking(true);
+    setError(false);
+    try {
+      const response = await fetch("/api/public/contact-sessions/current/resolve", {
+        credentials: "same-origin",
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("UNAVAILABLE");
+      }
+      setCompleted(true);
+      setEscalation(null);
+      setSession((current) => (current ? { ...current, status: "RESOLVED" } : current));
+    } catch {
+      setError(true);
+    } finally {
+      setCompleteWorking(false);
     }
   }
 
@@ -179,6 +205,16 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
           </button>
         ) : null}
         {officeAlertSent ? <p className="public-contact-notice">{copy.officeAlertSent}</p> : null}
+        {!completed && session?.status === "OWNER_REPLIED" ? (
+          <button
+            className="public-contact-primary"
+            disabled={completeWorking}
+            type="button"
+            onClick={() => void completeRequest()}
+          >
+            {completeWorking ? copy.completing : copy.complete}
+          </button>
+        ) : null}
         {error ? (
           <div className="public-contact-error" role="alert">
             <p>{copy.errorUnavailable}</p>

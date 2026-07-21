@@ -105,6 +105,10 @@ export interface PublicContactRepository {
     reasonCode: string;
     sessionTokenHash: string;
   }): Promise<{ reportId: string; status: "OPEN" }>;
+  resolve(input: {
+    anonymousTokenHash: string;
+    sessionTokenHash: string;
+  }): Promise<{ status: "RESOLVED" }>;
 }
 
 export interface PublicContactRepositoryCreateInput {
@@ -245,6 +249,13 @@ export class PublicContactService {
       ...(await this.recoveryHashes(input)),
       reasonCode,
     });
+  }
+
+  async resolve(input: {
+    anonymousToken: string;
+    sessionToken: string;
+  }): Promise<{ status: "RESOLVED" }> {
+    return this.repository.resolve(await this.recoveryHashes(input));
   }
 
   private async recoveryHashes(input: {

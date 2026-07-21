@@ -1,6 +1,6 @@
 import { normalizeContactMessage } from "./public-contact-policy.js";
 
-export const SMS_PROVIDER_ERROR_CODES = [
+export const NOTIFICATION_PROVIDER_ERROR_CODES = [
   "AUTH_ERROR",
   "INVALID_RECIPIENT",
   "RATE_LIMIT",
@@ -9,7 +9,7 @@ export const SMS_PROVIDER_ERROR_CODES = [
   "UNKNOWN",
 ] as const;
 
-export type SmsProviderErrorCode = (typeof SMS_PROVIDER_ERROR_CODES)[number];
+export type NotificationProviderErrorCode = (typeof NOTIFICATION_PROVIDER_ERROR_CODES)[number];
 
 export const OWNER_REPLY_CODES = [
   "MOVING_NOW",
@@ -39,8 +39,10 @@ export class NotificationReplyPolicyError extends Error {
   }
 }
 
-export function isRetryableSmsProviderError(code: string): code is SmsProviderErrorCode {
-  if (!SMS_PROVIDER_ERROR_CODES.includes(code as SmsProviderErrorCode)) {
+export function isRetryableNotificationProviderError(
+  code: string,
+): code is NotificationProviderErrorCode {
+  if (!NOTIFICATION_PROVIDER_ERROR_CODES.includes(code as NotificationProviderErrorCode)) {
     throw new NotificationReplyPolicyError("INVALID_PROVIDER_ERROR");
   }
   return code === "RATE_LIMIT" || code === "TEMPORARY_FAILURE" || code === "UNKNOWN";

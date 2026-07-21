@@ -47,6 +47,7 @@ function createHarness(captcha?: PublicContactCaptchaVerifier) {
       reportId: "11111111-1111-4111-8111-111111111111",
       status: "OPEN" as const,
     })),
+    resolve: vi.fn(async () => ({ status: "RESOLVED" as const })),
   };
   const hasher: PublicContactHasher = {
     hash: vi.fn(async (_value, purpose) => purpose.padEnd(64, "0").slice(0, 64)),
@@ -118,6 +119,20 @@ describe("PublicContactService", () => {
       sessionToken: "session_12345678901234567890",
     });
     expect(repository.read).toHaveBeenCalledWith({
+      anonymousTokenHash: expect.any(String),
+      sessionTokenHash: expect.any(String),
+    });
+  });
+
+  it("hashes both recovery tokens before resolving the temporary session", async () => {
+    const { repository, service } = createHarness();
+    await expect(
+      service.resolve({
+        anonymousToken: "anonymous_12345678901234567890",
+        sessionToken: "session_12345678901234567890",
+      }),
+    ).resolves.toEqual({ status: "RESOLVED" });
+    expect(repository.resolve).toHaveBeenCalledWith({
       anonymousTokenHash: expect.any(String),
       sessionTokenHash: expect.any(String),
     });

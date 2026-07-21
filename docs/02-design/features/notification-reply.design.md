@@ -3,16 +3,20 @@
 > Version: 1.0.0 | Date: 2026-07-20 | Status: Approved for Implementation
 > Level: Dynamic | Plan: `docs/01-plan/features/notification-reply.plan.md`
 
+> 2026-07-21 amendment: SMS-specific provider names and message bodies below are superseded by
+> `docs/02-design/features/kakao-alimtalk-ephemeral-contact.design.md`. The retry, response-token,
+> Owner reply, RLS, and audit boundaries remain authoritative.
+
 ## 1. Architecture
 
 ```text
 Internal Notification Worker
   → claim_notification_deliveries()
   → NotificationReplyWorkerService
-  → SmsProvider.send(stable idempotency key)
+  → OwnerNotificationProvider.send(OWNER_CONTACT_REQUEST_V1, stable idempotency key)
   → record_notification_sent() / record_notification_failure()
 
-Owner SMS URL /{locale}/respond/{rawToken}
+Owner AlimTalk Taptolk URL /{locale}/respond/{rawToken}
   → same-origin Route Handler
   → NotificationReplyService
   → inspect/reply service-only RPC
@@ -105,6 +109,6 @@ without an approved provider is fail-closed.
 
 ## 7. Phase Gate
 
-Phase 8 cannot start until duplicate SMS zero, bounded retry success, expired-lease recovery,
+Phase 8 cannot start until duplicate Owner notification zero, bounded retry success, expired-lease recovery,
 caller-visible Owner reply, token expiry/revoke denial, full linked pgTAP, staging E2E, WCJ, and
 `pnpm verify` pass.

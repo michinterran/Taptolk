@@ -236,7 +236,11 @@ export const messageModerationStatus = pgEnum("message_moderation_status", [
   "BLOCKED",
   "EVIDENCE_LOCKED",
 ]);
-export const notificationChannel = pgEnum("notification_channel", ["SMS", "WEB_PUSH"]);
+export const notificationChannel = pgEnum("notification_channel", [
+  "SMS",
+  "WEB_PUSH",
+  "KAKAO_ALIMTALK",
+]);
 export const notificationPurpose = pgEnum("notification_purpose", [
   "OWNER_CONTACT",
   "CALLER_REPLY",

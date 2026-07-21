@@ -1,6 +1,6 @@
 # Taptolk Pilot Readiness Checklist
 
-> Updated: 2026-07-21 | Current decision: Task 2 automated complete / Cron deferred / Manual gates pending
+> Updated: 2026-07-21 | Current decision: AlimTalk ephemeral contact automated complete / Cron deferred / Manual and external gates pending
 
 ## Automated staging gates
 
@@ -14,6 +14,12 @@
 - [x] Queue retry evidence present; poison active 0; Queue/Auth/fixture residue 0.
 - [x] Owner activation, public contact, notification/reply, escalation/report/block journeys.
 - [x] Privacy cleanup and operations KPI dashboard.
+- [x] Kakao AlimTalk-shaped Owner notification contract and ephemeral A–B lifecycle: new
+      `KAKAO_ALIMTALK` intent, typed `OWNER_CONTACT_REQUEST_V1`, Owner reply in Taptolk, caller
+      completion, cookie removal, message/hash redaction, token revocation, participant close, and
+      redacted audit. Clean local and linked pgTAP 24 files/604 tests; authenticated staging 5/5;
+      `pnpm verify` PASS with lint 331, unit 54 files/336 tests, DB 59 migrations/24 tests, secret
+      scan 557, WCJ 100 over 93 files, and Production build.
 - [x] Linked pgTAP, authenticated staging E2E, WCJ, secret scan, logo integrity, and production
       build.
 - [x] Full default staging suite: 28 PASS and one intentional opt-in 1,000-item acceptance skip.
@@ -134,9 +140,13 @@
 - [ ] Create or grant access to a separate approved Production Supabase project, approve its data
       region, and apply migrations through `20260719184000`. Only `taptolk-staging` was accessible
       for this lane during the audit.
-- [ ] Select an approved production SMS provider and authorize provider-adapter implementation,
-      sender registration, receipt/cost reconciliation, and failure rehearsal. Do not configure
-      secret values until the adapter and Production project are approved.
+- [ ] Contract with an approved Kakao AlimTalk dealer, approve the business channel and
+      `OWNER_CONTACT_REQUEST_V1` informational template, then authorize the live adapter,
+      receipt/cost reconciliation, and failure rehearsal. Do not choose a dealer or configure
+      template IDs or secret values until separately approved.
+- [ ] Select and approve a Production phone-ownership verification provider. The AlimTalk
+      informational template is not verification, and the current Production adapter remains
+      fail-closed.
 - [ ] Select a production CAPTCHA provider and authorize provider-adapter implementation and
       failure rehearsal; keep public Contact fail closed until then.
 - [ ] At actual service launch, configure Production secrets only in the deployment secret

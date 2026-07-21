@@ -20,13 +20,14 @@
 2. 문서에서 `MVP 필수`로 지정한 기능은 Mock UI가 아니라 실제 데이터 흐름으로 구현한다.
 3. 비즈니스 로직을 React 컴포넌트나 Route Handler에 직접 누적하지 않는다.
 4. 모든 주요 상태 변경은 Application Service와 DB Transaction을 통해 처리한다.
-5. 브라우저에 Supabase Secret Key, Service Role Key, DB URL, SMS Secret을 노출하지 않는다.
+5. 브라우저에 Supabase Secret Key, Service Role Key, DB URL, 알림 Provider Secret을 노출하지 않는다.
 6. QR 공개 토큰, 활성화 코드, OTP, 응답 토큰을 로그에 출력하지 않는다.
 7. 테넌트 데이터 격리를 프론트엔드 필터에 의존하지 않는다.
 8. 모든 관리자 데이터 조회와 변경은 백엔드 권한 검사를 통과해야 한다.
 9. 폐기된 QR, 종료된 Binding, 만료된 Session은 물리 삭제하지 않는다.
 10. 개발 편의를 이유로 RLS를 비활성화한 상태로 완료 처리하지 않는다.
-11. 외부 SMS 자격증명이 없을 때 기능을 생략하지 말고 `MockSmsProvider`를 구현한다.
+11. 외부 카카오 알림톡 계약·템플릿·자격증명이 없을 때 Provider 경계를 생략하지 말고
+    비프로덕션 전용 `StagingOwnerNotificationProvider`와 프로덕션 fail-closed Adapter를 구현한다.
 12. 대량 QR 생성과 PDF 렌더링을 사용자 HTTP 요청 안에서 동기식으로 끝내지 않는다.
 13. 각 Phase 완료 시 테스트, 타입 검사, 빌드 검증을 수행하고 결과를 기록한다.
 14. API 계약과 DB Schema를 변경하면 이 문서 또는 `docs/`의 관련 명세도 함께 갱신한다.
@@ -59,7 +60,7 @@
 
 - Supabase 프로젝트 정보가 없음
 - Vercel 프로젝트가 없음
-- SMS 사업자 계약·발신번호 승인이 없음
+- 카카오 알림톡 공식 딜러 계약·채널·정보성 템플릿 승인이 없음
 - 실제 Taptolk 로고 SVG가 없음
 - 아파트 로고가 없음
 - 개인정보 보유기간 정책이 확정되지 않음
@@ -80,13 +81,15 @@ Taptolk는 차량에 부착된 고유 QR 스티커를 통해 호출자 B가 차�
 → Taptolk 모바일 웹
 → 요청 전송
 → Taptolk 서버 중계
-→ 차주 A에게 SMS·PWA 알림
+→ 차주 A에게 카카오 알림톡으로 1회용 Taptolk 링크 알림
 → A가 원터치 답장
 → B의 임시 웹 대화방에 답장
 → 해결 완료 또는 관리사무소 전달
 ```
 
-Taptolk는 전화번호 공유 서비스가 아니다. A와 B 사이의 모든 연락은 Taptolk의 목적 제한형 `Contact Session` 안에서 중계한다.
+Taptolk는 전화번호 공유 서비스가 아니다. 카카오 알림톡은 A에게 Taptolk 진입 링크를
+알리는 수단일 뿐이며, A와 B 사이의 모든 연락은 Taptolk의 목적 제한형 `Contact Session`
+안에서 중계한다. 카카오 오픈채팅은 사용하지 않는다.
 
 ## 1.2 핵심 가치
 
@@ -202,13 +205,12 @@ Taptolk는 전화번호 공유 서비스가 아니다. A와 B 사이의 모든 �
 - 익명 Contact Session
 - 메시지 전송 상태
 - 차주 응답 대기
-- 선택적 SMS 답장 수신
 - 관리사무소 알리기
 - 해결 완료
 
 ### 메시지·알림
 
-- SMS 발송 Provider Adapter
+- 카카오 알림톡 Owner Notification Provider Adapter
 - 개발용 Mock Provider
 - 차주 1회용 응답 링크
 - B 대기방 Polling
@@ -423,7 +425,7 @@ flowchart TB
     Storage[Supabase Storage]
     Queue[Supabase Queues]
     Worker[Node Worker]
-    SMS[SMS Provider]
+    AlimTalk[Kakao AlimTalk Provider]
     Push[Web Push]
     Monitor[Sentry / Logs]
 
@@ -437,7 +439,7 @@ flowchart TB
     Queue --> Worker
     Worker --> DB
     Worker --> Storage
-    Worker --> SMS
+    Worker --> AlimTalk
     Worker --> Push
     Web --> Monitor
     Worker --> Monitor
@@ -595,7 +597,7 @@ B가 QR 스캔
 → 요청 확인
 → Contact Session 생성
 → 메시지 저장
-→ SMS Job Queue
+→ KAKAO_ALIMTALK Notification Queue
 → B 대기방
 ```
 
@@ -604,7 +606,7 @@ B에게 로그인·앱 설치·카메라 권한을 요구하지 않는다.
 ## 6.7 차주 A 응답
 
 ```text
-SMS 수신
+카카오 알림톡 수신
 → 1회용 응답 링크 터치
 → Response Token 검증
 → 요청 확인
@@ -629,7 +631,8 @@ SMS 수신
 
 ### 화면 종료
 
-B가 선택적으로 휴대전화 번호를 등록하면 SMS로 답장 링크를 전송한다. B 번호는 세션 종료 후 삭제한다.
+B는 전화번호를 등록하지 않는다. 동일 브라우저의 httpOnly 익명·세션 쿠키로만 대기방을
+복구하며, 완료 또는 만료 시 접근 권한을 즉시 폐기한다.
 
 ## 6.9 미응답·관리사무소 전달
 
@@ -650,7 +653,8 @@ OWNER_NOTIFIED
 B가 해결 완료
 → Session RESOLVED
 → 응답 토큰 폐기
-→ B 임시 번호 삭제 예약
+→ A·B Session participant 접근 종료
+→ 메시지 본문과 본문 Hash tombstone redaction
 → 세션 만료 Job 취소 또는 종료
 → KPI 집계
 ```
@@ -1174,15 +1178,8 @@ Site 안에서 활성 차량번호가 중복되지 않도록 Unique 정책을 �
 
 ### temporary_contact_points
 
-- id
-- session_id
-- type `SMS`
-- value_hash
-- value_encrypted
-- key_version
-- verified_at nullable
-- expires_at
-- deleted_at nullable
+MVP 활성 흐름에서는 사용하지 않는다. B는 전화번호를 등록하지 않으며 익명 Session
+권한만 사용한다. 향후 별도 승인 없이 임시 연락처 수집을 추가하지 않는다.
 
 ### notification_deliveries
 
@@ -1191,7 +1188,7 @@ Site 안에서 활성 차량번호가 중복되지 않도록 Unique 정책을 �
 - site_id
 - session_id nullable
 - owner_id nullable
-- channel `SMS/WEB_PUSH`
+- channel `KAKAO_ALIMTALK/WEB_PUSH` (`SMS`는 기존 이력 호환 전용)
 - purpose `OWNER_CONTACT/CALLER_REPLY/OTP/ADMIN_ALERT`
 - destination_hash
 - provider
@@ -1332,21 +1329,21 @@ Unique: `qr_asset_id + sticker_design_id + version`.
 
 # 9. AUTHENTICATION & AUTHORIZATION
 
-## 9.1 차주 Phone OTP
+## 9.1 차주 Phone Ownership Verification
 
 ```text
-Supabase Auth
-→ Send SMS Hook
-→ Taptolk SMS Adapter
-→ 국내 SMS Provider
+Activation Code 검증
+→ Taptolk Owner Verification Provider
+→ 승인된 본인확인 수단
+→ Phone ownership proof
 ```
 
-### Provider 구현
+### Provider 구현 원칙
 
-- `MockSmsProvider`: OTP를 테스트 Inbox에 기록
-- `ConsoleSmsProvider`: 로컬 개발 전용
-- `NaverSensSmsProvider`: 계약 시 활성화
-- `SolapiSmsProvider`: 대체 구현 가능
+- `StagingMockOwnerOtpProvider`: 비프로덕션 테스트 전용
+- `UnavailableOwnerOtpProvider`: 프로덕션 기본 fail-closed
+- 실제 Provider는 사용자 승인 후 별도 Adapter로 구현한다.
+- 카카오 알림톡 정보성 템플릿을 전화번호 본인확인 수단으로 간주하지 않는다.
 
 ### OTP 정책
 
@@ -1361,7 +1358,7 @@ Supabase Auth
 
 ## 9.2 차주 일반 답장
 
-- 인증된 차주 번호로 SMS 발송
+- 검증된 차주 연락처로 카카오 알림톡 발송
 - 짧은 TTL의 Response Token 발급
 - 해당 Contact Session의 답장만 허용
 - 계정·차량 정보 수정은 불가
@@ -1801,7 +1798,7 @@ metrics-aggregation
 ## 14.4 Idempotency
 
 - 모든 Job은 `jobId`와 Resource 상태로 중복 실행 방지
-- SMS는 `notification_deliveries.idempotency_key`
+- Owner 알림은 `notification_deliveries.idempotency_key`
 - 이미 SENT/DELIVERED면 재발송 금지
 - Render는 `qr_asset_id + sticker_design_id + version` Unique
 
@@ -1822,21 +1819,27 @@ Production에서는 Cron Secret 검증.
 ## 15.1 채널 전략
 
 ```text
-차주 요청 알림: SMS 필수
+차주 요청 알림: 카카오 알림톡 정보성 템플릿
 PWA Push: 허용 사용자에게 보조
-B 답장 알림: B가 선택한 경우 SMS
-관리사무소 긴급 알림: Admin Dashboard + 선택적 SMS
+B 답장 수신: Taptolk 임시 대기방 Polling
+관리사무소 긴급 알림: Admin Dashboard
 ```
 
 ## 15.2 Provider Interface
 
 ```ts
-export interface SmsProvider {
+export interface OwnerNotificationProvider {
   send(input: {
-    to: string;
-    body: string;
+    toCiphertext: string;
+    notification: {
+      templateKey: "OWNER_CONTACT_REQUEST_V1";
+      locale: "ko" | "en";
+      variables: {
+        reasonCode: ContactReasonCode;
+        responseUrl: string;
+      };
+    };
     idempotencyKey: string;
-    metadata?: Record<string, string>;
   }): Promise<{
     providerMessageId: string;
     acceptedAt: Date;
@@ -1853,21 +1856,18 @@ Provider 오류:
 - PERMANENT_FAILURE
 - UNKNOWN
 
-## 15.3 차주 문자
+## 15.3 차주 카카오 알림톡 정보성 템플릿 계약
 
 ```text
-[Taptolk] 차량 연락 요청
-
-등록 차량 끝자리 7098에
-차량 이동 요청이 도착했습니다.
-
-확인 및 답장:
-{response_url}
-
-유효시간: {ttl}
+templateKey: OWNER_CONTACT_REQUEST_V1
+variables:
+  reasonCode: bounded ContactReasonCode
+  responseUrl: one-time Taptolk HTTPS URL
 ```
 
-문자에 B 전화번호, 동·호수, 전체 차량번호를 넣지 않는다.
+최종 사용자 문구, 템플릿 ID, 채널 프로필, Provider 인증정보는 공식 딜러 계약과 카카오
+검수 후 외부 설정으로 연결한다. 템플릿 변수에는 B 전화번호, 자유입력 본문, 동·호수,
+전체·일부 차량번호를 넣지 않는다.
 
 ## 15.4 Response Token
 
@@ -2293,7 +2293,6 @@ Danger: #D64553
 ## 21.4 호출자: 답장 수신
 
 - 이 화면에서 기다리기
-- 문자로 답장 받기
 - 답장 필요 없음
 
 User-Agent는 안내 최적화에만 사용하고 권한 판단에 사용하지 않는다.
@@ -2425,8 +2424,8 @@ errorCode
 
 - Public QR 조회 성공률
 - Contact Session 생성 성공률
-- SMS Queue 지연
-- SMS 발송 성공률
+- 카카오 알림톡 Queue 지연
+- 카카오 알림톡 발송 성공률
 - 차주 열람률
 - 차주 응답률
 - 5분 내 응답률
@@ -2441,7 +2440,7 @@ errorCode
 ## 24.3 Alert
 
 - Contact Session 생성 실패 급증
-- SMS 실패율 임계 초과
+- 카카오 알림톡 실패율 임계 초과
 - Queue 적체
 - QR Lookup 오류
 - DB Connection 오류
@@ -2622,12 +2621,9 @@ APP_ENCRYPTION_KEY_V1=
 TOKEN_HMAC_KEY=
 COOKIE_SIGNING_KEY=
 
-# SMS
-SMS_PROVIDER=mock
-SMS_SENDER_NUMBER=
-SMS_API_KEY=
-SMS_API_SECRET=
-SMS_SERVICE_ID=
+# Owner notification and verification
+OWNER_NOTIFICATION_PROVIDER=mock
+OWNER_VERIFICATION_PROVIDER=mock
 
 # Queue
 QUEUE_WORKER_SECRET=
@@ -2821,16 +2817,16 @@ INTERNAL_ERROR
 
 ## Phase 7 — Notification·Reply
 
-- SMS Queue
+- KAKAO_ALIMTALK Queue
 - Provider Adapter
 - Response Token
 - Owner Reply
 - Caller Polling
-- Optional Caller SMS
+- Caller Session resolve 및 즉시 redaction
 
 ### Acceptance
 
-- 중복 SMS 없음
+- 중복 Owner 알림 없음
 - 실패 재시도
 - 답장 B 화면 반영
 - Token 만료
@@ -2905,7 +2901,7 @@ INTERNAL_ERROR
 10. 차량 임시 배정
 11. 차주 OTP 활성화
 12. B QR 요청
-13. A SMS 수신
+13. A 카카오 알림톡 수신
 14. A 원터치 답장
 15. B 답장 확인
 16. 미응답 관리사무소 전달
@@ -2962,7 +2958,7 @@ TAPTOLK_MASTER_DEVELOPMENT_SPEC.md를 프로젝트의 최상위 기준 문서로
 
 1. 현재 저장소 구조와 기존 코드를 전부 분석한다.
 2. 명세와 현재 코드의 차이를 Gap Analysis로 작성한다.
-3. 기술스택, 환경변수, DB, 배포, 인증, SMS 의존성을 확인한다.
+3. 기술스택, 환경변수, DB, 배포, 인증, 알림 Provider 의존성을 확인한다.
 4. Phase 0 구현계획을 파일 단위로 제시한다.
 5. 보안 또는 데이터 정합성에 위험한 기존 코드가 있으면 우선 보고한다.
 6. 승인되지 않은 범위 변경을 하지 않는다.
@@ -2999,13 +2995,14 @@ Firebase Firestore가 아니라 Supabase PostgreSQL을 사용한다.
 - Queue Worker 분리
 - 규모 증가 후 분리 가능
 
-## ADR-003 SMS 중심
+## ADR-003 카카오 알림톡 진입 + Taptolk Session 중심
 
-MVP는 SMS를 차주 필수 알림 채널로 사용한다.
+MVP는 카카오 알림톡 정보성 템플릿을 차주 진입 알림 채널로 사용한다.
 
-- 카카오 의존 없음
+- 실제 A–B 메시지는 Taptolk Contact Session 안에서만 중계
 - PWA Push 보조
 - 오픈채팅 미사용
+- 완료·만료 시 접근 폐기와 메시지 redaction, 최소 감사 이력 보존
 
 ## ADR-004 Polling 우선
 
@@ -3099,7 +3096,7 @@ await db.transaction(async (tx) => {
 - Vercel Fluid Compute: https://vercel.com/docs/fluid-compute
 - Supabase Documentation: https://supabase.com/docs
 - Supabase Auth: https://supabase.com/docs/guides/auth
-- Supabase Send SMS Hook: https://supabase.com/docs/guides/auth/auth-hooks/send-sms-hook
+- Kakao AlimTalk live Provider documentation: select only after the official dealer contract
 - Supabase Queues: https://supabase.com/docs/guides/queues
 - Supabase Realtime: https://supabase.com/docs/guides/realtime/getting_started
 - Drizzle + Supabase: https://orm.drizzle.team/docs/get-started/supabase-new

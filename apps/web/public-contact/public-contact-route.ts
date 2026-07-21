@@ -186,6 +186,35 @@ export async function readCurrentPublicContact(request: Request): Promise<NextRe
   }
 }
 
+export async function resolveCurrentPublicContact(request: Request): Promise<NextResponse> {
+  try {
+    if (!sameOrigin(request)) {
+      throw new PublicContactRouteError();
+    }
+    const tokens = recoveryTokens(request);
+    if (!tokens) {
+      return safeJson({ error: { code: "UNAUTHORIZED" } }, 401);
+    }
+    const result = await serviceOrThrow().resolve(tokens);
+    const response = safeJson({ data: result });
+    const secure = new URL(request.url).protocol === "https:";
+    for (const name of [CALLER_ANONYMOUS_COOKIE_NAME, CONTACT_SESSION_COOKIE_NAME]) {
+      response.cookies.set({
+        httpOnly: true,
+        maxAge: 0,
+        name,
+        path: "/",
+        sameSite: "lax",
+        secure,
+        value: "",
+      });
+    }
+    return response;
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
 function recoveryTokens(request: Request): {
   anonymousToken: string;
   sessionToken: string;

@@ -8,7 +8,8 @@ describe("environment contracts", () => {
 
     expect(environment.APP_ENV).toBe("local");
     expect(environment.APP_ENCRYPTION_KEY_VERSION).toBe(1);
-    expect(environment.SMS_PROVIDER).toBe("mock");
+    expect(environment.OWNER_NOTIFICATION_PROVIDER).toBe("mock");
+    expect(environment.OWNER_VERIFICATION_PROVIDER).toBe("mock");
     expect(environment.DATABASE_URL).toBeUndefined();
     expect(environment.QR_GENERATION_QUEUE_NAME).toBe("qr-generation");
     expect(environment.QR_GENERATION_DISPATCH_CLAIM_LIMIT).toBe(10);

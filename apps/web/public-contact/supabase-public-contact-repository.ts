@@ -279,5 +279,17 @@ export function createSupabasePublicContactRepository(
       }
       return { reportId: row.report_id, status: "OPEN" };
     },
+    async resolve(input) {
+      const result = resultData(
+        await client.rpc("resolve_public_contact_session", {
+          p_anonymous_token_hash: input.anonymousTokenHash,
+          p_session_token_hash: input.sessionTokenHash,
+        }),
+      );
+      if (result.status !== "RESOLVED") {
+        throw new PublicContactRepositoryError("UNAVAILABLE");
+      }
+      return { status: "RESOLVED" };
+    },
   };
 }

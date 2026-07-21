@@ -5,6 +5,8 @@ export interface PublicContactCopy {
   back: string;
   confirmDescription: string;
   confirmTitle: string;
+  complete: string;
+  completing: string;
   description: string;
   errorConflict: string;
   errorInvalid: string;
@@ -45,6 +47,8 @@ const ko: PublicContactCopy = {
   back: "이전",
   confirmDescription: "아래 내용으로 요청을 접수하고 차주 알림을 준비합니다.",
   confirmTitle: "요청 내용을 확인해 주세요.",
+  complete: "요청 완료하기",
+  completing: "요청을 안전하게 종료하는 중",
   description: "전화번호를 공개하지 않고 필요한 차량 요청을 안전하게 전달합니다.",
   errorConflict: "같은 차량 요청이 이미 열려 있습니다. 기존 대기방을 확인해 주세요.",
   errorInvalid: "차량 또는 입력 내용을 다시 확인해 주세요.",
@@ -105,6 +109,8 @@ const en: PublicContactCopy = {
   back: "Back",
   confirmDescription: "We will accept this request and prepare an owner notification.",
   confirmTitle: "Review your request.",
+  complete: "Complete request",
+  completing: "Closing this request securely",
   description: "Send an essential vehicle request without exposing anyone's phone number.",
   errorConflict: "A matching vehicle request is already open. Check the existing waiting room.",
   errorInvalid: "Check the vehicle and the information you entered.",

@@ -3,6 +3,9 @@
 > Version: 1.0.0 | Date: 2026-07-20 | Status: Approved for Implementation
 > Level: Dynamic | Plan: `docs/01-plan/features/public-contact.plan.md`
 
+> 2026-07-21 amendment: the Owner notification channel and terminal lifecycle are refined by
+> `docs/02-design/features/kakao-alimtalk-ephemeral-contact.design.md`.
+
 ## 1. Architecture
 
 ```text
@@ -105,7 +108,7 @@ claiming a provider delivery before it exists.
 
 ### 3.4 `notification_deliveries`
 
-Phase 6 creates one `OWNER_CONTACT` `SMS` intent with:
+Phase 6 creates one `OWNER_CONTACT` `KAKAO_ALIMTALK` intent with:
 
 - tenant/site/session/Owner scope
 - destination hash only; provider destination ciphertext is resolved from Owner data in Phase 7

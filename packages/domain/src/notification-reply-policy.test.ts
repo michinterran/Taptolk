@@ -2,18 +2,18 @@ import { describe, expect, it } from "vitest";
 import {
   assertResponseTokenTtl,
   getNotificationRetryDelaySeconds,
-  isRetryableSmsProviderError,
+  isRetryableNotificationProviderError,
   NotificationReplyPolicyError,
   normalizeOwnerReply,
 } from "./notification-reply-policy.js";
 
 describe("notification reply policy", () => {
   it("classifies only bounded transient provider failures as retryable", () => {
-    expect(isRetryableSmsProviderError("RATE_LIMIT")).toBe(true);
-    expect(isRetryableSmsProviderError("TEMPORARY_FAILURE")).toBe(true);
-    expect(isRetryableSmsProviderError("UNKNOWN")).toBe(true);
-    expect(isRetryableSmsProviderError("AUTH_ERROR")).toBe(false);
-    expect(() => isRetryableSmsProviderError("RAW_PROVIDER_TEXT")).toThrow(
+    expect(isRetryableNotificationProviderError("RATE_LIMIT")).toBe(true);
+    expect(isRetryableNotificationProviderError("TEMPORARY_FAILURE")).toBe(true);
+    expect(isRetryableNotificationProviderError("UNKNOWN")).toBe(true);
+    expect(isRetryableNotificationProviderError("AUTH_ERROR")).toBe(false);
+    expect(() => isRetryableNotificationProviderError("RAW_PROVIDER_TEXT")).toThrow(
       NotificationReplyPolicyError,
     );
   });
