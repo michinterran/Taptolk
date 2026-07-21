@@ -1,5 +1,6 @@
 import type { OperationsDashboardModel } from "@taptolk/application";
 import { SemanticHeading } from "@taptolk/ui";
+import type { CSSProperties } from "react";
 import type { AdminOverviewCopy } from "../content/admin-overview-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -53,6 +54,33 @@ function ActionCard({ action }: { action: DashboardAction }) {
   );
 }
 
+function percent(part: number, total: number): number {
+  if (total <= 0) {
+    return 0;
+  }
+  return Math.max(0, Math.min(100, Math.round((part / total) * 100)));
+}
+
+function BarMeter({
+  label,
+  value,
+  tone = "violet",
+}: {
+  label: string;
+  tone?: "green" | "orange" | "red" | "violet";
+  value: number;
+}) {
+  return (
+    <div className={`admin-command-meter admin-command-meter--${tone}`}>
+      <div>
+        <span>{label}</span>
+        <strong>{value}%</strong>
+      </div>
+      <i aria-hidden="true" style={{ "--admin-meter-value": `${value}%` } as CSSProperties} />
+    </div>
+  );
+}
+
 export function AdminDashboardView({
   canApproveAccounts,
   context,
@@ -76,11 +104,6 @@ export function AdminDashboardView({
     variant === "platform"
       ? [
           {
-            description: copy.actionOperationsDescription,
-            href: `${prefix}/operations`,
-            label: copy.actionOperations,
-          },
-          {
             description: copy.actionManagementCompaniesDescription,
             href: `${prefix}/platform/management-companies`,
             label: copy.actionManagementCompanies,
@@ -94,6 +117,21 @@ export function AdminDashboardView({
             description: copy.actionQrDescription,
             href: `${prefix}/qr-inventory`,
             label: copy.actionQr,
+          },
+          {
+            description: copy.actionOperationsDescription,
+            href: `${prefix}/operations`,
+            label: copy.actionOperations,
+          },
+          {
+            description: copy.actionReportsDescription,
+            href: `${prefix}/reports`,
+            label: copy.actionReports,
+          },
+          {
+            description: copy.actionRevenueDescription,
+            href: `${prefix}/platform/revenue`,
+            label: copy.actionRevenue,
           },
           {
             description: copy.actionCustomersDescription,
@@ -126,6 +164,11 @@ export function AdminDashboardView({
             href: `${prefix}/qr-inventory`,
             label: copy.actionQr,
           },
+          {
+            description: copy.actionReportsDescription,
+            href: `${prefix}/reports`,
+            label: copy.actionReports,
+          },
         ];
   const attentionItems = [
     { count: model.unresolvedCount, label: copy.unresolved },
@@ -146,6 +189,64 @@ export function AdminDashboardView({
     [copy.batches, number.format(model.completedBatchCount)],
     [copy.sentNotifications, number.format(model.notificationSentCount)],
     [copy.openReports, number.format(model.openReportCount)],
+  ] as const;
+  const totalSignals =
+    model.contactCount +
+    model.unresolvedCount +
+    model.escalatedCount +
+    model.notificationFailedCount +
+    model.openReportCount;
+  const qrActivationRate = percent(model.activeQrCount, Math.max(model.activeQrCount + 100, 1));
+  const requestResolutionRate =
+    100 - percent(model.unresolvedCount, Math.max(model.contactCount, 1));
+  const deliverySuccessRate =
+    100 -
+    percent(
+      model.notificationFailedCount + model.notificationRetryCount,
+      Math.max(model.notificationSentCount, 1),
+    );
+  const healthScore =
+    totalSignals === 0
+      ? 100
+      : Math.max(
+          0,
+          100 -
+            percent(
+              model.unresolvedCount + model.escalatedCount + model.notificationFailedCount,
+              totalSignals,
+            ),
+        );
+  const portfolioRows = [
+    {
+      action: copy.actionCustomers,
+      health: healthScore,
+      href: variant === "platform" ? `${prefix}/platform/tenants` : `${prefix}/sites`,
+      locations: number.format(model.siteCount),
+      name: copy.customerPortfolio,
+      openIssues: number.format(model.unresolvedCount + model.openReportCount),
+      qr: qrActivationRate,
+      requests: number.format(model.contactCount),
+    },
+    {
+      action: copy.actionQr,
+      health: qrActivationRate,
+      href: `${prefix}/qr-inventory`,
+      locations: number.format(model.siteCount),
+      name: copy.actionQr,
+      openIssues: number.format(model.completedBatchCount),
+      qr: qrActivationRate,
+      requests: number.format(model.activeQrCount),
+    },
+    {
+      action: copy.actionOperations,
+      health: requestResolutionRate,
+      href: `${prefix}/operations`,
+      locations: number.format(model.siteCount),
+      name: copy.operationFlow,
+      openIssues: number.format(model.unresolvedCount + model.escalatedCount),
+      qr: deliverySuccessRate,
+      requests: number.format(model.contactCount),
+    },
   ] as const;
 
   return (
@@ -208,6 +309,139 @@ export function AdminDashboardView({
         <p className="admin-overview-scope-note">{copy.scopeNotice}</p>
       </section>
 
+      <section className="admin-command-grid" aria-labelledby="portfolio-title">
+        <div className="admin-command-panel admin-command-panel--wide">
+          <header className="admin-command-panel__header">
+            <div>
+              <p className="eyebrow">{copy.customerPortfolio}</p>
+              <h2 id="portfolio-title">{copy.customerPortfolioTitle}</h2>
+              <p>{copy.customerPortfolioDescription}</p>
+            </div>
+          </header>
+          <div className="admin-command-table-wrap">
+            <table className="admin-command-table">
+              <thead>
+                <tr>
+                  <th scope="col">{copy.tableName}</th>
+                  <th scope="col">{copy.tableLocations}</th>
+                  <th scope="col">{copy.tableRequests}</th>
+                  <th scope="col">{copy.tableQrActivation}</th>
+                  <th scope="col">{copy.tableOpenIssues}</th>
+                  <th scope="col">{copy.tableHealth}</th>
+                  <th scope="col">{copy.tableAction}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portfolioRows.map((row) => (
+                  <tr key={row.name}>
+                    <th scope="row">{row.name}</th>
+                    <td>{row.locations}</td>
+                    <td>{row.requests}</td>
+                    <td>
+                      <BarMeter label={copy.activeQr} value={row.qr} />
+                    </td>
+                    <td>{row.openIssues}</td>
+                    <td>
+                      <BarMeter
+                        label={copy.statusHealthy}
+                        tone={row.health >= 80 ? "green" : row.health >= 50 ? "orange" : "red"}
+                        value={row.health}
+                      />
+                    </td>
+                    <td>
+                      <a href={row.href}>{row.action} →</a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside className="admin-command-panel admin-command-panel--queue">
+          <p className="eyebrow">{copy.actionsTitle}</p>
+          <h2>{copy.approvalQueue}</h2>
+          <div className="admin-command-queue">
+            {attentionItems.length > 0 ? (
+              attentionItems.map((item) => (
+                <a href={`${prefix}/operations`} key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{number.format(item.count)}</strong>
+                </a>
+              ))
+            ) : (
+              <article className="admin-command-queue__empty">
+                <strong>{copy.healthyTitle}</strong>
+                <p>{copy.healthyDescription}</p>
+              </article>
+            )}
+            {canApproveAccounts ? (
+              <a href={`${prefix}/platform/access`}>
+                <span>{copy.actionApprovals}</span>
+                <strong>→</strong>
+              </a>
+            ) : null}
+          </div>
+        </aside>
+      </section>
+
+      <section
+        className="admin-command-grid admin-command-grid--charts"
+        aria-label={copy.actionReports}
+      >
+        <article className="admin-command-panel">
+          <p className="eyebrow">{copy.operationFlow}</p>
+          <h2>{copy.operationFlowDescription}</h2>
+          <div className="admin-command-bars">
+            <BarMeter
+              label={copy.contactCount}
+              value={percent(model.contactCount, Math.max(model.contactCount, 1))}
+            />
+            <BarMeter
+              label={copy.unresolved}
+              tone="orange"
+              value={percent(model.unresolvedCount, Math.max(model.contactCount, 1))}
+            />
+            <BarMeter
+              label={copy.escalated}
+              tone="red"
+              value={percent(model.escalatedCount, Math.max(model.contactCount, 1))}
+            />
+          </div>
+        </article>
+        <article className="admin-command-panel">
+          <p className="eyebrow">{copy.deliveryHealth}</p>
+          <h2>{copy.deliveryHealthDescription}</h2>
+          <div className="admin-command-bars">
+            <BarMeter label={copy.sentNotifications} tone="green" value={deliverySuccessRate} />
+            <BarMeter
+              label={copy.failedNotifications}
+              tone="red"
+              value={percent(
+                model.notificationFailedCount,
+                Math.max(model.notificationSentCount, 1),
+              )}
+            />
+            <BarMeter
+              label={copy.openReports}
+              tone="orange"
+              value={percent(model.openReportCount, Math.max(totalSignals, 1))}
+            />
+          </div>
+        </article>
+        <article className="admin-command-panel">
+          <p className="eyebrow">{copy.locationHierarchy}</p>
+          <h2>{copy.locationHierarchyDescription}</h2>
+          <div className="admin-command-hierarchy" aria-hidden="true">
+            <span>{copy.actionCustomers}</span>
+            <i />
+            <span>{copy.actionManagementCompanies}</span>
+            <i />
+            <span>{copy.actionSites}</span>
+          </div>
+        </article>
+      </section>
+
       <section
         className={`admin-overview-attention${attentionItems.length === 0 ? " is-healthy" : ""}`}
         aria-labelledby="attention-title"
@@ -248,7 +482,7 @@ export function AdminDashboardView({
             <p>{copy.actionsDescription}</p>
           </div>
         </header>
-        <div className="admin-overview-actions">
+        <div className="admin-overview-actions admin-overview-actions--compact">
           {actions.map((action) => (
             <ActionCard action={action} key={action.href} />
           ))}

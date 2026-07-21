@@ -31,14 +31,16 @@ export async function AdminPageHeader({
     const navigation = isPlatform
       ? [
           { href: `/${locale}/admin/platform`, label: copy["admin.nav.overview"] },
-          { href: `/${locale}/admin/operations`, label: copy["admin.nav.operations"] },
+          { href: `/${locale}/admin/platform/tenants`, label: copy["admin.nav.tenants"] },
           {
             href: `/${locale}/admin/platform/management-companies`,
             label: copy["admin.nav.managementCompanies"],
           },
           { href: `/${locale}/admin/sites`, label: copy["admin.nav.sites"] },
           { href: `/${locale}/admin/qr-inventory`, label: copy["admin.nav.qr"] },
-          { href: `/${locale}/admin/platform/tenants`, label: copy["admin.nav.tenants"] },
+          { href: `/${locale}/admin/operations`, label: copy["admin.nav.operations"] },
+          { href: `/${locale}/admin/reports`, label: copy["admin.nav.reports"] },
+          { href: `/${locale}/admin/platform/revenue`, label: copy["admin.nav.revenue"] },
           ...(membership.role === "SUPER_ADMIN"
             ? [
                 {
@@ -50,9 +52,10 @@ export async function AdminPageHeader({
         ]
       : [
           { href: `/${locale}/admin/dashboard`, label: copy["admin.nav.overview"] },
-          { href: `/${locale}/admin/operations`, label: copy["admin.nav.operations"] },
           { href: `/${locale}/admin/sites`, label: copy["admin.nav.sites"] },
           { href: `/${locale}/admin/qr-inventory`, label: copy["admin.nav.qr"] },
+          { href: `/${locale}/admin/operations`, label: copy["admin.nav.operations"] },
+          { href: `/${locale}/admin/reports`, label: copy["admin.nav.reports"] },
         ];
     const currentItem =
       navigation.find((item) => pathname === item.href) ??

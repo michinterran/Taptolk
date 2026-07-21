@@ -139,6 +139,7 @@ export default async function QrInventoryPage({
           batchRequest: copy["admin.qr.batch.request"],
           batchRequestDescription: copy["admin.qr.batch.request.description"],
           batchRequestTitle: copy["admin.qr.batch.request.title"],
+          batchSplitNotice: copy["admin.qr.batch.splitNotice"],
           batchStatusLabels: {
             CANCELLED: copy["admin.qr.batch.status.cancelled"],
             COMPLETED: copy["admin.qr.batch.status.completed"],
@@ -223,6 +224,19 @@ export default async function QrInventoryPage({
           storageBucket: copy["admin.qr.storageBucket"],
           storagePath: copy["admin.qr.storagePath"],
           templateCode: copy["admin.qr.templateCode"],
+          wizardBrand: copy["admin.qr.wizard.brand"],
+          wizardBrandDescription: copy["admin.qr.wizard.brand.description"],
+          wizardPreview: copy["admin.qr.wizard.preview"],
+          wizardQuantityHint: copy["admin.qr.wizard.quantityHint"],
+          wizardStep1: copy["admin.qr.wizard.step1"],
+          wizardStep1Description: copy["admin.qr.wizard.step1.description"],
+          wizardStep2: copy["admin.qr.wizard.step2"],
+          wizardStep2Description: copy["admin.qr.wizard.step2.description"],
+          wizardStep3: copy["admin.qr.wizard.step3"],
+          wizardStep3Description: copy["admin.qr.wizard.step3.description"],
+          wizardTemplate: copy["admin.qr.wizard.template"],
+          wizardTemplateDescription: copy["admin.qr.wizard.template.description"],
+          wizardTitle: copy["admin.qr.wizard.title"],
           tenant: copy["admin.qr.tenant"],
           titleLines: [copy["admin.qr.line1"], copy["admin.qr.line2"]],
           waitingDesign: copy["admin.qr.waiting.design"],
@@ -231,26 +245,28 @@ export default async function QrInventoryPage({
         }}
         errorMessage={error ? errorMessages[error] : undefined}
         finalApprovalModel={finalApprovalModel}
+        brandAssetUpload={
+          roleHasPermission(membership.role, "sticker-design:create") ? (
+            <BrandAssetUploadView
+              copy={{
+                description: copy["admin.qr.brand.upload.description"],
+                file: copy["admin.qr.brand.upload.file"],
+                name: copy["admin.qr.brand.upload.name"],
+                reason: copy["admin.qr.reason"],
+                reasonPlaceholder: copy["admin.qr.reason.placeholder"],
+                site: copy["admin.qr.site"],
+                submit: copy["admin.qr.brand.upload.submit"],
+                title: copy["admin.qr.brand.upload.title"],
+              }}
+              locale={locale}
+              sites={model.siteOptions}
+            />
+          ) : null
+        }
         locale={locale}
         model={model}
         statusMessage={status ? statusMessages[status] : undefined}
       />
-      {roleHasPermission(membership.role, "sticker-design:create") ? (
-        <BrandAssetUploadView
-          copy={{
-            description: copy["admin.qr.brand.upload.description"],
-            file: copy["admin.qr.brand.upload.file"],
-            name: copy["admin.qr.brand.upload.name"],
-            reason: copy["admin.qr.reason"],
-            reasonPlaceholder: copy["admin.qr.reason.placeholder"],
-            site: copy["admin.qr.site"],
-            submit: copy["admin.qr.brand.upload.submit"],
-            title: copy["admin.qr.brand.upload.title"],
-          }}
-          locale={locale}
-          sites={model.siteOptions}
-        />
-      ) : null}
       <QrBatchProgressView
         copy={{
           attempts: copy["admin.qr.progress.attempts"],

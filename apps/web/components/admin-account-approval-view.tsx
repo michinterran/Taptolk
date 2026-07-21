@@ -11,7 +11,6 @@ import {
 } from "@taptolk/domain";
 import { SemanticHeading } from "@taptolk/ui";
 import { approvePendingAdmin, rejectPendingAdmin } from "../admin/account-approval-actions";
-import { signOutAdmin } from "../auth/actions";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
 
@@ -322,12 +321,6 @@ export function AdminAccountApprovalView({
           <SemanticHeading className="admin-section-title" lines={copy.titleLines} />
           <p className="admin-dashboard-description">{copy.description}</p>
         </div>
-        <form action={signOutAdmin}>
-          <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
-          <button className="tt-button tt-button--secondary" type="submit">
-            {copy.signOut}
-          </button>
-        </form>
       </section>
 
       {status ? (
@@ -344,6 +337,30 @@ export function AdminAccountApprovalView({
       <section className="admin-catalog-summary" aria-live="polite">
         <strong>{copy.total.replace("{count}", String(queue.total))}</strong>
         <span>{queue.truncated ? copy.truncated : copy.securityNote}</span>
+      </section>
+
+      <section className="admin-permission-matrix" aria-labelledby="permission-matrix-title">
+        <header>
+          <p className="eyebrow">{copy.securityNote}</p>
+          <h2 id="permission-matrix-title">{copy.scopeType}</h2>
+          <p>{copy.scopeHelp}</p>
+        </header>
+        <div className="admin-permission-matrix__grid">
+          {ADMIN_ROLES.map((role) => (
+            <article key={role}>
+              <span>{copy.roleLabels[role]}</span>
+              <p>
+                {role === "SUPER_ADMIN"
+                  ? copy.scopeLabels.PLATFORM
+                  : role === "SITE_ADMIN" || role === "SITE_OPERATOR"
+                    ? copy.scopeLabels.SITE
+                    : role === "MANAGEMENT_ADMIN"
+                      ? copy.scopeLabels.MANAGEMENT_COMPANY
+                      : copy.scopeLabels.TENANT}
+              </p>
+            </article>
+          ))}
+        </div>
       </section>
 
       {configurationMissing ? (

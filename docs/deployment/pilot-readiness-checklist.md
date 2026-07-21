@@ -177,6 +177,18 @@
       tests, DB 61 migrations/25 tests, secret scan 584 files, service-stage guard, deferred
       Production Cron verification, logo integrity, and production build; Production Cron deferred
       verification passed with zero active definitions.
+- [x] 2026-07-21 Admin Command Center UX hardening: the Super Admin and management-company
+      dashboards now use a left-rail-first command center, customer hierarchy language
+      (`계약 고객` > `관리회사` > `관리 현장`), portfolio table, priority queue, operations
+      graphs, reporting route, platform revenue-readiness route, and account-permission matrix.
+      The QR production area now presents a sticker-production wizard with template preview,
+      managed-location brand upload in the flow, and a synchronized quantity control capped at
+      1-100 per Batch; larger requests are explained as consecutive 100-unit production lots
+      without changing the per-Batch contract. `pnpm verify` passed with lint 349 files,
+      typecheck 19/19, unit 57 files/384 tests, DB 61 migrations/25 tests, secret scan 592 files,
+      logo integrity, service-stage guard, WCJ 100 over 108 files, and production build.
+      `pnpm verify:production-cron:deferred` also passed, keeping active Production Cron
+      definitions at zero.
 
 ## Manual and external pilot gates
 

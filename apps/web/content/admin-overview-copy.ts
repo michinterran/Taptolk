@@ -13,18 +13,32 @@ export interface AdminOverviewCopy {
   actionQrDescription: string;
   actionSites: string;
   actionSitesDescription: string;
+  actionReports: string;
+  actionReportsDescription: string;
+  actionRevenue: string;
+  actionRevenueDescription: string;
   actionsDescription: string;
   actionsTitle: string;
   activeQr: string;
+  approvalQueue: string;
   attentionDescription: string;
   attentionTitle: string;
   batches: string;
   contactCount: string;
+  customerPortfolio: string;
+  customerPortfolioDescription: string;
+  customerPortfolioTitle: string;
+  deliveryHealth: string;
+  deliveryHealthDescription: string;
   escalated: string;
   failedNotifications: string;
   freshAt: string;
   healthyDescription: string;
   healthyTitle: string;
+  locationHierarchy: string;
+  locationHierarchyDescription: string;
+  operationFlow: string;
+  operationFlowDescription: string;
   medianResponse: string;
   noResponseData: string;
   openReports: string;
@@ -40,6 +54,14 @@ export interface AdminOverviewCopy {
   siteCount: string;
   statusAttention: string;
   statusHealthy: string;
+  tableAction: string;
+  tableCustomers: string;
+  tableHealth: string;
+  tableLocations: string;
+  tableName: string;
+  tableOpenIssues: string;
+  tableQrActivation: string;
+  tableRequests: string;
   unresolved: string;
   workspaceDescription: string;
   workspaceEyebrow: string;
@@ -61,18 +83,34 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     actionQrDescription: "Manage approval, production progress, intake, and assignment.",
     actionSites: "Sites",
     actionSitesDescription: "Manage the sites available within the approved scope.",
-    actionsDescription: "Continue with the most common tasks for this role.",
-    actionsTitle: "Workspace shortcuts",
+    actionReports: "Reports",
+    actionReportsDescription: "Review trends, risks, and operating quality by approved scope.",
+    actionRevenue: "Revenue management",
+    actionRevenueDescription: "Track contract, production, and provider-cost readiness.",
+    actionsDescription: "Priority queues and routing helpers for work that needs a decision.",
+    actionsTitle: "Decision queue",
     activeQr: "Active QR assets",
+    approvalQueue: "Approvals waiting",
     attentionDescription: "These live signals may require an operator decision.",
     attentionTitle: "Items needing attention",
     batches: "Completed QR batches",
     contactCount: "Contact requests · 24h",
+    customerPortfolio: "Customer portfolio",
+    customerPortfolioDescription:
+      "Contract customers > management companies > managed locations are handled as one operating hierarchy.",
+    customerPortfolioTitle: "Customer and contract status at a glance",
+    deliveryHealth: "Delivery health",
+    deliveryHealthDescription: "Sent, retrying, failed, and missing-cost signals from providers.",
     escalated: "Site office alerts",
     failedNotifications: "Final delivery failures",
     freshAt: "Data refreshed",
     healthyDescription: "There are no unresolved, escalated, failed, or open-review signals.",
     healthyTitle: "No immediate action is required",
+    locationHierarchy: "Location hierarchy",
+    locationHierarchyDescription:
+      "Each management company can operate multiple apartments, buildings, villas, or parking locations.",
+    operationFlow: "Vehicle-contact flow",
+    operationFlowDescription: "Scan, request, owner response, delivery, and review signals.",
     medianResponse: "Median owner response",
     noResponseData: "No response data",
     openReports: "Open reports",
@@ -89,6 +127,14 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     siteCount: "Operating sites",
     statusAttention: "Review",
     statusHealthy: "Stable",
+    tableAction: "Action",
+    tableCustomers: "Customers",
+    tableHealth: "Health",
+    tableLocations: "Locations",
+    tableName: "Area",
+    tableOpenIssues: "Open issues",
+    tableQrActivation: "QR activation",
+    tableRequests: "Requests",
     unresolved: "Unresolved requests",
     workspaceDescription:
       "Manage QR inventory and vehicle-contact operations for the sites approved under your company.",
@@ -97,51 +143,75 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     workspaceLine2: "from one clear workspace.",
   },
   ko: {
-    actionApprovals: "계정 승인",
-    actionApprovalsDescription: "신규 관리자 계정을 검토하고 승인된 역할을 부여합니다.",
-    actionCustomers: "고객사",
+    actionApprovals: "계정·권한",
+    actionApprovalsDescription: "신규 운영 계정 승인과 역할·범위 부여 상태를 관리합니다.",
+    actionCustomers: "계약 고객",
     actionCustomersDescription: "계약과 데이터 격리의 최상위 고객 범위를 확인합니다.",
     actionManagementCompanies: "관리회사",
     actionManagementCompaniesDescription: "계약된 운영 주체와 서비스 범위를 관리합니다.",
-    actionOperations: "운영 현황",
+    actionOperations: "운영 모니터링",
     actionOperationsDescription: "차량 연락, 알림 전달, 안전 검토와 QR 신호를 확인합니다.",
-    actionQr: "QR 제작·재고",
-    actionQrDescription: "승인, 제작 진행, 입고와 차량 배정까지 관리합니다.",
-    actionSites: "사업장",
-    actionSitesDescription: "승인된 범위에서 운영할 사업장을 관리합니다.",
-    actionsDescription: "현재 역할에서 자주 수행하는 업무로 바로 이동합니다.",
-    actionsTitle: "주요 업무",
+    actionQr: "QR 제작 관리",
+    actionQrDescription: "디자인 선택, 제작 묶음 요청, 승인, 입고와 차량 배정까지 관리합니다.",
+    actionSites: "관리 현장",
+    actionSitesDescription: "아파트, 빌딩, 빌라 등 실제 운영 현장을 관리합니다.",
+    actionReports: "리포트",
+    actionReportsDescription: "운영 흐름, 응답 품질, 위험 신호와 QR 성과를 분석합니다.",
+    actionRevenue: "매출 관리",
+    actionRevenueDescription: "계약, 제작, 알림 비용과 청구 준비 상태를 확인합니다.",
+    actionsDescription: "중복 메뉴가 아니라 실제 판단이 필요한 업무만 모아 보여줍니다.",
+    actionsTitle: "처리 우선순위",
     activeQr: "활성 QR",
+    approvalQueue: "승인 대기",
     attentionDescription: "운영 담당자의 확인이나 판단이 필요한 실시간 신호입니다.",
     attentionTitle: "확인이 필요한 항목",
-    batches: "제작 완료 QR Batch",
+    batches: "제작 완료 QR 묶음",
     contactCount: "차량 연락 요청 · 24시간",
+    customerPortfolio: "고객 포트폴리오",
+    customerPortfolioDescription:
+      "계약 고객 > 관리회사 > 관리 현장 구조로 운영 범위와 책임을 정리합니다.",
+    customerPortfolioTitle: "고객과 계약 상태를 한눈에 관리하세요",
+    deliveryHealth: "전송 품질",
+    deliveryHealthDescription: "전송·재시도·실패·비용 누락 신호를 함께 봅니다.",
     escalated: "관리사무소 알림",
     failedNotifications: "알림 최종 실패",
     freshAt: "데이터 기준 시각",
     healthyDescription: "미해결 요청, 관리사무소 알림, 전송 실패와 미처리 신고가 없습니다.",
     healthyTitle: "지금 바로 처리할 항목이 없습니다",
+    locationHierarchy: "관리 현장 구조",
+    locationHierarchyDescription:
+      "하나의 관리회사가 여러 아파트 단지, 빌딩, 빌라, 주차 구역을 운영할 수 있습니다.",
+    operationFlow: "차량 연락 흐름",
+    operationFlowDescription: "스캔, 요청, 차주 응답, 전송, 신고 상태를 한 흐름으로 봅니다.",
     medianResponse: "차주 응답 중앙값",
     noResponseData: "응답 데이터 없음",
     openReports: "미처리 신고",
     overviewDescription: "이 계정에 승인된 범위의 실제 운영 집계를 보여줍니다.",
     overviewTitle: "운영 한눈에 보기",
     platformDescription:
-      "서비스 운영 상태를 확인하고 고객사, 사업장, QR, 계정 업무 중 필요한 작업으로 바로 이동합니다.",
+      "서비스 운영 상태를 확인하고 계약 고객, 관리회사, 관리 현장, QR, 계정 업무 중 필요한 작업으로 바로 이동합니다.",
     platformEyebrow: "Taptolk 플랫폼 운영",
     platformLine1: "전체 서비스의 흐름을 보고,",
     platformLine2: "필요한 운영을 바로 처리합니다.",
     scopeNotice: "모든 수치는 서버가 승인한 역할과 데이터 범위 안에서만 집계됩니다.",
     seconds: "초",
     sentNotifications: "전송·도달",
-    siteCount: "운영 사업장",
+    siteCount: "운영 현장",
     statusAttention: "확인 필요",
     statusHealthy: "안정",
+    tableAction: "작업",
+    tableCustomers: "고객",
+    tableHealth: "상태",
+    tableLocations: "현장",
+    tableName: "운영 영역",
+    tableOpenIssues: "미처리",
+    tableQrActivation: "QR 활성",
+    tableRequests: "요청",
     unresolved: "미해결 요청",
     workspaceDescription:
-      "계약 회사에 승인된 사업장의 QR 재고와 차량 연락 운영을 한곳에서 관리합니다.",
+      "계약 회사에 승인된 관리 현장의 QR 재고와 차량 연락 운영을 한곳에서 관리합니다.",
     workspaceEyebrow: "관리회사 운영 공간",
-    workspaceLine1: "오늘의 사업장 운영을,",
+    workspaceLine1: "오늘의 관리 현장 운영을,",
     workspaceLine2: "한눈에 보고 처리합니다.",
   },
 });

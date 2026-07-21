@@ -10,6 +10,7 @@ import {
 } from "@taptolk/application";
 import { SemanticHeading } from "@taptolk/ui";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import {
   approveQrBatchFinalGeneration,
   cancelQrBatchBeforeGenerationApproval,
@@ -28,6 +29,9 @@ import {
 import { signOutAdmin } from "../auth/actions";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
+import { QrQuantityControl } from "./qr-quantity-control";
+
+const QR_PREVIEW_CELLS = Array.from({ length: 25 }, (_, index) => `qr-preview-cell-${index}`);
 
 interface QrInventoryCopy {
   actions: string;
@@ -43,6 +47,7 @@ interface QrInventoryCopy {
   batchRequest: string;
   batchRequestDescription: string;
   batchRequestTitle: string;
+  batchSplitNotice: string;
   batchStatusLabels: Readonly<Record<QrBatchStatus, string>>;
   batchTitle: string;
   byteSize: string;
@@ -99,6 +104,19 @@ interface QrInventoryCopy {
   storageBucket: string;
   storagePath: string;
   templateCode: string;
+  wizardBrand: string;
+  wizardBrandDescription: string;
+  wizardPreview: string;
+  wizardQuantityHint: string;
+  wizardStep1: string;
+  wizardStep1Description: string;
+  wizardStep2: string;
+  wizardStep2Description: string;
+  wizardStep3: string;
+  wizardStep3Description: string;
+  wizardTemplate: string;
+  wizardTemplateDescription: string;
+  wizardTitle: string;
   tenant: string;
   titleLines: readonly [string, ...string[]];
   waitingDesign: string;
@@ -120,6 +138,7 @@ interface QrInventorySampleViewProps {
   locale: AppLocale;
   model: QrInventorySampleReadModel;
   statusMessage?: string | undefined;
+  brandAssetUpload?: ReactNode;
 }
 
 function formatDate(locale: AppLocale, value: string): string {
@@ -272,6 +291,42 @@ function ReasonField({ copy, id }: { copy: QrInventoryCopy; id: string }) {
         required
       />
     </label>
+  );
+}
+
+function StickerPreview({ copy }: { copy: QrInventoryCopy }) {
+  return (
+    <figure className="admin-qr-sticker-preview">
+      <div className="admin-qr-sticker-preview__disc">
+        <div className="admin-qr-sticker-preview__mark" aria-hidden="true" />
+        <div className="admin-qr-sticker-preview__qr" aria-hidden="true">
+          {QR_PREVIEW_CELLS.map((key) => (
+            <span key={key} />
+          ))}
+        </div>
+        {/* biome-ignore lint/performance/noImgElement: approved logo must bypass image transformation */}
+        <img alt={copy.logoAlt} src="/brand/taptolk-logo.png" />
+      </div>
+      <figcaption>{copy.wizardPreview}</figcaption>
+    </figure>
+  );
+}
+
+function WizardStep({
+  description,
+  index,
+  title,
+}: {
+  description: string;
+  index: number;
+  title: string;
+}) {
+  return (
+    <article className="admin-qr-wizard-step">
+      <span>{String(index).padStart(2, "0")}</span>
+      <strong>{title}</strong>
+      <p>{description}</p>
+    </article>
   );
 }
 
@@ -542,6 +597,7 @@ export function QrInventorySampleView({
   copy,
   errorMessage,
   finalApprovalModel,
+  brandAssetUpload,
   locale,
   model,
   statusMessage,
@@ -587,8 +643,44 @@ export function QrInventorySampleView({
         <strong>{copy.finalApprovalNotice}</strong>
       </aside>
 
+      <section className="admin-qr-wizard" aria-labelledby="qr-wizard-title">
+        <div className="admin-qr-wizard__copy">
+          <p className="eyebrow">{copy.wizardTemplate}</p>
+          <h2 id="qr-wizard-title">{copy.wizardTitle}</h2>
+          <p>{copy.wizardTemplateDescription}</p>
+          <div className="admin-qr-wizard__steps">
+            <WizardStep
+              description={copy.wizardStep1Description}
+              index={1}
+              title={copy.wizardStep1}
+            />
+            <WizardStep
+              description={copy.wizardStep2Description}
+              index={2}
+              title={copy.wizardStep2}
+            />
+            <WizardStep
+              description={copy.wizardStep3Description}
+              index={3}
+              title={copy.wizardStep3}
+            />
+          </div>
+        </div>
+        <StickerPreview copy={copy} />
+      </section>
+
+      {brandAssetUpload ? (
+        <section className="admin-qr-wizard-panel" aria-labelledby="qr-brand-title">
+          <div>
+            <p className="eyebrow">{copy.wizardBrand}</p>
+            <h2 id="qr-brand-title">{copy.wizardBrandDescription}</h2>
+          </div>
+          {brandAssetUpload}
+        </section>
+      ) : null}
+
       {canCreateDesign ? (
-        <details className="admin-tenant-create">
+        <details className="admin-tenant-create admin-qr-wizard-panel">
           <summary>
             <span>{copy.designCreateTitle}</span>
             <small>{copy.designCreateDescription}</small>
@@ -718,10 +810,14 @@ export function QrInventorySampleView({
       </section>
 
       {canRequestBatch ? (
-        <section aria-labelledby="batch-request-title" className="admin-lifecycle-queue">
+        <section
+          aria-labelledby="batch-request-title"
+          className="admin-lifecycle-queue admin-qr-wizard-panel"
+        >
           <header>
             <h2 id="batch-request-title">{copy.batchRequestTitle}</h2>
             <p>{copy.batchRequestDescription}</p>
+            <p className="admin-catalog-read-only">{copy.batchSplitNotice}</p>
           </header>
           {model.approvedDesignOptions.length > 0 ? (
             <div className="admin-approval-list">
@@ -768,17 +864,10 @@ export function QrInventorySampleView({
                         {design.siteName} · {design.templateCode}
                       </strong>
                       <div className="admin-approval-field-grid">
-                        <label className="admin-field" htmlFor={`quantity-${design.id}`}>
-                          <span>{copy.batchQuantity}</span>
-                          <input
-                            id={`quantity-${design.id}`}
-                            max={10_000}
-                            min={1}
-                            name="quantity"
-                            required
-                            type="number"
-                          />
-                        </label>
+                        <QrQuantityControl
+                          label={copy.batchQuantity}
+                          maxLabel={copy.wizardQuantityHint}
+                        />
                         <label className="admin-field" htmlFor={`purpose-${design.id}`}>
                           <span>{copy.batchPurpose}</span>
                           <input

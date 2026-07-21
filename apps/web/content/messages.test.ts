@@ -86,6 +86,8 @@ describe("administrator portal copy", () => {
       "admin.nav.sites",
       "admin.nav.qr",
       "admin.nav.operations",
+      "admin.nav.reports",
+      "admin.nav.revenue",
       "admin.nav.access",
     ] as const;
 

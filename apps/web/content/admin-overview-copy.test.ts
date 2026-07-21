@@ -13,9 +13,9 @@ describe("administrator overview copy", () => {
   });
 
   it("uses customer-facing navigation language", () => {
-    expect(ADMIN_OVERVIEW_COPY.ko.actionCustomers).toBe("고객사");
-    expect(ADMIN_OVERVIEW_COPY.ko.actionQr).toBe("QR 제작·재고");
-    expect(ADMIN_OVERVIEW_COPY.ko.actionOperations).toBe("운영 현황");
+    expect(ADMIN_OVERVIEW_COPY.ko.actionCustomers).toBe("계약 고객");
+    expect(ADMIN_OVERVIEW_COPY.ko.actionQr).toBe("QR 제작 관리");
+    expect(ADMIN_OVERVIEW_COPY.ko.actionOperations).toBe("운영 모니터링");
     expect(Object.values(ADMIN_OVERVIEW_COPY.ko).join(" ")).not.toMatch(/열기/u);
   });
 });
