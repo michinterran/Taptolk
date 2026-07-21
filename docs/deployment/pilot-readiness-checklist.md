@@ -132,18 +132,48 @@
       Mobile Chrome smoke 36/36 PASS with 320/768/1280/1920 admin-login overflow and semantic
       heading coverage.
 
+- [x] Separated the public landing from the administrator portal at the route group,
+      layout, header/footer, metadata, and authentication-call boundary on commit
+      `06e873f`. Existing URLs are unchanged, including the printed
+      `/{locale}/q/{token}` form. The public surface carries zero administrator links,
+      `proxy.ts` refreshes the administrator session only on administrator paths,
+      `/{locale}/admin` introduces the workspace to management companies while keeping
+      the canonical single sign-in and server-side role routing, and the whole
+      administrator area is `noindex` and excluded from `sitemap.xml`.
+      WCJ rule `J005` was rewritten to enforce zero administrator links on the public
+      surface; it previously required an administrator sign-in link on onboarding.
+      Evidence: lint 339 files, typecheck 19/19, unit 56 files/379 tests, DB structure
+      59 migrations/24 tests, secret scan 572 files, WCJ 100 over 99 files, production
+      build, and local browser smoke 42/42. Linked pgTAP and authenticated staging E2E
+      remain pending for the next session.
+
 ## Manual and external pilot gates
 
 - [ ] At actual service launch, move the Vercel project to Pro or Enterprise before activating
       `0 * * * *`; keep Cron deferred on Hobby.
 - [x] Create/link the `taptolk` Vercel project and confirm Root Directory exactly `apps/web`.
-- [ ] Create or grant access to a separate approved Production Supabase project, approve its data
-      region, and apply migrations through `20260719184000`. Only `taptolk-staging` was accessible
+- [ ] Create or grant access to a separate approved Production Supabase project and apply
+      migrations through `20260721041000` (59 migrations). Only `taptolk-staging` was accessible
       for this lane during the audit.
+      - **Data region approved 2026-07-21: Seoul (`ap-northeast-2`).** Chosen so that personal
+        data stays in-country, which removes the cross-border transfer notice/consent section
+        from the privacy policy and keeps parity with `taptolk-staging`. The region cannot be
+        changed after project creation.
+      - Organization `Taptolk` exists on the Free plan. Keep the organization-level Supabase
+        Assistant opt-in at `Disabled` for the Production project as well.
+      - Plan upgrade is deliberately NOT requested yet; decide it at actual service launch.
 - [ ] Contract with an approved Kakao AlimTalk dealer, approve the business channel and
       `OWNER_CONTACT_REQUEST_V1` informational template, then authorize the live adapter,
       receipt/cost reconciliation, and failure rehearsal. Do not choose a dealer or configure
       template IDs or secret values until separately approved.
+      - **Status 2026-07-21: blocked on business registration.** The operator is obtaining a
+        Korean business registration certificate, which is a hard prerequisite for Kakao business
+        channel verification (step 3 of the onboarding flow). Work resumes once it is issued.
+      - Operator preparation steps, dealer selection criteria, the three product decisions
+        (SMS fallback / non-KakaoTalk recipients / English template), and draft KO+EN
+        informational templates are in `docs/deployment/kakao-alimtalk-onboarding-guide.md`.
+      - Recommendation carried forward: contract with **SMS fallback disabled** so the owner's
+        phone number is not additionally disclosed to an SMS carrier.
 - [ ] Select and approve a Production phone-ownership verification provider. The AlimTalk
       informational template is not verification, and the current Production adapter remains
       fail-closed.
@@ -162,6 +192,16 @@
 - [ ] Decide and validate TUS resumable upload for artifacts above the reviewed large-file
       threshold.
 - [ ] Complete production domain, environment, alerting, rollback, and incident owner review.
+      - **Domain acquired 2026-07-21: `taptolk.com`.** DNS connection is deliberately deferred to
+        just before service launch; the operator will consolidate DNS, admin subdomain, and
+        environment wiring in one pass at that time.
+      - ⚠️ **Before any physical sticker printing, the canonical QR host must be final.**
+        `PUBLIC_QR_BASE_URL` is baked into each generated QR image, so printed stickers can never
+        be repointed. Decide apex vs `www` at that point: `https://taptolk.com/q/{token}` is 65
+        characters versus 69 for the `www` form, and both sit well under the 88-character URL that
+        already passed 85mm print decode 100/100. Apex is recommended with `www` redirecting.
+      - Admin host name (e.g. `admin.taptolk.com`) remains undecided and is settled during the
+        same DNS pass. PRD Part A keeps a single-host default so development is not blocked.
 - [x] Install and start an approved Docker-compatible local runtime, then complete a clean
       local Supabase reset. The operator approved Docker Desktop; version 4.82.0 is installed,
       its daemon responds, and the clean reset plus complete local pgTAP suite pass.
