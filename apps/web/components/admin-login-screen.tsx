@@ -2,7 +2,7 @@ import { SemanticHeading } from "@taptolk/ui";
 import { redirect } from "next/navigation";
 import { signInAdmin } from "../auth/actions";
 import { loadAdminContext } from "../auth/admin-context";
-import { type AdminLoginArea, getAdminDecisionPath } from "../auth/admin-routing";
+import { getAdminDecisionPath } from "../auth/admin-routing";
 import { getAdminRegistrationPath } from "../auth/registration-routing";
 import { getMessages } from "../content/messages";
 import type { AppLocale } from "../i18n/config";
@@ -11,34 +11,24 @@ import { AdminAuthNotice } from "./admin-auth-notice";
 import { AdminPageHeader } from "./admin-page-header";
 
 interface AdminLoginScreenProps {
-  area: AdminLoginArea;
   locale: AppLocale;
   queryError: string | undefined;
 }
 
-export async function AdminLoginScreen({ area, locale, queryError }: AdminLoginScreenProps) {
+export async function AdminLoginScreen({ locale, queryError }: AdminLoginScreenProps) {
   const copy = getMessages(locale);
   const context = await loadAdminContext();
   if (context.status === "AVAILABLE" && context.decision.state !== "UNAUTHENTICATED") {
     redirect(getAdminDecisionPath(locale, context.decision));
   }
 
-  const isPlatform = area === "platform";
-  const intro = isPlatform
-    ? {
-        description: copy["admin.platformLogin.description"],
-        eyebrow: copy["admin.platformLogin.eyebrow"],
-        line1: copy["admin.platformLogin.line1"],
-        line2: copy["admin.platformLogin.line2"],
-        submit: copy["admin.platformLogin.submit"],
-      }
-    : {
-        description: copy["admin.login.description"],
-        eyebrow: copy["admin.login.eyebrow"],
-        line1: copy["admin.login.line1"],
-        line2: copy["admin.login.line2"],
-        submit: copy["admin.login.submit"],
-      };
+  const intro = {
+    description: copy["admin.login.description"],
+    eyebrow: copy["admin.login.eyebrow"],
+    line1: copy["admin.login.line1"],
+    line2: copy["admin.login.line2"],
+    submit: copy["admin.login.submit"],
+  };
   const errorMessage =
     queryError === "invalid_credentials"
       ? copy["admin.auth.error.invalidCredentials"]
@@ -46,10 +36,13 @@ export async function AdminLoginScreen({ area, locale, queryError }: AdminLoginS
         ? copy["admin.auth.error.configuration"]
         : queryError === "oauth_unavailable"
           ? copy["admin.auth.error.unavailable"]
-          : null;
+          : queryError === "session"
+            ? copy["admin.auth.error.session"]
+            : null;
   const configurationMissing = context.status === "CONFIGURATION_MISSING";
   const serviceUnavailable = context.status === "LOAD_ERROR";
-  const pathname = isPlatform ? `/${locale}/admin/platform/login` : `/${locale}/admin/login`;
+  const pathname =
+    queryError === "session" ? `/${locale}/admin/login?error=session` : `/${locale}/admin/login`;
 
   return (
     <>
@@ -96,31 +89,30 @@ export async function AdminLoginScreen({ area, locale, queryError }: AdminLoginS
           ) : null}
 
           <form action={signInAdmin} className="admin-form">
-            <input aria-label={intro.submit} name="area" type="hidden" value={area} />
             <input
               aria-label={copy["locale.switcher.label"]}
               name="locale"
               type="hidden"
               value={locale}
             />
-            <label className="admin-field" htmlFor={`${area}-admin-email`}>
+            <label className="admin-field" htmlFor="admin-email">
               <span>{copy["admin.login.email.label"]}</span>
               <input
                 autoComplete="username"
                 disabled={configurationMissing || serviceUnavailable}
-                id={`${area}-admin-email`}
+                id="admin-email"
                 name="email"
                 placeholder={copy["admin.login.email.placeholder"]}
                 required
                 type="email"
               />
             </label>
-            <label className="admin-field" htmlFor={`${area}-admin-password`}>
+            <label className="admin-field" htmlFor="admin-password">
               <span>{copy["admin.login.password.label"]}</span>
               <input
                 autoComplete="current-password"
                 disabled={configurationMissing || serviceUnavailable}
-                id={`${area}-admin-password`}
+                id="admin-password"
                 minLength={8}
                 name="password"
                 required
@@ -142,18 +134,9 @@ export async function AdminLoginScreen({ area, locale, queryError }: AdminLoginS
             googleLabel={copy["admin.login.google"]}
             locale={locale}
             localeTitle={copy["locale.switcher.label"]}
-            loginArea={area}
-            secondaryAction={
-              isPlatform
-                ? copy["admin.platformLogin.customerAction"]
-                : copy["admin.login.signupAction"]
-            }
-            secondaryHref={isPlatform ? `/${locale}/admin/login` : getAdminRegistrationPath(locale)}
-            secondaryPrompt={
-              isPlatform
-                ? copy["admin.platformLogin.customerPrompt"]
-                : copy["admin.login.signupPrompt"]
-            }
+            secondaryAction={copy["admin.login.signupAction"]}
+            secondaryHref={getAdminRegistrationPath(locale)}
+            secondaryPrompt={copy["admin.login.signupPrompt"]}
           />
         </section>
       </section>

@@ -1,5 +1,5 @@
 import type { AdminRole, AdminScopeType } from "@taptolk/domain";
-import { roleRequiresMfa } from "@taptolk/domain";
+import { isAdminRoleScopeValid, roleRequiresMfa } from "@taptolk/domain";
 
 export type AdminProfileStatus = "INVITED" | "ACTIVE" | "SUSPENDED" | "CLOSED";
 export type AdminMembershipStatus = "INVITED" | "ACTIVE" | "SUSPENDED" | "REVOKED";
@@ -64,7 +64,18 @@ export function selectPrimaryAdminMembership(
 ): AdminMembership | null {
   return (
     [...memberships]
-      .filter((membership) => membership.status === "ACTIVE")
+      .filter(
+        (membership) =>
+          membership.status === "ACTIVE" &&
+          isAdminRoleScopeValid(membership.role, {
+            ...(membership.managementCompanyId
+              ? { managementCompanyId: membership.managementCompanyId }
+              : {}),
+            ...(membership.siteId ? { siteId: membership.siteId } : {}),
+            ...(membership.tenantId ? { tenantId: membership.tenantId } : {}),
+            type: membership.scopeType,
+          }),
+      )
       .sort(
         (left, right) =>
           ROLE_SELECTION_PRIORITY[left.role] - ROLE_SELECTION_PRIORITY[right.role] ||

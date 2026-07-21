@@ -1,5 +1,4 @@
 import { signInWithGoogle } from "../auth/actions";
-import type { AdminLoginArea } from "../auth/admin-routing";
 import type { AdminRegistrationFlow } from "../auth/registration-routing";
 import type { AppLocale } from "../i18n/config";
 
@@ -10,7 +9,6 @@ interface AdminAuthAlternativesProps {
   googleLabel: string;
   locale: AppLocale;
   localeTitle: string;
-  loginArea?: AdminLoginArea;
   secondaryAction: string;
   secondaryHref: string;
   secondaryPrompt: string;
@@ -23,7 +21,6 @@ export function AdminAuthAlternatives({
   googleLabel,
   locale,
   localeTitle,
-  loginArea = "customer",
   secondaryAction,
   secondaryHref,
   secondaryPrompt,
@@ -34,7 +31,6 @@ export function AdminAuthAlternatives({
         <span>{dividerLabel}</span>
       </div>
       <form action={signInWithGoogle}>
-        <input aria-label={googleLabel} name="area" type="hidden" value={loginArea} />
         <input aria-label={googleLabel} name="flow" type="hidden" value={flow} />
         <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
         <button

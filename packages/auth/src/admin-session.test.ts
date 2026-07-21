@@ -116,4 +116,20 @@ describe("admin access resolution", () => {
     expect(selected?.id).toBe("membership-platform");
     expect(getAdminLandingArea(selected?.role ?? "READ_ONLY")).toBe("platform");
   });
+
+  it("fails closed when an active membership has an invalid role and scope pairing", () => {
+    const invalidPlatformMembership = membership("SUPER_ADMIN", {
+      scopeType: "TENANT",
+      tenantId: "tenant-1",
+    });
+
+    expect(selectPrimaryAdminMembership([invalidPlatformMembership])).toBeNull();
+    expect(
+      resolveAdminAccess(
+        { authenticated: true, hasVerifiedTotp: true, mfaLevel: "aal2" },
+        profile,
+        [invalidPlatformMembership],
+      ),
+    ).toMatchObject({ reason: "MEMBERSHIP_INACTIVE", state: "ACCESS_DENIED" });
+  });
 });

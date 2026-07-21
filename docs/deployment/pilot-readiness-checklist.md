@@ -1,6 +1,6 @@
 # Taptolk Pilot Readiness Checklist
 
-> Updated: 2026-07-20 | Current decision: Web deployed / Cron deferred / Manual gates pending
+> Updated: 2026-07-21 | Current decision: Task 2 automated complete / Cron deferred / Manual gates pending
 
 ## Automated staging gates
 
@@ -51,9 +51,10 @@
 - [x] GitHub Actions run `29705909265` passed the same required gates for handoff commit
       `3c420d1`.
 - [x] Replaced the internal Phase/Foundation root screen with localized public landing and
-      role-based onboarding pages. Caller and owner guidance remains QR/token led; customer
-      administrator and Taptolk platform administrator login entry points are visibly separate
-      before the shared central auth/RBAC/RLS boundary.
+      role-based onboarding pages. Caller and owner guidance remains QR/token led. The initial
+      separate customer/platform pre-login presentation was superseded by the 2026-07-21 Task 2
+      canonical administrator entry; post-login screens and authorization boundaries remain
+      separate.
 - [x] Public landing/onboarding WCJ and browser coverage: no internal development copy,
       KO/EN parity, semantic headings, Axe clean, and no horizontal overflow at 320 CSS pixels.
 - [x] 2026-07-20 public-surface revalidation: linked pgTAP all 22 files PASS; `pnpm verify`
@@ -113,6 +114,17 @@
       28 PASS with one intentional 10x100 opt-in skip, and `pnpm verify` PASS with lint 329,
       typecheck 19/19, unit 54 files/334 tests, DB 57/23, secret scan 544, WCJ 100/92, and
       build 11/11.
+- [x] 2026-07-21 workorder Task 2: public landing, onboarding, password sign-in, and Google callback
+      now expose one canonical `/{locale}/admin/login` entry. The legacy platform-login URL is a
+      server redirect only. Post-login routing still loads the approved profile, active
+      membership, valid role/scope pairing, and MFA state on the server before opening the
+      customer dashboard or the separate platform dashboard.
+- [x] Task 2 validation: WCJ 100/100; linked pgTAP 23 files/590 tests; authenticated staging E2E
+      30 PASS with one intentional 10x100 opt-in skip, including new Site Admin and Super Admin
+      route/boundary proof; `pnpm verify` PASS with lint 330 files, unit 54 files/335 tests,
+      DB 57 migrations/23 tests, secret scan 551 files, and Production build; local Chromium and
+      Mobile Chrome smoke 36/36 PASS with 320/768/1280/1920 admin-login overflow and semantic
+      heading coverage.
 
 ## Manual and external pilot gates
 

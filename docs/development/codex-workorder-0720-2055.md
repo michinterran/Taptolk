@@ -290,12 +290,28 @@ environment capability가 **도달 가능하면 CI가 실패**해야 한다
 
 ### 4.3 Task 2 완료 기준
 
-- [ ] 단일 관리자 로그인 진입점, 서버 역할 기반 post-login routing
-- [ ] 고객/플랫폼 화면·권한 경계 유지 확인
-- [ ] KO/EN dictionary 동시 반영
-- [ ] `corepack pnpm validate:wcj` PASS (320/768/1280/1920 CSS px 확인)
-- [ ] 인증된 staging E2E에서 역할별 routing 증명
-- [ ] `corepack pnpm verify` PASS
+- [x] 단일 관리자 로그인 진입점, 서버 역할 기반 post-login routing
+- [x] 고객/플랫폼 화면·권한 경계 유지 확인
+- [x] KO/EN dictionary 동시 반영
+- [x] `corepack pnpm validate:wcj` PASS (320/768/1280/1920 CSS px 확인)
+- [x] 인증된 staging E2E에서 역할별 routing 증명
+- [x] `corepack pnpm verify` PASS
+
+### 4.4 실행 결과 (2026-07-21)
+
+- 공개·온보딩·password·Google 경로를 `/{locale}/admin/login` 하나로 통합했다. 기존
+  `/{locale}/admin/platform/login`은 UI 없이 canonical login으로 server redirect한다.
+- 로그인 후 `loadAdminContext`가 server-only Supabase session에서 profile, active
+  membership, role/scope, MFA를 읽고 중앙 `resolveAdminAccess`와 `getAdminDecisionPath`로
+  고객 dashboard 또는 분리된 platform dashboard를 선택한다. 브라우저 `area` 입력과
+  callback parameter는 제거했다.
+- 중앙 membership 선택은 active 상태뿐 아니라 role/scope 조합 유효성도 fail-closed한다.
+  RBAC, RLS, MFA, 감사 mutation 경계와 고객/플랫폼 화면은 합치지 않았다.
+- KO/EN 단일 로그인 copy, loading, expired-session, configuration/error, access-denied 상태와
+  legacy redirect를 반영했다.
+- WCJ 100/100, linked pgTAP 23파일·590테스트, authenticated staging E2E 30 PASS와 의도적
+  10x100 opt-in skip 1개, local Chromium/Mobile smoke 36/36, `pnpm verify` PASS를 확인했다.
+- Task 3 access grant, Test Lab, persona 기능은 시작하지 않았다.
 
 ---
 

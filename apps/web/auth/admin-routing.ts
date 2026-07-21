@@ -4,19 +4,12 @@ import { type AdminAccessDecision, getAdminLandingArea } from "@taptolk/auth";
 import type { Route } from "next";
 import type { AppLocale } from "../i18n/config";
 
-export type AdminLoginArea = "customer" | "platform";
-
 export function getLocalizedAdminPath(locale: AppLocale, suffix = ""): Route {
   return `/${locale}/admin${suffix}` as Route;
 }
 
-export function readAdminLoginArea(value: FormDataEntryValue | string | null): AdminLoginArea {
-  return value === "platform" ? "platform" : "customer";
-}
-
-export function getAdminLoginPath(locale: AppLocale, area: AdminLoginArea, suffix = ""): Route {
-  const base = area === "platform" ? "/platform/login" : "/login";
-  return getLocalizedAdminPath(locale, `${base}${suffix}`);
+export function getAdminLoginPath(locale: AppLocale, suffix = ""): Route {
+  return getLocalizedAdminPath(locale, `/login${suffix}`);
 }
 
 export function getReadyAdminPath(
@@ -31,7 +24,7 @@ export function getReadyAdminPath(
 export function getAdminDecisionPath(locale: AppLocale, decision: AdminAccessDecision): Route {
   switch (decision.state) {
     case "UNAUTHENTICATED":
-      return getAdminLoginPath(locale, "customer");
+      return getAdminLoginPath(locale);
     case "ACCESS_DENIED":
       return getLocalizedAdminPath(locale, "/access");
     case "MFA_ENROLL_REQUIRED":

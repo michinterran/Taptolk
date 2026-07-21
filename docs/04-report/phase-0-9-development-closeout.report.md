@@ -123,3 +123,14 @@ the clean-local Phase 1 gate is now satisfied. Production Supabase project/regio
 providers, secrets, monitoring/rollback/incident owners, and actual-service Cron activation
 remain explicit external decisions. Active Cron remains zero on Hobby, and the per-Batch quantity
 contract remains `1..100`.
+
+## 7. 2026-07-21 Administrator Entry Supersession
+
+Workorder Task 2 supersedes the 2026-07-20 two-entry public presentation. Customer and platform
+administrators now use one canonical localized login. The server still resolves the approved
+profile, active membership, valid role/scope pairing, and MFA before routing to separate customer
+or platform dashboards. This is a UX-entry consolidation, not an authorization merge.
+
+Task 2 revalidation produced linked pgTAP 23 files/590 tests, authenticated staging E2E 30 PASS
+with one intentional 10x100 opt-in skip, WCJ 100/100, local browser smoke 36/36, and full
+`pnpm verify` PASS. Manual and external Production pilot gates remain open.

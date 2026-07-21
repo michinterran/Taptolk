@@ -2,6 +2,11 @@
 
 > Date: 2026-07-20 | Level: Dynamic
 
+> 2026-07-21 supersession: workorder Task 2 replaced the two visible administrator pre-login
+> entries with one canonical `/{locale}/admin/login`. The historical implementation evidence
+> below remains accurate for its 2026-07-20 checkpoint; current behavior is recorded in
+> `docs/04-report/admin-single-login-role-routing.report.md`.
+
 ---
 
 ## 1. Summary

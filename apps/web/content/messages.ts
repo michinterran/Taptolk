@@ -91,7 +91,7 @@ export const ko = {
   "admin.dashboard.session.aal2": "MFA 인증 완료",
   "admin.login.backToOnboarding": "시작 안내로 돌아가기",
   "admin.login.description":
-    "관리회사와 계약 사이트 운영자는 승인된 업무 계정으로 로그인해 주세요.",
+    "고객 관리자와 Taptolk 플랫폼 관리자는 하나의 승인된 업무 계정으로 로그인합니다. 로그인 후 서버가 역할, 소속 범위와 MFA 상태를 확인해 알맞은 관리 화면으로 연결합니다.",
   "admin.login.email.label": "관리자 이메일",
   "admin.login.email.placeholder": "name@company.com",
   "admin.login.eyebrow": "관리자 콘솔",
@@ -102,14 +102,6 @@ export const ko = {
   "admin.login.signupAction": "계정 만들기",
   "admin.login.signupPrompt": "아직 계정이 없나요?",
   "admin.login.submit": "관리자 로그인",
-  "admin.platformLogin.customerAction": "고객 관리자 로그인",
-  "admin.platformLogin.customerPrompt": "관리회사·사이트 운영 계정인가요?",
-  "admin.platformLogin.description":
-    "Taptolk 슈퍼어드민과 플랫폼 운영자만 승인된 플랫폼 계정으로 로그인해 주세요.",
-  "admin.platformLogin.eyebrow": "Taptolk 플랫폼 어드민",
-  "admin.platformLogin.line1": "전체 서비스 운영을 위한",
-  "admin.platformLogin.line2": "별도 보안 입구입니다.",
-  "admin.platformLogin.submit": "플랫폼 어드민 로그인",
   "admin.mfa.challenge.description":
     "인증 앱에 표시된 최신 6자리 코드를 입력하면 관리자 세션의 보안 수준이 AAL2로 올라갑니다.",
   "admin.mfa.challenge.eyebrow": "2단계 인증",
@@ -565,11 +557,11 @@ export const ko = {
   "landing.audiences.caller.description":
     "차량 이동, 주차 문제, 차량 이상을 알릴 때 전화번호나 앱 설치가 필요하지 않습니다.",
   "landing.audiences.caller.title": "차량에 연락하려는 분",
-  "landing.audiences.customer.action": "고객 관리자 로그인",
-  "landing.audiences.customer.badge": "계약 고객",
+  "landing.audiences.customer.action": "관리자 로그인",
+  "landing.audiences.customer.badge": "승인된 관리자",
   "landing.audiences.customer.description":
-    "관리회사와 사이트 운영자는 승인된 업무 범위로 QR 배포와 운영 상태를 관리합니다.",
-  "landing.audiences.customer.title": "관리회사·사이트 관리자",
+    "고객 관리자와 플랫폼 관리자는 같은 로그인에서 시작하고, 서버가 승인된 역할과 범위에 맞는 별도 콘솔로 연결합니다.",
+  "landing.audiences.customer.title": "고객·플랫폼 관리자",
   "landing.audiences.eyebrow": "역할별 시작",
   "landing.audiences.line1": "누구나 같은 입구를 쓰지 않도록",
   "landing.audiences.line2": "역할에 맞게 나누었습니다.",
@@ -578,11 +570,6 @@ export const ko = {
   "landing.audiences.owner.description":
     "새 QR 활성화는 받은 스티커의 QR에서 시작하고, 연결된 차량은 현재 기기에서 확인합니다.",
   "landing.audiences.owner.title": "QR을 받은 차주",
-  "landing.audiences.platform.action": "플랫폼 어드민 로그인",
-  "landing.audiences.platform.badge": "Taptolk 운영팀",
-  "landing.audiences.platform.description":
-    "슈퍼어드민과 플랫폼 운영자는 고객 관리자와 분리된 보안 입구를 사용합니다.",
-  "landing.audiences.platform.title": "Taptolk 플랫폼 어드민",
   "landing.eyebrow": "전화번호 공개 없이 시작하는 차량 연락",
   "landing.footer": "Taptolk · 필요한 연락만, 공개되는 번호 없이",
   "landing.hero.description":
@@ -607,10 +594,9 @@ export const ko = {
   "landing.journey.send.label": "SEND",
   "landing.journey.send.title": "필요한 요청만 전달",
   "landing.logo.alt": "Taptolk 홈",
-  "landing.nav.customerAdmin": "고객 관리자",
+  "landing.nav.customerAdmin": "관리자 로그인",
   "landing.nav.guide": "시작 안내",
   "landing.nav.label": "Taptolk 주요 메뉴",
-  "landing.nav.platformAdmin": "플랫폼 어드민",
   "landing.privacy.description":
     "방문자와 차주의 전화번호를 서로에게 보여 주지 않고, QR·요청·답장은 목적이 정해진 임시 연락 세션 안에서만 연결합니다.",
   "landing.privacy.eyebrow": "Privacy by Design",
@@ -635,16 +621,16 @@ export const ko = {
     "QR이 해당 차량의 안전한 연락 화면을 엽니다. 차량번호 전체나 차주의 연락처는 표시하지 않습니다.",
   "onboarding.caller.kicker": "차량에 연락하기",
   "onboarding.caller.title": "주차·이동·차량 이상을 알리고 싶어요",
-  "onboarding.customer.action": "고객 관리자 로그인",
-  "onboarding.customer.badge": "이메일 계정",
+  "onboarding.customer.action": "관리자 로그인",
+  "onboarding.customer.badge": "역할별 서버 라우팅",
   "onboarding.customer.description":
-    "관리회사, 사이트 관리자와 운영자는 승인된 역할과 소속 범위로 고객 운영 콘솔에 접근합니다.",
-  "onboarding.customer.kicker": "계약 고객 운영",
-  "onboarding.customer.title": "QR 배포와 사이트를 관리해요",
+    "고객 관리자와 Taptolk 플랫폼 관리자는 하나의 로그인에서 시작합니다. 서버가 승인된 프로필, 소속 범위와 MFA 상태를 확인해 서로 분리된 관리 화면으로 연결합니다.",
+  "onboarding.customer.kicker": "고객·플랫폼 관리",
+  "onboarding.customer.title": "승인된 역할에 맞는 관리 화면으로 이동해요",
   "onboarding.eyebrow": "START BY ROLE",
   "onboarding.footer": "어떤 역할이든 필요한 범위만 연결합니다.",
   "onboarding.hero.description":
-    "Taptolk는 방문자, 차주, 고객 관리자, 플랫폼 운영팀의 시작 경로를 분리합니다. 아래에서 지금 상황에 맞는 입구를 선택하세요.",
+    "Taptolk는 방문자, 차주와 관리자의 시작 경로를 분리합니다. 관리자는 하나의 로그인 후 서버에서 확인된 역할에 맞는 화면으로 이동합니다.",
   "onboarding.hero.line1": "지금 하려는 일에 맞는",
   "onboarding.hero.line2": "안전한 입구를 선택하세요.",
   "onboarding.owner.action": "연결된 내 차량 확인",
@@ -654,12 +640,6 @@ export const ko = {
   "onboarding.owner.kicker": "차량 QR 연결",
   "onboarding.owner.title": "새 QR을 활성화하거나 내 차량을 확인해요",
   "onboarding.paths.label": "역할별 Taptolk 시작 경로",
-  "onboarding.platform.action": "플랫폼 어드민 로그인",
-  "onboarding.platform.badge": "MFA 필수",
-  "onboarding.platform.description":
-    "Taptolk 슈퍼어드민과 플랫폼 운영자는 고객 운영 계정과 분리된 입구에서 인증합니다.",
-  "onboarding.platform.kicker": "Taptolk 내부 운영",
-  "onboarding.platform.title": "전체 플랫폼을 운영해요",
   "onboarding.token.description":
     "방문자 연락과 신규 차주 활성화는 발급된 QR 또는 안전한 전용 링크에서만 시작됩니다. 이 페이지에서 차량 번호나 코드를 직접 입력하는 방법은 제공하지 않습니다.",
   "onboarding.token.title": "QR이 필요한 이유",
@@ -774,7 +754,7 @@ export const en = {
   "admin.dashboard.session.aal2": "MFA verified",
   "admin.login.backToOnboarding": "Back to getting started",
   "admin.login.description":
-    "Management company and contracted-site operators must sign in with an approved work account.",
+    "Customer and Taptolk platform administrators use one approved work-account sign-in. The server then verifies the role, membership scope, and MFA state before routing to the appropriate admin area.",
   "admin.login.email.label": "Admin email",
   "admin.login.email.placeholder": "name@company.com",
   "admin.login.eyebrow": "Admin console",
@@ -785,14 +765,6 @@ export const en = {
   "admin.login.signupAction": "Create an account",
   "admin.login.signupPrompt": "Need an account?",
   "admin.login.submit": "Sign in as admin",
-  "admin.platformLogin.customerAction": "Customer admin sign in",
-  "admin.platformLogin.customerPrompt": "Using a management company or site operations account?",
-  "admin.platformLogin.description":
-    "Only approved Taptolk Super Admins and Platform Operators may sign in with a platform account.",
-  "admin.platformLogin.eyebrow": "Taptolk platform admin",
-  "admin.platformLogin.line1": "A separate secure entry",
-  "admin.platformLogin.line2": "for full-service operations.",
-  "admin.platformLogin.submit": "Platform admin sign in",
   "admin.mfa.challenge.description":
     "Enter the latest six-digit code from your authenticator app to raise this admin session to AAL2.",
   "admin.mfa.challenge.eyebrow": "Two-step verification",
@@ -1266,11 +1238,11 @@ export const en = {
   "landing.audiences.caller.description":
     "Report a move request, parking issue, or vehicle concern without a phone number or app.",
   "landing.audiences.caller.title": "I need to reach a vehicle owner",
-  "landing.audiences.customer.action": "Customer admin sign in",
-  "landing.audiences.customer.badge": "Contract customer",
+  "landing.audiences.customer.action": "Admin sign in",
+  "landing.audiences.customer.badge": "Approved administrator",
   "landing.audiences.customer.description":
-    "Management companies and site teams manage QR distribution and operations within approved work scopes.",
-  "landing.audiences.customer.title": "Management company or site admin",
+    "Customer and platform administrators start from one sign-in, then the server routes each approved role and scope to its separate console.",
+  "landing.audiences.customer.title": "Customer or platform administrator",
   "landing.audiences.eyebrow": "Start by role",
   "landing.audiences.line1": "Different responsibilities deserve",
   "landing.audiences.line2": "clearly separated entry points.",
@@ -1279,11 +1251,6 @@ export const en = {
   "landing.audiences.owner.description":
     "Activate a new QR from the issued sticker, then view connected vehicles on your current device.",
   "landing.audiences.owner.title": "I received a vehicle QR",
-  "landing.audiences.platform.action": "Platform admin sign in",
-  "landing.audiences.platform.badge": "Taptolk operations",
-  "landing.audiences.platform.description":
-    "Super Admins and Platform Operators use an entry point separate from customer administrators.",
-  "landing.audiences.platform.title": "Taptolk platform admin",
   "landing.eyebrow": "Vehicle contact that starts without sharing a phone number",
   "landing.footer": "Taptolk · essential contact without an exposed number",
   "landing.hero.description":
@@ -1310,10 +1277,9 @@ export const en = {
   "landing.journey.send.label": "SEND",
   "landing.journey.send.title": "Send only what is needed",
   "landing.logo.alt": "Taptolk home",
-  "landing.nav.customerAdmin": "Customer admin",
+  "landing.nav.customerAdmin": "Admin sign in",
   "landing.nav.guide": "Get started",
   "landing.nav.label": "Taptolk primary navigation",
-  "landing.nav.platformAdmin": "Platform admin",
   "landing.privacy.description":
     "Caller and owner phone numbers remain hidden from each other. The QR, request, and reply connect only inside a purpose-limited temporary session.",
   "landing.privacy.eyebrow": "Privacy by Design",
@@ -1339,16 +1305,16 @@ export const en = {
     "The QR opens that vehicle's protected contact screen. It does not reveal the full plate or the owner's contact details.",
   "onboarding.caller.kicker": "Contact a vehicle",
   "onboarding.caller.title": "I need to report a parking, move, or vehicle issue",
-  "onboarding.customer.action": "Customer admin sign in",
-  "onboarding.customer.badge": "Email account",
+  "onboarding.customer.action": "Admin sign in",
+  "onboarding.customer.badge": "Server role routing",
   "onboarding.customer.description":
-    "Management company, site admin, and operator accounts enter the customer console with an approved role and scope.",
-  "onboarding.customer.kicker": "Contract customer operations",
-  "onboarding.customer.title": "I manage QR distribution and sites",
+    "Customer and Taptolk platform administrators start from one sign-in. The server verifies the approved profile, membership scope, and MFA state before opening separate admin areas.",
+  "onboarding.customer.kicker": "Customer and platform administration",
+  "onboarding.customer.title": "Open the admin area approved for my role",
   "onboarding.eyebrow": "START BY ROLE",
   "onboarding.footer": "Every role receives only the access it needs.",
   "onboarding.hero.description":
-    "Taptolk separates entry paths for callers, owners, customer administrators, and platform administrators. Choose the one that matches your task.",
+    "Taptolk separates entry paths for callers, owners, and administrators. Administrators use one sign-in, then the server routes them by their approved role.",
   "onboarding.hero.line1": "Choose the secure entry",
   "onboarding.hero.line2": "that matches what you need to do.",
   "onboarding.owner.action": "View my connected vehicles",
@@ -1358,12 +1324,6 @@ export const en = {
   "onboarding.owner.kicker": "Connect a vehicle QR",
   "onboarding.owner.title": "I want to activate a new QR or view my vehicle",
   "onboarding.paths.label": "Taptolk entry paths by role",
-  "onboarding.platform.action": "Platform admin sign in",
-  "onboarding.platform.badge": "MFA required",
-  "onboarding.platform.description":
-    "Taptolk Super Admins and Platform Operators authenticate through an entry separate from customer operations accounts.",
-  "onboarding.platform.kicker": "Taptolk internal operations",
-  "onboarding.platform.title": "I operate the full platform",
   "onboarding.token.description":
     "Caller contact and new-owner activation begin only from an issued QR or protected dedicated link. This page does not offer a way to enter a vehicle number or code directly.",
   "onboarding.token.title": "Why the QR is required",

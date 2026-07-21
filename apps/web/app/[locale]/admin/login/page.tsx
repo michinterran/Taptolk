@@ -16,7 +16,6 @@ export default async function AdminLoginPage({ params, searchParams }: AdminLogi
   return (
     <main className="admin-auth-shell">
       <AdminLoginScreen
-        area="customer"
         locale={locale}
         queryError={Array.isArray(query.error) ? query.error[0] : query.error}
       />

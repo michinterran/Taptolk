@@ -68,6 +68,7 @@ function checkStaticRules(files) {
   const errorPage = sourceAt(files, "apps/web/app/[locale]/error.tsx");
   const landingPage = sourceAt(files, "apps/web/app/[locale]/page.tsx");
   const onboardingPage = sourceAt(files, "apps/web/app/[locale]/onboarding/page.tsx");
+  const publicHeader = sourceAt(files, "apps/web/components/public-site-header.tsx");
   const localeModule = sourceAt(files, "apps/web/i18n/locale.ts");
   const localeSwitcher = sourceAt(files, "apps/web/components/locale-switcher.tsx");
   const localeRoute = sourceAt(files, "apps/web/app/api/locale/route.ts");
@@ -252,13 +253,14 @@ function checkStaticRules(files) {
     !landingPage.includes("/onboarding") ||
     !onboardingPage.includes("<SemanticHeading") ||
     !onboardingPage.includes("/admin/login") ||
-    !onboardingPage.includes("/admin/platform/login")
+    onboardingPage.includes("/admin/platform/login") ||
+    publicHeader.includes("/admin/platform/login")
   ) {
     findings.push(
       finding(
         "J005",
         "apps/web/app/[locale]/onboarding/page.tsx",
-        "Public landing or role-separated onboarding entry markers are incomplete.",
+        "Public onboarding must expose one administrator sign-in while preserving role-separated post-login journeys.",
       ),
     );
   }

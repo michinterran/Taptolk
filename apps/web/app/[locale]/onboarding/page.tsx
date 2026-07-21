@@ -17,12 +17,11 @@ export default async function OnboardingPage({ params }: { params: Promise<{ loc
       <PublicSiteHeader
         currentLocale={locale}
         labels={{
-          customerAdmin: copy["landing.nav.customerAdmin"],
+          admin: copy["landing.nav.customerAdmin"],
           en: copy["locale.english"],
           guide: copy["landing.nav.guide"],
           ko: copy["locale.korean"],
           navigation: copy["landing.nav.label"],
-          platformAdmin: copy["landing.nav.platformAdmin"],
         }}
         localeTitle={copy["locale.switcher.label"]}
         logoAlt={copy["landing.logo.alt"]}
@@ -77,18 +76,6 @@ export default async function OnboardingPage({ params }: { params: Promise<{ loc
           <p>{copy["onboarding.customer.description"]}</p>
           <a className="onboarding-path__link" href={`/${locale}/admin/login`}>
             {copy["onboarding.customer.action"]}
-          </a>
-        </article>
-
-        <article className="onboarding-path onboarding-path--platform">
-          <div>
-            <span>{copy["onboarding.platform.kicker"]}</span>
-            <strong>{copy["onboarding.platform.badge"]}</strong>
-          </div>
-          <h2>{copy["onboarding.platform.title"]}</h2>
-          <p>{copy["onboarding.platform.description"]}</p>
-          <a className="onboarding-path__link" href={`/${locale}/admin/platform/login`}>
-            {copy["onboarding.platform.action"]}
           </a>
         </article>
       </section>

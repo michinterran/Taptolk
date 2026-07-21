@@ -38,12 +38,11 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
       <PublicSiteHeader
         currentLocale={locale}
         labels={{
-          customerAdmin: copy["landing.nav.customerAdmin"],
+          admin: copy["landing.nav.customerAdmin"],
           en: copy["locale.english"],
           guide: copy["landing.nav.guide"],
           ko: copy["locale.korean"],
           navigation: copy["landing.nav.label"],
-          platformAdmin: copy["landing.nav.platformAdmin"],
         }}
         localeTitle={copy["locale.switcher.label"]}
         logoAlt={copy["landing.logo.alt"]}
@@ -135,14 +134,6 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             <h2>{copy["landing.audiences.customer.title"]}</h2>
             <p>{copy["landing.audiences.customer.description"]}</p>
             <a href={`/${locale}/admin/login`}>{copy["landing.audiences.customer.action"]}</a>
-          </article>
-          <article className="landing-audience-card">
-            <span>{copy["landing.audiences.platform.badge"]}</span>
-            <h2>{copy["landing.audiences.platform.title"]}</h2>
-            <p>{copy["landing.audiences.platform.description"]}</p>
-            <a href={`/${locale}/admin/platform/login`}>
-              {copy["landing.audiences.platform.action"]}
-            </a>
           </article>
         </div>
       </section>

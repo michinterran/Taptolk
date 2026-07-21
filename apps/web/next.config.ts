@@ -30,6 +30,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        destination: "/:locale/admin/login",
+        permanent: false,
+        source: "/:locale(ko|en)/admin/platform/login",
+      },
+    ];
+  },
   poweredByHeader: false,
   reactStrictMode: true,
   transpilePackages: ["@taptolk/config", "@taptolk/observability", "@taptolk/ui"],

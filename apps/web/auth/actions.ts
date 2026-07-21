@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import type { AppLocale } from "../i18n/config";
 import { isAppLocale } from "../i18n/locale";
 import { loadAdminContext } from "./admin-context";
-import { getAdminLoginPath, getLocalizedAdminPath, readAdminLoginArea } from "./admin-routing";
+import { getAdminLoginPath, getLocalizedAdminPath } from "./admin-routing";
 import {
   type AdminRegistrationFlow,
   getAdminAuthCallbackUrl,
@@ -45,12 +45,8 @@ function readLocale(value: FormDataEntryValue | string | null): AppLocale {
   return typeof value === "string" && isAppLocale(value) ? value : "en";
 }
 
-function loginErrorPath(
-  locale: AppLocale,
-  area: ReturnType<typeof readAdminLoginArea>,
-  error: AdminActionError,
-) {
-  return getAdminLoginPath(locale, area, `?error=${error.toLowerCase()}`);
+function loginErrorPath(locale: AppLocale, error: AdminActionError) {
+  return getAdminLoginPath(locale, `?error=${error.toLowerCase()}`);
 }
 
 function readRegistrationFlow(value: FormDataEntryValue | null): AdminRegistrationFlow {
@@ -63,24 +59,23 @@ function registrationErrorPath(locale: AppLocale, error: AdminRegistrationAction
 
 export async function signInAdmin(formData: FormData): Promise<never> {
   const locale = readLocale(formData.get("locale"));
-  const area = readAdminLoginArea(formData.get("area"));
   const emailValue = formData.get("email");
   const passwordValue = formData.get("password");
   const email = typeof emailValue === "string" ? emailValue.trim() : "";
   const password = typeof passwordValue === "string" ? passwordValue : "";
 
   if (!email.includes("@") || password.length < 8) {
-    redirect(loginErrorPath(locale, area, "INVALID_CREDENTIALS"));
+    redirect(loginErrorPath(locale, "INVALID_CREDENTIALS"));
   }
 
   const client = await createAdminServerClient();
   if (!client) {
-    redirect(loginErrorPath(locale, area, "CONFIGURATION"));
+    redirect(loginErrorPath(locale, "CONFIGURATION"));
   }
 
   const { error } = await client.auth.signInWithPassword({ email, password });
   if (error) {
-    redirect(loginErrorPath(locale, area, "INVALID_CREDENTIALS"));
+    redirect(loginErrorPath(locale, "INVALID_CREDENTIALS"));
   }
 
   redirect(getLocalizedAdminPath(locale));
@@ -127,12 +122,11 @@ export async function signUpAdmin(formData: FormData): Promise<never> {
 
 export async function signInWithGoogle(formData: FormData): Promise<never> {
   const locale = readLocale(formData.get("locale"));
-  const area = readAdminLoginArea(formData.get("area"));
   const flow = readRegistrationFlow(formData.get("flow"));
-  const callbackUrl = getAdminAuthCallbackUrl(locale, flow, area);
+  const callbackUrl = getAdminAuthCallbackUrl(locale, flow);
   const client = await createAdminServerClient();
   if (!client || !callbackUrl) {
-    redirect(getAdminAuthErrorPath(locale, flow, "configuration", area));
+    redirect(getAdminAuthErrorPath(locale, flow, "configuration"));
   }
 
   const { data, error } = await client.auth.signInWithOAuth({
@@ -142,7 +136,7 @@ export async function signInWithGoogle(formData: FormData): Promise<never> {
     },
   });
   if (error || !data.url) {
-    redirect(getAdminAuthErrorPath(locale, flow, "oauth_unavailable", area));
+    redirect(getAdminAuthErrorPath(locale, flow, "oauth_unavailable"));
   }
 
   redirect(data.url as Route);

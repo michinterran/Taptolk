@@ -4,12 +4,11 @@ import { LocaleSwitcher } from "./locale-switcher";
 interface PublicSiteHeaderProps {
   currentLocale: AppLocale;
   labels: Readonly<{
-    customerAdmin: string;
+    admin: string;
     en: string;
     guide: string;
     ko: string;
     navigation: string;
-    platformAdmin: string;
   }>;
   localeTitle: string;
   logoAlt: string;
@@ -32,8 +31,7 @@ export function PublicSiteHeader({
       <div className="public-site-header__controls">
         <nav aria-label={labels.navigation} className="public-site-nav">
           <a href={`/${currentLocale}/onboarding`}>{labels.guide}</a>
-          <a href={`/${currentLocale}/admin/login`}>{labels.customerAdmin}</a>
-          <a href={`/${currentLocale}/admin/platform/login`}>{labels.platformAdmin}</a>
+          <a href={`/${currentLocale}/admin/login`}>{labels.admin}</a>
         </nav>
         <LocaleSwitcher
           currentLocale={currentLocale}
