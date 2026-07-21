@@ -1,9 +1,11 @@
 import { getAdminLandingArea } from "@taptolk/auth";
 import { notFound, redirect } from "next/navigation";
+import { loadOperationsDashboard } from "../../../../../admin/load-operations-dashboard";
 import { getLocalizedAdminPath } from "../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../auth/page-guard";
 import { AdminDashboardView } from "../../../../../components/admin-dashboard-view";
 import { getAdminRoleLabel, getAdminScopeLabel } from "../../../../../content/admin-copy";
+import { ADMIN_OVERVIEW_COPY } from "../../../../../content/admin-overview-copy";
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
 
@@ -20,16 +22,27 @@ export default async function TenantAdminPage({ params }: { params: Promise<{ lo
 
   const copy = getMessages(locale);
   const { membership } = context.decision;
+  const model = await loadOperationsDashboard(context);
+  if (!model) {
+    redirect(getLocalizedAdminPath(locale, "/login?error=configuration"));
+  }
 
   return (
     <main className="admin-dashboard-shell">
       <AdminDashboardView
-        accountLabel={copy["admin.shared.account"]}
-        contextLabel={copy["admin.dashboard.context"]}
-        contextValue={getAdminScopeLabel(copy, membership.scopeType)}
-        description={copy["admin.dashboard.description"]}
-        email={context.email}
-        eyebrow={copy["admin.dashboard.eyebrow"]}
+        canApproveAccounts={false}
+        context={{
+          contextLabel: copy["admin.dashboard.context"],
+          contextValue: getAdminScopeLabel(copy, membership.scopeType),
+          roleLabel: getAdminRoleLabel(copy, membership.role),
+          roleTitle: copy["admin.dashboard.role"],
+          securityLabel: copy["admin.dashboard.session"],
+          securityValue:
+            context.mfaLevel === "aal2"
+              ? copy["admin.dashboard.session.aal2"]
+              : copy["admin.dashboard.session.aal1"],
+        }}
+        copy={ADMIN_OVERVIEW_COPY[locale]}
         locale={locale}
         localeLabels={{
           en: copy["locale.english"],
@@ -37,33 +50,9 @@ export default async function TenantAdminPage({ params }: { params: Promise<{ lo
         }}
         localeTitle={copy["locale.switcher.label"]}
         logoAlt={copy["admin.brand.logoAlt"]}
-        nextDescription={copy["admin.dashboard.next.description"]}
-        nextActions={[
-          {
-            href: `/${locale}/admin/sites`,
-            label: copy["admin.dashboard.sitesAction"],
-          },
-          {
-            href: `/${locale}/admin/qr-inventory`,
-            label: copy["admin.dashboard.qrAction"],
-          },
-          {
-            href: `/${locale}/admin/operations`,
-            label: copy["admin.dashboard.operationsAction"],
-          },
-        ]}
-        nextTitle={copy["admin.dashboard.next.title"]}
+        model={model}
         pathname={`/${locale}/admin/dashboard`}
-        roleLabel={getAdminRoleLabel(copy, membership.role)}
-        roleTitle={copy["admin.dashboard.role"]}
-        securityLabel={copy["admin.dashboard.session"]}
-        securityValue={
-          context.mfaLevel === "aal2"
-            ? copy["admin.dashboard.session.aal2"]
-            : copy["admin.dashboard.session.aal1"]
-        }
-        signOutLabel={copy["admin.shared.signOut"]}
-        titleLines={[copy["admin.dashboard.line1"], copy["admin.dashboard.line2"]]}
+        variant="customer"
       />
     </main>
   );

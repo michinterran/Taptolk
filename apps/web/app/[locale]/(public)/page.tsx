@@ -192,14 +192,19 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             lines={[copy["landing.faq.line1"], copy["landing.faq.line2"]]}
           />
         </div>
-        <dl aria-label={copy["landing.faq.label"]} className="landing-faq-list">
+        <ul aria-label={copy["landing.faq.label"]} className="landing-faq-list">
           {faqEntries.map((entry) => (
-            <div className="landing-faq-item" key={entry.question}>
-              <dt>{entry.question}</dt>
-              <dd>{entry.answer}</dd>
-            </div>
+            <li key={entry.question}>
+              <details className="landing-faq-item">
+                <summary>
+                  <span>{entry.question}</span>
+                  <span aria-hidden="true" className="landing-faq-item__icon" />
+                </summary>
+                <p className="landing-faq-item__answer">{entry.answer}</p>
+              </details>
+            </li>
           ))}
-        </dl>
+        </ul>
       </section>
 
       <footer className="landing-footer">

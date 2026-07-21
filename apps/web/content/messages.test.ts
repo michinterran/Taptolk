@@ -77,4 +77,21 @@ describe("administrator portal copy", () => {
     expect(ko["portal.workflow.step2.description"]).toMatch(/1~100/u);
     expect(en["portal.workflow.step2.description"]).toMatch(/1 to 100/u);
   });
+
+  it("uses concise workspace navigation labels without repeated open commands", () => {
+    const navigationKeys = [
+      "admin.nav.overview",
+      "admin.nav.tenants",
+      "admin.nav.managementCompanies",
+      "admin.nav.sites",
+      "admin.nav.qr",
+      "admin.nav.operations",
+      "admin.nav.access",
+    ] as const;
+
+    for (const key of navigationKeys) {
+      expect(ko[key]).not.toMatch(/열기/u);
+      expect(en[key]).not.toMatch(/^Open\b/u);
+    }
+  });
 });

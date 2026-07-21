@@ -29,6 +29,13 @@ test("public landing introduces the service without any administrator entrance",
   await expect(page.getByText("QR 스캔", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("스티커 수령", { exact: false })).toBeVisible();
 
+  const appQuestion = page.getByText("앱을 설치해야 하나요?", { exact: true });
+  const appAnswer = page.getByText("필요하지 않습니다.", { exact: false });
+  await expect(appQuestion).toBeVisible();
+  await expect(appAnswer).not.toBeVisible();
+  await appQuestion.click();
+  await expect(appAnswer).toBeVisible();
+
   // No control may suggest a request can start without an issued QR.
   await expect(page.locator("form")).toHaveCount(0);
   await expect(page.locator('a[href^="/ko/q/"]')).toHaveCount(0);

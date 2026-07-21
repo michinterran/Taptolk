@@ -1,9 +1,11 @@
 import { getAdminLandingArea } from "@taptolk/auth";
 import { notFound, redirect } from "next/navigation";
+import { loadOperationsDashboard } from "../../../../../admin/load-operations-dashboard";
 import { getLocalizedAdminPath } from "../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../auth/page-guard";
 import { AdminDashboardView } from "../../../../../components/admin-dashboard-view";
 import { getAdminRoleLabel, getAdminScopeLabel } from "../../../../../content/admin-copy";
+import { ADMIN_OVERVIEW_COPY } from "../../../../../content/admin-overview-copy";
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
 
@@ -24,16 +26,27 @@ export default async function PlatformAdminPage({
 
   const copy = getMessages(locale);
   const { membership } = context.decision;
+  const model = await loadOperationsDashboard(context);
+  if (!model) {
+    redirect(getLocalizedAdminPath(locale, "/login?error=configuration"));
+  }
 
   return (
     <main className="admin-dashboard-shell">
       <AdminDashboardView
-        accountLabel={copy["admin.shared.account"]}
-        contextLabel={copy["admin.dashboard.context"]}
-        contextValue={getAdminScopeLabel(copy, membership.scopeType)}
-        description={copy["admin.platform.description"]}
-        email={context.email}
-        eyebrow={copy["admin.platform.eyebrow"]}
+        canApproveAccounts={membership.role === "SUPER_ADMIN"}
+        context={{
+          contextLabel: copy["admin.dashboard.context"],
+          contextValue: getAdminScopeLabel(copy, membership.scopeType),
+          roleLabel: getAdminRoleLabel(copy, membership.role),
+          roleTitle: copy["admin.dashboard.role"],
+          securityLabel: copy["admin.dashboard.session"],
+          securityValue:
+            context.mfaLevel === "aal2"
+              ? copy["admin.dashboard.session.aal2"]
+              : copy["admin.dashboard.session.aal1"],
+        }}
+        copy={ADMIN_OVERVIEW_COPY[locale]}
         locale={locale}
         localeLabels={{
           en: copy["locale.english"],
@@ -41,45 +54,9 @@ export default async function PlatformAdminPage({
         }}
         localeTitle={copy["locale.switcher.label"]}
         logoAlt={copy["admin.brand.logoAlt"]}
-        nextDescription={copy["admin.platform.next.description"]}
-        nextActions={[
-          {
-            href: `/${locale}/admin/platform/tenants`,
-            label: copy["admin.platform.tenantsAction"],
-          },
-          {
-            href: `/${locale}/admin/platform/management-companies`,
-            label: copy["admin.platform.managementCompaniesAction"],
-          },
-          {
-            href: `/${locale}/admin/sites`,
-            label: copy["admin.platform.sitesAction"],
-          },
-          {
-            href: `/${locale}/admin/qr-inventory`,
-            label: copy["admin.platform.qrAction"],
-          },
-          ...(membership.role === "SUPER_ADMIN"
-            ? [
-                {
-                  href: `/${locale}/admin/platform/access`,
-                  label: copy["admin.platform.accessAction"],
-                },
-              ]
-            : []),
-        ]}
-        nextTitle={copy["admin.platform.next.title"]}
+        model={model}
         pathname={`/${locale}/admin/platform`}
-        roleLabel={getAdminRoleLabel(copy, membership.role)}
-        roleTitle={copy["admin.dashboard.role"]}
-        securityLabel={copy["admin.dashboard.session"]}
-        securityValue={
-          context.mfaLevel === "aal2"
-            ? copy["admin.dashboard.session.aal2"]
-            : copy["admin.dashboard.session.aal1"]
-        }
-        signOutLabel={copy["admin.shared.signOut"]}
-        titleLines={[copy["admin.platform.line1"], copy["admin.platform.line2"]]}
+        variant="platform"
       />
     </main>
   );

@@ -156,6 +156,15 @@
       rows across five RLS-protected operational tables, plus existing QR/caller/Owner/admin
       and tenant-isolation regressions. `pnpm verify` and the Production Cron deferred gate
       passed with zero active Production Cron definitions.
+- [x] 2026-07-21 administrator dashboard hardening: the Super Admin platform home and contracted
+      management-company home now use the existing server-authorized, RLS-scoped operations
+      aggregate instead of generic introduction cards. The left rail contains the authenticated
+      role, account area, sign-out, scope and MFA state; navigation uses customer-facing KO/EN
+      labels and remains role-specific. Real unresolved, escalation, delivery-failure and report
+      counts drive the attention queue. `pnpm verify` passed with lint 342 files, typecheck 19/19,
+      unit 57 files/382 tests, DB 59 migrations/24 tests, secret scan 578 files, WCJ 100 over
+      101 files and production build; local browser smoke passed 42/42. Production Cron remains
+      deferred with zero active definitions.
 
 ## Manual and external pilot gates
 
