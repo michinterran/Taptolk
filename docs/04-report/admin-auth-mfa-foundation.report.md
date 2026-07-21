@@ -4,12 +4,12 @@
 
 ## 1. 결과
 
-Supabase SSR 세션을 기반으로 관리자 신원을 검증하고, 활성 프로필·멤버십·역할과
-MFA AAL을 서버에서 판정하는 Auth foundation을 구현했다. KO/EN 로그인, TOTP 등록,
+Supabase SSR 세션을 기반으로 관리자 신원을 검증하고, 활성 프로필·멤버십·역할을
+서버에서 판정하는 Auth foundation을 구현했다. KO/EN 로그인, optional TOTP 등록,
 챌린지, 접근 거부, 플랫폼/테넌트 진입 화면을 포함한다.
 
 이 완료는 소스와 비인증 브라우저 상태의 acceptance다. 실제 `taptolk-staging`
-사용자의 Email/Password→TOTP→AAL2 journey를 아직 증명하지 않았으므로 Phase 1
+사용자의 Email/Password→server role/scope routing journey를 아직 증명하지 않았으므로 Phase 1
 전체 완료로 판정하지 않는다.
 
 ## 2. 구현 항목
@@ -17,7 +17,7 @@ MFA AAL을 서버에서 판정하는 Auth foundation을 구현했다. KO/EN 로�
 - [x] Supabase SSR cookie client와 Proxy의 `getClaims()` session refresh
 - [x] active `admin_profiles`와 `admin_memberships` 서버 조회
 - [x] 여러 membership의 권한을 합치지 않는 단일 active context 선택
-- [x] privileged role의 verified TOTP와 AAL2 강제
+- [x] optional TOTP 등록과 AAL2 세션 확인 경계
 - [x] KO/EN Email/Password 로그인
 - [x] TOTP QR·수동 설정 키 등록과 6자리 코드 검증
 - [x] 플랫폼 역할과 테넌트 역할의 서버 route 분리
@@ -31,12 +31,12 @@ MFA AAL을 서버에서 판정하는 Auth foundation을 구현했다. KO/EN 로�
 Verified Supabase JWT
 → Active Admin Profile
 → One Active Membership Context
-→ Role MFA Policy
-→ AAL2 or Deny/Enroll/Challenge
+→ Role/Scope Policy
+→ Ready or Access Denied
 → Role-specific Admin Route
 ```
 
-- 브라우저가 role, tenant, site 또는 AAL을 주장할 수 없다.
+- 브라우저가 role, tenant 또는 site를 주장할 수 없다.
 - MFA action은 active admin decision을 다시 확인하고 현재 session 소유 factor만
   challenge한다.
 - TOTP secret과 QR은 URL·로그·저장소에 기록하지 않고 등록 세션 화면에만 반환한다.
@@ -72,8 +72,8 @@ Verified Supabase JWT
 ## 6. 다음 개발 순서
 
 1. Staging 공개 Auth 환경변수와 최초 Super Admin bootstrap
-2. 실제 로그인→TOTP 등록→AAL2→`/admin/platform` acceptance
+2. 실제 로그인→server role/scope routing→`/admin/platform` acceptance
 3. tenant-scoped Site repository와 API
 4. KO/EN Site CRUD UI
 5. 서로 다른 tenant 계정으로 isolation E2E
-6. MFA recovery와 Admin idle timeout 운영 정책
+6. Admin idle timeout과 고위험 작업 재확인 정책

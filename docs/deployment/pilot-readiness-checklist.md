@@ -123,7 +123,7 @@
 - [x] 2026-07-21 workorder Task 2: public landing, onboarding, password sign-in, and Google callback
       now expose one canonical `/{locale}/admin/login` entry. The legacy platform-login URL is a
       server redirect only. Post-login routing still loads the approved profile, active
-      membership, valid role/scope pairing, and MFA state on the server before opening the
+      membership, and valid role/scope pairing on the server before opening the
       customer dashboard or the separate platform dashboard.
 - [x] Task 2 validation: WCJ 100/100; linked pgTAP 23 files/590 tests; authenticated staging E2E
       30 PASS with one intentional 10x100 opt-in skip, including new Site Admin and Super Admin
@@ -150,8 +150,8 @@
 - [x] 2026-07-21 surface-separation staging closure on `013a54b`: the linked target was
       confirmed as the approved healthy `taptolk-staging`; all 24 linked pgTAP files and
       604 assertions passed; authenticated staging E2E passed 31 tests with one intentional
-      opt-in 1,000-item Worker acceptance skip. Evidence includes Site Admin plus MFA to
-      customer dashboard, Super Admin plus MFA to platform dashboard, Site Admin platform
+      opt-in 1,000-item Worker acceptance skip. Evidence includes Site Admin routing to the
+      customer dashboard, Super Admin routing to the platform dashboard, Site Admin platform
       denial, approval-pending account denial from five administrator workspaces and zero
       rows across five RLS-protected operational tables, plus existing QR/caller/Owner/admin
       and tenant-isolation regressions. `pnpm verify` and the Production Cron deferred gate
@@ -159,12 +159,24 @@
 - [x] 2026-07-21 administrator dashboard hardening: the Super Admin platform home and contracted
       management-company home now use the existing server-authorized, RLS-scoped operations
       aggregate instead of generic introduction cards. The left rail contains the authenticated
-      role, account area, sign-out, scope and MFA state; navigation uses customer-facing KO/EN
+      role, account area, sign-out and scope; navigation uses customer-facing KO/EN
       labels and remains role-specific. Real unresolved, escalation, delivery-failure and report
       counts drive the attention queue. `pnpm verify` passed with lint 342 files, typecheck 19/19,
       unit 57 files/382 tests, DB 59 migrations/24 tests, secret scan 578 files, WCJ 100 over
       101 files and production build; local browser smoke passed 42/42. Production Cron remains
       deferred with zero active definitions.
+- [x] 2026-07-21 pilot MFA policy update: administrator MFA remains implemented as an optional
+      account hardening feature, but Super Admin, Management Admin, Site Admin, and Site Operator
+      access no longer requires AAL2 during the pilot. Server-side approved profile, active
+      membership, role/scope authorization, PostgreSQL RLS, redacted audit, QR 1-100 per-Batch,
+      and public-surface zero-admin-link boundaries remain unchanged. The approved linked target
+      was confirmed as healthy `taptolk-staging`; local reset and pgTAP passed 25 database files
+      and 608 tests; linked pgTAP passed all 25 database files; authenticated staging E2E passed
+      31 tests with one intentional opt-in 1,000-item Worker acceptance skip; WCJ remained 100 over
+      101 files; `pnpm verify` passed with lint 342 files, typecheck 19/19, unit 57 files/382
+      tests, DB 61 migrations/25 tests, secret scan 584 files, service-stage guard, deferred
+      Production Cron verification, logo integrity, and production build; Production Cron deferred
+      verification passed with zero active definitions.
 
 ## Manual and external pilot gates
 

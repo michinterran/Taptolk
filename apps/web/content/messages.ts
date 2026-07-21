@@ -50,7 +50,7 @@ export const ko = {
   "admin.approvals.scopeHelp":
     "플랫폼 역할은 고객 범위를 선택하지 않습니다. 관리회사·사이트 역할은 역할과 일치하는 범위를 모두 선택해야 합니다.",
   "admin.approvals.scopeType": "접근 범위 유형",
-  "admin.approvals.securityNote": "2단계 인증 슈퍼어드민 · 서버 권한 재검증 · 변경 기록 보존",
+  "admin.approvals.securityNote": "슈퍼어드민 권한 · 서버 권한 재검증 · 변경 기록 보존",
   "admin.approvals.site": "사이트",
   "admin.approvals.status.approved": "관리자 계정이 승인되었습니다.",
   "admin.approvals.status.rejected": "가입 요청이 거절 처리되었습니다.",
@@ -71,7 +71,7 @@ export const ko = {
   "admin.auth.error.unavailable": "인증 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.auth.divider": "또는",
   "admin.auth.securityNote":
-    "관리 권한은 로그인 후에도 역할, 소속 범위와 MFA 상태를 서버에서 다시 확인합니다.",
+    "관리 권한은 로그인 후에도 승인 상태, 역할과 소속 범위를 서버에서 다시 확인합니다.",
   "admin.brand.logoAlt": "Taptolk",
   "admin.dashboard.context": "현재 접근 범위",
   "admin.dashboard.description":
@@ -86,12 +86,12 @@ export const ko = {
   "admin.dashboard.operationsAction": "운영 지표",
   "admin.dashboard.next.title": "현재 운영 환경",
   "admin.dashboard.role": "현재 역할",
-  "admin.dashboard.session": "보안 세션",
+  "admin.dashboard.session": "인증 방식",
   "admin.dashboard.session.aal1": "비밀번호 인증",
-  "admin.dashboard.session.aal2": "MFA 인증 완료",
+  "admin.dashboard.session.aal2": "추가 인증 완료",
   "admin.login.backToOnboarding": "시작 안내로 돌아가기",
   "admin.login.description":
-    "고객 관리자와 Taptolk 플랫폼 관리자는 하나의 승인된 업무 계정으로 로그인합니다. 로그인 후 서버가 역할, 소속 범위와 MFA 상태를 확인해 알맞은 관리 화면으로 연결합니다.",
+    "고객 관리자와 Taptolk 플랫폼 관리자는 하나의 승인된 업무 계정으로 로그인합니다. 로그인 후 서버가 승인 상태, 역할과 소속 범위를 확인해 알맞은 관리 화면으로 연결합니다.",
   "admin.login.email.label": "관리자 이메일",
   "admin.login.email.placeholder": "name@company.com",
   "admin.login.eyebrow": "관리자 콘솔",
@@ -109,6 +109,7 @@ export const ko = {
   "admin.nav.operations": "운영 현황",
   "admin.nav.overview": "운영 홈",
   "admin.nav.qr": "QR 제작·재고",
+  "admin.nav.sidebar": "관리자 콘솔 사이드바",
   "admin.nav.sites": "사업장",
   "admin.nav.tenants": "고객사",
   "admin.nav.workspace": "Taptolk 운영 콘솔",
@@ -196,7 +197,7 @@ export const ko = {
   "admin.tenants.edit.description": "현재 version을 기준으로 이름과 식별자를 안전하게 수정합니다.",
   "admin.tenants.error.conflict":
     "다른 관리자가 먼저 변경했거나 같은 식별자가 사용 중입니다. 최신 목록을 확인해 주세요.",
-  "admin.tenants.error.forbidden": "이 작업을 수행할 AAL2 슈퍼어드민 권한이 없습니다.",
+  "admin.tenants.error.forbidden": "이 작업을 수행할 슈퍼어드민 권한이 없습니다.",
   "admin.tenants.error.unavailable":
     "고객사 관리 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.tenants.error.validation": "이름, 식별자, 상태와 처리 사유를 확인해 주세요.",
@@ -213,7 +214,7 @@ export const ko = {
   "admin.tenants.reason": "처리 사유",
   "admin.tenants.reason.placeholder": "계약 또는 운영 근거를 3자 이상 입력해 주세요.",
   "admin.tenants.save": "정보 저장",
-  "admin.tenants.securityNote": "2단계 인증 슈퍼어드민 · 승인 권한 확인 · 모든 변경 기록 보존",
+  "admin.tenants.securityNote": "슈퍼어드민 권한 · 승인 권한 확인 · 모든 변경 기록 보존",
   "admin.tenants.slug": "식별자",
   "admin.tenants.slug.help": "소문자 영문, 숫자, 하이픈으로 2–63자",
   "admin.tenants.status": "상태",
@@ -248,7 +249,7 @@ export const ko = {
     "활성 사업장이 있거나 상위 고객사가 비활성 상태라 변경할 수 없습니다.",
   "admin.companies.error.conflict":
     "다른 관리자가 먼저 변경했거나 같은 사업자번호가 이미 사용 중입니다.",
-  "admin.companies.error.forbidden": "이 작업에는 AAL2 슈퍼어드민 권한이 필요합니다.",
+  "admin.companies.error.forbidden": "이 작업에는 슈퍼어드민 권한이 필요합니다.",
   "admin.companies.error.unavailable":
     "관리회사 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.companies.error.validation":
@@ -269,7 +270,7 @@ export const ko = {
   "admin.companies.reason": "처리 사유",
   "admin.companies.reason.placeholder": "계약 또는 운영 근거를 3자 이상 입력해 주세요.",
   "admin.companies.save": "정보 저장",
-  "admin.companies.securityNote": "고객 범위 격리 · 2단계 인증 승인 · 변경 기록 보존",
+  "admin.companies.securityNote": "고객 범위 격리 · 승인 권한 확인 · 변경 기록 보존",
   "admin.companies.status": "상태",
   "admin.companies.status.active": "운영 중",
   "admin.companies.status.closed": "종료",
@@ -348,7 +349,7 @@ export const ko = {
   "admin.qr.error.conflict":
     "다른 관리자가 먼저 처리했거나 동일한 활성 항목이 있습니다. 최신 화면을 확인해 주세요.",
   "admin.qr.error.forbidden":
-    "현재 역할, 소속 범위, MFA 또는 maker-checker 규칙이 작업을 허용하지 않습니다.",
+    "현재 역할, 소속 범위 또는 maker-checker 규칙이 작업을 허용하지 않습니다.",
   "admin.qr.error.unavailable":
     "QR 샘플 운영 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.qr.error.validation":
@@ -491,8 +492,7 @@ export const ko = {
     "상위 테넌트·관리회사가 비활성 상태이거나 활성 계약이 있어 변경할 수 없습니다.",
   "admin.sites.error.conflict":
     "다른 관리자가 먼저 변경했거나 같은 관리회사에 동일한 사이트 이름이 사용 중입니다.",
-  "admin.sites.error.forbidden":
-    "현재 역할, 소속 범위 또는 MFA 수준으로 이 작업을 수행할 수 없습니다.",
+  "admin.sites.error.forbidden": "현재 역할 또는 소속 범위로 이 작업을 수행할 수 없습니다.",
   "admin.sites.error.unavailable":
     "사이트 운영 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.sites.error.validation":
@@ -784,7 +784,7 @@ export const en = {
     "Platform roles do not use a customer scope. Management-company and site roles require every matching scope selection.",
   "admin.approvals.scopeType": "Access scope type",
   "admin.approvals.securityNote":
-    "Two-factor verified Super Admin · server reauthorization · every change recorded",
+    "Super Admin permission · server reauthorization · every change recorded",
   "admin.approvals.site": "Site",
   "admin.approvals.status.approved": "The admin account was approved.",
   "admin.approvals.status.rejected": "The registration request was rejected.",
@@ -806,7 +806,7 @@ export const en = {
     "The authentication service is unavailable. Please try again shortly.",
   "admin.auth.divider": "or",
   "admin.auth.securityNote":
-    "After sign-in, the server verifies the role, membership scope, and MFA state before granting admin access.",
+    "After sign-in, the server verifies approval status, role, and membership scope before granting admin access.",
   "admin.brand.logoAlt": "Taptolk",
   "admin.dashboard.context": "Current access scope",
   "admin.dashboard.description":
@@ -821,12 +821,12 @@ export const en = {
   "admin.dashboard.operationsAction": "Operations metrics",
   "admin.dashboard.next.title": "Current operating context",
   "admin.dashboard.role": "Current role",
-  "admin.dashboard.session": "Security session",
+  "admin.dashboard.session": "Authentication",
   "admin.dashboard.session.aal1": "Password authenticated",
-  "admin.dashboard.session.aal2": "MFA verified",
+  "admin.dashboard.session.aal2": "Additional verification complete",
   "admin.login.backToOnboarding": "Back to getting started",
   "admin.login.description":
-    "Customer and Taptolk platform administrators use one approved work-account sign-in. The server then verifies the role, membership scope, and MFA state before routing to the appropriate admin area.",
+    "Customer and Taptolk platform administrators use one approved work-account sign-in. The server then verifies approval status, role, and membership scope before routing to the appropriate admin area.",
   "admin.login.email.label": "Admin email",
   "admin.login.email.placeholder": "name@company.com",
   "admin.login.eyebrow": "Admin console",
@@ -844,6 +844,7 @@ export const en = {
   "admin.nav.operations": "Operations status",
   "admin.nav.overview": "Operations home",
   "admin.nav.qr": "QR production & inventory",
+  "admin.nav.sidebar": "Admin console sidebar",
   "admin.nav.sites": "Sites",
   "admin.nav.tenants": "Customer organizations",
   "admin.nav.workspace": "Taptolk operations console",
@@ -933,7 +934,7 @@ export const en = {
     "Update the name and identifier safely against the current version.",
   "admin.tenants.error.conflict":
     "Another admin changed this customer first, or the identifier is already in use. Refresh the catalog.",
-  "admin.tenants.error.forbidden": "This action requires an AAL2 Super Admin session.",
+  "admin.tenants.error.forbidden": "This action requires Super Admin permission.",
   "admin.tenants.error.unavailable":
     "The customer management service is unavailable. Please try again shortly.",
   "admin.tenants.error.validation":
@@ -953,7 +954,7 @@ export const en = {
     "Enter at least three characters explaining the contract or operating basis.",
   "admin.tenants.save": "Save identity",
   "admin.tenants.securityNote":
-    "Two-factor verified Super Admin · permission checks · every change recorded",
+    "Super Admin permission · permission checks · every change recorded",
   "admin.tenants.slug": "Identifier",
   "admin.tenants.slug.help": "Use 2–63 lowercase letters, numbers, or hyphens",
   "admin.tenants.status": "Status",
@@ -989,7 +990,7 @@ export const en = {
     "This change is blocked by an active site or an inactive parent tenant.",
   "admin.companies.error.conflict":
     "Another admin changed this company first, or the business number is already in use.",
-  "admin.companies.error.forbidden": "This action requires an AAL2 Super Admin session.",
+  "admin.companies.error.forbidden": "This action requires Super Admin permission.",
   "admin.companies.error.unavailable":
     "The management company service is unavailable. Please try again shortly.",
   "admin.companies.error.validation":
@@ -1012,7 +1013,7 @@ export const en = {
     "Enter at least three characters explaining the contract or operating basis.",
   "admin.companies.save": "Save identity",
   "admin.companies.securityNote":
-    "Customer-scope isolation · two-factor approval · every change recorded",
+    "Customer-scope isolation · permission checks · every change recorded",
   "admin.companies.status": "Status",
   "admin.companies.status.active": "Active",
   "admin.companies.status.closed": "Closed",
@@ -1091,7 +1092,7 @@ export const en = {
   "admin.qr.error.conflict":
     "Another admin processed this version first, or an active item already exists. Refresh the page.",
   "admin.qr.error.forbidden":
-    "The current role, membership scope, MFA level, or maker-checker rule does not allow this action.",
+    "The current role, membership scope, or maker-checker rule does not allow this action.",
   "admin.qr.error.unavailable":
     "The QR sample operations service is unavailable. Please try again shortly.",
   "admin.qr.error.validation":
@@ -1241,8 +1242,7 @@ export const en = {
     "This change is blocked by an inactive parent tenant or company, or by an active contract.",
   "admin.sites.error.conflict":
     "Another admin changed this site first, or the same site name is already used by this company.",
-  "admin.sites.error.forbidden":
-    "The current role, membership scope, or MFA level cannot perform this action.",
+  "admin.sites.error.forbidden": "The current role or membership scope cannot perform this action.",
   "admin.sites.error.unavailable":
     "The site operations service is unavailable. Please try again shortly.",
   "admin.sites.error.validation":

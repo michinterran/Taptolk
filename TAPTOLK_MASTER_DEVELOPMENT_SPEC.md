@@ -109,9 +109,9 @@ Taptolk는 전화번호 공유 서비스가 아니다. 카카오 알림톡은 A�
 |---|---|---|
 | Caller B | 차량에 연락하려는 외부 사용자 | 회원가입 없음 |
 | Owner A | QR이 연결된 차량 연락 수신자 | 휴대전화 OTP |
-| Taptolk Super Admin | 전체 플랫폼 운영자 | 이메일 + 비밀번호 + MFA |
-| Management Company Admin | 관리회사 산하 단지 관리 | 이메일 + 비밀번호 + MFA |
-| Site Admin | 특정 아파트 관리사무소 관리자 | 이메일 + 비밀번호 + MFA |
+| Taptolk Super Admin | 전체 플랫폼 운영자 | 이메일 + 비밀번호, MFA 선택 |
+| Management Company Admin | 관리회사 산하 단지 관리 | 이메일 + 비밀번호, MFA 선택 |
+| Site Admin | 특정 아파트 관리사무소 관리자 | 이메일 + 비밀번호, MFA 선택 |
 | Site Operator | QR 배포·차량 배정·미응답 처리 | 이메일 + 비밀번호 |
 | Read Only Auditor | 통계·감사 로그 조회 | 이메일 + 비밀번호 |
 | Print Vendor | 인쇄 주문만 확인하는 외부 사용자 | Phase 2 |
@@ -1378,8 +1378,8 @@ Activation Code 검증
 ## 9.4 관리자
 
 - Supabase Auth Email/Password
-- Super Admin, Management Admin, Site Admin은 MFA 필수
-- Site Operator는 MVP에서 MFA 선택 가능, Production 권장
+- MFA 기능은 유지하되 파일럿 기간에는 관리자 전 역할에서 선택 사항으로 둔다
+- Production 전 Super Admin, 고위험 작업, 개인정보 대량 조회에 대한 MFA 또는 재확인 정책을 재검토한다
 - Admin Session Idle Timeout
 - 개인정보 조회 시 Audit Log
 
@@ -2716,7 +2716,7 @@ INTERNAL_ERROR
 ## Phase 1 — Tenant·Admin
 
 - Admin Auth
-- MFA Foundation
+- Optional MFA Foundation
 - Tenant
 - Management Company
 - Site

@@ -11,7 +11,7 @@ import { isAppLocale } from "../../../../i18n/locale";
  *
  * A visitor who is not signed in sees the management-company introduction with the
  * canonical sign-in and sign-up entries. An authenticated administrator is routed by
- * the server from the approved profile, active membership, role/scope, and MFA state,
+ * the server from the approved profile and active membership role/scope,
  * exactly as before: the customer and platform workspaces stay separate and the browser
  * never selects between them.
  */

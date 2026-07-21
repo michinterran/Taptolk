@@ -142,11 +142,7 @@ const ROLE_PERMISSIONS: Readonly<Record<AdminRole, ReadonlySet<AdminPermission>>
   SUPER_ADMIN: permissions(...ADMIN_PERMISSIONS),
 });
 
-const MFA_REQUIRED_ROLES: ReadonlySet<AdminRole> = new Set([
-  "SUPER_ADMIN",
-  "MANAGEMENT_ADMIN",
-  "SITE_ADMIN",
-]);
+const MFA_REQUIRED_ROLES: ReadonlySet<AdminRole> = new Set();
 
 export function getRolePermissions(role: AdminRole): readonly AdminPermission[] {
   return ADMIN_PERMISSIONS.filter((permission) => ROLE_PERMISSIONS[role].has(permission));

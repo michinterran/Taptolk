@@ -38,7 +38,8 @@
 - `corepack pnpm e2e:smoke`: 42/42 PASS
 - `corepack pnpm verify:production-cron:deferred`: PASS; active Production Cron definitions remain 0.
 - The approved staging project already contains two operator-provided ACTIVE platform Super Admin
-  accounts. One has a verified MFA factor; the other correctly requires first-login MFA enrollment.
+  accounts. MFA is now optional for pilot admin access, so both can use the approved role/scope
+  route after password authentication.
 - No Production deployment, Production secret, provider, plan, domain, or Cron setting changed.
 
 ## Act

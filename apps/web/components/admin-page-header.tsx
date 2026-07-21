@@ -63,7 +63,7 @@ export async function AdminPageHeader({
 
     return (
       <>
-        <aside className="admin-console-sidebar">
+        <aside aria-label={copy["admin.nav.sidebar"]} className="admin-console-sidebar">
           <a className="admin-console-brand" href={workspaceHref}>
             {/* biome-ignore lint/performance/noImgElement: approved logo must bypass image transformation */}
             <img alt={logoAlt} height="405" src="/brand/taptolk-logo.png" width="1000" />

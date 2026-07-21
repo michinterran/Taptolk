@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
 import {
   createStagingFixture,
-  currentTotp,
   loadStagingEnvironment,
   type StagingActor,
   type StagingFixture,
@@ -23,21 +22,12 @@ const PENDING_ACCOUNT_OPERATIONAL_TABLES = [
   "operations_metric_snapshots",
 ] as const;
 
-async function signInAndCompleteMfa(page: Page, actor: StagingActor) {
+async function signInAdmin(page: Page, actor: StagingActor) {
   await page.goto("/ko/admin/login");
   await expect(page.locator('input[name="area"]')).toHaveCount(0);
   await page.locator('input[name="email"]').fill(actor.email);
   await page.locator('input[name="password"]').fill(actor.password);
   await page.getByRole("button", { name: "관리자 로그인" }).click();
-
-  await expect(page).toHaveURL(/\/ko\/admin\/mfa\/enroll$/u);
-  await page.locator(".admin-enrollment-start button").click();
-  const secret = await page.locator(".admin-enrollment-secret code").textContent();
-  if (!secret) {
-    throw new Error("The authenticated staging MFA enrollment returned no in-memory secret.");
-  }
-  await page.locator('input[name="code"]').fill(await currentTotp(secret));
-  await page.locator(".admin-mfa-form button[type='submit']").click();
 }
 
 async function createApprovalPendingActor(): Promise<StagingActor> {
@@ -111,13 +101,13 @@ test.describe
     test("approved Site Admin is routed to the customer dashboard and blocked from platform UI", async ({
       page,
     }) => {
-      await signInAndCompleteMfa(page, fixture.actors.siteAdmin);
+      await signInAdmin(page, fixture.actors.siteAdmin);
 
       await expect(page).toHaveURL(/\/ko\/admin\/dashboard$/u);
       const customerSidebar = page.getByRole("complementary");
       await expect(customerSidebar.getByText("사이트 관리자", { exact: true })).toBeVisible();
       await expect(customerSidebar.getByText("사이트 범위", { exact: true })).toBeVisible();
-      await expect(customerSidebar.getByText("MFA 인증 완료", { exact: true })).toBeVisible();
+      await expect(customerSidebar.getByText("비밀번호 인증", { exact: true })).toBeVisible();
       const customerNavigation = page.getByRole("navigation", {
         name: "관리자 운영 메뉴",
       });
@@ -136,13 +126,13 @@ test.describe
     });
 
     test("approved Super Admin is routed to the separate platform dashboard", async ({ page }) => {
-      await signInAndCompleteMfa(page, fixture.actors.superAdmin);
+      await signInAdmin(page, fixture.actors.superAdmin);
 
       await expect(page).toHaveURL(/\/ko\/admin\/platform$/u);
       const platformSidebar = page.getByRole("complementary");
       await expect(platformSidebar.getByText("슈퍼어드민", { exact: true })).toBeVisible();
       await expect(platformSidebar.getByText("전체 플랫폼", { exact: true })).toBeVisible();
-      await expect(platformSidebar.getByText("MFA 인증 완료", { exact: true })).toBeVisible();
+      await expect(platformSidebar.getByText("비밀번호 인증", { exact: true })).toBeVisible();
       const platformNavigation = page.getByRole("navigation", {
         name: "관리자 운영 메뉴",
       });

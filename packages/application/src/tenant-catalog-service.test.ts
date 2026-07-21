@@ -56,7 +56,7 @@ describe("Tenant catalog service", () => {
     expect(repository.list).not.toHaveBeenCalled();
   });
 
-  it("enforces MFA for a privileged platform actor", async () => {
+  it("allows a privileged platform actor without MFA under the current pilot policy", async () => {
     const repository = createRepository();
     const service = new TenantCatalogService(repository);
 
@@ -68,8 +68,8 @@ describe("Tenant catalog service", () => {
           scope: { type: "PLATFORM" },
         },
       }),
-    ).rejects.toEqual(new AdminAuthorizationError("MFA_REQUIRED"));
+    ).resolves.toMatchObject({ total: 1 });
 
-    expect(repository.list).not.toHaveBeenCalled();
+    expect(repository.list).toHaveBeenCalled();
   });
 });

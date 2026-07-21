@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { hasRequiredAdminAssurance } from "./admin-assurance.js";
 
 describe("admin authentication assurance", () => {
-  it("requires aal2 for Site Admin", () => {
+  it("accepts aal1 for Site Admin under the current pilot MFA policy", () => {
     expect(
       hasRequiredAdminAssurance("SITE_ADMIN", {
         authenticated: true,
         mfaLevel: "aal1",
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       hasRequiredAdminAssurance("SITE_ADMIN", {
         authenticated: true,

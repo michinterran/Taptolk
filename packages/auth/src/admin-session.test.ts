@@ -58,7 +58,7 @@ describe("admin access resolution", () => {
     ).toMatchObject({ reason: "MEMBERSHIP_INACTIVE", state: "ACCESS_DENIED" });
   });
 
-  it("routes privileged roles through enrollment and then an AAL2 challenge", () => {
+  it("does not require MFA enrollment or challenge for the current pilot policy", () => {
     const superAdmin = membership("SUPER_ADMIN");
 
     expect(
@@ -67,7 +67,7 @@ describe("admin access resolution", () => {
         profile,
         [superAdmin],
       ),
-    ).toMatchObject({ state: "MFA_ENROLL_REQUIRED" });
+    ).toMatchObject({ state: "READY" });
 
     expect(
       resolveAdminAccess(
@@ -75,7 +75,7 @@ describe("admin access resolution", () => {
         profile,
         [superAdmin],
       ),
-    ).toMatchObject({ state: "MFA_CHALLENGE_REQUIRED" });
+    ).toMatchObject({ state: "READY" });
 
     expect(
       resolveAdminAccess(

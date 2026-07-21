@@ -137,7 +137,7 @@ describe("SiteLifecycleRequestService", () => {
     ).rejects.toEqual(new SiteLifecycleRequestError("INVALID_STATUS_TRANSITION"));
   });
 
-  it("requires MFA for customer request roles", async () => {
+  it("allows customer request roles without MFA under the current pilot policy", async () => {
     const service = new SiteLifecycleRequestService(repository());
 
     await expect(
@@ -152,7 +152,7 @@ describe("SiteLifecycleRequestService", () => {
         siteId: IDS.site,
         tenantId: IDS.tenant,
       }),
-    ).rejects.toMatchObject({ code: "MFA_REQUIRED" });
+    ).resolves.toMatchObject({ requestId: IDS.request, siteId: IDS.site });
   });
 
   it("derives an approval queue and cancellation ownership without widening RLS", async () => {

@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
  *
  * `noindex` is a discoverability control, not an authorization control. Access is
  * still decided by the server from the approved profile, active membership,
- * role/scope, and MFA state, and independently by PostgreSQL RLS.
+ * role/scope, and independently by PostgreSQL RLS.
  */
 export const dynamic = "force-dynamic";
 

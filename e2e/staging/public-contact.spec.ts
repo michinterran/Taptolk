@@ -3,7 +3,6 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import {
   createStagingFixture,
-  currentTotp,
   loadStagingEnvironment,
   type StagingActor,
   type StagingFixture,
@@ -23,28 +22,12 @@ interface PasswordSession {
 let fixture: StagingFixture;
 let contactFixture: PublicContactFixture;
 let contractId: string;
-const mfaSecrets = new Map<string, string>();
 
-async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en" | "ko") {
+async function signInAdmin(page: Page, actor: StagingActor, locale: "en" | "ko") {
   await page.goto(`/${locale}/admin/login`);
   await page.locator('input[name="email"]').fill(actor.email);
   await page.locator('input[name="password"]').fill(actor.password);
   await page.locator('button[type="submit"]').first().click();
-  const existingSecret = mfaSecrets.get(actor.id);
-  if (existingSecret) {
-    await page.locator('input[name="code"]').fill(await currentTotp(existingSecret));
-    await page.locator(".admin-mfa-form button[type='submit']").click();
-    await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"));
-    return;
-  }
-  await page.locator(".admin-enrollment-start button").click();
-  const secret = await page.locator(".admin-enrollment-secret code").textContent();
-  if (!secret) {
-    throw new Error("The staging MFA enrollment returned no TOTP secret.");
-  }
-  mfaSecrets.set(actor.id, secret);
-  await page.locator('input[name="code"]').fill(await currentTotp(secret));
-  await page.locator(".admin-mfa-form button[type='submit']").click();
   await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"));
 }
 
@@ -825,7 +808,7 @@ test.describe
       ).toHaveLength(1);
 
       await page.context().clearCookies();
-      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "ko");
+      await signInAdmin(page, fixture.actors.siteAdmin, "ko");
       for (const width of [320, 768, 1280, 1920]) {
         await page.setViewportSize({ height: 900, width });
         const response = await page.goto("/ko/admin/operations");

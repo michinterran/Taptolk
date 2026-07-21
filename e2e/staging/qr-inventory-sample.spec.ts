@@ -3,7 +3,6 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import {
   auditPayloadIsSafe,
   createStagingFixture,
-  currentTotp,
   type StagingActor,
   type StagingFixture,
 } from "./staging-fixture";
@@ -131,7 +130,6 @@ interface GenerationClaim {
 }
 
 let fixture: StagingFixture;
-const mfaSecrets = new Map<string, string>();
 let designId = "";
 let batchId = "";
 let sampleId = "";
@@ -139,35 +137,11 @@ let generationJobId = "";
 let phase4Assets: QrAssetRow[] = [];
 let vehicleImportId = "";
 
-async function signInAndSatisfyMfa(page: Page, actor: StagingActor, locale: "en" | "ko") {
+async function signInAdmin(page: Page, actor: StagingActor, locale: "en" | "ko") {
   await page.goto(`/${locale}/admin/login`);
   await page.locator('input[name="email"]').fill(actor.email);
   await page.locator('input[name="password"]').fill(actor.password);
   await page.locator('button[type="submit"]').first().click();
-  const existingSecret = mfaSecrets.get(actor.id);
-  if (existingSecret) {
-    await expect(page).toHaveURL(new RegExp(`/${locale}/admin/mfa/challenge$`, "u"), {
-      timeout: 15_000,
-    });
-    await page.locator('input[name="code"]').fill(await currentTotp(existingSecret));
-    await page.locator(".admin-mfa-form button[type='submit']").click();
-    await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"), {
-      timeout: 15_000,
-    });
-    return;
-  }
-
-  await expect(page).toHaveURL(new RegExp(`/${locale}/admin/mfa/enroll$`, "u"), {
-    timeout: 15_000,
-  });
-  await page.locator(".admin-enrollment-start button").click();
-  const secret = await page.locator(".admin-enrollment-secret code").textContent();
-  if (!secret) {
-    throw new Error("The real MFA enrollment UI returned no TOTP secret.");
-  }
-  mfaSecrets.set(actor.id, secret);
-  await page.locator('input[name="code"]').fill(await currentTotp(secret));
-  await page.locator(".admin-mfa-form button[type='submit']").click();
   await expect(page).toHaveURL(new RegExp(`/${locale}/admin(?:/(?:platform|dashboard))?$`, "u"), {
     timeout: 15_000,
   });
@@ -222,7 +196,7 @@ test.describe
     test("Management Admin creates a scoped Design and cross-tenant tampering is denied", async ({
       page,
     }) => {
-      await signInAndSatisfyMfa(page, fixture.actors.managementAdmin, "ko");
+      await signInAdmin(page, fixture.actors.managementAdmin, "ko");
       await page.goto("/ko/admin/qr-inventory");
       await expect(
         page.getByText(
@@ -284,7 +258,7 @@ test.describe
     });
 
     test("Super Admin independently approves the Design", async ({ page }) => {
-      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await signInAdmin(page, fixture.actors.superAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const designCard = cardWithText(page, fixture.sites.companyAFirst.name)
         .filter({
@@ -316,7 +290,7 @@ test.describe
     });
 
     test("Site Admin requests only its exact-Site Batch", async ({ page }) => {
-      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "en");
+      await signInAdmin(page, fixture.actors.siteAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const requestButton = page.getByRole("button", { name: "Request small Batch" });
       const requestForm = requestButton.locator("xpath=ancestor::form");
@@ -358,7 +332,7 @@ test.describe
     });
 
     test("Super Admin attaches and independently approves a passing sample", async ({ page }) => {
-      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await signInAdmin(page, fixture.actors.superAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const batchCard = cardWithText(page, fixture.sites.companyAFirst.name)
         .filter({
@@ -411,7 +385,7 @@ test.describe
     test("sample invalidation preserves history and returns the Batch to DRAFT", async ({
       page,
     }) => {
-      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "ko");
+      await signInAdmin(page, fixture.actors.superAdmin, "ko");
       await page.goto("/ko/admin/qr-inventory");
       const batchCard = cardWithText(page, fixture.sites.companyAFirst.name)
         .filter({
@@ -453,7 +427,7 @@ test.describe
     test("a new passing sample can enter requester final review after invalidation", async ({
       page,
     }) => {
-      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await signInAdmin(page, fixture.actors.superAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const batchCard = cardWithText(page, fixture.sites.companyAFirst.name)
         .filter({
@@ -490,7 +464,7 @@ test.describe
     test("the original requester sends the Batch to final approval without starting generation", async ({
       page,
     }) => {
-      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "en");
+      await signInAdmin(page, fixture.actors.siteAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const batchCard = cardWithText(page, fixture.sites.companyAFirst.name)
         .filter({
@@ -532,7 +506,7 @@ test.describe
     test("an independent Super Admin records exactly one durable generation job", async ({
       page,
     }) => {
-      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await signInAdmin(page, fixture.actors.superAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const approvalCard = cardWithText(page, fixture.sites.companyAFirst.name)
         .filter({
@@ -835,7 +809,7 @@ test.describe
       const [manualAsset, duplicateAsset] = phase4Assets;
       const manualPlate = "12가3456";
 
-      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "en");
+      await signInAdmin(page, fixture.actors.siteAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const receiveCard = cardWithText(page, fixture.sites.companyAFirst.name)
         .filter({ has: page.getByRole("button", { name: "Receive Batch" }) })
@@ -919,7 +893,7 @@ test.describe
       const csvPlate = "56다7890";
       const csvSource = `vehicle_plate,qr_human_code\n${csvPlate},${csvAsset.human_code}\n`;
 
-      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "ko");
+      await signInAdmin(page, fixture.actors.siteAdmin, "ko");
       await page.goto("/ko/admin/qr-inventory");
       const importButton = page.getByRole("button", { name: "CSV 검증" });
       const importForm = importButton.locator("xpath=ancestor::form");
@@ -990,7 +964,7 @@ test.describe
     }) => {
       const [manualAsset, csvAsset, replacementAsset] = phase4Assets;
 
-      await signInAndSatisfyMfa(page, fixture.actors.superAdmin, "en");
+      await signInAdmin(page, fixture.actors.superAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const replacementForm = inventoryAssetForm(
         page,
@@ -1121,7 +1095,7 @@ test.describe
         throw new Error("Staging race E2E requires the configured base URL.");
       }
 
-      await signInAndSatisfyMfa(page, fixture.actors.siteAdmin, "en");
+      await signInAdmin(page, fixture.actors.siteAdmin, "en");
       await page.goto("/en/admin/qr-inventory");
       const batchRequestButton = page.getByRole("button", { name: "Request small Batch" });
       const batchRequestForm = batchRequestButton.locator("xpath=ancestor::form");
@@ -1142,7 +1116,7 @@ test.describe
       const superContext = await browser.newContext({ baseURL });
       const superPage = await superContext.newPage();
       try {
-        await signInAndSatisfyMfa(superPage, fixture.actors.superAdmin, "en");
+        await signInAdmin(superPage, fixture.actors.superAdmin, "en");
         await superPage.goto("/en/admin/qr-inventory");
         const draftCard = cardWithText(superPage, raceBatch.batch_code)
           .filter({

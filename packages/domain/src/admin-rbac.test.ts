@@ -18,9 +18,10 @@ const siteA = {
 } as const;
 
 describe("admin RBAC", () => {
-  it("requires MFA for privileged administrative roles", () => {
-    expect(roleRequiresMfa("SUPER_ADMIN")).toBe(true);
-    expect(roleRequiresMfa("SITE_ADMIN")).toBe(true);
+  it("keeps MFA optional for the current pilot admin policy", () => {
+    expect(roleRequiresMfa("SUPER_ADMIN")).toBe(false);
+    expect(roleRequiresMfa("MANAGEMENT_ADMIN")).toBe(false);
+    expect(roleRequiresMfa("SITE_ADMIN")).toBe(false);
     expect(roleRequiresMfa("SITE_OPERATOR")).toBe(false);
   });
 
@@ -48,11 +49,11 @@ describe("admin RBAC", () => {
     expect(decision).toEqual({ allowed: false, reason: "OUT_OF_SCOPE" });
   });
 
-  it("allows a verified Management Admin to request Site creation inside the company scope", () => {
+  it("allows a Management Admin to request Site creation inside the company scope without MFA", () => {
     expect(
       authorizeAdminAction(
         {
-          mfaVerified: true,
+          mfaVerified: false,
           role: "MANAGEMENT_ADMIN",
           scope: {
             managementCompanyId: "company-a",

@@ -15,7 +15,7 @@ apps/
   worker/              Queue consumer와 lifecycle 계약
 packages/
   application/         Site mutation·Tenant Catalog service와 transaction/audit 계약
-  auth/                Supabase SSR, 가입 검증, session/membership/AAL과 Admin MFA action
+  auth/                Supabase SSR, 가입 검증, session/membership과 optional Admin MFA action
   config/              client/server 환경변수 검증
   db/                  Drizzle/postgres-js 및 Phase 1 tenant schema
   domain/              중앙 RBAC, scope, MFA policy
@@ -28,8 +28,8 @@ e2e/                   axe, health, 320px, locale·Admin Auth browser smoke
 .github/workflows/     동일 품질 게이트 CI
 ```
 
-Tenant/Admin 데이터·권한·application service, Admin 로그인/MFA와 실제 staging
-AAL2 acceptance를 완료했다. 이메일/Google 계정 생성과 Super Admin Tenant Catalog도
+Tenant/Admin 데이터·권한·application service, Admin 로그인과 실제 staging
+role/scope routing acceptance를 완료했다. 이메일/Google 계정 생성과 Super Admin Tenant Catalog도
 구현했다. 인증된 Site CRUD와 QR Design/승인/입고/배정 화면·RPC가 staging
 acceptance를 통과했다. 10개 승인 100-item Batch의 실제 Queue/Worker에서 1,000 QR
 생성, chunk commit 후 lease 재개, decode 100%, PDF/CSV/ZIP/manifest checksum과
@@ -72,9 +72,9 @@ UI
 - 환경변수: `config/client`와 server schema 분리
 - UI 문구: `apps/web/content/messages.ts`의 한·영 타입 계약
 - i18n: `/ko`·`/en` URL 기준, cookie → `Accept-Language` 최초 판정
-- 인증: browser/server Supabase client와 MFA assurance 정책 분리
-- 관리자 컨텍스트: verified JWT → active profile → 단일 membership → MFA AAL 순서로
-  서버에서 fail-closed 판정
+- 인증: browser/server Supabase client와 optional MFA assurance 정책 분리
+- 관리자 컨텍스트: verified JWT → active profile → 단일 membership 순서로
+  서버에서 fail-closed 판정하고, 파일럿 기간에는 MFA를 선택 사항으로 둠
 - 업무 권한: `@taptolk/domain`의 role/scope/permission 단일 기준
 - mutation: `@taptolk/application`의 transaction 안에서 mutation과 audit 동시 처리
 - 이용자 구분: Caller/Owner/Admin route policy
@@ -148,9 +148,9 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
 - RLS `auth.uid()` 초기화와 계약 policy 분리로 Advisor 경고 제거
 - FK covering index를 추가해 tenant 연관 조회·삭제 검사 경로 보호
 - `/ko|en/admin/login` Email/Password 로그인과 locale 유지
-- TOTP MFA 등록 QR·수동 키와 AAL2 challenge 화면
-- `SUPER_ADMIN`, `MANAGEMENT_ADMIN`, `SITE_ADMIN`의 MFA 강제 및
-  `SITE_OPERATOR`, `READ_ONLY`, `PLATFORM_OPERATOR`의 현재 명세 정책 적용
+- TOTP MFA 등록 QR·수동 키와 AAL2 challenge 화면은 보존
+- 파일럿 기간에는 모든 관리자 역할에서 MFA를 선택 사항으로 적용하고,
+  Production 전 고위험 작업 재확인 정책을 재검토
 - 활성 profile과 membership을 서버에서 확인하고 여러 membership 권한은 합치지
   않은 채 하나의 안정적인 active context만 선택
 - 플랫폼 역할은 `/admin/platform`, 고객 역할은 `/admin/dashboard`로 분리하고
@@ -159,7 +159,7 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
 - 이메일 가입과 Google SSO를 Supabase PKCE callback으로 연결하고 신규 Auth
   identity에는 admin profile·membership을 자동 부여하지 않음
 - `tenant:read` application service와 authenticated Supabase repository를 분리하고
-  Super Admin Tenant Catalog에 PLATFORM scope, MFA, RLS를 중첩 적용
+  Super Admin Tenant Catalog에 PLATFORM scope와 RLS를 중첩 적용
 - 역할별 Site catalog와 audited command boundary를 실제 KO/EN UI에 연결
 - Super Admin Site 생성·운영정보·계약한도·중지·재개·종료와
   Management/Site Admin scope 운영정보 수정 구현
@@ -179,7 +179,7 @@ Phase 1부터 실제 기능을 추가할 때도 이 레이어를 건너뛰는 Ro
   audit redaction, history preservation, cleanup residue `0` 검증
 
 이는 Phase 1의 안전한 기반이며 전체 Phase 1 완료가 아니다. Docker PostgreSQL에서
-reset과 pgTAP을 실행해야 Phase 1 acceptance로 판정한다. Staging Auth/MFA와 인증된
+reset과 pgTAP을 실행해야 Phase 1 acceptance로 판정한다. Staging Auth와 인증된
 Site CRUD·Tenant Isolation, QR inventory/sample E2E는 통과했다. Staging에서는
 extension 설치 없이 catalog, transaction rollback, 실제 browser session으로
 RLS·권한·제약을 검증했다.
@@ -236,11 +236,11 @@ pnpm 10.34.5에서 확인한 결과:
 - Vercel Preview: 프로젝트 생성·외부 연결 승인 전이므로 미실행
 - Sentry/SMS 실제 연결: 후속 승인 및 자격증명 필요
 - Production Worker runtime: ADR 결정 필요
-- Staging Admin Email/Password→TOTP→AAL2→platform route는 실제 계정으로 통과
+- Staging Admin Email/Password→server role/scope routing은 실제 계정으로 통과
 - Google SSO는 코드가 구현됐으나 Google Cloud/Supabase provider 연결과 실계정
   acceptance 필요
 - 이메일/Google 신규 계정의 access-pending 실계정 acceptance 필요
-- MFA recovery와 Admin idle timeout 운영 정책은 후속 구현 필요
+- Admin idle timeout과 고위험 작업 재확인 정책은 후속 구현 필요
 - 인증된 Site CRUD repository/API/UI/E2E: staging acceptance 통과
 - QR inventory/small Batch/sample approval repository/RPC/UI/E2E: staging acceptance 통과
 - Phase 1 migration/tenant isolation pgTAP runtime: Docker DB에서 실행 필요

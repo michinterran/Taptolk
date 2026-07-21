@@ -6,7 +6,7 @@ import { LocaleSwitcher } from "./locale-switcher";
  *
  * Deliberately carries no sign-in, sign-up, or administrator link. The administrator
  * portal has its own address and its own header; access there is decided by the server
- * from the approved profile, membership, role/scope, and MFA state rather than by
+ * from the approved profile and membership role/scope rather than by
  * whether a link was shown here.
  */
 interface PublicSiteHeaderProps {

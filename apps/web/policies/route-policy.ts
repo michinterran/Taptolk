@@ -1,6 +1,6 @@
 export const ROUTE_POLICIES = Object.freeze({
   admin: Object.freeze({
-    authentication: "email-password-mfa",
+    authentication: "email-password",
     bottomNavigation: "hidden",
     routePrefix: "/admin",
   }),

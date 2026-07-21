@@ -213,7 +213,7 @@ describe("QrFinalGenerationApprovalService", () => {
     ).rejects.toEqual(new QrFinalGenerationApprovalError("INACTIVE_PARENT"));
   });
 
-  it("requires MFA before reading a customer command target", async () => {
+  it("allows customer command targets without MFA under the current pilot policy", async () => {
     const repo = repository();
 
     await expect(
@@ -221,11 +221,11 @@ describe("QrFinalGenerationApprovalService", () => {
         actor: actor("MANAGEMENT_ADMIN", { mfaVerified: false }),
         ...command,
       }),
-    ).rejects.toMatchObject({ code: "MFA_REQUIRED" });
-    expect(repo.getBatchForCommand).not.toHaveBeenCalled();
+    ).resolves.toMatchObject({ batchId: command.batchId });
+    expect(repo.getBatchForCommand).toHaveBeenCalled();
   });
 
-  it("allows only an independent AAL2 Super Admin to approve generation", async () => {
+  it("allows only an independent Super Admin to approve generation", async () => {
     const approvalBatch = batch({
       requestedByCurrentActor: false,
       status: "FINAL_APPROVAL_PENDING",
@@ -242,14 +242,14 @@ describe("QrFinalGenerationApprovalService", () => {
     ).rejects.toMatchObject({ code: "ROLE_FORBIDDEN" });
     expect(roleRepo.getBatchForCommand).not.toHaveBeenCalled();
 
-    const mfaRepo = repository({ commandBatch: approvalBatch });
+    const noMfaRepo = repository({ commandBatch: approvalBatch });
     await expect(
-      new QrFinalGenerationApprovalService(mfaRepo).approveFinalGeneration({
+      new QrFinalGenerationApprovalService(noMfaRepo).approveFinalGeneration({
         actor: actor("SUPER_ADMIN", { mfaVerified: false }),
         ...approvalCommand,
       }),
-    ).rejects.toMatchObject({ code: "MFA_REQUIRED" });
-    expect(mfaRepo.getBatchForCommand).not.toHaveBeenCalled();
+    ).resolves.toMatchObject({ batchId: approvalBatch.id });
+    expect(noMfaRepo.getBatchForCommand).toHaveBeenCalled();
 
     await expect(
       new QrFinalGenerationApprovalService(
