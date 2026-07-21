@@ -114,9 +114,10 @@ test.describe
       await signInAndCompleteMfa(page, fixture.actors.siteAdmin);
 
       await expect(page).toHaveURL(/\/ko\/admin\/dashboard$/u);
-      await expect(page.getByText("사이트 관리자", { exact: true })).toBeVisible();
-      await expect(page.getByText("사이트 범위", { exact: true })).toBeVisible();
-      await expect(page.getByText("MFA 인증 완료", { exact: true })).toBeVisible();
+      const customerSidebar = page.getByRole("complementary");
+      await expect(customerSidebar.getByText("사이트 관리자", { exact: true })).toBeVisible();
+      await expect(customerSidebar.getByText("사이트 범위", { exact: true })).toBeVisible();
+      await expect(customerSidebar.getByText("MFA 인증 완료", { exact: true })).toBeVisible();
       const customerNavigation = page.getByRole("navigation", {
         name: "관리자 운영 메뉴",
       });
@@ -138,9 +139,10 @@ test.describe
       await signInAndCompleteMfa(page, fixture.actors.superAdmin);
 
       await expect(page).toHaveURL(/\/ko\/admin\/platform$/u);
-      await expect(page.getByText("슈퍼어드민", { exact: true })).toBeVisible();
-      await expect(page.getByText("전체 플랫폼", { exact: true })).toBeVisible();
-      await expect(page.getByText("MFA 인증 완료", { exact: true })).toBeVisible();
+      const platformSidebar = page.getByRole("complementary");
+      await expect(platformSidebar.getByText("슈퍼어드민", { exact: true })).toBeVisible();
+      await expect(platformSidebar.getByText("전체 플랫폼", { exact: true })).toBeVisible();
+      await expect(platformSidebar.getByText("MFA 인증 완료", { exact: true })).toBeVisible();
       const platformNavigation = page.getByRole("navigation", {
         name: "관리자 운영 메뉴",
       });
