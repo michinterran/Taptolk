@@ -59,7 +59,9 @@
 
 ## Act
 
-- Publish this source to Vercel Preview only and perform a final protected Preview smoke.
+- Published commit `6c96677` to Vercel Preview only. Deployment
+  `dpl_1YEEphMPg7SUYeEr5tDaFmXbwbvN` is `READY`; protected KO/EN public, administrator-login, and
+  health entries return the expected Vercel SSO redirect. GitHub Actions `29847699333` passed.
 - Keep Production deployment, `taptolk.com` connection, Production Supabase selection/secrets,
   provider setup, plan changes, and Cron activation behind separate operator approval.
 - Before commercial operation, confirm licensed brand artwork, tax-invoice/print-vendor workflow,

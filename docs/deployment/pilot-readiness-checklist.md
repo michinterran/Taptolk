@@ -198,7 +198,9 @@
       authenticated staging E2E passed 31 tests with one intentional opt-in 10x100 skip; and
       `pnpm verify` passed with lint 381 files, typecheck 19/19, unit 60 files/391 tests, DB
       65 migrations/29 tests, secret scan 633 files, WCJ 100 over 124 files, and Production build.
-      Production deployment was not performed and active Production Cron definitions remain zero.
+      GitHub Actions `29847699333` passed. Preview deployment
+      `dpl_1YEEphMPg7SUYeEr5tDaFmXbwbvN` is READY and protected by Vercel SSO. Production deployment
+      was not performed and active Production Cron definitions remain zero.
 
 ## Manual and external pilot gates
 
