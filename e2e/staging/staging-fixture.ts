@@ -42,6 +42,7 @@ export interface StagingFixture {
 }
 
 interface Environment {
+  publishableKey: string;
   secretKey: string;
   supabaseUrl: string;
 }
@@ -63,7 +64,9 @@ const ENV_FILE = path.join(process.cwd(), "apps/web/.env.local");
 const LINKED_PROJECT_FILE = path.join(process.cwd(), "supabase/.temp/project-ref");
 const SENSITIVE_AUDIT_KEY =
   /authorization|cookie|phone|message|otp|token|secret|password|api.?key/iu;
-const TOTP_MINIMUM_VALIDITY_SECONDS = 8;
+// Leave enough of the current window for a cold Next.js Server Action compilation
+// before Supabase verifies the code. This keeps authenticated staging runs deterministic.
+const TOTP_MINIMUM_VALIDITY_SECONDS = 18;
 
 function parseEnvironmentFile(source: string): Readonly<Record<string, string>> {
   const values: Record<string, string> = {};
@@ -103,8 +106,9 @@ export function loadStagingEnvironment(): Environment {
 
   const appEnvironment = process.env.APP_ENV;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
-  if (appEnvironment !== "staging" || !supabaseUrl || !secretKey) {
+  if (appEnvironment !== "staging" || !supabaseUrl || !publishableKey || !secretKey) {
     throw new Error("Staging Site E2E requires the server-only staging environment.");
   }
 
@@ -123,7 +127,7 @@ export function loadStagingEnvironment(): Environment {
   process.env.OWNER_RESPONSE_BASE_URL ??= "http://localhost:3200";
   process.env.QUEUE_WORKER_SECRET ??= randomBytes(32).toString("base64url");
 
-  return { secretKey, supabaseUrl };
+  return { publishableKey, secretKey, supabaseUrl };
 }
 
 function randomPassword(): string {
