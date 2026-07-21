@@ -66,8 +66,10 @@ function checkStaticRules(files) {
   const journeyState = sourceAt(files, "packages/ui/src/patterns/journey-state.ts");
   const routePolicy = sourceAt(files, "apps/web/policies/route-policy.ts");
   const errorPage = sourceAt(files, "apps/web/app/[locale]/error.tsx");
-  const landingPage = sourceAt(files, "apps/web/app/[locale]/page.tsx");
-  const onboardingPage = sourceAt(files, "apps/web/app/[locale]/onboarding/page.tsx");
+  const landingPage = sourceAt(files, "apps/web/app/[locale]/(public)/page.tsx");
+  const onboardingPage = sourceAt(files, "apps/web/app/[locale]/(public)/onboarding/page.tsx");
+  const adminPortalPage = sourceAt(files, "apps/web/app/[locale]/(admin)/admin/page.tsx");
+  const adminPortalIntro = sourceAt(files, "apps/web/components/admin-portal-intro.tsx");
   const publicHeader = sourceAt(files, "apps/web/components/public-site-header.tsx");
   const localeModule = sourceAt(files, "apps/web/i18n/locale.ts");
   const localeSwitcher = sourceAt(files, "apps/web/components/locale-switcher.tsx");
@@ -248,19 +250,45 @@ function checkStaticRules(files) {
     );
   }
 
+  // The public surface introduces the service to callers and vehicle owners. It must not
+  // advertise administrator entry: the administrator portal is reached by its own address
+  // and protected by server-side authorization, not by hiding or exposing a link.
+  const publicSurfaceSources = [
+    ["apps/web/app/[locale]/(public)/page.tsx", landingPage],
+    ["apps/web/app/[locale]/(public)/onboarding/page.tsx", onboardingPage],
+    ["apps/web/components/public-site-header.tsx", publicHeader],
+  ];
+
+  for (const [path, source] of publicSurfaceSources) {
+    if (source.includes("/admin")) {
+      findings.push(
+        finding("J005", path, "Public surface must not link to the administrator portal."),
+      );
+    }
+  }
+
   if (
     !landingPage.includes("<SemanticHeading") ||
-    !landingPage.includes("/onboarding") ||
     !onboardingPage.includes("<SemanticHeading") ||
-    !onboardingPage.includes("/admin/login") ||
-    onboardingPage.includes("/admin/platform/login") ||
-    publicHeader.includes("/admin/platform/login")
+    !adminPortalIntro.includes("<SemanticHeading")
   ) {
     findings.push(
       finding(
         "J005",
-        "apps/web/app/[locale]/onboarding/page.tsx",
-        "Public onboarding must expose one administrator sign-in while preserving role-separated post-login journeys.",
+        "apps/web/components/admin-portal-intro.tsx",
+        "Landing, onboarding, and the administrator portal must use semantic heading groups.",
+      ),
+    );
+  }
+
+  // The administrator portal keeps one canonical sign-in; role separation happens on the
+  // server after login, never through a separate browser-selected login address.
+  if (adminPortalPage.includes("/admin/platform/login")) {
+    findings.push(
+      finding(
+        "J005",
+        "apps/web/app/[locale]/(admin)/admin/page.tsx",
+        "Administrator portal must keep a single canonical sign-in entry.",
       ),
     );
   }

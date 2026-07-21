@@ -3,10 +3,12 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { readPublicSupabaseConfiguration } from "./auth/configuration";
 import { detectLocale, getLocaleFromPathname, LOCALE_COOKIE_NAME } from "./i18n/locale";
+import { requiresAdminSession } from "./routing/app-routes";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Locale resolution applies to every user-facing route, public and administrator alike.
   if (!getLocaleFromPathname(pathname)) {
     const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
     const locale = detectLocale({
@@ -20,6 +22,14 @@ export async function proxy(request: NextRequest) {
   }
 
   const response = NextResponse.next({ request });
+
+  // Administrator session refresh is scoped to the administrator surface only.
+  // Landing, onboarding, QR scan, caller waiting room, activation, owner response, and
+  // owner home never touch the administrator authentication provider.
+  if (!requiresAdminSession(pathname)) {
+    return response;
+  }
+
   const configuration = readPublicSupabaseConfiguration();
   if (!configuration) {
     return response;

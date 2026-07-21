@@ -552,63 +552,75 @@ export const ko = {
   "admin.sites.type.building": "빌딩",
   "admin.sites.type.officetel": "오피스텔",
   "admin.sites.type.other": "기타",
-  "landing.audiences.caller.action": "차량에 부착된 Taptolk QR을 스캔해 시작하세요.",
-  "landing.audiences.caller.badge": "로그인 없음",
-  "landing.audiences.caller.description":
-    "차량 이동, 주차 문제, 차량 이상을 알릴 때 전화번호나 앱 설치가 필요하지 않습니다.",
-  "landing.audiences.caller.title": "차량에 연락하려는 분",
-  "landing.audiences.customer.action": "관리자 로그인",
-  "landing.audiences.customer.badge": "승인된 관리자",
-  "landing.audiences.customer.description":
-    "고객 관리자와 플랫폼 관리자는 같은 로그인에서 시작하고, 서버가 승인된 역할과 범위에 맞는 별도 콘솔로 연결합니다.",
-  "landing.audiences.customer.title": "고객·플랫폼 관리자",
-  "landing.audiences.eyebrow": "역할별 시작",
-  "landing.audiences.line1": "누구나 같은 입구를 쓰지 않도록",
-  "landing.audiences.line2": "역할에 맞게 나누었습니다.",
-  "landing.audiences.owner.action": "연결된 내 차량 확인",
-  "landing.audiences.owner.badge": "차주",
-  "landing.audiences.owner.description":
-    "새 QR 활성화는 받은 스티커의 QR에서 시작하고, 연결된 차량은 현재 기기에서 확인합니다.",
-  "landing.audiences.owner.title": "QR을 받은 차주",
   "landing.eyebrow": "전화번호 공개 없이 시작하는 차량 연락",
+  "landing.faq.app.answer":
+    "필요하지 않습니다. 차량의 QR을 스캔하면 휴대폰 브라우저에서 바로 요청을 보낼 수 있고, 회원가입도 필요하지 않습니다.",
+  "landing.faq.app.question": "앱을 설치해야 하나요?",
+  "landing.faq.emergency.answer":
+    "사고, 화재, 범죄처럼 즉시 대응이 필요한 상황에서는 119, 112 또는 관리사무소에 직접 연락해 주세요. Taptolk는 차주가 언제 확인할지 보장하지 않으므로 긴급 대응 수단으로 사용하지 마세요.",
+  "landing.faq.emergency.question": "긴급 상황에서도 사용할 수 있나요?",
+  "landing.faq.label": "자주 묻는 질문 목록",
+  "landing.faq.line1": "궁금한 점을",
+  "landing.faq.line2": "먼저 확인해 보세요.",
+  "landing.faq.noqr.answer":
+    "요청할 수 없습니다. Taptolk는 차량에 부착된 QR에서만 연락을 시작합니다. 차량 번호를 입력해 임의의 차량에 연락하는 기능은 제공하지 않습니다.",
+  "landing.faq.noqr.question": "QR이 없는 차량에도 요청할 수 있나요?",
+  "landing.faq.phone.answer":
+    "보이지 않습니다. 요청한 사람과 차주 어느 쪽에도 상대방의 전화번호를 보여주지 않습니다. 연락은 Taptolk가 중계합니다.",
+  "landing.faq.phone.question": "전화번호가 상대방에게 보이나요?",
+  "landing.faq.reply.answer":
+    "요청을 보낸 화면에서 그대로 확인합니다. 화면을 닫아도 같은 브라우저에서 다시 열면 상태를 확인할 수 있습니다.",
+  "landing.faq.reply.question": "차주의 답변은 어디에서 확인하나요?",
+  "landing.faq.report.answer":
+    "요청 횟수에는 제한이 있고, 부적절한 내용은 신고할 수 있습니다. 반복적이거나 악의적인 요청은 차단됩니다.",
+  "landing.faq.report.question": "반복적이거나 부적절한 요청은 어떻게 처리되나요?",
   "landing.footer": "Taptolk · 필요한 연락만, 공개되는 번호 없이",
   "landing.hero.description":
-    "차량의 QR을 스캔하면 앱 설치나 전화번호 공개 없이 필요한 내용을 차주에게 전달하고, 같은 임시 대화방에서 답장을 확인할 수 있습니다.",
-  "landing.hero.line1": "번호를 묻지 않고,",
-  "landing.hero.line2": "차량에 필요한 말을 전합니다.",
-  "landing.hero.primary": "내 상황에 맞게 시작하기",
-  "landing.hero.secondary": "작동 방식 보기",
-  "landing.journey.description":
-    "연락은 목적이 정해진 임시 세션 안에서만 중계되며, 개인 전화번호 대신 상태와 답장만 전달합니다.",
-  "landing.journey.eyebrow": "SCAN → SEND → REPLY",
-  "landing.journey.line1": "복잡한 가입 대신",
-  "landing.journey.line2": "세 번의 분명한 흐름으로.",
-  "landing.journey.reply.description": "차주의 원터치 답장이 방문자의 임시 대화방에 도착합니다.",
-  "landing.journey.reply.label": "REPLY",
-  "landing.journey.reply.title": "답장을 같은 화면에서 확인",
-  "landing.journey.scan.description": "차량에 부착된 고유 QR이 안전한 연락 화면을 엽니다.",
-  "landing.journey.scan.label": "SCAN",
-  "landing.journey.scan.title": "Taptolk QR 스캔",
-  "landing.journey.send.description":
-    "차량 이동, 주차 문제, 차량 이상 중 필요한 내용을 선택해 전송합니다.",
-  "landing.journey.send.label": "SEND",
-  "landing.journey.send.title": "필요한 요청만 전달",
+    "차량의 Taptolk QR을 스캔하면 전화번호를 서로 공개하지 않고 필요한 요청과 답변을 주고받을 수 있습니다.",
+  "landing.hero.line1": "차량에 연락이 필요할 때,",
+  "landing.hero.line2": "전화번호를 몰라도 괜찮습니다.",
+  "landing.hero.primary": "사용 방법 보기",
   "landing.logo.alt": "Taptolk 홈",
-  "landing.nav.customerAdmin": "관리자 로그인",
-  "landing.nav.guide": "시작 안내",
+  "landing.nav.faq": "자주 묻는 질문",
   "landing.nav.label": "Taptolk 주요 메뉴",
-  "landing.privacy.description":
-    "방문자와 차주의 전화번호를 서로에게 보여 주지 않고, QR·요청·답장은 목적이 정해진 임시 연락 세션 안에서만 연결합니다.",
-  "landing.privacy.eyebrow": "Privacy by Design",
-  "landing.privacy.title": "연락은 이어도, 개인정보는 건네지 않습니다.",
-  "landing.signal.description": "전화번호 대신 목적 제한형 임시 세션으로 연결",
-  "landing.signal.kicker": "PRIVATE CONNECTION",
-  "landing.signal.label": "Taptolk 개인정보 보호 연결 방식",
-  "landing.signal.title": "QR → Taptolk → 차주",
-  "landing.trust.label": "Taptolk 핵심 이용 원칙",
-  "landing.trust.noApp": "앱 설치 없이",
-  "landing.trust.noPhone": "전화번호 공개 없이",
-  "landing.trust.purpose": "필요한 목적 안에서만",
+  "landing.nav.privacy": "개인정보 보호",
+  "landing.nav.usage": "사용 방법",
+  "landing.owner.label": "차주 사용 순서",
+  "landing.owner.line1": "QR을 받은 차주는",
+  "landing.owner.line2": "이렇게 사용합니다.",
+  "landing.owner.step1.description": "관리회사에서 차량용 Taptolk 스티커를 전달받습니다.",
+  "landing.owner.step1.title": "스티커 수령",
+  "landing.owner.step2.description":
+    "스티커의 QR을 스캔하고 본인 확인을 마치면 내 차량에 연결됩니다.",
+  "landing.owner.step2.title": "내 차량에 활성화",
+  "landing.owner.step3.description":
+    "차량에 연락 요청이 오면 카카오 알림톡으로 Taptolk 링크를 받습니다.",
+  "landing.owner.step3.title": "알림 확인",
+  "landing.owner.step4.description":
+    "Taptolk 화면에서 준비된 답변 중 하나를 선택해 바로 회신합니다.",
+  "landing.owner.step4.title": "빠른 답변 선택",
+  "landing.privacy.control":
+    "요청 횟수에는 제한이 있고, 부적절한 요청은 신고와 차단으로 관리합니다.",
+  "landing.privacy.eyebrow": "개인정보 보호",
+  "landing.privacy.line1": "연락은 이어도,",
+  "landing.privacy.line2": "개인정보는 건네지 않습니다.",
+  "landing.privacy.numbers":
+    "요청한 사람과 차주 어느 쪽에도 상대방의 전화번호를 보여주지 않습니다.",
+  "landing.privacy.purpose":
+    "자유로운 대화가 아니라 차량 이동·주차처럼 목적이 정해진 짧은 연락만 중계합니다.",
+  "landing.privacy.temporary":
+    "요청이 완료되거나 시간이 지나면 임시 연락 화면이 닫히고 주고받은 내용이 정리됩니다.",
+  "landing.usage.label": "요청하는 사람 사용 순서",
+  "landing.usage.line1": "차량에 연락하는 방법은",
+  "landing.usage.line2": "세 단계면 충분합니다.",
+  "landing.usage.step1.description": "차량 유리에 부착된 Taptolk QR을 휴대폰 카메라로 비춥니다.",
+  "landing.usage.step1.title": "QR 스캔",
+  "landing.usage.step2.description":
+    "차량이 맞는지 확인한 뒤 차량 이동, 라이트 켜짐 같은 요청을 선택합니다.",
+  "landing.usage.step2.title": "필요한 요청 선택",
+  "landing.usage.step3.description":
+    "같은 화면에서 차주의 답변을 확인합니다. 전화번호는 어느 쪽에도 표시되지 않습니다.",
+  "landing.usage.step3.title": "답변 확인",
   "locale.english": "영어로 보기",
   "locale.korean": "한국어로 보기",
   "locale.switcher.label": "언어 선택",
@@ -621,12 +633,6 @@ export const ko = {
     "QR이 해당 차량의 안전한 연락 화면을 엽니다. 차량번호 전체나 차주의 연락처는 표시하지 않습니다.",
   "onboarding.caller.kicker": "차량에 연락하기",
   "onboarding.caller.title": "주차·이동·차량 이상을 알리고 싶어요",
-  "onboarding.customer.action": "관리자 로그인",
-  "onboarding.customer.badge": "역할별 서버 라우팅",
-  "onboarding.customer.description":
-    "고객 관리자와 Taptolk 플랫폼 관리자는 하나의 로그인에서 시작합니다. 서버가 승인된 프로필, 소속 범위와 MFA 상태를 확인해 서로 분리된 관리 화면으로 연결합니다.",
-  "onboarding.customer.kicker": "고객·플랫폼 관리",
-  "onboarding.customer.title": "승인된 역할에 맞는 관리 화면으로 이동해요",
   "onboarding.eyebrow": "START BY ROLE",
   "onboarding.footer": "어떤 역할이든 필요한 범위만 연결합니다.",
   "onboarding.hero.description":
@@ -643,6 +649,66 @@ export const ko = {
   "onboarding.token.description":
     "방문자 연락과 신규 차주 활성화는 발급된 QR 또는 안전한 전용 링크에서만 시작됩니다. 이 페이지에서 차량 번호나 코드를 직접 입력하는 방법은 제공하지 않습니다.",
   "onboarding.token.title": "QR이 필요한 이유",
+  "portal.approval.audit":
+    "사이트·QR·차량 배정 같은 주요 운영 변경은 언제 누가 처리했는지 기록으로 남습니다.",
+  "portal.approval.eyebrow": "승인과 보안",
+  "portal.approval.line1": "권한은 승인된 범위에서만",
+  "portal.approval.line2": "열립니다.",
+  "portal.approval.mfa": "중요한 관리자 역할에는 추가 인증 단계를 요구합니다.",
+  "portal.approval.pending":
+    "계정을 만들면 바로 권한이 생기지 않고 승인 대기 상태가 됩니다. 승인 전에는 고객·차량·운영 데이터를 볼 수 없습니다.",
+  "portal.approval.scope": "승인된 관리회사와 사이트 범위의 데이터만 조회하고 운영할 수 있습니다.",
+  "portal.approval.separation":
+    "관리회사 운영 화면과 Taptolk 플랫폼 관리 화면은 분리되어 있습니다.",
+  "portal.cta.login": "관리자 로그인",
+  "portal.cta.signup": "관리자 계정 가입 요청",
+  "portal.features.abuse": "반복·악의 요청 신고와 차단 처리",
+  "portal.features.activation": "차주 QR 활성화와 차량 연결 상태 확인",
+  "portal.features.contact": "요청·응답·미해결·관리사무소 전달 현황",
+  "portal.features.eyebrow": "관리 기능",
+  "portal.features.inventory": "QR 재고 입고, 차량 배정, 교체·폐기 이력",
+  "portal.features.label": "관리회사가 사용하는 기능",
+  "portal.features.line1": "현장 운영에 필요한 기능을",
+  "portal.features.line2": "권한 범위 안에서 제공합니다.",
+  "portal.features.metrics": "응답률, 미해결 건수, 알림 비용 등 운영 지표",
+  "portal.features.qr": "QR 샘플 승인과 발급 진행 상태 확인",
+  "portal.features.security": "역할·범위 기반 접근 통제와 주요 변경 기록",
+  "portal.features.sites": "사이트 등록과 관리 범위 설정",
+  "portal.footer": "Taptolk 관리자 포털 · 승인된 관리회사 담당자를 위한 공간",
+  "portal.hero.description":
+    "스티커 발급·입고·배포·활성화와 차량 요청 운영 현황을 승인된 권한 범위 안에서 관리할 수 있습니다.",
+  "portal.hero.line1": "QR 발급부터 차량 연락 운영까지,",
+  "portal.hero.line2": "관리회사 업무를 한곳에서 관리합니다.",
+  "portal.intro.eyebrow": "관리회사를 위한 Taptolk",
+  "portal.label": "관리자 포털",
+  "portal.nav.approval": "승인과 보안",
+  "portal.nav.features": "기능",
+  "portal.nav.flow": "운영 흐름",
+  "portal.nav.label": "관리자 포털 메뉴",
+  "portal.signupNote":
+    "가입은 권한 부여가 아니라 승인 요청입니다. Taptolk가 역할과 범위를 확인한 뒤 접근이 열립니다.",
+  "portal.workflow.eyebrow": "운영 흐름",
+  "portal.workflow.label": "계약 이후 운영 순서",
+  "portal.workflow.line1": "계약부터 운영까지",
+  "portal.workflow.line2": "일곱 단계로 이어집니다.",
+  "portal.workflow.step1.description": "관리회사와 Taptolk가 서비스 이용 계약을 체결합니다.",
+  "portal.workflow.step1.title": "계약 체결",
+  "portal.workflow.step2.description":
+    "운영할 사이트를 등록하고 필요한 수량의 QR Batch를 요청·승인합니다. 한 Batch는 1~100개입니다.",
+  "portal.workflow.step2.title": "사이트 등록과 QR 요청",
+  "portal.workflow.step3.description": "승인된 디자인으로 스티커를 인쇄해 납품합니다.",
+  "portal.workflow.step3.title": "스티커 인쇄와 납품",
+  "portal.workflow.step4.description":
+    "납품 수량을 확인해 입고 처리하고, 재고를 관리하며 차량에 배포하거나 배정합니다.",
+  "portal.workflow.step4.title": "입고와 배포",
+  "portal.workflow.step5.description": "차주가 받은 스티커의 QR을 스캔해 본인 차량에 활성화합니다.",
+  "portal.workflow.step5.title": "차주 활성화",
+  "portal.workflow.step6.description":
+    "차량 연락 요청과 답변을 운영하고, 미응답 건은 관리사무소로 전달합니다.",
+  "portal.workflow.step6.title": "연락 운영",
+  "portal.workflow.step7.description":
+    "교체·분실·폐기 이력을 남기고 운영 지표로 현황을 확인합니다.",
+  "portal.workflow.step7.title": "이력과 지표 관리",
   "shared.error.description": "잠시 후 다시 시도해 주세요.",
   "shared.error.retry": "다시 시도",
   "shared.error.title": "화면을 불러오지 못했습니다.",
@@ -1233,66 +1299,77 @@ export const en = {
   "admin.sites.type.building": "Building",
   "admin.sites.type.officetel": "Officetel",
   "admin.sites.type.other": "Other",
-  "landing.audiences.caller.action": "Scan the Taptolk QR attached to the vehicle to begin.",
-  "landing.audiences.caller.badge": "No sign-in",
-  "landing.audiences.caller.description":
-    "Report a move request, parking issue, or vehicle concern without a phone number or app.",
-  "landing.audiences.caller.title": "I need to reach a vehicle owner",
-  "landing.audiences.customer.action": "Admin sign in",
-  "landing.audiences.customer.badge": "Approved administrator",
-  "landing.audiences.customer.description":
-    "Customer and platform administrators start from one sign-in, then the server routes each approved role and scope to its separate console.",
-  "landing.audiences.customer.title": "Customer or platform administrator",
-  "landing.audiences.eyebrow": "Start by role",
-  "landing.audiences.line1": "Different responsibilities deserve",
-  "landing.audiences.line2": "clearly separated entry points.",
-  "landing.audiences.owner.action": "View my connected vehicles",
-  "landing.audiences.owner.badge": "Vehicle owner",
-  "landing.audiences.owner.description":
-    "Activate a new QR from the issued sticker, then view connected vehicles on your current device.",
-  "landing.audiences.owner.title": "I received a vehicle QR",
   "landing.eyebrow": "Vehicle contact that starts without sharing a phone number",
+  "landing.faq.app.answer":
+    "No. Scanning the QR on the vehicle opens the request screen straight in your phone browser, and no account is needed.",
+  "landing.faq.app.question": "Do I need to install an app?",
+  "landing.faq.emergency.answer":
+    "For an accident, a fire, or a crime, contact the emergency services or the site office directly. Taptolk cannot guarantee when the owner will see a request, so do not rely on it in an emergency.",
+  "landing.faq.emergency.question": "Can I use it in an emergency?",
+  "landing.faq.label": "Frequently asked questions",
+  "landing.faq.line1": "Answers to the questions",
+  "landing.faq.line2": "people ask first.",
+  "landing.faq.noqr.answer":
+    "No. Contact can only start from a Taptolk QR attached to a vehicle. There is no way to enter a plate number and reach an arbitrary vehicle.",
+  "landing.faq.noqr.question": "Can I contact a vehicle without a QR code?",
+  "landing.faq.phone.answer":
+    "No. Neither the caller nor the owner sees the other's number. Taptolk relays the contact instead.",
+  "landing.faq.phone.question": "Will my phone number be visible?",
+  "landing.faq.reply.answer":
+    "On the same screen you sent the request from. You can close it and reopen the status later in the same browser.",
+  "landing.faq.reply.question": "Where do I see the owner's reply?",
+  "landing.faq.report.answer":
+    "Requests are rate limited, and inappropriate content can be reported. Repeated or malicious requests are blocked.",
+  "landing.faq.report.question": "How are repeated or inappropriate requests handled?",
   "landing.footer": "Taptolk · essential contact without an exposed number",
   "landing.hero.description":
-    "Scan a vehicle QR to deliver an essential message without installing an app or exposing a phone number, then receive the reply in the same temporary room.",
-  "landing.hero.line1": "Reach the vehicle,",
-  "landing.hero.line2": "not the owner's phone number.",
-  "landing.hero.primary": "Choose how you want to start",
-  "landing.hero.secondary": "See how it works",
-  "landing.journey.description":
-    "Communication stays inside a purpose-limited temporary session. Taptolk relays status and replies instead of personal phone numbers.",
-  "landing.journey.eyebrow": "SCAN → SEND → REPLY",
-  "landing.journey.line1": "Three clear steps,",
-  "landing.journey.line2": "without a complicated sign-up.",
-  "landing.journey.reply.description":
-    "The owner's one-tap reply arrives in the caller's temporary room.",
-  "landing.journey.reply.label": "REPLY",
-  "landing.journey.reply.title": "Receive the reply in place",
-  "landing.journey.scan.description":
-    "A unique QR attached to the vehicle opens its protected contact screen.",
-  "landing.journey.scan.label": "SCAN",
-  "landing.journey.scan.title": "Scan the Taptolk QR",
-  "landing.journey.send.description":
-    "Choose the relevant move request, parking issue, or vehicle concern and send it.",
-  "landing.journey.send.label": "SEND",
-  "landing.journey.send.title": "Send only what is needed",
+    "Scan the Taptolk QR on a vehicle to exchange the request and the reply without either side revealing a phone number.",
+  "landing.hero.line1": "Need to reach a vehicle?",
+  "landing.hero.line2": "You don't need the owner's number.",
+  "landing.hero.primary": "See how it works",
   "landing.logo.alt": "Taptolk home",
-  "landing.nav.customerAdmin": "Admin sign in",
-  "landing.nav.guide": "Get started",
+  "landing.nav.faq": "FAQ",
   "landing.nav.label": "Taptolk primary navigation",
-  "landing.privacy.description":
-    "Caller and owner phone numbers remain hidden from each other. The QR, request, and reply connect only inside a purpose-limited temporary session.",
-  "landing.privacy.eyebrow": "Privacy by Design",
-  "landing.privacy.title": "Connect the message, not the personal information.",
-  "landing.signal.description":
-    "A purpose-limited temporary session replaces exposed phone numbers",
-  "landing.signal.kicker": "PRIVATE CONNECTION",
-  "landing.signal.label": "Taptolk privacy-preserving connection",
-  "landing.signal.title": "QR → Taptolk → Owner",
-  "landing.trust.label": "Core Taptolk use principles",
-  "landing.trust.noApp": "No app installation",
-  "landing.trust.noPhone": "No exposed phone number",
-  "landing.trust.purpose": "Only for the stated purpose",
+  "landing.nav.privacy": "Privacy",
+  "landing.nav.usage": "How it works",
+  "landing.owner.label": "Steps for vehicle owners",
+  "landing.owner.line1": "If you received a QR sticker,",
+  "landing.owner.line2": "here is how you use it.",
+  "landing.owner.step1.description":
+    "Your management company gives you a Taptolk sticker for your vehicle.",
+  "landing.owner.step1.title": "Receive the sticker",
+  "landing.owner.step2.description":
+    "Scan the QR on the sticker and confirm your identity to link it to your vehicle.",
+  "landing.owner.step2.title": "Activate it for your vehicle",
+  "landing.owner.step3.description":
+    "When someone needs to reach your vehicle, you receive a Taptolk link through Kakao AlimTalk.",
+  "landing.owner.step3.title": "Get the notification",
+  "landing.owner.step4.description":
+    "Open the Taptolk screen and choose one of the prepared replies to respond immediately.",
+  "landing.owner.step4.title": "Choose a quick reply",
+  "landing.privacy.control":
+    "Requests are rate limited, and inappropriate ones are handled through reporting and blocking.",
+  "landing.privacy.eyebrow": "Privacy",
+  "landing.privacy.line1": "We connect the message,",
+  "landing.privacy.line2": "not the personal information.",
+  "landing.privacy.numbers":
+    "Neither the caller nor the vehicle owner is shown the other person's phone number.",
+  "landing.privacy.purpose":
+    "We relay short, purpose-limited contact such as a move request, not open-ended conversation.",
+  "landing.privacy.temporary":
+    "When a request is completed or expires, the temporary screen closes and the exchanged content is cleared.",
+  "landing.usage.label": "Steps for people contacting a vehicle",
+  "landing.usage.line1": "Reaching a vehicle",
+  "landing.usage.line2": "takes three steps.",
+  "landing.usage.step1.description":
+    "Point your phone camera at the Taptolk QR on the vehicle window.",
+  "landing.usage.step1.title": "Scan the QR",
+  "landing.usage.step2.description":
+    "Confirm the vehicle, then choose what is needed, such as moving the car or lights left on.",
+  "landing.usage.step2.title": "Choose what is needed",
+  "landing.usage.step3.description":
+    "Read the owner's reply on the same screen. No phone number is shown to either side.",
+  "landing.usage.step3.title": "See the reply",
   "locale.english": "View in English",
   "locale.korean": "View in Korean",
   "locale.switcher.label": "Language selection",
@@ -1305,12 +1382,6 @@ export const en = {
     "The QR opens that vehicle's protected contact screen. It does not reveal the full plate or the owner's contact details.",
   "onboarding.caller.kicker": "Contact a vehicle",
   "onboarding.caller.title": "I need to report a parking, move, or vehicle issue",
-  "onboarding.customer.action": "Admin sign in",
-  "onboarding.customer.badge": "Server role routing",
-  "onboarding.customer.description":
-    "Customer and Taptolk platform administrators start from one sign-in. The server verifies the approved profile, membership scope, and MFA state before opening separate admin areas.",
-  "onboarding.customer.kicker": "Customer and platform administration",
-  "onboarding.customer.title": "Open the admin area approved for my role",
   "onboarding.eyebrow": "START BY ROLE",
   "onboarding.footer": "Every role receives only the access it needs.",
   "onboarding.hero.description":
@@ -1327,6 +1398,72 @@ export const en = {
   "onboarding.token.description":
     "Caller contact and new-owner activation begin only from an issued QR or protected dedicated link. This page does not offer a way to enter a vehicle number or code directly.",
   "onboarding.token.title": "Why the QR is required",
+  "portal.approval.audit":
+    "Significant operational changes such as sites, QR assets, and vehicle assignments are recorded with who acted and when.",
+  "portal.approval.eyebrow": "Approval and security",
+  "portal.approval.line1": "Access opens only within",
+  "portal.approval.line2": "an approved scope.",
+  "portal.approval.mfa": "Sensitive administrator roles require an additional verification step.",
+  "portal.approval.pending":
+    "Creating an account does not grant access. It enters an approval queue, and no customer, vehicle, or operational data is visible until it is approved.",
+  "portal.approval.scope":
+    "You can view and operate only the data within your approved management company and sites.",
+  "portal.approval.separation":
+    "The management company workspace and the Taptolk platform workspace are kept separate.",
+  "portal.cta.login": "Administrator sign in",
+  "portal.cta.signup": "Request an administrator account",
+  "portal.features.abuse": "Reporting and blocking of repeated or malicious requests",
+  "portal.features.activation": "Owner QR activation and vehicle connection status",
+  "portal.features.contact": "Requests, replies, unresolved cases, and site office escalation",
+  "portal.features.eyebrow": "Operational features",
+  "portal.features.inventory":
+    "QR stock intake, vehicle assignment, replacement and revocation history",
+  "portal.features.label": "Features used by management companies",
+  "portal.features.line1": "Everything field operations need,",
+  "portal.features.line2": "inside your permitted scope.",
+  "portal.features.metrics":
+    "Operational metrics such as response rate, unresolved cases, and delivery cost",
+  "portal.features.qr": "QR sample approval and issuance progress",
+  "portal.features.security": "Role and scope based access control with change records",
+  "portal.features.sites": "Site registration and operating scope",
+  "portal.footer": "Taptolk administrator portal · for approved management company staff",
+  "portal.hero.description":
+    "Manage sticker issuance, intake, distribution, activation, and vehicle contact operations within your approved scope.",
+  "portal.hero.line1": "From QR issuance to daily contact,",
+  "portal.hero.line2": "run your operations in one place.",
+  "portal.intro.eyebrow": "Taptolk for management companies",
+  "portal.label": "Administrator portal",
+  "portal.nav.approval": "Approval",
+  "portal.nav.features": "Features",
+  "portal.nav.flow": "Workflow",
+  "portal.nav.label": "Administrator portal navigation",
+  "portal.signupNote":
+    "Signing up requests approval rather than granting access. Taptolk confirms your role and scope before opening the workspace.",
+  "portal.workflow.eyebrow": "Workflow",
+  "portal.workflow.label": "Operating steps after the contract",
+  "portal.workflow.line1": "From contract to daily operation",
+  "portal.workflow.line2": "in seven steps.",
+  "portal.workflow.step1.description":
+    "The management company and Taptolk sign a service agreement.",
+  "portal.workflow.step1.title": "Sign the agreement",
+  "portal.workflow.step2.description":
+    "Register the sites you operate and request QR batches for approval. Each batch holds 1 to 100 items.",
+  "portal.workflow.step2.title": "Register sites and request QR",
+  "portal.workflow.step3.description":
+    "Stickers are printed from the approved design and delivered.",
+  "portal.workflow.step3.title": "Printing and delivery",
+  "portal.workflow.step4.description":
+    "Confirm the delivered quantity, record intake, manage stock, and distribute or assign stickers to vehicles.",
+  "portal.workflow.step4.title": "Intake and distribution",
+  "portal.workflow.step5.description":
+    "Vehicle owners scan the QR on the sticker they received to activate it for their own vehicle.",
+  "portal.workflow.step5.title": "Owner activation",
+  "portal.workflow.step6.description":
+    "Operate contact requests and replies, and escalate unanswered cases to the site office.",
+  "portal.workflow.step6.title": "Run daily contact",
+  "portal.workflow.step7.description":
+    "Keep replacement, loss, and revocation history, and review operational metrics.",
+  "portal.workflow.step7.title": "History and metrics",
   "shared.error.description": "Please try again in a moment.",
   "shared.error.retry": "Try again",
   "shared.error.title": "We could not load this screen.",

@@ -67,6 +67,6 @@ export const WCJ_RULES = Object.freeze([
     category: "J",
     id: "J005",
     severity: "major",
-    title: "Public landing and onboarding preserve role-separated journeys",
+    title: "Public surface excludes administrator entry and roles stay server-decided",
   },
 ]);
