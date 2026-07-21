@@ -3,6 +3,7 @@
 > Branch: `codex/phase-1-foundation`
 > Baseline commit: `6c8413f`
 > Implementation commit: `06e873f`
+> Staging gate commit: `013a54b`
 > Date: 2026-07-21
 > Scope source: `docs/development/prd-public-user-admin-portals-0721.md`
 
@@ -78,6 +79,11 @@ headings on landing, onboarding, and the portal, and a single canonical sign-in.
 This is a deliberate gate change and is called out here and in the handoff so it is not
 mistaken for a silent weakening.
 
+The staging-gate review confirmed that this change matches the product contract. The
+previous rule forced an administrator entry onto a public surface; the revised rule
+keeps administrator discovery out of the public journey while preserving the single
+canonical sign-in and server-only post-login role routing. No relaxation was found.
+
 ### Automated evidence
 
 | Gate | Result |
@@ -86,7 +92,10 @@ mistaken for a silent weakening.
 | typecheck | 19/19 tasks PASS |
 | unit | 56 files / 379 tests PASS |
 | DB static contract | 59 migrations / 24 database tests |
-| secret scan | 572 text files PASS |
+| GitHub Actions | `29802031226` PASS on `6fe2efe` |
+| linked pgTAP | approved `taptolk-staging`, 24 files / 604 assertions PASS |
+| authenticated staging E2E | 31 PASS / 1 intentional opt-in skip |
+| secret scan | 575 text files PASS after documentation update |
 | immutable logo | required SHA-256 PASS |
 | Production Cron deferred | active definitions 0 PASS |
 | WCJ | 100 · C100 · J100 · W100 over 99 files |
@@ -105,6 +114,15 @@ mistaken for a silent weakening.
 - `sitemap.xml` contains no administrator path and no token-bearing path.
 - New unit coverage: 34 route classifier assertions and dictionary parity, public-copy,
   and portal-copy guards.
+- Site Admin plus MFA reaches the customer dashboard and is redirected away from the
+  platform workspace.
+- Super Admin plus MFA reaches the separate platform dashboard.
+- An approval-pending account is redirected to the access state from all five
+  administrator workspaces and reads zero rows from five representative RLS-protected
+  operational tables.
+- Existing Owner activation, caller/contact, QR inventory, Site CRUD, maker-checker,
+  tenant-isolation, cleanup, and administrator authentication journeys passed in the
+  same full staging run.
 
 ## Act
 
@@ -119,5 +137,9 @@ project and region, Production secrets, CAPTCHA or any new authentication provid
 enterprise SSO, Vercel plan changes, Cron activation, and monitoring or incident owner
 assignment.
 
-Deferred to the next session: linked pgTAP and authenticated staging E2E, which require
-staging credentials that were not injected in this session.
+The previously deferred linked pgTAP and authenticated staging E2E gates are complete.
+The first new approval-pending probe exposed an incorrect test table name, not an access
+leak; it was corrected to real RLS-protected operational tables. A later run exposed an
+existing TOTP-window timing flake during cold Server Action compilation, so the staging
+fixture now requires 18 seconds of code validity. The final full suite passed in one
+run. No Production deployment or domain change was performed.

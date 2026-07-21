@@ -143,9 +143,19 @@
       WCJ rule `J005` was rewritten to enforce zero administrator links on the public
       surface; it previously required an administrator sign-in link on onboarding.
       Evidence: lint 339 files, typecheck 19/19, unit 56 files/379 tests, DB structure
-      59 migrations/24 tests, secret scan 572 files, WCJ 100 over 99 files, production
-      build, and local browser smoke 42/42. Linked pgTAP and authenticated staging E2E
-      remain pending for the next session.
+      59 migrations/24 tests, final secret scan 575 files, WCJ 100 over 99 files, production
+      build, and local browser smoke 42/42. GitHub Actions `29802031226` passed on
+      `6fe2efe`. The J005 review confirmed that zero public administrator links is the
+      intended stricter product contract, not a gate relaxation.
+- [x] 2026-07-21 surface-separation staging closure on `013a54b`: the linked target was
+      confirmed as the approved healthy `taptolk-staging`; all 24 linked pgTAP files and
+      604 assertions passed; authenticated staging E2E passed 31 tests with one intentional
+      opt-in 1,000-item Worker acceptance skip. Evidence includes Site Admin plus MFA to
+      customer dashboard, Super Admin plus MFA to platform dashboard, Site Admin platform
+      denial, approval-pending account denial from five administrator workspaces and zero
+      rows across five RLS-protected operational tables, plus existing QR/caller/Owner/admin
+      and tenant-isolation regressions. `pnpm verify` and the Production Cron deferred gate
+      passed with zero active Production Cron definitions.
 
 ## Manual and external pilot gates
 
