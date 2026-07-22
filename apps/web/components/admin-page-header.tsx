@@ -34,6 +34,11 @@ interface AdminNavigationItem {
   label: string;
 }
 
+interface AdminNavigationSection {
+  label: string;
+  items: readonly AdminNavigationItem[];
+}
+
 export async function AdminPageHeader({
   locale,
   localeLabels,
@@ -48,84 +53,125 @@ export async function AdminPageHeader({
     const { membership } = context.decision;
     const isPlatform = getAdminLandingArea(membership.role) === "platform";
     const workspaceHref = `/${locale}/admin/${isPlatform ? "platform" : "dashboard"}`;
-    const navigation: readonly AdminNavigationItem[] = isPlatform
+    const navigationSections: readonly AdminNavigationSection[] = isPlatform
       ? [
           {
-            href: `/${locale}/admin/platform`,
-            icon: <HouseIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.overview"],
+            label: copy["admin.nav.group.overview"],
+            items: [
+              {
+                href: `/${locale}/admin/platform`,
+                icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.overview"],
+              },
+            ],
           },
           {
-            href: `/${locale}/admin/platform/management-companies`,
-            icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.managementCompanies"],
+            label: copy["admin.nav.group.customers"],
+            items: [
+              {
+                href: `/${locale}/admin/platform/management-companies`,
+                icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.managementCompanies"],
+              },
+            ],
           },
           {
-            href: `/${locale}/admin/qr-inventory`,
-            icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.qr"],
-          },
-          {
-            href: `/${locale}/admin/operations`,
-            icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.operations"],
-          },
-          {
-            href: `/${locale}/admin/reports`,
-            icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.reports"],
-          },
-          {
-            href: `/${locale}/admin/platform/revenue`,
-            icon: <CirclesFourIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.revenue"],
+            label: copy["admin.nav.group.service"],
+            items: [
+              {
+                href: `/${locale}/admin/qr-inventory`,
+                icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.qr"],
+              },
+              {
+                href: `/${locale}/admin/operations`,
+                icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.operations"],
+              },
+              {
+                href: `/${locale}/admin/reports`,
+                icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.reports"],
+              },
+              {
+                href: `/${locale}/admin/platform/revenue`,
+                icon: <CirclesFourIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.revenue"],
+              },
+            ],
           },
           ...(membership.role === "SUPER_ADMIN"
             ? [
                 {
-                  href: `/${locale}/admin/accounts`,
-                  icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
-                  label: copy["admin.nav.access"],
+                  label: copy["admin.nav.group.administration"],
+                  items: [
+                    {
+                      href: `/${locale}/admin/accounts`,
+                      icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
+                      label: copy["admin.nav.access"],
+                    },
+                  ],
                 },
               ]
             : []),
         ]
       : [
           {
-            href: `/${locale}/admin/dashboard`,
-            icon: <HouseIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.overview"],
+            label: copy["admin.nav.group.overview"],
+            items: [
+              {
+                href: `/${locale}/admin/dashboard`,
+                icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.overview"],
+              },
+            ],
           },
           {
-            href: `/${locale}/admin/sites`,
-            icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.sites"],
+            label: copy["admin.nav.group.customers"],
+            items: [
+              {
+                href: `/${locale}/admin/sites`,
+                icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.sites"],
+              },
+            ],
           },
           {
-            href: `/${locale}/admin/qr-inventory`,
-            icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.qr"],
-          },
-          {
-            href: `/${locale}/admin/operations`,
-            icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.operations"],
-          },
-          {
-            href: `/${locale}/admin/reports`,
-            icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
-            label: copy["admin.nav.reports"],
+            label: copy["admin.nav.group.service"],
+            items: [
+              {
+                href: `/${locale}/admin/qr-inventory`,
+                icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.qr"],
+              },
+              {
+                href: `/${locale}/admin/operations`,
+                icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.operations"],
+              },
+              {
+                href: `/${locale}/admin/reports`,
+                icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.reports"],
+              },
+            ],
           },
           ...(["MANAGEMENT_ADMIN", "SITE_ADMIN"].includes(membership.role)
             ? [
                 {
-                  href: `/${locale}/admin/accounts`,
-                  icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
-                  label: copy["admin.nav.access"],
+                  label: copy["admin.nav.group.administration"],
+                  items: [
+                    {
+                      href: `/${locale}/admin/accounts`,
+                      icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
+                      label: copy["admin.nav.access"],
+                    },
+                  ],
                 },
               ]
             : []),
         ];
+    const navigation = navigationSections.flatMap((section) => section.items);
     const profileHref = `/${locale}/admin/profile`;
     const isProfile = pathname === profileHref;
     const currentItem =
@@ -151,20 +197,25 @@ export async function AdminPageHeader({
           </div>
 
           <nav aria-label={copy["admin.nav.label"]} className="admin-console-nav">
-            {navigation.map((item) => {
-              const isCurrent = currentItem?.href === item.href;
-              return (
-                <a
-                  aria-current={isCurrent ? "page" : undefined}
-                  className="admin-console-nav__item"
-                  href={item.href}
-                  key={item.href}
-                >
-                  {item.icon}
-                  {item.label}
-                </a>
-              );
-            })}
+            {navigationSections.map((section) => (
+              <section className="admin-console-nav__section" key={section.label}>
+                <p>{section.label}</p>
+                {section.items.map((item) => {
+                  const isCurrent = currentItem?.href === item.href;
+                  return (
+                    <a
+                      aria-current={isCurrent ? "page" : undefined}
+                      className="admin-console-nav__item"
+                      href={item.href}
+                      key={item.href}
+                    >
+                      {item.icon}
+                      {item.label}
+                    </a>
+                  );
+                })}
+              </section>
+            ))}
           </nav>
 
           <a

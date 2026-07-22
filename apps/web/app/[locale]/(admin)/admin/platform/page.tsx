@@ -8,7 +8,6 @@ import { getLocalizedAdminPath } from "../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../auth/page-guard";
 import { createAdminServerClient } from "../../../../../auth/server-client";
 import { AdminDashboardView } from "../../../../../components/admin-dashboard-view";
-import { getAdminRoleLabel, getAdminScopeLabel } from "../../../../../content/admin-copy";
 import { ADMIN_OVERVIEW_COPY } from "../../../../../content/admin-overview-copy";
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
@@ -50,17 +49,6 @@ export default async function PlatformAdminPage({
       <AdminDashboardView
         canApproveAccounts={membership.role === "SUPER_ADMIN"}
         companyPortfolio={companyPortfolio.items}
-        context={{
-          contextLabel: copy["admin.dashboard.context"],
-          contextValue: getAdminScopeLabel(copy, membership.scopeType),
-          roleLabel: getAdminRoleLabel(copy, membership.role),
-          roleTitle: copy["admin.dashboard.role"],
-          securityLabel: copy["admin.dashboard.session"],
-          securityValue:
-            context.mfaLevel === "aal2"
-              ? copy["admin.dashboard.session.aal2"]
-              : copy["admin.dashboard.session.aal1"],
-        }}
         copy={ADMIN_OVERVIEW_COPY[locale]}
         locale={locale}
         localeLabels={{

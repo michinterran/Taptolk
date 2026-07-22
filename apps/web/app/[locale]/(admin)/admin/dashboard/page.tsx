@@ -4,7 +4,6 @@ import { loadOperationsDashboard } from "../../../../../admin/load-operations-da
 import { getLocalizedAdminPath } from "../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../auth/page-guard";
 import { AdminDashboardView } from "../../../../../components/admin-dashboard-view";
-import { getAdminRoleLabel, getAdminScopeLabel } from "../../../../../content/admin-copy";
 import { ADMIN_OVERVIEW_COPY } from "../../../../../content/admin-overview-copy";
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
@@ -21,7 +20,6 @@ export default async function TenantAdminPage({ params }: { params: Promise<{ lo
   }
 
   const copy = getMessages(locale);
-  const { membership } = context.decision;
   const model = await loadOperationsDashboard(context);
   if (!model) {
     redirect(getLocalizedAdminPath(locale, "/login?error=configuration"));
@@ -31,17 +29,6 @@ export default async function TenantAdminPage({ params }: { params: Promise<{ lo
     <main className="admin-dashboard-shell">
       <AdminDashboardView
         canApproveAccounts={false}
-        context={{
-          contextLabel: copy["admin.dashboard.context"],
-          contextValue: getAdminScopeLabel(copy, membership.scopeType),
-          roleLabel: getAdminRoleLabel(copy, membership.role),
-          roleTitle: copy["admin.dashboard.role"],
-          securityLabel: copy["admin.dashboard.session"],
-          securityValue:
-            context.mfaLevel === "aal2"
-              ? copy["admin.dashboard.session.aal2"]
-              : copy["admin.dashboard.session.aal1"],
-        }}
         copy={ADMIN_OVERVIEW_COPY[locale]}
         locale={locale}
         localeLabels={{

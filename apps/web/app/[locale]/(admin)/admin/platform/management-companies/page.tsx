@@ -1,4 +1,4 @@
-import { ManagementCompanyCatalogService } from "@taptolk/application";
+import { ManagementCompanyCatalogService, type OrganizationStatus } from "@taptolk/application";
 import { getAdminLandingArea } from "@taptolk/auth";
 import { roleHasPermission } from "@taptolk/domain";
 import { notFound, redirect } from "next/navigation";
@@ -20,6 +20,11 @@ function readPage(value: string | string[] | undefined): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
+function readCompanyState(value: string | string[] | undefined): OrganizationStatus | undefined {
+  const state = readValue(value);
+  return state === "ACTIVE" || state === "SUSPENDED" || state === "CLOSED" ? state : undefined;
+}
+
 export default async function ManagementCompaniesPage({
   params,
   searchParams,
@@ -29,6 +34,7 @@ export default async function ManagementCompaniesPage({
     error?: string | string[];
     page?: string | string[];
     q?: string | string[];
+    state?: string | string[];
     status?: string | string[];
   }>;
 }) {
@@ -48,6 +54,7 @@ export default async function ManagementCompaniesPage({
 
   const membership = context.decision.membership;
   const search = readValue(query.q);
+  const stateFilter = readCompanyState(query.state);
   const catalog = await new ManagementCompanyCatalogService(
     createSupabaseManagementCompanyCatalogRepository(client),
   ).list({
@@ -58,6 +65,7 @@ export default async function ManagementCompaniesPage({
     },
     page: readPage(query.page),
     ...(search ? { search } : {}),
+    ...(stateFilter ? { status: stateFilter } : {}),
   });
   const copy = getMessages(locale);
   const errorMessages: Readonly<Record<string, string>> = {
@@ -129,6 +137,7 @@ export default async function ManagementCompaniesPage({
         locale={locale}
         portfolioCopy={ADMIN_COMPANY_PORTFOLIO_COPY[locale]}
         search={search}
+        stateFilter={stateFilter}
         statusMessage={status ? statusMessages[status] : undefined}
       />
     </main>

@@ -36,6 +36,7 @@ export interface ManagementCompanyCatalogRepository {
     limit: number;
     offset: number;
     search?: string;
+    status?: OrganizationStatus;
   }): Promise<{ items: readonly ManagementCompanyCatalogItem[]; total: number }>;
   listActiveTenants(): Promise<readonly ManagementCompanyTenantOption[]>;
 }
@@ -47,6 +48,7 @@ export class ManagementCompanyCatalogService {
     actor: AdminAuthorizationContext;
     page?: number;
     search?: string;
+    status?: OrganizationStatus;
   }): Promise<ManagementCompanyCatalogPage> {
     if (input.actor.scope.type !== "PLATFORM") {
       throw new AdminAuthorizationError("OUT_OF_SCOPE");
@@ -62,6 +64,7 @@ export class ManagementCompanyCatalogService {
         limit: MANAGEMENT_COMPANY_PAGE_SIZE,
         offset: (page - 1) * MANAGEMENT_COMPANY_PAGE_SIZE,
         ...(input.search?.trim() ? { search: input.search.trim().slice(0, 100) } : {}),
+        ...(input.status ? { status: input.status } : {}),
       }),
       this.repository.listActiveTenants(),
     ]);

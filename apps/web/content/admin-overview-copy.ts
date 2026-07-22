@@ -52,6 +52,7 @@ export interface AdminOverviewCopy {
   platformLine1: string;
   platformLine2: string;
   scopeNotice: string;
+  refreshData: string;
   seconds: string;
   sentNotifications: string;
   siteCount: string;
@@ -87,7 +88,7 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     actionQr: "QR production and inventory",
     actionQrDescription: "Manage approval, production progress, intake, and assignment.",
     actionSites: "Sites",
-    actionSitesDescription: "Manage the sites available within the approved scope.",
+    actionSitesDescription: "Manage apartments, villas, buildings, and other sites by company.",
     actionReports: "Reports",
     actionReportsDescription: "Review trends, risks, and operating quality by approved scope.",
     actionRevenue: "Revenue management",
@@ -103,9 +104,9 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     company: "Management company",
     contactCount: "Contact requests · 24h",
     contractCapacity: "Vehicle capacity",
-    customerPortfolio: "Customer portfolio",
+    customerPortfolio: "Customer management",
     customerPortfolioDescription:
-      "Contract customers > management companies > managed locations are handled as one operating hierarchy.",
+      "Management companies > sites are handled as one clear operating hierarchy.",
     customerPortfolioTitle: "Customer and contract status at a glance",
     deliveryHealth: "Delivery health",
     deliveryHealthDescription: "Sent, retrying, failed, and missing-cost signals from providers.",
@@ -114,9 +115,9 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     freshAt: "Data refreshed",
     healthyDescription: "There are no unresolved, escalated, failed, or open-review signals.",
     healthyTitle: "No immediate action is required",
-    locationHierarchy: "Location hierarchy",
+    locationHierarchy: "Customer hierarchy",
     locationHierarchyDescription:
-      "Each management company can operate multiple apartments, buildings, villas, or parking locations.",
+      "Each management company can operate multiple apartment, villa, building, or parking sites.",
     operationFlow: "Vehicle-contact flow",
     operationFlowDescription: "Scan, request, owner response, delivery, and review signals.",
     medianResponse: "Median owner response",
@@ -125,11 +126,12 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     overviewDescription: "Live totals from the scope approved for this account.",
     overviewTitle: "Operations at a glance",
     platformDescription:
-      "Monitor service operations and move directly to the customer, site, QR, and access work that needs attention.",
+      "Monitor service operations and move directly to customer management, sites, QR, and access work that needs attention.",
     platformEyebrow: "Taptolk platform operations",
-    platformLine1: "See the service clearly,",
+    platformLine1: "Manage customers and service health at a glance",
     platformLine2: "then act on what matters.",
     scopeNotice: "All figures are limited by the server-approved role and data scope.",
+    refreshData: "Refresh data",
     seconds: "s",
     sentNotifications: "Sent or delivered",
     siteCount: "Operating sites",
@@ -138,7 +140,7 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     tableAction: "Action",
     tableCustomers: "Customers",
     tableHealth: "Health",
-    tableLocations: "Locations",
+    tableLocations: "Sites",
     tableName: "Area",
     tableOpenIssues: "Open issues",
     tableQrActivation: "QR activation",
@@ -149,7 +151,7 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     workspaceDescription:
       "Manage QR inventory and vehicle-contact operations for the sites approved under your company.",
     workspaceEyebrow: "Management company workspace",
-    workspaceLine1: "Run today’s site operations",
+    workspaceLine1: "Manage today’s sites and service health at a glance",
     workspaceLine2: "from one clear workspace.",
   },
   ko: {
@@ -163,8 +165,8 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     actionOperationsDescription: "차량 연락, 알림 전달, 안전 검토와 QR 신호를 확인합니다.",
     actionQr: "QR 제작 관리",
     actionQrDescription: "디자인 선택, 제작 묶음 요청, 승인, 입고와 차량 배정까지 관리합니다.",
-    actionSites: "관리 현장",
-    actionSitesDescription: "아파트, 빌딩, 빌라 등 실제 운영 현장을 관리합니다.",
+    actionSites: "사이트",
+    actionSitesDescription: "관리회사별 아파트, 빌라, 빌딩 등 실제 운영 사이트를 관리합니다.",
     actionReports: "리포트",
     actionReportsDescription: "운영 흐름, 응답 품질, 위험 신호와 QR 성과를 분석합니다.",
     actionRevenue: "매출 관리",
@@ -180,9 +182,9 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     company: "관리회사",
     contactCount: "차량 연락 요청 · 24시간",
     contractCapacity: "계약 차량 용량",
-    customerPortfolio: "고객 포트폴리오",
+    customerPortfolio: "고객관리",
     customerPortfolioDescription:
-      "계약 고객 > 관리회사 > 관리 현장 구조로 운영 범위와 책임을 정리합니다.",
+      "관리회사 > 사이트 구조로 운영 범위와 책임을 명확하게 정리합니다.",
     customerPortfolioTitle: "고객과 계약 상태를 한눈에 관리하세요",
     deliveryHealth: "전송 품질",
     deliveryHealthDescription: "전송·재시도·실패·비용 누락 신호를 함께 봅니다.",
@@ -191,9 +193,9 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     freshAt: "데이터 기준 시각",
     healthyDescription: "미해결 요청, 관리사무소 알림, 전송 실패와 미처리 신고가 없습니다.",
     healthyTitle: "지금 바로 처리할 항목이 없습니다",
-    locationHierarchy: "관리 현장 구조",
+    locationHierarchy: "고객관리 구조",
     locationHierarchyDescription:
-      "하나의 관리회사가 여러 아파트 단지, 빌딩, 빌라, 주차 구역을 운영할 수 있습니다.",
+      "하나의 관리회사가 여러 아파트 단지, 빌라, 빌딩, 주차장 사이트를 운영할 수 있습니다.",
     operationFlow: "차량 연락 흐름",
     operationFlowDescription: "스캔, 요청, 차주 응답, 전송, 신고 상태를 한 흐름으로 봅니다.",
     medianResponse: "차주 응답 중앙값",
@@ -202,20 +204,21 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     overviewDescription: "이 계정에 승인된 범위의 실제 운영 집계를 보여줍니다.",
     overviewTitle: "운영 한눈에 보기",
     platformDescription:
-      "서비스 운영 상태를 확인하고 계약 고객, 관리회사, 관리 현장, QR, 계정 업무 중 필요한 작업으로 바로 이동합니다.",
+      "서비스 운영 상태를 확인하고 고객관리, 사이트, QR, 계정 업무 중 필요한 작업으로 바로 이동합니다.",
     platformEyebrow: "Taptolk 플랫폼 운영",
-    platformLine1: "전체 서비스의 흐름을 보고,",
+    platformLine1: "고객과 서비스 현황을 한눈에 관리하세요",
     platformLine2: "필요한 운영을 바로 처리합니다.",
     scopeNotice: "모든 수치는 서버가 승인한 역할과 데이터 범위 안에서만 집계됩니다.",
+    refreshData: "데이터 새로고침",
     seconds: "초",
     sentNotifications: "전송·도달",
-    siteCount: "운영 현장",
+    siteCount: "사이트",
     statusAttention: "확인 필요",
     statusHealthy: "안정",
     tableAction: "작업",
     tableCustomers: "고객",
     tableHealth: "상태",
-    tableLocations: "현장",
+    tableLocations: "사이트",
     tableName: "운영 영역",
     tableOpenIssues: "미처리",
     tableQrActivation: "QR 활성",
@@ -226,7 +229,7 @@ export const ADMIN_OVERVIEW_COPY: Readonly<Record<AppLocale, AdminOverviewCopy>>
     workspaceDescription:
       "계약 회사에 승인된 관리 현장의 QR 재고와 차량 연락 운영을 한곳에서 관리합니다.",
     workspaceEyebrow: "관리회사 운영 공간",
-    workspaceLine1: "오늘의 관리 현장 운영을,",
+    workspaceLine1: "사이트와 운영 현황을 한눈에 관리하세요",
     workspaceLine2: "한눈에 보고 처리합니다.",
   },
 });

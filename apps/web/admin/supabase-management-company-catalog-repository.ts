@@ -68,7 +68,7 @@ export function createSupabaseManagementCompanyCatalogRepository(
   client: AdminServerClient,
 ): ManagementCompanyCatalogRepository {
   return {
-    async list({ limit, offset, search }) {
+    async list({ limit, offset, search, status }) {
       let query = client
         .from("management_companies")
         .select(
@@ -78,6 +78,9 @@ export function createSupabaseManagementCompanyCatalogRepository(
         .is("deleted_at", null);
       if (search) {
         query = query.ilike("name", `%${search.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`);
+      }
+      if (status) {
+        query = query.eq("status", status);
       }
       const result = await query
         .order("created_at", { ascending: false })

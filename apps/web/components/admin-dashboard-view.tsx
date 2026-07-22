@@ -1,25 +1,23 @@
+import {
+  BuildingsIcon,
+  CarIcon,
+  CheckCircleIcon,
+  MapPinAreaIcon,
+  QrCodeIcon,
+  WarningCircleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import type { ManagementCompanyCatalogItem, OperationsDashboardModel } from "@taptolk/application";
 import { SemanticHeading } from "@taptolk/ui";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { AdminOverviewCopy } from "../content/admin-overview-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
 
 type DashboardVariant = "customer" | "platform";
 
-interface DashboardContext {
-  contextLabel: string;
-  contextValue: string;
-  roleLabel: string;
-  roleTitle: string;
-  securityLabel: string;
-  securityValue: string;
-}
-
 interface AdminDashboardViewProps {
   canApproveAccounts: boolean;
   companyPortfolio?: readonly ManagementCompanyCatalogItem[];
-  context: DashboardContext;
   copy: AdminOverviewCopy;
   locale: AppLocale;
   localeLabels: Readonly<Record<AppLocale, string>>;
@@ -30,10 +28,11 @@ interface AdminDashboardViewProps {
   variant: DashboardVariant;
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function MetricCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <article className="admin-overview-metric">
-      <span>{label}</span>
+      <span className="admin-overview-metric__icon">{icon}</span>
+      <span className="admin-overview-metric__label">{label}</span>
       <strong>{value}</strong>
     </article>
   );
@@ -68,7 +67,6 @@ function BarMeter({
 
 export function AdminDashboardView({
   canApproveAccounts,
-  context,
   copy,
   locale,
   localeLabels,
@@ -83,9 +81,7 @@ export function AdminDashboardView({
   const decimal = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const prefix = `/${locale}/admin`;
   const titleLines =
-    variant === "platform"
-      ? ([copy.platformLine1, copy.platformLine2] as const)
-      : ([copy.workspaceLine1, copy.workspaceLine2] as const);
+    variant === "platform" ? ([copy.platformLine1] as const) : ([copy.workspaceLine1] as const);
   const attentionItems = [
     { count: model.unresolvedCount, label: copy.unresolved },
     { count: model.escalatedCount, label: copy.escalated },
@@ -96,16 +92,6 @@ export function AdminDashboardView({
     model.medianOwnerResponseMs === null
       ? copy.noResponseData
       : `${decimal.format(model.medianOwnerResponseMs / 1_000)}${copy.seconds}`;
-  const metrics = [
-    [copy.siteCount, number.format(model.siteCount)],
-    [copy.activeQr, number.format(model.activeQrCount)],
-    [copy.contactCount, number.format(model.contactCount)],
-    [copy.unresolved, number.format(model.unresolvedCount)],
-    [copy.medianResponse, responseValue],
-    [copy.batches, number.format(model.completedBatchCount)],
-    [copy.sentNotifications, number.format(model.notificationSentCount)],
-    [copy.openReports, number.format(model.openReportCount)],
-  ] as const;
   const totalSignals =
     model.contactCount +
     model.unresolvedCount +
@@ -118,6 +104,76 @@ export function AdminDashboardView({
       model.notificationFailedCount + model.notificationRetryCount,
       Math.max(model.notificationSentCount, 1),
     );
+  const platformVehicleCapacity = companyPortfolio.reduce(
+    (total, company) => total + company.contractVehicleLimit,
+    0,
+  );
+  const metrics =
+    variant === "platform"
+      ? [
+          {
+            icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
+            label: copy.company,
+            value: number.format(companyPortfolio.length),
+          },
+          {
+            icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+            label: copy.siteCount,
+            value: number.format(model.siteCount),
+          },
+          {
+            icon: <CarIcon aria-hidden="true" weight="duotone" />,
+            label: copy.contractCapacity,
+            value: number.format(platformVehicleCapacity),
+          },
+          {
+            icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+            label: copy.activeQr,
+            value: number.format(model.activeQrCount),
+          },
+          {
+            icon: <WarningCircleIcon aria-hidden="true" weight="duotone" />,
+            label: copy.unresolved,
+            value: number.format(model.unresolvedCount),
+          },
+          {
+            icon: <CheckCircleIcon aria-hidden="true" weight="duotone" />,
+            label: copy.deliveryHealth,
+            value: `${deliverySuccessRate}%`,
+          },
+        ]
+      : [
+          {
+            icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+            label: copy.siteCount,
+            value: number.format(model.siteCount),
+          },
+          {
+            icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+            label: copy.activeQr,
+            value: number.format(model.activeQrCount),
+          },
+          {
+            icon: <CarIcon aria-hidden="true" weight="duotone" />,
+            label: copy.contactCount,
+            value: number.format(model.contactCount),
+          },
+          {
+            icon: <WarningCircleIcon aria-hidden="true" weight="duotone" />,
+            label: copy.unresolved,
+            value: number.format(model.unresolvedCount),
+          },
+          {
+            icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
+            label: copy.batches,
+            value: number.format(model.completedBatchCount),
+          },
+          {
+            icon: <CheckCircleIcon aria-hidden="true" weight="duotone" />,
+            label: copy.medianResponse,
+            value: responseValue,
+          },
+        ];
   const customerRows = model.sitePerformance.map((site) => ({
     activeQr: site.activeQrCount,
     contactCount: site.contactCount,
@@ -139,28 +195,14 @@ export function AdminDashboardView({
 
       <header className="admin-compact-heading admin-overview-heading">
         <div>
-          <p className="eyebrow">
-            {variant === "platform" ? copy.platformEyebrow : copy.workspaceEyebrow}
-          </p>
           <SemanticHeading className="admin-compact-title" lines={titleLines} />
           <p className="admin-overview-description">
             {variant === "platform" ? copy.platformDescription : copy.workspaceDescription}
           </p>
         </div>
-        <dl className="admin-heading-context">
-          <div>
-            <dt>{context.roleTitle}</dt>
-            <dd>{context.roleLabel}</dd>
-          </div>
-          <div>
-            <dt>{context.contextLabel}</dt>
-            <dd>{context.contextValue}</dd>
-          </div>
-          <div>
-            <dt>{context.securityLabel}</dt>
-            <dd>{context.securityValue}</dd>
-          </div>
-        </dl>
+        <a className="admin-dashboard-refresh" href={pathname}>
+          {copy.refreshData}
+        </a>
       </header>
 
       <section className="admin-overview-section" aria-labelledby="operations-overview-title">
@@ -180,8 +222,8 @@ export function AdminDashboardView({
           </p>
         </header>
         <div className="admin-overview-metrics">
-          {metrics.map(([label, value]) => (
-            <MetricCard key={label} label={label} value={value} />
+          {metrics.map((metric) => (
+            <MetricCard key={metric.label} {...metric} />
           ))}
         </div>
         <p className="admin-overview-scope-note">{copy.scopeNotice}</p>
@@ -202,7 +244,6 @@ export function AdminDashboardView({
                 <thead>
                   <tr>
                     <th scope="col">{copy.company}</th>
-                    <th scope="col">{copy.tenant}</th>
                     <th scope="col">{copy.tableLocations}</th>
                     <th scope="col">{copy.contractCapacity}</th>
                     <th scope="col">{copy.activeQr}</th>
@@ -216,8 +257,9 @@ export function AdminDashboardView({
                     const rate = percent(company.activeQrCount, company.contractVehicleLimit);
                     return (
                       <tr key={company.id}>
-                        <th scope="row">{company.name}</th>
-                        <td>{company.tenantName}</td>
+                        <th scope="row" title={company.name}>
+                          {company.name}
+                        </th>
                         <td>{number.format(company.siteCount)}</td>
                         <td>{number.format(company.contractVehicleLimit)}</td>
                         <td>{number.format(company.activeQrCount)}</td>
@@ -354,9 +396,7 @@ export function AdminDashboardView({
         <article className="admin-command-panel">
           <p className="eyebrow">{copy.locationHierarchy}</p>
           <h2>{copy.locationHierarchyDescription}</h2>
-          <div className="admin-command-hierarchy" aria-hidden="true">
-            <span>{copy.actionCustomers}</span>
-            <i />
+          <div className="admin-command-hierarchy admin-command-hierarchy--two" aria-hidden="true">
             <span>{copy.actionManagementCompanies}</span>
             <i />
             <span>{copy.actionSites}</span>
