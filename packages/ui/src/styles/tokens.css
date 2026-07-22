@@ -1,4 +1,5 @@
 :root {
+  /* Brand + core palette (existing — do not rename; admin CSS depends on these) */
   --tt-color-brand: #8066ff;
   --tt-color-brand-strong: #5c42da;
   --tt-color-logo-purple: #8a6eff;
@@ -13,10 +14,46 @@
   --tt-color-warning: #d98a00;
   --tt-color-danger: #d64553;
   --tt-color-focus: #2b59ff;
+
+  /* Surface + border levels (new) */
+  --tt-color-surface-subtle: #f2f4fa;
+  --tt-color-surface-muted: #eaedf6;
+  --tt-color-border-strong: #c9cfdd;
+
+  /* Informational accent (new) */
+  --tt-color-info: #2f6bff;
+
+  /* State tint pairs for badges / pills / tiles — bg + accessible foreground (new) */
+  --tt-color-brand-surface: #eeeaff;
+  --tt-color-brand-fg: #5540c9;
+  --tt-color-success-surface: #e4f5ed;
+  --tt-color-success-fg: #0f7a4f;
+  --tt-color-warning-surface: #fdf0d9;
+  --tt-color-warning-fg: #8f5c00;
+  --tt-color-danger-surface: #fce4e7;
+  --tt-color-danger-fg: #b3283a;
+  --tt-color-info-surface: #e6edff;
+  --tt-color-info-fg: #2a4fd6;
+  --tt-color-neutral-surface: #eef0f6;
+  --tt-color-neutral-fg: #4a5468;
+
+  /* Radius (existing sm/md/lg + new) */
+  --tt-radius-xs: 0.5rem;
   --tt-radius-sm: 0.75rem;
   --tt-radius-md: 1.25rem;
   --tt-radius-lg: 2rem;
+  --tt-radius-pill: 999px;
+
+  /* Elevation (existing card + new sm/md) */
+  --tt-shadow-sm: 0 1px 2px color-mix(in srgb, var(--tt-color-text) 6%, transparent),
+    0 1px 3px color-mix(in srgb, var(--tt-color-text) 4%, transparent);
+  --tt-shadow-md: 0 4px 14px color-mix(in srgb, var(--tt-color-text) 9%, transparent);
   --tt-shadow-card: 0 1rem 3rem color-mix(in srgb, var(--tt-color-text) 8%, transparent);
+
+  /* Focus ring (new) */
+  --tt-focus-ring: 0 0 0 3px color-mix(in srgb, var(--tt-color-focus) 35%, transparent);
+
+  /* Spacing scale (existing 1-7 + new 8) */
   --tt-space-1: 0.25rem;
   --tt-space-2: 0.5rem;
   --tt-space-3: 0.75rem;
@@ -24,6 +61,30 @@
   --tt-space-5: 1.5rem;
   --tt-space-6: 2rem;
   --tt-space-7: 3rem;
+  --tt-space-8: 4rem;
+
+  /* Type scale (new) */
+  --tt-font-size-xs: 0.75rem;
+  --tt-font-size-sm: 0.8125rem;
+  --tt-font-size-base: 0.875rem;
+  --tt-font-size-md: 1rem;
+  --tt-font-size-lg: 1.25rem;
+  --tt-font-size-xl: 1.625rem;
+  --tt-font-size-2xl: 2rem;
+  --tt-font-size-3xl: 2.5rem;
+  --tt-font-weight-regular: 400;
+  --tt-font-weight-medium: 500;
+  --tt-font-weight-semibold: 600;
+  --tt-font-weight-bold: 700;
+
+  /* Line heights (existing heading/body + new tight) */
+  --tt-line-tight: 1.1;
   --tt-line-heading: 1.18;
   --tt-line-body: 1.72;
+
+  /* Z-index scale (new) */
+  --tt-z-sidebar: 20;
+  --tt-z-dropdown: 40;
+  --tt-z-modal: 60;
+  --tt-z-toast: 80;
 }
