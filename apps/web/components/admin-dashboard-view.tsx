@@ -35,9 +35,13 @@ interface AdminDashboardViewProps {
   variant: DashboardVariant;
 }
 
-function percent(part: number, total: number): number {
+const EMPTY_VALUE = "—";
+
+/** Returns null when there is no basis to divide by, so callers render an em dash
+    rather than a manufactured 0% or 100%. */
+function percent(part: number, total: number): number | null {
   if (total <= 0) {
-    return 0;
+    return null;
   }
   return Math.max(0, Math.min(100, Math.round((part / total) * 100)));
 }
@@ -75,12 +79,11 @@ export function AdminDashboardView({
     model.escalatedCount +
     model.notificationFailedCount +
     model.openReportCount;
-  const deliverySuccessRate =
-    100 -
-    percent(
-      model.notificationFailedCount + model.notificationRetryCount,
-      Math.max(model.notificationSentCount, 1),
-    );
+  const deliveryFailureRate = percent(
+    model.notificationFailedCount + model.notificationRetryCount,
+    model.notificationSentCount,
+  );
+  const deliverySuccessRate = deliveryFailureRate === null ? null : 100 - deliveryFailureRate;
   const platformVehicleCapacity = companyPortfolio.reduce(
     (total, company) => total + company.contractVehicleLimit,
     0,
@@ -116,7 +119,7 @@ export function AdminDashboardView({
           {
             icon: <CheckCircleIcon aria-hidden="true" weight="duotone" />,
             label: copy.deliveryHealth,
-            value: `${deliverySuccessRate}%`,
+            value: deliverySuccessRate === null ? EMPTY_VALUE : `${deliverySuccessRate}%`,
           },
         ]
       : [
@@ -154,7 +157,6 @@ export function AdminDashboardView({
   const customerRows = model.sitePerformance.map((site) => ({
     activeQr: site.activeQrCount,
     contactCount: site.contactCount,
-    health: 100 - percent(site.unresolvedCount, Math.max(site.contactCount, 1)),
     href: `${prefix}/sites/${site.siteId}`,
     name: site.siteName,
     unresolvedCount: site.unresolvedCount,
@@ -186,6 +188,9 @@ export function AdminDashboardView({
     {
       cell: (company: ManagementCompanyCatalogItem) => {
         const rate = percent(company.activeQrCount, company.contractVehicleLimit);
+        if (rate === null) {
+          return EMPTY_VALUE;
+        }
         return (
           <div className="admin-command-meter">
             <div>
@@ -239,22 +244,6 @@ export function AdminDashboardView({
       cell: (row: (typeof customerRows)[number]) => number.format(row.unresolvedCount),
       header: copy.tableOpenIssues,
       key: "openIssues",
-    },
-    {
-      cell: (row: (typeof customerRows)[number]) => (
-        <div className="admin-command-meter">
-          <div>
-            <span>{copy.statusHealthy}</span>
-            <strong>{row.health}%</strong>
-          </div>
-          <MeterBar
-            tone={row.health >= 80 ? "success" : row.health >= 50 ? "warning" : "danger"}
-            value={row.health}
-          />
-        </div>
-      ),
-      header: copy.tableHealth,
-      key: "health",
     },
     {
       cell: (row: (typeof customerRows)[number]) => <a href={row.href}>{copy.viewDetails}</a>,
@@ -362,14 +351,14 @@ export function AdminDashboardView({
           <p className="eyebrow">{copy.operationFlow}</p>
           <p>{copy.operationFlowDescription}</p>
           <div className="admin-command-bars">
-            <MeterBar value={percent(model.contactCount, Math.max(model.contactCount, 1))} />
+            <MeterBar value={percent(model.unresolvedCount, model.contactCount) ?? 0} />
             <MeterBar
               tone="warning"
-              value={percent(model.unresolvedCount, Math.max(model.contactCount, 1))}
+              value={percent(model.escalatedCount, model.contactCount) ?? 0}
             />
             <MeterBar
               tone="danger"
-              value={percent(model.escalatedCount, Math.max(model.contactCount, 1))}
+              value={percent(model.notificationFailedCount, model.notificationSentCount) ?? 0}
             />
           </div>
         </SideCard>
@@ -377,18 +366,12 @@ export function AdminDashboardView({
           <p className="eyebrow">{copy.deliveryHealth}</p>
           <p>{copy.deliveryHealthDescription}</p>
           <div className="admin-command-bars">
-            <MeterBar tone="success" value={deliverySuccessRate} />
+            <MeterBar tone="success" value={deliverySuccessRate ?? 0} />
             <MeterBar
               tone="danger"
-              value={percent(
-                model.notificationFailedCount,
-                Math.max(model.notificationSentCount, 1),
-              )}
+              value={percent(model.notificationFailedCount, model.notificationSentCount) ?? 0}
             />
-            <MeterBar
-              tone="warning"
-              value={percent(model.openReportCount, Math.max(totalSignals, 1))}
-            />
+            <MeterBar tone="warning" value={percent(model.openReportCount, totalSignals) ?? 0} />
           </div>
         </SideCard>
         <SideCard className="admin-command-panel" title={copy.locationHierarchy}>

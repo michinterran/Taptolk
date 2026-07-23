@@ -131,7 +131,7 @@ export function AdminAnalyticsView({
         <StatTile
           icon={<QrCode aria-hidden="true" size={22} />}
           label={copy.activeQr}
-          value={`${percent(model.activeQrCount, Math.max(model.activeQrCount + model.siteCount, 1))}%`}
+          value={number.format(model.activeQrCount)}
         />
       </StatStrip>
 
