@@ -45,6 +45,15 @@
 | `console-pages.html` | 목록/관리 화면들 |
 | `console-detail.html` | 상세 화면 |
 | `sticker-previews/*.png` | 템플릿 선택 카드에 쓰는 실제 렌더 결과 |
+| `pwa/01-caller-compose.png` | **PWA** — 스캔 직후 호출자가 상황을 고르고 메시지를 보내는 화면 |
+| `pwa/02-caller-sent-waiting.png` | **PWA** — 전달 완료, 차주 확인 대기 |
+| `pwa/03-owner-reply.png` | **PWA** — 차주가 받은 메시지에 응답 |
+| `pwa/04-caller-response-received.png` | **PWA** — 차주 응답 도착, 호출 종료 |
+| `pwa/sticker-physical.png` | 실물 스티커 |
+
+**PWA 공통**: 상단 taptolk 로고, 흰 카드 스택, 선택지는 아이콘 + 한 줄, 가장 많이 쓰는
+선택지에 브랜드 틴트, 하단 primary 버튼 1개(로고 마크 + 라벨),
+하단 탭 `MESSAGES · ALERT · HISTORY · SETTINGS`. **차량번호는 브랜드색 대형 수치.**
 
 정본은 **배포되지 않는 경로**에 둔다. `apps/web/public/`에 프로토타입을 두지 않는다.
 
