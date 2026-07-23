@@ -4416,9 +4416,9 @@ h3,
 
 .admin-report-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--tt-space-5);
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-bottom: 1rem;
+  margin-bottom: var(--tt-space-5);
 }
 
 .admin-report-section,
@@ -4426,7 +4426,8 @@ h3,
   background: var(--tt-color-surface);
   border: 1px solid var(--tt-color-border);
   border-radius: var(--tt-radius-md);
-  padding: 1rem;
+  box-shadow: var(--tt-shadow-sm);
+  padding: var(--tt-space-5);
 }
 
 .admin-report-section h2,
@@ -4442,18 +4443,21 @@ h3,
   min-height: 2.3rem;
 }
 
-/* One bordered group divided by hairlines, not three boxes inside a card. */
+/* Figures sit directly in the card, separated by rules — no inner border box. */
 .admin-report-section dl {
-  border: 1px solid var(--tt-color-border);
-  border-radius: var(--tt-radius-sm);
+  border-top: 1px solid var(--tt-color-border);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 1rem 0 0;
-  overflow: hidden;
+  margin: var(--tt-space-4) 0 0;
+  padding-top: var(--tt-space-4);
 }
 
 .admin-report-section dl div {
-  padding: 0.75rem;
+  padding: 0 var(--tt-space-3);
+}
+
+.admin-report-section dl div:first-child {
+  padding-left: 0;
 }
 
 .admin-report-section dl div + div {
