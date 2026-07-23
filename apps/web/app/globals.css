@@ -6708,6 +6708,13 @@ h3,
 
 /* Shell ---------------------------------------------------------------------- */
 
+/* The marketing grid belongs to the landing page. The canon puts the mobile card
+   stack on a plain near-white ground, so the decoration is off wherever the
+   mobile shell is on screen. */
+body:has(.tt-m-shell)::before {
+  display: none;
+}
+
 .tt-m-shell {
   background: var(--tt-m-background);
   display: flex;
@@ -7158,6 +7165,11 @@ h3,
   font-size: var(--tt-m-meta-size);
   gap: var(--tt-space-2);
   margin: 0;
+}
+
+.tt-m-notice--center {
+  justify-content: center;
+  text-align: center;
 }
 
 .tt-m-notice--danger {

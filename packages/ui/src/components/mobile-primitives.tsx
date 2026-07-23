@@ -371,13 +371,25 @@ export function MobileEmptyState({
 }
 
 export type MobileNoticeProps = HTMLAttributes<HTMLParagraphElement> & {
+  center?: boolean;
   tone?: "muted" | "danger";
 };
 
-export function MobileNotice({ children, className, tone = "muted", ...props }: MobileNoticeProps) {
+export function MobileNotice({
+  center,
+  children,
+  className,
+  tone = "muted",
+  ...props
+}: MobileNoticeProps) {
   return (
     <p
-      className={cx("tt-m-notice", tone === "danger" && "tt-m-notice--danger", className)}
+      className={cx(
+        "tt-m-notice",
+        center && "tt-m-notice--center",
+        tone === "danger" && "tt-m-notice--danger",
+        className,
+      )}
       role={tone === "danger" ? "alert" : undefined}
       {...props}
     >
