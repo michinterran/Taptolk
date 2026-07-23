@@ -144,6 +144,64 @@ padding이 `0.85rem`/`1rem`/`1.1rem`/`1.25rem`, radius가 `0.8rem`/`1rem`/`2rem`
 - 배경: 이전 정의가 `3rem`/`750`/`brand-strong`/그림자 없음이라 주변 카드보다 과하게 무거웠다.
   개별 화면이 아니라 전역 정의가 어긋나 있던 문제였다.
 
+## 5.2 테이블 · 타이포 · 사이드바 (2026-07-23 확정 — 레퍼런스1 실측)
+
+레퍼런스1(1487 CSS px)에서 픽셀 실측한 값이다. 이전에는 테이블 정의가 3개로 갈라져
+행 padding이 `0.55`/`0.8`/`1rem`, 헤더 굵기가 `850`/`900`, 헤더 크기가
+`0.72`/`0.74`/`0.78rem`이었다.
+
+### 테이블
+
+| 토큰 | 값 | 실측 근거 |
+|---|---|---|
+| `--tt-table-row-min-height` | `3rem` | 행 48px |
+| `--tt-table-header-min-height` | `2.375rem` | 헤더 밴드 38px |
+| `--tt-table-cell-padding-block` / `-inline` | `0.7rem` / `1rem` | 2줄 셀이 48px에 맞음 |
+| `--tt-table-font-size` | `0.8125rem` | 본문 자간 높이 12px |
+| `--tt-table-header-font-size` | `0.8125rem` | **헤더가 본문과 같은 크기** |
+| `--tt-table-header-font-weight` | `600` | |
+| `--tt-table-header-transform` | `none` | **대문자 변환 없음** |
+| `--tt-table-header-surface` | `#f7f8fa` | 헤더 밴드 색 |
+| `--tt-table-divider-color` | `#f0f1f4` | **카드 테두리보다 옅다** |
+| `--tt-table-meta-font-size` | `0.6875rem` | 셀 안 보조 줄 |
+
+레퍼런스의 테이블 헤더는 **축소된 대문자 캡션이 아니다.** 본문 크기·muted·semibold이고
+옅은 밴드 위에 놓인다. 한국어는 대문자가 없으므로 `text-transform: uppercase`와
+넓은 `letter-spacing`은 자간 리듬만 망가뜨린다.
+
+### 타이포
+
+| 토큰 | 값 | 실측 |
+|---|---|---|
+| `--tt-heading-1-size` | `1.625rem` | h1 26px |
+| `--tt-heading-2-size` | `1.0625rem` | 패널 제목 17px |
+| `--tt-heading-3-size` | `0.9375rem` | 카드 제목 15px |
+| `--tt-label-size` / `-weight` | `0.75rem` / `600` | |
+| `--tt-stat-value-size` | `2.125rem` | 지표 숫자 |
+| `--tt-numeric-font-variant` | `tabular-nums` | 열 정렬·카운터 흔들림 방지 |
+
+수치(`dd`·`time`·`data`·지표 값)는 **전부 tabular numerals**다.
+
+### 사이드바
+
+| 토큰 | 값 | 실측 |
+|---|---|---|
+| `--tt-sidebar-width` | `12.875rem` | 레일 206px |
+| `--tt-sidebar-item-height` | `2.5rem` | 항목 41px |
+| `--tt-sidebar-item-gap` | `0.625rem` | 항목 pitch 50px |
+| `--tt-sidebar-padding-inline` | `0.625rem` | 알약 좌 inset 9px |
+| `--tt-sidebar-item-active-surface` | brand 8% on white | `#f4f2fd` |
+
+**활성 항목에 왼쪽 inset 바가 없다.** 이전 CSS의 `box-shadow: inset 2px 0 0`은
+레퍼런스에 없는 요소였고 제거했다.
+
+### 제작 추적 보드
+
+`packages/domain/src/qr-batch-phase-policy.ts`가 20개 상태를 4국면
+(생성·인쇄·배송·배부)으로 배치한다. **컴포넌트는 이 매핑을 다시 쓰지 않는다.**
+`CANCELLED`·`FAILED`는 국면이 아니라 종료 결과이므로 레인에 넣지 않는다.
+알 수 없는 상태는 버리지 않고 별도 그룹으로 보여준다.
+
 ## 6. 비협상 제약 (요약, 상세는 AGENTS.md)
 
 `UI→Route Handler→Application Service→Domain Policy→Repository→PostgreSQL`. 중앙 RBAC + RLS 둘 다
