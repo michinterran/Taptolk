@@ -273,8 +273,7 @@ export function AdminDashboardView({
         lines={titleLines}
       />
 
-      <SideCard className="admin-overview-section" title={copy.overviewTitle}>
-        <p>{copy.overviewDescription}</p>
+      <section aria-label={copy.overviewTitle} className="admin-overview-section">
         <p className="admin-overview-freshness">
           {copy.freshAt}:{" "}
           <time dateTime={model.freshAt}>
@@ -290,14 +289,13 @@ export function AdminDashboardView({
           ))}
         </StatStrip>
         <p className="admin-overview-scope-note">{copy.scopeNotice}</p>
-      </SideCard>
+      </section>
 
       <section className="admin-command-grid" aria-labelledby="portfolio-title">
         <SideCard
           className="admin-command-panel admin-command-panel--wide"
           title={copy.customerPortfolioTitle}
         >
-          <p className="eyebrow">{copy.customerPortfolio}</p>
           <p>{copy.customerPortfolioDescription}</p>
           {variant === "platform" ? (
             <DataTable
@@ -318,7 +316,6 @@ export function AdminDashboardView({
           className="admin-command-panel admin-command-panel--queue"
           title={copy.approvalQueue}
         >
-          <p className="eyebrow">{copy.actionsTitle}</p>
           <div className="admin-command-queue">
             {attentionItems.length > 0 ? (
               attentionItems.map((item) => (
@@ -348,7 +345,6 @@ export function AdminDashboardView({
         aria-label={copy.actionReports}
       >
         <SideCard className="admin-command-panel" title={copy.operationFlow}>
-          <p className="eyebrow">{copy.operationFlow}</p>
           <p>{copy.operationFlowDescription}</p>
           <div className="admin-command-bars">
             <MeterBar value={percent(model.unresolvedCount, model.contactCount) ?? 0} />
@@ -363,7 +359,6 @@ export function AdminDashboardView({
           </div>
         </SideCard>
         <SideCard className="admin-command-panel" title={copy.deliveryHealth}>
-          <p className="eyebrow">{copy.deliveryHealth}</p>
           <p>{copy.deliveryHealthDescription}</p>
           <div className="admin-command-bars">
             <MeterBar tone="success" value={deliverySuccessRate ?? 0} />
@@ -375,7 +370,6 @@ export function AdminDashboardView({
           </div>
         </SideCard>
         <SideCard className="admin-command-panel" title={copy.locationHierarchy}>
-          <p className="eyebrow">{copy.locationHierarchy}</p>
           <p>{copy.locationHierarchyDescription}</p>
           <div className="admin-command-hierarchy admin-command-hierarchy--two" aria-hidden="true">
             <span>{copy.actionManagementCompanies}</span>
