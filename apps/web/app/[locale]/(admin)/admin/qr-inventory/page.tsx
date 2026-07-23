@@ -37,6 +37,7 @@ export default async function QrInventoryPage({
   params: Promise<{ locale: string }>;
   searchParams: Promise<{
     error?: string | string[];
+    site?: string | string[];
     status?: string | string[];
     step?: string | string[];
   }>;
@@ -114,6 +115,7 @@ export default async function QrInventoryPage({
   const error = readValue(query.error);
   const status = readValue(query.status);
   const step = resolveQrWizardStep(readValue(query.step));
+  const selectedSiteId = readValue(query.site);
   const isPlatform = getAdminLandingArea(membership.role) === "platform";
 
   return (
@@ -130,6 +132,7 @@ export default async function QrInventoryPage({
         canOperateSample={roleHasPermission(membership.role, "qr-batch:sample-approve")}
         canRequestBatch={roleHasPermission(membership.role, "qr-batch:request")}
         canonicalQrHostReady={Boolean(environment.PUBLIC_QR_BASE_URL)}
+        selectedSiteId={selectedSiteId}
         copy={{
           actions: copy["admin.qr.actions"],
           approvalsCount: copy["admin.qr.approvals.count"],

@@ -155,6 +155,8 @@ interface QrInventorySampleViewProps {
   canApproveDesign: boolean;
   canApproveFinalGeneration: boolean;
   canonicalQrHostReady: boolean;
+  /** Site chosen on step one and carried in the query, so the flow keeps one page. */
+  selectedSiteId?: string | undefined;
   canArchiveDesign: boolean;
   canCreateDesign: boolean;
   canOperateSample: boolean;
@@ -376,15 +378,15 @@ function SampleApprovalCard({
     return null;
   }
   return (
-    <article className="admin-approval-card">
-      <header className="admin-approval-card__header">
+    <article className="qr-review-card">
+      <header className="qr-track-batch__header">
         <div>
-          <span className="admin-approval-card__label">{batch.batchCode}</span>
+          <span className="qr-track-batch__code">{batch.batchCode}</span>
           <h3>{batch.siteName}</h3>
         </div>
         <StatusPill tone="warning">{copy.sampleReady}</StatusPill>
       </header>
-      <dl className="admin-approval-meta">
+      <dl className="qr-spec">
         <div>
           <dt>{copy.batchQuantity}</dt>
           <dd>{batch.requestedQuantity.toLocaleString(locale === "ko" ? "ko-KR" : "en")}</dd>
@@ -400,7 +402,7 @@ function SampleApprovalCard({
           </dd>
         </div>
       </dl>
-      <form action={approveQrBatchSample} className="admin-approval-form">
+      <form action={approveQrBatchSample} className="qr-review-card__form">
         <BatchFields batch={batch} copy={copy} locale={locale} />
         <input aria-label={copy.decode} name="decodePassed" type="hidden" value="on" />
         <input aria-label={copy.quietZone} name="quietZonePassed" type="hidden" value="on" />
@@ -446,17 +448,17 @@ function BatchCard({
           : copy.batchStatusLabels[batch.status];
 
   return (
-    <article className="admin-approval-card">
-      <header className="admin-approval-card__header">
+    <article className="qr-review-card">
+      <header className="qr-track-batch__header">
         <div>
-          <span className="admin-approval-card__label">{batch.batchCode}</span>
+          <span className="qr-track-batch__code">{batch.batchCode}</span>
           <h3>{batch.siteName}</h3>
         </div>
         <StatusPill tone={getQrBatchStatusTone(batch.status)}>
           {copy.batchStatusLabels[batch.status]}
         </StatusPill>
       </header>
-      <dl className="admin-approval-meta">
+      <dl className="qr-spec">
         <div>
           <dt>{copy.batchQuantity}</dt>
           <dd>{batch.requestedQuantity.toLocaleString(locale === "ko" ? "ko-KR" : "en")}</dd>
@@ -498,7 +500,7 @@ function BatchCard({
           </figure>
         </div>
       ) : null}
-      <div className="admin-approval-form">
+      <div className="qr-review-card__form">
         <p className="admin-catalog-read-only">{waiting}</p>
       </div>
       {canAttach ? (
@@ -586,17 +588,17 @@ function FinalGenerationApprovalCard({
   templateCode: string;
 }) {
   return (
-    <article className="admin-approval-card">
-      <header className="admin-approval-card__header">
+    <article className="qr-review-card">
+      <header className="qr-track-batch__header">
         <div>
-          <span className="admin-approval-card__label">{batch.batchCode}</span>
+          <span className="qr-track-batch__code">{batch.batchCode}</span>
           <h3>{batch.siteName}</h3>
         </div>
         <StatusPill tone={getQrBatchStatusTone(batch.status)}>
           {copy.batchStatusLabels[batch.status]}
         </StatusPill>
       </header>
-      <dl className="admin-approval-meta">
+      <dl className="qr-spec">
         <div>
           <dt>{copy.batchQuantity}</dt>
           <dd>{batch.requestedQuantity.toLocaleString(locale === "ko" ? "ko-KR" : "en")}</dd>
@@ -612,7 +614,7 @@ function FinalGenerationApprovalCard({
           </dd>
         </div>
       </dl>
-      <form action={approveQrBatchFinalGeneration} className="admin-approval-form">
+      <form action={approveQrBatchFinalGeneration} className="qr-review-card__form">
         <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
         <ReasonField copy={copy} id={`final-approve-${batch.id}`} />
         <button
@@ -631,6 +633,7 @@ export function QrInventorySampleView({
   canApproveDesign,
   canApproveFinalGeneration,
   canonicalQrHostReady,
+  selectedSiteId,
   canArchiveDesign,
   canCreateDesign,
   canOperateSample,
@@ -645,6 +648,7 @@ export function QrInventorySampleView({
   step,
   workflowCopy,
 }: QrInventorySampleViewProps) {
+  const selectedSite = model.siteOptions.find((site) => site.id === selectedSiteId);
   const stepIndex = QR_WIZARD_STEPS.indexOf(step);
   const previousStep = stepIndex > 0 ? QR_WIZARD_STEPS[stepIndex - 1] : undefined;
   const nextStep =
@@ -699,34 +703,60 @@ export function QrInventorySampleView({
         steps={workflowCopy.steps}
       />
 
-      {step === "design" && canCreateDesign ? (
-        <section aria-labelledby="qr-design-title" className="qr-order">
-          <div className="qr-order__panel">
-            <header className="qr-order__head">
-              <h2 id="qr-design-title">{copy.designCreateTitle}</h2>
-              <p>{copy.designCreateDescription}</p>
-            </header>
-            {model.siteOptions.length > 0 ? (
-              <form action={createStickerDesignVersion} className="qr-order__form">
-                <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
-                <label className="admin-field" htmlFor="design-site">
-                  <span>{copy.site}</span>
-                  <select id="design-site" name="siteScope" required>
-                    {model.siteOptions.map((site) => (
-                      <option
-                        key={site.id}
-                        value={`${site.tenantId}|${site.managementCompanyId}|${site.id}|${site.version}|${site.status}`}
-                      >
-                        {site.tenantName} / {site.managementCompanyName} / {site.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+      {step === "site" ? (
+        <section aria-labelledby="qr-site-title" className="qr-wizard__panel">
+          <h2 id="qr-site-title">{workflowCopy.steps[0]?.title}</h2>
+          <p>{workflowCopy.steps[0]?.description}</p>
+          {model.siteOptions.length > 0 ? (
+            <div className="qr-choice-rows">
+              {model.siteOptions.map((site) => (
+                <a
+                  aria-current={site.id === selectedSiteId ? "true" : undefined}
+                  className="qr-choice-rows__link"
+                  href={`${getQrWizardStepHref(locale, "design")}&site=${encodeURIComponent(site.id)}`}
+                  key={site.id}
+                >
+                  <span className="qr-choice-rows__meta">
+                    <strong>{site.name}</strong>
+                    <small>
+                      {site.tenantName} · {site.managementCompanyName}
+                    </small>
+                  </span>
+                  <StatusPill tone="info">{copy.site}</StatusPill>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.noSite}</p>
+          )}
+        </section>
+      ) : null}
 
-                <fieldset className="qr-order__templates">
+      {step === "design" && canCreateDesign ? (
+        <section aria-labelledby="qr-design-title" className="qr-wizard__columns">
+          <div className="qr-wizard__panel">
+            <h2 id="qr-design-title">{copy.designCreateTitle}</h2>
+            <p>{copy.designCreateDescription}</p>
+            {selectedSite ? (
+              <form action={createStickerDesignVersion} className="qr-design-form">
+                <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+                <input
+                  id="design-site-scope"
+                  name="siteScope"
+                  type="hidden"
+                  value={`${selectedSite.tenantId}|${selectedSite.managementCompanyId}|${selectedSite.id}|${selectedSite.version}|${selectedSite.status}`}
+                />
+
+                <p className="qr-note qr-note--ok">
+                  <span>
+                    {copy.site} · {selectedSite.name} ({selectedSite.managementCompanyName})
+                  </span>
+                </p>
+
+                <fieldset className="qr-choice-cards">
                   <legend>{workflowCopy.templateLegend}</legend>
                   {STICKER_TEMPLATE_CODES.map((templateCode, index) => (
-                    <label className="qr-order__tpl" key={templateCode}>
+                    <label key={templateCode}>
                       <input
                         aria-label={workflowCopy.templateLabels[templateCode]}
                         defaultChecked={index === 0}
@@ -735,53 +765,80 @@ export function QrInventorySampleView({
                         type="radio"
                         value={templateCode}
                       />
-                      <span className="qr-order__tpl-art">
-                        {/* biome-ignore lint/performance/noImgElement: protected route returns a generated production renderer preview */}
-                        <img
-                          alt={`${workflowCopy.templateLabels[templateCode]} · ${workflowCopy.previewAlt}`}
-                          src={`/api/admin/qr-preview?template=${templateCode}`}
-                        />
-                      </span>
+                      {/* biome-ignore lint/performance/noImgElement: protected route returns a generated production renderer preview */}
+                      <img
+                        alt={`${workflowCopy.templateLabels[templateCode]} · ${workflowCopy.previewAlt}`}
+                        src={`/api/admin/qr-preview?template=${templateCode}`}
+                      />
                       <strong>{workflowCopy.templateLabels[templateCode]}</strong>
                       <small>{workflowCopy.templateDescriptions[templateCode]}</small>
                     </label>
                   ))}
                 </fieldset>
 
-                <label className="admin-field" htmlFor="design-brand-asset">
-                  <span>{copy.designLogo}</span>
-                  <select id="design-brand-asset" name="brandAssetId">
-                    <option value="">{copy.designLogoNone}</option>
-                    {model.brandAssetOptions.map((asset) => (
-                      <option
-                        key={asset.id}
+                <fieldset className="qr-choice-rows">
+                  <legend>{copy.designLogo}</legend>
+                  <label>
+                    <input
+                      aria-label={copy.designLogoNone}
+                      defaultChecked
+                      name="brandAssetId"
+                      type="radio"
+                      value=""
+                    />
+                    <span className="qr-choice-rows__meta">
+                      <strong>{copy.designLogoNone}</strong>
+                    </span>
+                  </label>
+                  {model.brandAssetOptions.map((asset) => (
+                    <label key={asset.id}>
+                      <input
+                        aria-label={asset.name}
+                        name="brandAssetId"
+                        type="radio"
                         value={`${asset.tenantId}|${asset.managementCompanyId}|${asset.siteId}|${asset.id}`}
-                      >
-                        {asset.name} · {asset.mimeType}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                      />
+                      <span className="qr-choice-rows__meta">
+                        <strong>{asset.name}</strong>
+                        <small>{asset.mimeType}</small>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
 
-                <p className="qr-order__note">{copy.designConfig}</p>
+                <p className="qr-note qr-note--ok">
+                  <span>{copy.specBottomValue}</span>
+                </p>
                 <ReasonField copy={copy} id="design-create-reason" />
-                <div className="qr-order__actions">
-                  <button className="tt-button tt-button--primary" type="submit">
+                <div className="qr-wizard__footer">
+                  <a
+                    className="tt-button tt-button--secondary"
+                    href={getQrWizardStepHref(locale, "site")}
+                  >
+                    {copy.stepBackDesign}
+                  </a>
+                  <button className="tt-button" type="submit">
                     {copy.designCreate}
                   </button>
                 </div>
               </form>
             ) : (
-              <p className="admin-catalog-read-only">{copy.noSite}</p>
+              <p className="admin-catalog-read-only">
+                <a href={getQrWizardStepHref(locale, "site")}>{copy.noSite}</a>
+              </p>
             )}
           </div>
 
           {/* The rail renders every template and CSS reveals the checked one, so the
               preview tracks the selection without turning this into a client component. */}
-          <aside className="qr-order__rail">
+          <aside className="qr-wizard__rail">
             <h3>{copy.wizardPreview}</h3>
             {STICKER_TEMPLATE_CODES.map((templateCode) => (
-              <figure className="qr-order__preview" data-template={templateCode} key={templateCode}>
+              <figure
+                className="qr-wizard__preview"
+                data-template={templateCode}
+                key={templateCode}
+              >
                 {/* biome-ignore lint/performance/noImgElement: protected route returns a generated production renderer preview */}
                 <img
                   alt={`${workflowCopy.templateLabels[templateCode]} · ${workflowCopy.previewAlt}`}
@@ -789,8 +846,8 @@ export function QrInventorySampleView({
                 />
               </figure>
             ))}
-            <p className="qr-order__cap">{copy.decode}</p>
-            <dl className="qr-order__spec">
+            <p className="qr-wizard__rail-caption">{copy.decode}</p>
+            <dl className="qr-wizard__rail-spec">
               <div>
                 <dt>{workflowCopy.templateLegend}</dt>
                 <dd>
@@ -808,6 +865,10 @@ export function QrInventorySampleView({
               <div>
                 <dt>{copy.specBottom}</dt>
                 <dd>{copy.specBottomValue}</dd>
+              </div>
+              <div>
+                <dt>{copy.site}</dt>
+                <dd>{selectedSite ? selectedSite.name : "—"}</dd>
               </div>
             </dl>
           </aside>
@@ -837,10 +898,7 @@ export function QrInventorySampleView({
       </nav>
 
       {step === "review" ? (
-        <section
-          aria-label={copy.approvalsSummary}
-          className="admin-stat-strip qr-approval-summary"
-        >
+        <section aria-label={copy.approvalsSummary} className="tt-stat-strip tt-stat-strip--3">
           {[
             {
               count: canApproveDesign ? model.designApprovalQueue.length : null,
@@ -858,32 +916,34 @@ export function QrInventorySampleView({
             },
           ].map((entry) => (
             <article className="tt-stat-tile" key={entry.label}>
-              <span>{entry.label}</span>
-              <strong>{entry.count === null ? "—" : entry.count.toLocaleString()}</strong>
-              <small>{copy.approvalsCount}</small>
+              <span className="tt-stat-tile__label">{entry.label}</span>
+              <span className="tt-stat-tile__value">
+                {entry.count === null ? "—" : entry.count.toLocaleString()}
+              </span>
+              <span className="tt-stat-tile__meta">{copy.approvalsCount}</span>
             </article>
           ))}
         </section>
       ) : null}
 
       {step === "review" && canApproveDesign ? (
-        <section aria-labelledby="design-approval-title" className="admin-lifecycle-queue">
+        <section aria-labelledby="design-approval-title" className="qr-wizard__panel">
           <header>
             <h2 id="design-approval-title">{copy.designApproveTitle}</h2>
             <p>{copy.designApproveDescription}</p>
           </header>
           {model.designApprovalQueue.length > 0 ? (
-            <div className="admin-approval-list">
+            <div className="qr-review-list">
               {model.designApprovalQueue.map((design) => (
-                <article className="admin-approval-card" key={design.id}>
-                  <header className="admin-approval-card__header">
+                <article className="qr-review-card" key={design.id}>
+                  <header className="qr-track-batch__header">
                     <div>
-                      <span className="admin-approval-card__label">{design.templateCode}</span>
+                      <span className="qr-track-batch__code">{design.templateCode}</span>
                       <h3>{design.siteName}</h3>
                     </div>
                     <StatusPill tone="warning">{copy.waitingDesign}</StatusPill>
                   </header>
-                  <form action={approveStickerDesignVersion} className="admin-approval-form">
+                  <form action={approveStickerDesignVersion} className="qr-review-card__form">
                     <DesignFields copy={copy} design={design} locale={locale} />
                     <ReasonField copy={copy} id={`design-approve-${design.id}`} />
                     <button className="tt-button admin-approval-primary-action" type="submit">
@@ -900,18 +960,18 @@ export function QrInventorySampleView({
       ) : null}
 
       {step === "quantity" ? (
-        <section aria-labelledby="design-catalog-title" className="admin-lifecycle-queue">
+        <section aria-labelledby="design-catalog-title" className="qr-wizard__panel">
           <header>
             <h2 id="design-catalog-title">{copy.designTitle}</h2>
             <p>{copy.securityNote}</p>
           </header>
           {model.designs.length > 0 ? (
-            <div className="admin-approval-list">
+            <div className="qr-review-list">
               {model.designs.map((design) => (
-                <article className="admin-approval-card" key={design.id}>
-                  <header className="admin-approval-card__header">
+                <article className="qr-review-card" key={design.id}>
+                  <header className="qr-track-batch__header">
                     <div>
-                      <span className="admin-approval-card__label">{design.templateCode}</span>
+                      <span className="qr-track-batch__code">{design.templateCode}</span>
                       <h3>{design.siteName}</h3>
                     </div>
                     <StatusPill tone={getStickerDesignStatusTone(design.status)}>
@@ -919,7 +979,7 @@ export function QrInventorySampleView({
                     </StatusPill>
                   </header>
                   {canArchiveDesign && design.status === "APPROVED" ? (
-                    <form action={archiveStickerDesignVersion} className="admin-approval-form">
+                    <form action={archiveStickerDesignVersion} className="qr-review-card__form">
                       <DesignFields copy={copy} design={design} locale={locale} />
                       <ReasonField copy={copy} id={`design-archive-${design.id}`} />
                       <button className="tt-button tt-button--secondary" type="submit">
@@ -947,15 +1007,15 @@ export function QrInventorySampleView({
             <p className="admin-catalog-read-only">{copy.batchSplitNotice}</p>
           </header>
           {model.approvedDesignOptions.length > 0 ? (
-            <div className="admin-approval-list">
+            <div className="qr-review-list">
               {model.approvedDesignOptions.map((design) => {
                 const site = model.siteOptions.find((item) => item.id === design.siteId);
                 if (!site) {
                   return null;
                 }
                 return (
-                  <form action={requestQrBatch} className="admin-approval-card" key={design.id}>
-                    <div className="admin-approval-form">
+                  <form action={requestQrBatch} className="qr-review-card" key={design.id}>
+                    <div className="qr-review-card__form">
                       <ScopeFields copy={copy} item={design} locale={locale} />
                       <input
                         aria-label={copy.designTitle}
@@ -1020,13 +1080,13 @@ export function QrInventorySampleView({
       ) : null}
 
       {step === "review" && canOperateSample ? (
-        <section aria-labelledby="sample-approval-title" className="admin-lifecycle-queue">
+        <section aria-labelledby="sample-approval-title" className="qr-wizard__panel">
           <header>
             <h2 id="sample-approval-title">{copy.sampleApproveTitle}</h2>
             <p>{copy.sampleApproveDescription}</p>
           </header>
           {model.sampleApprovalQueue.length > 0 ? (
-            <div className="admin-approval-list">
+            <div className="qr-review-list">
               {model.sampleApprovalQueue.map((batch) => (
                 <SampleApprovalCard batch={batch} copy={copy} key={batch.id} locale={locale} />
               ))}
@@ -1038,7 +1098,7 @@ export function QrInventorySampleView({
       ) : null}
 
       {step === "review" && canApproveFinalGeneration ? (
-        <section aria-labelledby="final-approval-title" className="admin-lifecycle-queue">
+        <section aria-labelledby="final-approval-title" className="qr-wizard__panel">
           <header>
             <h2 id="final-approval-title">
               {copy.finalApprovalTitle}{" "}
@@ -1047,12 +1107,12 @@ export function QrInventorySampleView({
             <p>{copy.finalApprovalDescription}</p>
           </header>
           {canonicalQrHostReady ? null : (
-            <p className="admin-notice admin-notice--danger" role="status">
-              <strong>{copy.finalApprovalBlocked}</strong>
+            <p className="qr-note qr-note--warn" role="status">
+              <span>{copy.finalApprovalBlocked}</span>
             </p>
           )}
           {finalApprovalModel.finalApprovalQueue.length > 0 ? (
-            <div className="admin-approval-list">
+            <div className="qr-review-list">
               {finalApprovalModel.finalApprovalQueue.map((batch) => {
                 const inventoryBatch = model.batches.find((item) => item.id === batch.id);
                 return inventoryBatch ? (
@@ -1074,13 +1134,13 @@ export function QrInventorySampleView({
       ) : null}
 
       {step === "production" ? (
-        <section aria-labelledby="batch-catalog-title" className="admin-lifecycle-queue">
+        <section aria-labelledby="batch-catalog-title" className="qr-wizard__panel">
           <header>
             <h2 id="batch-catalog-title">{copy.batchTitle}</h2>
             <p>{copy.securityNote}</p>
           </header>
           {model.batches.length > 0 ? (
-            <div className="admin-approval-list">
+            <div className="qr-review-list">
               {model.batches.map((batch) => (
                 <BatchCard
                   batch={batch}

@@ -6640,40 +6640,6 @@ h3,
   margin-bottom: var(--tt-space-5);
 }
 
-.qr-sections__item {
-  background: var(--tt-color-surface);
-  border: 1px solid var(--tt-color-border);
-  border-radius: var(--tt-radius-md);
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.6rem 0.95rem;
-  text-decoration: none;
-}
-
-.qr-sections__item strong {
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.qr-sections__item small {
-  color: var(--tt-color-text-muted);
-  font-size: 0.71rem;
-}
-
-.qr-sections__item:hover {
-  border-color: var(--tt-color-brand);
-}
-
-.qr-sections__item[aria-current="page"] {
-  background: var(--tt-color-brand-surface);
-  border-color: var(--tt-color-brand);
-  color: var(--tt-color-brand-fg);
-}
-
-.qr-sections__item[aria-current="page"] small {
-  color: var(--tt-color-brand-fg);
-}
-
 /* Ordering progress marker. Steps 1-4 are the order request; 5 and 6 live in the
    approval and tracking areas, so they are not shown here. */
 .qr-steps {
@@ -6683,43 +6649,6 @@ h3,
   margin: var(--tt-space-4) 0 0;
   overflow-x: auto;
   padding: 0;
-}
-
-.qr-step {
-  align-items: center;
-  display: flex;
-  flex: 1;
-  gap: 0.55rem;
-  min-width: 10rem;
-  padding: 0.55rem 0.6rem;
-}
-
-.qr-step__n {
-  background: var(--tt-color-neutral-surface);
-  border-radius: 50%;
-  color: var(--tt-color-neutral-fg);
-  display: grid;
-  flex: 0 0 auto;
-  font-size: 0.76rem;
-  font-weight: 700;
-  height: 1.65rem;
-  place-items: center;
-  width: 1.65rem;
-}
-
-.qr-step__t {
-  display: grid;
-  min-width: 0;
-}
-
-.qr-step__t strong {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.qr-step__t small {
-  color: var(--tt-color-text-muted);
-  font-size: 0.68rem;
 }
 
 /* Marks a management company that Taptolk operates directly. Driven by
@@ -6735,275 +6664,10 @@ h3,
   vertical-align: middle;
 }
 
-/* QR ordering: work panel on the left, live preview rail on the right.
-   The rail renders every template and reveals the checked one via :has(), so the
-   preview follows the selection without making this a client component. */
-.qr-order {
-  align-items: start;
-  display: grid;
-  gap: var(--tt-space-4);
-  grid-template-columns: minmax(0, 1fr) 20rem;
-  margin-bottom: var(--tt-space-5);
-}
-
-.qr-order__panel {
-  background: var(--tt-color-surface);
-  border: 1px solid var(--tt-color-border);
-  border-radius: var(--tt-radius-md);
-  box-shadow: var(--tt-shadow-sm);
-  padding: clamp(1.1rem, 2vw, 1.5rem);
-}
-
-.qr-order__head h2 {
-  font-size: 1.02rem;
-  margin: 0 0 0.2rem;
-}
-
-.qr-order__head p {
-  color: var(--tt-color-text-muted);
-  font-size: 0.8rem;
-  margin: 0 0 1.1rem;
-}
-
-.qr-order__form {
-  display: grid;
-  gap: var(--tt-space-4);
-}
-
-.qr-order__templates {
-  border: 0;
-  display: grid;
-  gap: 0.7rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 0;
-  padding: 0;
-}
-
-.qr-order__templates legend {
-  color: var(--tt-color-text-muted);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.5rem;
-  padding: 0;
-  text-transform: uppercase;
-}
-
-.qr-order__tpl {
-  background: var(--tt-color-surface);
-  border: 1px solid var(--tt-color-border);
-  border-radius: var(--tt-radius-md);
-  cursor: pointer;
-  display: grid;
-  gap: 0.25rem;
-  justify-items: center;
-  padding: 0.8rem;
-  text-align: center;
-}
-
-.qr-order__tpl:has(input:checked) {
-  border-color: var(--tt-color-brand);
-  box-shadow: 0 0 0 2px var(--tt-color-brand-surface);
-}
-
-.qr-order__tpl input {
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  width: 1px;
-}
-
-.qr-order__tpl:has(input:focus-visible) {
-  outline: var(--tt-focus-ring);
-  outline-offset: 2px;
-}
-
-.qr-order__tpl-art img {
-  aspect-ratio: 1;
-  display: block;
-  max-width: 118px;
-  object-fit: contain;
-  width: 100%;
-}
-
-.qr-order__tpl strong {
-  font-size: 0.83rem;
-}
-
-.qr-order__tpl small {
-  color: var(--tt-color-text-muted);
-  font-size: 0.71rem;
-}
-
-.qr-order__note {
-  color: var(--tt-color-text-muted);
-  font-size: 0.78rem;
-  margin: 0;
-}
-
-.qr-order__actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.qr-order__rail {
-  background: var(--tt-color-surface);
-  border: 1px solid var(--tt-color-border);
-  border-radius: var(--tt-radius-md);
-  box-shadow: var(--tt-shadow-sm);
-  display: grid;
-  gap: 0.7rem;
-  justify-items: center;
-  padding: 1.1rem;
-  position: sticky;
-  top: 1rem;
-}
-
-.qr-order__rail h3 {
-  font-size: 0.86rem;
-  justify-self: start;
-  margin: 0;
-}
-
-.qr-order__preview {
-  display: none;
-  margin: 0;
-  width: 100%;
-}
-
-.qr-order__preview img {
-  display: block;
-  height: auto;
-  margin: 0 auto;
-  max-width: 220px;
-  width: 100%;
-}
-
-.qr-order__cap {
-  color: var(--tt-color-text-muted);
-  font-size: 0.72rem;
-  margin: 0;
-  text-align: center;
-}
-
-.qr-order__spec {
-  display: grid;
-  font-size: 0.76rem;
-  gap: 0.35rem;
-  margin: 0;
-  width: 100%;
-}
-
-.qr-order__spec div {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: space-between;
-}
-
-.qr-order__spec dt {
-  color: var(--tt-color-text-muted);
-}
-
-.qr-order__spec dd {
-  font-weight: 600;
-  margin: 0;
-  text-align: right;
-}
-
-.qr-order__spec dd span {
-  display: none;
-}
-
-/* Reveal the rail entry matching the selected template. */
-.qr-order:has(.qr-order__tpl input[value="ROUND_BLUE_HOLOGRAM_V1"]:checked)
-:is(.qr-order__preview, .qr-order__spec dd span)[data-template="ROUND_BLUE_HOLOGRAM_V1"],
-.qr-order:has(.qr-order__tpl input[value="ROUND_PURPLE_GRADIENT_V1"]:checked)
-  :is(.qr-order__preview, .qr-order__spec dd span)[data-template="ROUND_PURPLE_GRADIENT_V1"],
-.qr-order:has(.qr-order__tpl input[value="ROUND_WHITE_MINIMAL_V1"]:checked)
-  :is(.qr-order__preview, .qr-order__spec dd span)[data-template="ROUND_WHITE_MINIMAL_V1"],
-.qr-order:has(.qr-order__tpl input[value="SQUARE_DARK_PREMIUM_V1"]:checked)
-  :is(.qr-order__preview, .qr-order__spec dd span)[data-template="SQUARE_DARK_PREMIUM_V1"] {
-  display: block;
-}
-
-@media (max-width: 1100px) {
-  .qr-order {
-    grid-template-columns: 1fr;
-  }
-
-  .qr-order__rail {
-    position: static;
-  }
-
-  .qr-order__templates {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* Stepper bar. The page heading above already names the flow, so this carries
-   only the steps. */
-.qr-steps-bar {
-  background: var(--tt-color-surface);
-  border: 1px solid var(--tt-color-border);
-  border-radius: var(--tt-radius-md);
-  box-shadow: var(--tt-shadow-sm);
-  margin-bottom: var(--tt-space-4);
-  padding: 0.7rem;
-}
-
-.qr-steps-bar .qr-steps {
-  margin: 0;
-}
-
 /* Step states on the ordering stepper. */
 .qr-step--done .qr-step__n {
   background: var(--tt-color-success-surface);
   color: var(--tt-color-success-fg);
-}
-
-.qr-step--now {
-  background: var(--tt-color-brand-surface);
-  border-radius: var(--tt-radius-xs);
-}
-
-.qr-step--now .qr-step__n {
-  background: var(--tt-color-brand);
-  color: var(--tt-color-on-brand);
-}
-
-.qr-stepnav {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--tt-space-5);
-}
-
-.qr-stepnav__back,
-.qr-stepnav__next {
-  align-items: center;
-  border-radius: var(--tt-button-radius);
-  display: inline-flex;
-  font-size: var(--tt-button-font-size);
-  font-weight: var(--tt-button-font-weight);
-  min-height: var(--tt-button-height);
-  padding: var(--tt-button-padding-block) var(--tt-button-padding-inline);
-  text-decoration: none;
-}
-
-.qr-stepnav__back {
-  background: var(--tt-color-surface);
-  border: 1px solid var(--tt-color-border);
-  color: var(--tt-color-text);
-}
-
-.qr-stepnav__next {
-  background: var(--tt-color-brand);
-  box-shadow: var(--tt-shadow-sm);
-  color: var(--tt-color-on-brand);
-}
-
-.qr-stepnav__next:hover {
-  background: var(--tt-color-brand-strong);
 }
 
 /* Site brand logo upload. It previously reused the list and approval-card styles,
@@ -7079,9 +6743,6 @@ h3,
 .operations-site-panel,
 .admin-report-section,
 .admin-report-detail,
-.qr-order__panel,
-.qr-order__rail,
-.qr-board,
 .qr-wizard__steps,
 .qr-wizard__panel,
 .qr-wizard__rail,
@@ -7145,7 +6806,6 @@ h3,
     .admin-report-detail,
     .operations-trend-panel,
     .operations-site-panel,
-    .qr-order__panel,
     .qr-brand-upload,
     .tt-side-card
   )
@@ -8323,4 +7983,110 @@ h3,
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* Wizard panel internals. A fieldset is a group label plus its choices — it does
+   not draw a box, because a box here would be a card inside a card. */
+.qr-design-form {
+  display: grid;
+  gap: var(--tt-card-gap);
+}
+
+.qr-design-form fieldset,
+.qr-wizard__panel fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.qr-choice-cards legend,
+.qr-choice-rows legend {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-label-size);
+  font-weight: var(--tt-label-weight);
+  margin-bottom: var(--tt-space-2);
+  padding: 0;
+}
+
+/* A fieldset that is also the grid needs its legend out of the flow. */
+.qr-choice-cards legend,
+.qr-choice-rows legend {
+  float: left;
+  inline-size: 100%;
+}
+
+/* The site step offers links, not radios, because choosing a site navigates. */
+.qr-choice-rows__link {
+  align-items: center;
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-choice-radius);
+  color: inherit;
+  display: flex;
+  gap: 0.75rem;
+  padding: var(--tt-choice-padding-block) var(--tt-choice-padding-inline);
+  text-decoration: none;
+}
+
+.qr-choice-rows__link:hover {
+  background: var(--tt-color-surface-subtle);
+}
+
+.qr-choice-rows__link[aria-current="true"] {
+  background: var(--tt-color-brand-surface);
+  border-color: var(--tt-color-brand);
+}
+
+/* Preview rail: every template is rendered and the checked one is revealed, so the
+   preview follows the selection without making this a client component. */
+.qr-wizard__preview,
+.qr-wizard__rail-spec dd span {
+  display: none;
+  margin: 0;
+}
+
+.qr-wizard__preview img {
+  block-size: auto;
+  display: block;
+  inline-size: 100%;
+  max-inline-size: var(--tt-wizard-preview-max-width);
+}
+
+.qr-wizard__columns:has(.qr-choice-cards input[value="ROUND_BLUE_HOLOGRAM_V1"]:checked)
+  :is(.qr-wizard__preview, .qr-wizard__rail-spec dd span)[data-template="ROUND_BLUE_HOLOGRAM_V1"],
+.qr-wizard__columns:has(.qr-choice-cards input[value="ROUND_PURPLE_GRADIENT_V1"]:checked)
+  :is(.qr-wizard__preview, .qr-wizard__rail-spec dd span)[data-template="ROUND_PURPLE_GRADIENT_V1"],
+.qr-wizard__columns:has(.qr-choice-cards input[value="ROUND_WHITE_MINIMAL_V1"]:checked)
+  :is(.qr-wizard__preview, .qr-wizard__rail-spec dd span)[data-template="ROUND_WHITE_MINIMAL_V1"],
+.qr-wizard__columns:has(.qr-choice-cards input[value="SQUARE_DARK_PREMIUM_V1"]:checked)
+  :is(.qr-wizard__preview, .qr-wizard__rail-spec dd span)[data-template="SQUARE_DARK_PREMIUM_V1"] {
+  display: block;
+}
+
+.qr-choice-cards label:has(input:focus-visible) {
+  box-shadow: var(--tt-focus-ring);
+}
+
+/* Review and batch cards inside a wizard panel. A card here is a bordered group,
+   not a second elevated surface — the panel is already the card. */
+.qr-review-list {
+  display: grid;
+  gap: var(--tt-card-gap);
+}
+
+.qr-review-card {
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-choice-radius);
+  display: grid;
+  gap: var(--tt-space-3);
+  padding: var(--tt-choice-padding-block) var(--tt-choice-padding-inline);
+}
+
+.qr-review-card__form {
+  display: grid;
+  gap: var(--tt-space-3);
+  justify-items: start;
+}
+
+.qr-review-card__form > .tt-button {
+  justify-self: end;
 }
