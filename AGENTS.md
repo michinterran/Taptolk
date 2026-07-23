@@ -6,6 +6,15 @@
 Approved architecture documents under `docs/architecture/` refine it but do not
 silently reduce its required scope.
 
+Order of authority, highest first. Where two disagree, the higher wins.
+
+1. `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` — product scope
+2. `AGENTS.md` — this engineering contract
+3. `DESIGN_SYSTEM.md` + `docs/design-canon/` — how a screen looks
+4. `docs/architecture/` — approved architecture
+5. `docs/development/` work orders and PRDs — what to build
+6. `docs/handoff-*.md` — session state only, never a design or scope source
+
 ## Modular implementation
 
 - Do not hardcode business rules, user-facing copy, URLs, secrets, retention
@@ -20,15 +29,35 @@ silently reduce its required scope.
 - New packages need a real owner, public API, and tests. Do not create empty
   packages as placeholders.
 
-## WCJ release gate
+## Screen work gate
 
-WCJ means `Web Compliance & Journey`.
+Every screen change passes through the design system and WCJ. They check
+different things and neither substitutes for the other.
 
+- `DESIGN_SYSTEM.md` and `docs/design-canon/` are the only authority on how a
+  screen looks. Open the canon before building or changing a screen.
+- A handoff document records session state. **Never cite a handoff as design
+  authority** — several screens were built from handoff prose that contradicted
+  an already-approved mockup, and each one had to be rebuilt.
+- Run `pnpm validate:design-system` after every console surface change. It fails
+  on new drift: a screen rule restating a value the tokens own, a prototype left
+  in a deployable path, a card drawn inside a card.
+- `config/design-system-baseline.json` records drift that predates the gate. It
+  is a debt list, not a permission list. It may shrink, never grow; update it
+  with `pnpm validate:design-system --update-baseline` when a fix removes an
+  entry.
 - Run `pnpm validate:wcj` after every web page or component change.
-- Run `pnpm verify` before reporting a phase complete.
-- CI must fail when WCJ fails.
-- WCJ automated success does not replace keyboard, screen-reader, computed
-  contrast, responsive, real-device, and real-journey manual review.
+- Run `pnpm verify` before reporting a phase complete. CI must fail when either
+  gate fails.
+- Neither gate checks whether a screen matches the canon. Compare the built
+  screen against the canon at the same viewport width by eye, and when the
+  screen is behind a login, ask the operator for a capture rather than guessing.
+- Automated success does not replace keyboard, screen-reader, computed contrast,
+  responsive, real-device, and real-journey manual review.
+
+WCJ means `Web Compliance & Journey`. It validates localization,
+`SemanticHeading`, accessibility, and journeys — **it does not validate layout**,
+so a WCJ pass never means a screen matches the design.
 
 ## Session handoff protocol
 
