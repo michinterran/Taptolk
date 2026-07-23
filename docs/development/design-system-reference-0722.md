@@ -77,6 +77,33 @@ Badge(neutral/info/success/warning/danger) · StatusPill(점+tone) · **MeterBar
 - 임계·룰(응답품질 버킷, 리스크 등급 룰, 만료 임박 30일)은 **타입 있는 도메인 정책**이 소유
   (컴포넌트·Route Handler 하드코딩 금지). 응답품질·리스크 룰 수치는 착수 전 사용자 확정 필요.
 
+## 5.1 버튼 (2026-07-23 확정 — 이 규격을 벗어난 버튼을 만들지 않는다)
+
+버튼은 **하나의 정의**만 존재한다. 새 버튼을 만들 때 크기·모양·타입을 직접 쓰지 말고
+`packages/ui`의 `Button` 프리미티브 또는 `.tt-button` 클래스를 쓴다.
+
+| 항목 | 토큰 | 값 |
+|---|---|---|
+| 높이 | `--tt-button-height` | `2.5rem` |
+| 높이(compact) | `--tt-button-height-compact` | `2.1rem` |
+| 상하 padding | `--tt-button-padding-block` | `0.6rem` |
+| 좌우 padding | `--tt-button-padding-inline` | `1.15rem` |
+| 좌우 padding(compact) | `--tt-button-padding-inline-compact` | `0.85rem` |
+| 글자 크기 | `--tt-button-font-size` | `0.85rem` |
+| 글자 크기(compact) | `--tt-button-font-size-compact` | `0.79rem` |
+| 글자 굵기 | `--tt-button-font-weight` | `600` |
+| 모서리 | `--tt-button-radius` | `--tt-radius-pill` |
+| 아이콘 간격 | `--tt-button-gap` | `0.4rem` |
+
+- 채움색은 `--tt-color-brand`, 전경은 `--tt-color-on-brand`, 그림자는 `--tt-shadow-sm` 한 단계.
+  hover에서만 `--tt-color-brand-strong`으로 진해진다.
+- 변형: `primary`(기본) · `secondary`(흰 배경+헤어라인) · `ghost`(투명) · `danger`.
+  크기: `default` · `compact`. 그 외 변형을 임의로 만들지 않는다.
+- **컴포넌트 스타일시트에 버튼 수치를 다시 쓰지 않는다.** 값을 바꿔야 하면 `tokens.css`에서
+  바꿔 제품 전체가 함께 움직이게 한다.
+- 배경: 이전 정의가 `3rem`/`750`/`brand-strong`/그림자 없음이라 주변 카드보다 과하게 무거웠다.
+  개별 화면이 아니라 전역 정의가 어긋나 있던 문제였다.
+
 ## 6. 비협상 제약 (요약, 상세는 AGENTS.md)
 
 `UI→Route Handler→Application Service→Domain Policy→Repository→PostgreSQL`. 중앙 RBAC + RLS 둘 다

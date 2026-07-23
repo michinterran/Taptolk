@@ -26,6 +26,20 @@
   /* Foreground for filled brand/state surfaces (new) */
   --tt-color-on-brand: #ffffff;
 
+  /* Button metrics (new). Every button in the product resolves its size, shape and
+     type from these. Do not restate the values in a component stylesheet — change
+     them here so the whole product moves together. */
+  --tt-button-height: 2.5rem;
+  --tt-button-height-compact: 2.1rem;
+  --tt-button-padding-block: 0.6rem;
+  --tt-button-padding-inline: 1.15rem;
+  --tt-button-padding-inline-compact: 0.85rem;
+  --tt-button-font-size: 0.85rem;
+  --tt-button-font-size-compact: 0.79rem;
+  --tt-button-font-weight: 600;
+  --tt-button-radius: var(--tt-radius-pill);
+  --tt-button-gap: 0.4rem;
+
   /* State tint pairs for badges / pills / tiles — bg + accessible foreground (new) */
   --tt-color-brand-surface: #eeeaff;
   --tt-color-brand-fg: #5540c9;
