@@ -324,21 +324,18 @@ export default async function QrInventoryPage({
             exports: copy["admin.qr.progress.exports"],
             failed: copy["admin.qr.progress.failed"],
             generated: copy["admin.qr.progress.generated"],
-            laneEmpty: copy["admin.qr.board.laneEmpty"],
-            laneHints: {
-              DISTRIBUTION: copy["admin.qr.board.lane.distribution.hint"],
-              GENERATION: copy["admin.qr.board.lane.generation.hint"],
-              PRINT: copy["admin.qr.board.lane.print.hint"],
-              SHIPPING: copy["admin.qr.board.lane.shipping.hint"],
-            },
-            laneLabels: {
-              DISTRIBUTION: copy["admin.qr.board.lane.distribution"],
-              GENERATION: copy["admin.qr.board.lane.generation"],
-              PRINT: copy["admin.qr.board.lane.print"],
-              SHIPPING: copy["admin.qr.board.lane.shipping"],
-            },
             outcomes: copy["admin.qr.board.outcomes"],
-            outcomesEmpty: copy["admin.qr.board.outcomesEmpty"],
+            stageCurrent: copy["admin.qr.board.stage.current"],
+            stageDone: copy["admin.qr.board.stage.done"],
+            stageLabels: {
+              DELIVERY: copy["admin.qr.board.stage.delivery"],
+              GENERATION: copy["admin.qr.board.stage.generation"],
+              INTAKE: copy["admin.qr.board.stage.intake"],
+              PRINT: copy["admin.qr.board.stage.print"],
+              SHIPPING: copy["admin.qr.board.stage.shipping"],
+            },
+            stageTodo: copy["admin.qr.board.stage.todo"],
+            stopped: copy["admin.qr.board.stopped"],
             progress: copy["admin.qr.progress.description"],
             statusLabels: {
               CANCELLED: copy["admin.qr.batch.status.cancelled"],
@@ -363,7 +360,6 @@ export default async function QrInventoryPage({
               SHIPPED: copy["admin.qr.batch.status.shipped"],
             },
             title: copy["admin.qr.progress.title"],
-            unplaced: copy["admin.qr.board.unplaced"],
           }}
           items={progressModel}
         />

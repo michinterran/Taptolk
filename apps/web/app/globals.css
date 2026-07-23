@@ -7427,184 +7427,6 @@ h3,
 }
 
 /* ============================================================================
-   QR production tracking board.
-
-   Twenty statuses in one flat card list read as noise. The board is four lanes —
-   generation, print, shipping, distribution — that come from the domain phase
-   policy. Shape and spacing come from the card tokens; a lane is not a card inside
-   a card, it is a column separated by a hairline.
-   ========================================================================== */
-.qr-board {
-  margin-bottom: var(--tt-section-gap);
-}
-
-.qr-board__header {
-  margin-bottom: var(--tt-card-gap);
-}
-
-.qr-board__lanes {
-  display: grid;
-  gap: 0;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.qr-board__lane {
-  border-right: 1px solid var(--tt-table-divider-color);
-  display: grid;
-  gap: var(--tt-space-3);
-  min-width: 0;
-  padding: var(--tt-card-padding-compact);
-}
-
-.qr-board__lane:last-child {
-  border-right: 0;
-}
-
-.qr-board__lane-header {
-  align-items: baseline;
-  display: grid;
-  gap: 0 var(--tt-space-2);
-  grid-template-columns: auto 1fr;
-}
-
-.qr-board__lane-header h3 {
-  margin: 0;
-}
-
-.qr-board__lane-count {
-  color: var(--tt-color-text-muted);
-  font-variant-numeric: var(--tt-numeric-font-variant);
-  font-weight: var(--tt-font-weight-semibold);
-  justify-self: start;
-}
-
-.qr-board__lane-header p {
-  color: var(--tt-color-text-muted);
-  font-size: var(--tt-label-size);
-  grid-column: 1 / -1;
-  margin: 0;
-}
-
-.qr-board__lane-items,
-.qr-board__outcome-items {
-  display: grid;
-  gap: var(--tt-space-3);
-  min-width: 0;
-}
-
-.qr-board__outcome-items {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
-}
-
-.qr-board__batch {
-  background: var(--tt-color-surface-subtle);
-  border-radius: var(--tt-radius-xs);
-  display: grid;
-  gap: var(--tt-space-2);
-  min-width: 0;
-  padding: var(--tt-space-3);
-}
-
-.qr-board__batch-header {
-  align-items: start;
-  display: flex;
-  gap: var(--tt-space-2);
-  justify-content: space-between;
-  min-width: 0;
-}
-
-.qr-board__batch-header h4 {
-  font-size: var(--tt-table-font-size);
-  font-weight: var(--tt-font-weight-semibold);
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.qr-board__batch-code {
-  color: var(--tt-color-text-muted);
-  display: block;
-  font-size: var(--tt-table-meta-font-size);
-  font-variant-numeric: var(--tt-numeric-font-variant);
-}
-
-.qr-board__progress {
-  display: grid;
-  gap: var(--tt-space-1);
-  font-size: var(--tt-table-meta-font-size);
-}
-
-.qr-board__progress progress {
-  inline-size: 100%;
-}
-
-.qr-board__batch-meta {
-  display: grid;
-  gap: var(--tt-space-1) var(--tt-space-3);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 0;
-}
-
-.qr-board__batch-meta dt {
-  color: var(--tt-color-text-muted);
-  font-size: var(--tt-table-meta-font-size);
-}
-
-.qr-board__batch-meta dd {
-  font-size: var(--tt-table-meta-font-size);
-  font-variant-numeric: var(--tt-numeric-font-variant);
-  margin: 0;
-}
-
-.qr-board__lane-empty {
-  color: var(--tt-color-text-muted);
-  font-size: var(--tt-label-size);
-  margin: 0;
-}
-
-.qr-board__outcomes {
-  border-top: 1px solid var(--tt-table-divider-color);
-  display: grid;
-  gap: var(--tt-space-3);
-  margin-top: var(--tt-card-gap);
-  padding-top: var(--tt-card-gap);
-}
-
-.qr-board__outcomes h3 {
-  margin: 0;
-}
-
-/* The approval-queue counts reuse the strip of cells, not three separate cards. */
-.qr-approval-summary .tt-stat-tile small {
-  color: var(--tt-color-text-muted);
-  font-size: var(--tt-label-size);
-}
-
-@media (max-width: 68rem) {
-  .qr-board__lanes {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .qr-board__lane:nth-child(2) {
-    border-right: 0;
-  }
-}
-
-@media (max-width: 44rem) {
-  .qr-board__lanes {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .qr-board__lane {
-    border-bottom: 1px solid var(--tt-table-divider-color);
-    border-right: 0;
-  }
-
-  .qr-board__lane:last-child {
-    border-bottom: 0;
-  }
-}
-
-/* ============================================================================
    QR production wizard — five steps on one page.
 
    Structure comes from docs/design-canon/console-qr-wizard.html: a stepper card,
@@ -8446,4 +8268,59 @@ h3,
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+/* Production tracking: one batch, one vertical line of stages. */
+.qr-track-list {
+  display: grid;
+  gap: var(--tt-card-gap);
+}
+
+.qr-track-batch {
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-choice-radius);
+  display: grid;
+  gap: var(--tt-space-3);
+  padding: var(--tt-choice-padding-block) var(--tt-choice-padding-inline);
+}
+
+.qr-track-batch__header {
+  align-items: start;
+  display: flex;
+  gap: var(--tt-space-2);
+  justify-content: space-between;
+}
+
+.qr-track-batch__header h4 {
+  font-size: var(--tt-heading-3-size);
+  font-weight: var(--tt-font-weight-semibold);
+  margin: 0;
+}
+
+.qr-track-batch__code {
+  color: var(--tt-color-text-muted);
+  display: block;
+  font-size: var(--tt-table-meta-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+}
+
+.qr-track-batch__progress p {
+  display: flex;
+  font-size: var(--tt-table-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-semibold);
+  justify-content: space-between;
+  margin: 0;
+}
+
+.qr-track-batch__progress small {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+}
+
+.qr-track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }

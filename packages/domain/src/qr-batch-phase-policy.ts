@@ -1,18 +1,19 @@
 /**
- * QR batch production phases.
+ * QR batch production stages.
  *
  * A batch moves through twenty statuses, which is too many to read as a flat list
  * and too many to show as one linear stepper — a single operator never walks all
  * twenty, because sample approval, final generation approval and receiving belong
  * to different roles.
  *
- * The tracking board groups them into the four phases the work is actually handed
- * off between, plus the terminal outcomes that leave the pipeline. This is a
- * presentation grouping of existing statuses: it introduces no new state, no new
- * transition and no new approval. The transition rules stay in the database.
+ * The approved canon (docs/design-canon/console-qr-wizard.html) tracks production
+ * as five stages in one vertical line — generation, print order, shipping, receipt
+ * check, inventory intake — plus the terminal outcomes that leave the pipeline.
+ * This is a presentation grouping of existing statuses: it introduces no new
+ * state, no new transition and no new approval. The rules stay in the database.
  */
 
-export const QR_BATCH_PHASES = ["GENERATION", "PRINT", "SHIPPING", "DISTRIBUTION"] as const;
+export const QR_BATCH_PHASES = ["GENERATION", "PRINT", "SHIPPING", "DELIVERY", "INTAKE"] as const;
 
 export type QrBatchPhase = (typeof QR_BATCH_PHASES)[number];
 
@@ -68,13 +69,14 @@ const PLACEMENT: Readonly<Record<TrackedStatus, QrBatchPlacement>> = {
   PRINTED: { kind: "PHASE", phase: "PRINT" },
   // Physical stickers in transit to the site.
   SHIPPED: { kind: "PHASE", phase: "SHIPPING" },
-  DELIVERED: { kind: "PHASE", phase: "SHIPPING" },
-  // Received on site and being handed to vehicles.
-  DISTRIBUTING: { kind: "PHASE", phase: "DISTRIBUTION" },
-  COMPLETED: { kind: "PHASE", phase: "DISTRIBUTION" },
-  // Some items were produced and some were not: the batch is still on the board,
-  // in the phase where the remainder is handled.
-  PARTIALLY_COMPLETED: { kind: "PHASE", phase: "DISTRIBUTION" },
+  // Arrived, awaiting the receiving check.
+  DELIVERED: { kind: "PHASE", phase: "DELIVERY" },
+  // Checked in and being handed out on site.
+  DISTRIBUTING: { kind: "PHASE", phase: "INTAKE" },
+  COMPLETED: { kind: "PHASE", phase: "INTAKE" },
+  // Some items were produced and some were not: the batch is still tracked, at the
+  // stage where the remainder is handled.
+  PARTIALLY_COMPLETED: { kind: "PHASE", phase: "INTAKE" },
   CANCELLED: { kind: "OUTCOME", outcome: "CANCELLED" },
   FAILED: { kind: "OUTCOME", outcome: "FAILED" },
 };

@@ -49,10 +49,10 @@ describe("qr batch phase policy", () => {
     expect(getQrBatchPlacement("FAILED")).toEqual({ kind: "OUTCOME", outcome: "FAILED" });
   });
 
-  it("orders the lanes generation, print, shipping, distribution", () => {
-    expect(QR_BATCH_PHASES).toEqual(["GENERATION", "PRINT", "SHIPPING", "DISTRIBUTION"]);
+  it("orders the stages the way the canon tracks production", () => {
+    expect(QR_BATCH_PHASES).toEqual(["GENERATION", "PRINT", "SHIPPING", "DELIVERY", "INTAKE"]);
     expect(getQrBatchPhaseIndex("GENERATION")).toBe(0);
-    expect(getQrBatchPhaseIndex("DISTRIBUTION")).toBe(3);
+    expect(getQrBatchPhaseIndex("INTAKE")).toBe(4);
   });
 
   it("groups approval-stage batches under generation", () => {
@@ -61,12 +61,12 @@ describe("qr batch phase policy", () => {
     expect(getQrBatchPhase("GENERATING")).toBe("GENERATION");
   });
 
-  it("separates printing, shipping and distribution", () => {
+  it("separates printing, shipping, receipt and intake", () => {
     expect(getQrBatchPhase("SENT_TO_PRINTER")).toBe("PRINT");
     expect(getQrBatchPhase("SHIPPED")).toBe("SHIPPING");
-    expect(getQrBatchPhase("DELIVERED")).toBe("SHIPPING");
-    expect(getQrBatchPhase("DISTRIBUTING")).toBe("DISTRIBUTION");
-    expect(getQrBatchPhase("PARTIALLY_COMPLETED")).toBe("DISTRIBUTION");
+    expect(getQrBatchPhase("DELIVERED")).toBe("DELIVERY");
+    expect(getQrBatchPhase("DISTRIBUTING")).toBe("INTAKE");
+    expect(getQrBatchPhase("PARTIALLY_COMPLETED")).toBe("INTAKE");
   });
 
   it("builds every lane even when a phase has no batches", () => {
@@ -75,7 +75,8 @@ describe("qr batch phase policy", () => {
       "GENERATION",
       "PRINT",
       "SHIPPING",
-      "DISTRIBUTION",
+      "DELIVERY",
+      "INTAKE",
     ]);
     expect(board.lanes[0]?.items).toEqual([]);
     expect(board.lanes[2]?.items).toEqual([{ status: "SHIPPED" }]);

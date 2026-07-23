@@ -1,5 +1,10 @@
 import type { QrBatchProgressItem, QrBatchStatus } from "@taptolk/application";
-import { buildQrBatchBoard, type QrBatchPhase } from "@taptolk/domain";
+import {
+  getQrBatchPhaseIndex,
+  getQrBatchPlacement,
+  QR_BATCH_PHASES,
+  type QrBatchPhase,
+} from "@taptolk/domain";
 import { StatusPill } from "@taptolk/ui";
 
 function getQrBatchStatusTone(
@@ -8,19 +13,15 @@ function getQrBatchStatusTone(
   if (status === "FAILED" || status === "CANCELLED") {
     return "danger";
   }
-
   if (status === "COMPLETED" || status === "DELIVERED") {
     return "success";
   }
-
   if (status === "DRAFT") {
     return "neutral";
   }
-
   if (status === "PARTIALLY_COMPLETED") {
     return "warning";
   }
-
   return "info";
 }
 
@@ -30,66 +31,95 @@ export interface QrBatchProgressCopy {
   exports: string;
   failed: string;
   generated: string;
-  laneEmpty: string;
-  laneHints: Readonly<Record<QrBatchPhase, string>>;
-  laneLabels: Readonly<Record<QrBatchPhase, string>>;
   outcomes: string;
-  outcomesEmpty: string;
   progress: string;
+  stageLabels: Readonly<Record<QrBatchPhase, string>>;
+  stageDone: string;
+  stageCurrent: string;
+  stageTodo: string;
   statusLabels: Readonly<Record<QrBatchStatus, string>>;
+  stopped: string;
   title: string;
-  unplaced: string;
 }
 
-function BatchTile({ copy, item }: { copy: QrBatchProgressCopy; item: QrBatchProgressItem }) {
+/**
+ * One batch as the canon draws it: a generation bar, then the five production
+ * stages in a single vertical line with the reached ones marked.
+ *
+ * The stage a batch has reached comes from the domain phase policy, so this
+ * component never decides what a status means.
+ */
+function BatchTrack({ copy, item }: { copy: QrBatchProgressCopy; item: QrBatchProgressItem }) {
+  const placement = getQrBatchPlacement(item.status);
+  const reachedIndex = placement?.kind === "PHASE" ? getQrBatchPhaseIndex(placement.phase) : -1;
+  const stopped = placement?.kind === "OUTCOME";
+  const generatedPercent =
+    item.requestedQuantity > 0
+      ? Math.round((item.generatedQuantity / item.requestedQuantity) * 100)
+      : null;
+
   return (
-    <article className="qr-board__batch">
-      <header className="qr-board__batch-header">
+    <article className="qr-track-batch">
+      <header className="qr-track-batch__header">
         <div>
-          <span className="qr-board__batch-code">{item.batchCode}</span>
+          <span className="qr-track-batch__code">{item.batchCode}</span>
           <h4>{item.siteName}</h4>
         </div>
         <StatusPill tone={getQrBatchStatusTone(item.status)}>
           {copy.statusLabels[item.status]}
         </StatusPill>
       </header>
-      <label className="qr-board__progress" htmlFor={`batch-progress-${item.id}`}>
-        <span>
-          {copy.generated} · {item.generatedQuantity.toLocaleString()} /{" "}
-          {item.requestedQuantity.toLocaleString()}
+
+      <div className="qr-track-batch__progress">
+        <p>
+          <span>{copy.generated}</span>
+          <span>
+            {item.generatedQuantity.toLocaleString()} / {item.requestedQuantity.toLocaleString()}
+          </span>
+        </p>
+        <span className="qr-progress-bar">
+          {/* An unknown ratio draws nothing rather than an empty bar, which reads as zero. */}
+          <span style={generatedPercent === null ? undefined : { width: `${generatedPercent}%` }} />
         </span>
-        <progress
-          id={`batch-progress-${item.id}`}
-          max={item.requestedQuantity}
-          value={item.generatedQuantity}
-        />
-      </label>
-      <dl className="qr-board__batch-meta">
-        <div>
-          <dt>{copy.failed}</dt>
-          <dd>{item.failedQuantity.toLocaleString()}</dd>
-        </div>
-        <div>
-          <dt>{copy.attempts}</dt>
-          <dd>{item.executionAttemptCount ?? 0}</dd>
-        </div>
-        <div>
-          <dt>{copy.exports}</dt>
-          <dd>{item.exportTypes.length > 0 ? item.exportTypes.join(" · ") : "—"}</dd>
-        </div>
-      </dl>
+        <small>
+          {copy.failed} {item.failedQuantity.toLocaleString()} · {copy.attempts}{" "}
+          {item.executionAttemptCount ?? 0} · {copy.exports}{" "}
+          {item.exportTypes.length > 0 ? item.exportTypes.join(" · ") : "—"}
+        </small>
+      </div>
+
+      <ol className="qr-track">
+        {QR_BATCH_PHASES.map((phase, index) => {
+          const state = stopped
+            ? "todo"
+            : index < reachedIndex
+              ? "done"
+              : index === reachedIndex
+                ? "current"
+                : "todo";
+          return (
+            <li className="qr-track__stage" data-state={state} key={phase}>
+              <span aria-hidden="true" className="qr-track__dot">
+                {state === "done" ? "✓" : index + 1}
+              </span>
+              <span>{copy.stageLabels[phase]}</span>
+              <span className="qr-track__state">
+                {stopped
+                  ? copy.stopped
+                  : state === "done"
+                    ? copy.stageDone
+                    : state === "current"
+                      ? copy.stageCurrent
+                      : copy.stageTodo}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
     </article>
   );
 }
 
-/**
- * Production tracking board.
- *
- * Twenty batch statuses do not read as a flat card list, and they are not a single
- * stepper either — the hand-offs belong to different roles. The lanes come from the
- * domain phase policy, so the grouping is not restated here, and every lane renders
- * even when empty so the pipeline keeps its shape.
- */
 export function QrBatchProgressView({
   copy,
   items,
@@ -97,63 +127,16 @@ export function QrBatchProgressView({
   copy: QrBatchProgressCopy;
   items: readonly QrBatchProgressItem[];
 }) {
-  const board = buildQrBatchBoard(items, (item) => item.status);
-
   return (
-    <section aria-labelledby="qr-batch-progress-title" className="qr-board">
-      <header className="qr-board__header">
-        <h2 id="qr-batch-progress-title">{copy.title}</h2>
-        <p>{copy.progress}</p>
-      </header>
+    <section aria-labelledby="qr-batch-progress-title" className="qr-wizard__panel">
+      <h2 id="qr-batch-progress-title">{copy.title}</h2>
+      <p>{copy.progress}</p>
       {items.length > 0 ? (
-        <>
-          <div className="qr-board__lanes">
-            {board.lanes.map((lane) => (
-              <section
-                aria-label={copy.laneLabels[lane.phase]}
-                className="qr-board__lane"
-                key={lane.phase}
-              >
-                <header className="qr-board__lane-header">
-                  <h3>{copy.laneLabels[lane.phase]}</h3>
-                  <span className="qr-board__lane-count">{lane.items.length}</span>
-                  <p>{copy.laneHints[lane.phase]}</p>
-                </header>
-                {lane.items.length > 0 ? (
-                  <div className="qr-board__lane-items">
-                    {lane.items.map((item) => (
-                      <BatchTile copy={copy} item={item} key={item.id} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="qr-board__lane-empty">{copy.laneEmpty}</p>
-                )}
-              </section>
-            ))}
-          </div>
-          <section aria-label={copy.outcomes} className="qr-board__outcomes">
-            <h3>{copy.outcomes}</h3>
-            {board.outcomes.length > 0 ? (
-              <div className="qr-board__outcome-items">
-                {board.outcomes.map((entry) => (
-                  <BatchTile copy={copy} item={entry.item} key={entry.item.id} />
-                ))}
-              </div>
-            ) : (
-              <p className="qr-board__lane-empty">{copy.outcomesEmpty}</p>
-            )}
-          </section>
-          {board.unplaced.length > 0 ? (
-            <section aria-label={copy.unplaced} className="qr-board__outcomes">
-              <h3>{copy.unplaced}</h3>
-              <div className="qr-board__outcome-items">
-                {board.unplaced.map((item) => (
-                  <BatchTile copy={copy} item={item} key={item.id} />
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </>
+        <div className="qr-track-list">
+          {items.map((item) => (
+            <BatchTrack copy={copy} item={item} key={item.id} />
+          ))}
+        </div>
       ) : (
         <p className="admin-catalog-read-only">{copy.empty}</p>
       )}
