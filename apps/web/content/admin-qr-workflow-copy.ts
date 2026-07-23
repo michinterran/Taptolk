@@ -19,10 +19,9 @@ export const ADMIN_QR_WORKFLOW_COPY: Readonly<Record<AppLocale, AdminQrWorkflowC
       previewAlt: "Scannable Taptolk QR sticker template preview",
       steps: [
         { title: "Location", description: "Choose the management company and managed location." },
-        { title: "Template", description: "Compare four production-safe sticker layouts." },
-        { title: "Brand", description: "Use an approved logo or upload a licensed asset." },
+        { title: "Design", description: "Pick a production-safe layout and the top brand mark." },
         { title: "Quantity", description: "Enter the total; batches stay at 100 or fewer." },
-        { title: "Review", description: "Save, review, revise, and approve the design sample." },
+        { title: "Review", description: "Check the rendered sample, then approve generation." },
         {
           title: "Production",
           description: "Track print, shipping, receipt, and inventory check-in.",
@@ -49,13 +48,9 @@ export const ADMIN_QR_WORKFLOW_COPY: Readonly<Record<AppLocale, AdminQrWorkflowC
       previewAlt: "스캔 가능한 Taptolk QR 스티커 템플릿 미리보기",
       steps: [
         { title: "현장 선택", description: "관리회사와 QR을 사용할 관리 현장을 선택합니다." },
-        { title: "템플릿 선택", description: "인쇄 가능한 4개 스티커 구성을 비교합니다." },
-        {
-          title: "브랜드 적용",
-          description: "승인된 로고를 선택하거나 사용권이 있는 파일을 등록합니다.",
-        },
-        { title: "수량 입력", description: "총수량을 입력하면 100개 이하 묶음으로 나눕니다." },
-        { title: "검토·승인", description: "디자인을 저장하고 수정·샘플 검토·승인을 진행합니다." },
+        { title: "디자인", description: "인쇄 가능한 구성과 상단 브랜드를 한 화면에서 정합니다." },
+        { title: "수량", description: "총수량을 입력하면 100개 이하 묶음으로 나눕니다." },
+        { title: "검토·승인", description: "렌더된 샘플을 확인하고 생성 승인을 진행합니다." },
         { title: "제작·입고", description: "인쇄, 배송, 수령 확인과 재고 입고를 추적합니다." },
       ],
       templateDescriptions: {

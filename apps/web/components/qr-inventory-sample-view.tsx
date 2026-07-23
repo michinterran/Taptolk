@@ -30,7 +30,12 @@ import type { AdminQrWorkflowCopy } from "../content/admin-qr-workflow-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
 import { QrQuantityControl, type QrQuantityLabels } from "./qr-quantity-control";
-import { QrSectionNav, type QrSectionNavLabels } from "./qr-section-nav";
+import {
+  getQrWizardStepHref,
+  QR_WIZARD_STEPS,
+  type QrWizardStep,
+  QrWizardStepper,
+} from "./qr-wizard-stepper";
 
 interface QrInventoryCopy {
   actions: string;
@@ -96,7 +101,6 @@ interface QrInventoryCopy {
   specBottomValue: string;
   specSize: string;
   specSizeValue: string;
-  sections: QrSectionNavLabels;
   quietZone: string;
   reason: string;
   reasonPlaceholder: string;
@@ -136,14 +140,15 @@ interface QrInventoryCopy {
   waitingSample: string;
 }
 
-export type QrInventorySection = "order" | "approvals" | "tracking";
+/** Kept as the query contract only; the flow itself is the five wizard steps. */
+export type QrInventorySection = never;
 
 /**
  * Ordering is paged. Steps 1-2 (location + design) are one server action and steps
  * 3-4 (quantity + submit) are another, so the flow pages at that seam rather than
  * pretending each of the four steps is an independent screen.
  */
-export type QrOrderStep = "design" | "quantity";
+export type QrOrderStep = QrWizardStep;
 
 interface QrInventorySampleViewProps {
   backHref: string;
@@ -159,23 +164,10 @@ interface QrInventorySampleViewProps {
   finalApprovalModel: QrFinalGenerationApprovalReadModel;
   locale: AppLocale;
   model: QrInventorySampleReadModel;
-  section: QrInventorySection;
   statusMessage?: string | undefined;
   step: QrOrderStep;
   brandAssetUpload?: ReactNode;
   workflowCopy: AdminQrWorkflowCopy;
-}
-
-/** Steps 1-4 belong to ordering; step 5 is the approval area and step 6 is tracking. */
-const ORDER_STEP_COUNT = 4;
-/** The design page covers steps 1-2; the quantity page covers 3-4. */
-const DESIGN_STEP_LAST = 2;
-
-function stepState(step: QrOrderStep, index: number): "done" | "now" | "todo" {
-  if (step === "design") {
-    return index <= DESIGN_STEP_LAST ? "now" : "todo";
-  }
-  return index <= DESIGN_STEP_LAST ? "done" : "now";
 }
 
 function formatDate(locale: AppLocale, value: string): string {
@@ -368,33 +360,6 @@ function ReasonField({ copy, id }: { copy: QrInventoryCopy; id: string }) {
         required
       />
     </label>
-  );
-}
-
-/**
- * Progress marker for the ordering area. It reports where a request sits in the
- * workflow; it is not navigation, because the forms below are separate server
- * actions (design version, then batch request) rather than one paged wizard.
- */
-function WizardStep({
-  description,
-  index,
-  state,
-  title,
-}: {
-  description: string;
-  index: number;
-  state: "done" | "now" | "todo";
-  title: string;
-}) {
-  return (
-    <li aria-current={state === "now" ? "step" : undefined} className={`qr-step qr-step--${state}`}>
-      <span className="qr-step__n">{state === "done" ? "✓" : index}</span>
-      <span className="qr-step__t">
-        <strong>{title}</strong>
-        <small>{description}</small>
-      </span>
-    </li>
   );
 }
 
@@ -676,11 +641,24 @@ export function QrInventorySampleView({
   brandAssetUpload,
   locale,
   model,
-  section,
   statusMessage,
   step,
   workflowCopy,
 }: QrInventorySampleViewProps) {
+  const stepIndex = QR_WIZARD_STEPS.indexOf(step);
+  const previousStep = stepIndex > 0 ? QR_WIZARD_STEPS[stepIndex - 1] : undefined;
+  const nextStep =
+    stepIndex >= 0 && stepIndex < QR_WIZARD_STEPS.length - 1
+      ? QR_WIZARD_STEPS[stepIndex + 1]
+      : undefined;
+  /* A step the role cannot act on stays visible and dimmed. Splitting the flow by
+     permission is what broke the approved design before. */
+  const lockedSteps = new Set<QrWizardStep>([
+    ...(canCreateDesign ? [] : (["design"] as const)),
+    ...(canRequestBatch ? [] : (["quantity"] as const)),
+    ...(canOperateSample || canApproveFinalGeneration ? [] : (["review"] as const)),
+  ]);
+
   return (
     <>
       <AdminPageHeader
@@ -713,25 +691,15 @@ export function QrInventorySampleView({
         <strong>{copy.finalApprovalNotice}</strong>
       </aside>
 
-      <QrSectionNav labels={copy.sections} locale={locale} section={section} />
+      <QrWizardStepper
+        current={step}
+        label={copy.stepNavLabel}
+        locale={locale}
+        lockedSteps={lockedSteps}
+        steps={workflowCopy.steps}
+      />
 
-      {section === "order" ? (
-        <nav aria-label={workflowCopy.title} className="qr-steps-bar">
-          <ol className="qr-steps">
-            {workflowCopy.steps.slice(0, ORDER_STEP_COUNT).map((wizardStep, index) => (
-              <WizardStep
-                description={wizardStep.description}
-                index={index + 1}
-                key={wizardStep.title}
-                state={stepState(step, index + 1)}
-                title={wizardStep.title}
-              />
-            ))}
-          </ol>
-        </nav>
-      ) : null}
-
-      {section === "order" && step === "design" && canCreateDesign ? (
+      {step === "design" && canCreateDesign ? (
         <section aria-labelledby="qr-design-title" className="qr-order">
           <div className="qr-order__panel">
             <header className="qr-order__head">
@@ -848,26 +816,27 @@ export function QrInventorySampleView({
 
       {/* BrandAssetUploadView already renders its own titled section; wrapping it again
           produced a card inside a card with two headings. */}
-      {section === "order" && step === "design" ? brandAssetUpload : null}
+      {step === "design" ? brandAssetUpload : null}
 
-      {section === "order" ? (
-        <nav aria-label={copy.stepNavLabel} className="qr-stepnav">
-          {step === "quantity" ? (
-            <a className="qr-stepnav__back" href={`/${locale}/admin/qr-inventory`}>
-              {copy.stepBackDesign}
-            </a>
-          ) : (
-            <span />
-          )}
-          {step === "design" ? (
-            <a className="qr-stepnav__next" href={`/${locale}/admin/qr-inventory?step=quantity`}>
-              {copy.stepNextQuantity}
-            </a>
-          ) : null}
-        </nav>
-      ) : null}
+      <nav aria-label={copy.stepNavLabel} className="qr-wizard__footer">
+        {previousStep ? (
+          <a
+            className="tt-button tt-button--secondary"
+            href={getQrWizardStepHref(locale, previousStep)}
+          >
+            {copy.stepBackDesign}
+          </a>
+        ) : (
+          <span />
+        )}
+        {nextStep ? (
+          <a className="tt-button" href={getQrWizardStepHref(locale, nextStep)}>
+            {copy.stepNextQuantity}
+          </a>
+        ) : null}
+      </nav>
 
-      {section === "approvals" ? (
+      {step === "review" ? (
         <section
           aria-label={copy.approvalsSummary}
           className="admin-stat-strip qr-approval-summary"
@@ -897,7 +866,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {section === "approvals" && canApproveDesign ? (
+      {step === "review" && canApproveDesign ? (
         <section aria-labelledby="design-approval-title" className="admin-lifecycle-queue">
           <header>
             <h2 id="design-approval-title">{copy.designApproveTitle}</h2>
@@ -930,7 +899,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {section === "order" && step === "quantity" ? (
+      {step === "quantity" ? (
         <section aria-labelledby="design-catalog-title" className="admin-lifecycle-queue">
           <header>
             <h2 id="design-catalog-title">{copy.designTitle}</h2>
@@ -967,7 +936,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {section === "order" && step === "quantity" && canRequestBatch ? (
+      {step === "quantity" && canRequestBatch ? (
         <section
           aria-labelledby="batch-request-title"
           className="admin-lifecycle-queue admin-qr-wizard-panel"
@@ -1050,7 +1019,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {section === "approvals" && canOperateSample ? (
+      {step === "review" && canOperateSample ? (
         <section aria-labelledby="sample-approval-title" className="admin-lifecycle-queue">
           <header>
             <h2 id="sample-approval-title">{copy.sampleApproveTitle}</h2>
@@ -1068,7 +1037,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {section === "approvals" && canApproveFinalGeneration ? (
+      {step === "review" && canApproveFinalGeneration ? (
         <section aria-labelledby="final-approval-title" className="admin-lifecycle-queue">
           <header>
             <h2 id="final-approval-title">
@@ -1104,7 +1073,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {section === "tracking" ? (
+      {step === "production" ? (
         <section aria-labelledby="batch-catalog-title" className="admin-lifecycle-queue">
           <header>
             <h2 id="batch-catalog-title">{copy.batchTitle}</h2>

@@ -7158,6 +7158,9 @@ h3,
 .qr-order__panel,
 .qr-order__rail,
 .qr-board,
+.qr-wizard__steps,
+.qr-wizard__panel,
+.qr-wizard__rail,
 .qr-brand-upload {
   border-radius: var(--tt-card-radius);
   padding: var(--tt-card-padding);
@@ -7672,5 +7675,402 @@ h3,
 
   .qr-board__lane:last-child {
     border-bottom: 0;
+  }
+}
+
+/* ============================================================================
+   QR production wizard — five steps on one page.
+
+   Structure comes from docs/design-canon/console-qr-wizard.html: a stepper card,
+   then a panel and a sticky preview rail side by side. The canon writes its
+   metrics as literals; here they resolve from --tt-wizard-* so the whole wizard
+   moves together and a screen never restates them.
+
+   There is no section split. Permission does not reshape the flow — a step the
+   role cannot act on is shown locked, not moved to another screen.
+   ========================================================================== */
+.qr-wizard {
+  display: grid;
+  gap: var(--tt-section-gap);
+}
+
+.qr-wizard__steps {
+  display: flex;
+  gap: var(--tt-wizard-step-gap);
+  overflow-x: auto;
+}
+
+.qr-wizard__step {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--tt-radius-xs);
+  display: flex;
+  flex: 1;
+  font: inherit;
+  gap: 0.55rem;
+  min-width: var(--tt-wizard-step-min-width);
+  padding: var(--tt-wizard-step-padding-block) var(--tt-wizard-step-padding-inline);
+  text-align: left;
+  text-decoration: none;
+}
+
+.qr-wizard__step:hover {
+  background: var(--tt-color-surface-subtle);
+}
+
+.qr-wizard__step-marker {
+  background: var(--tt-color-neutral-surface);
+  block-size: var(--tt-wizard-step-marker-size);
+  border-radius: 50%;
+  color: var(--tt-color-neutral-fg);
+  display: grid;
+  flex: 0 0 auto;
+  font-size: var(--tt-label-size);
+  font-weight: var(--tt-font-weight-bold);
+  inline-size: var(--tt-wizard-step-marker-size);
+  place-items: center;
+}
+
+.qr-wizard__step-text {
+  display: grid;
+  min-width: 0;
+}
+
+.qr-wizard__step-text strong {
+  font-size: var(--tt-table-font-size);
+  font-weight: var(--tt-font-weight-semibold);
+  white-space: nowrap;
+}
+
+.qr-wizard__step-text small {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-wizard__step[data-state="done"] .qr-wizard__step-marker {
+  background: var(--tt-color-success-surface);
+  color: var(--tt-color-success-fg);
+}
+
+.qr-wizard__step[data-state="current"] {
+  background: var(--tt-color-brand-surface);
+}
+
+.qr-wizard__step[data-state="current"] .qr-wizard__step-marker {
+  background: var(--tt-color-brand);
+  color: var(--tt-color-on-brand);
+}
+
+.qr-wizard__step[data-state="current"] .qr-wizard__step-text strong {
+  color: var(--tt-color-brand-fg);
+}
+
+.qr-wizard__step[data-state="locked"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Panel beside a sticky preview rail. */
+.qr-wizard__columns {
+  align-items: start;
+  display: grid;
+  gap: var(--tt-wizard-column-gap);
+  grid-template-columns: minmax(0, 1fr) var(--tt-wizard-rail-width);
+}
+
+.qr-wizard__panel {
+  min-width: 0;
+}
+
+.qr-wizard__panel > p {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-body-size);
+  margin: 0 0 var(--tt-card-gap);
+}
+
+.qr-wizard__footer {
+  border-top: 1px solid var(--tt-color-border);
+  display: flex;
+  gap: 0.6rem;
+  justify-content: space-between;
+  margin-top: var(--tt-card-gap);
+  padding-top: var(--tt-card-gap);
+}
+
+.qr-wizard__rail {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: center;
+  position: sticky;
+  top: var(--tt-wizard-rail-top);
+}
+
+.qr-wizard__rail h3 {
+  justify-self: start;
+  margin: 0;
+}
+
+.qr-wizard__rail img {
+  block-size: auto;
+  display: block;
+  inline-size: 100%;
+  max-inline-size: var(--tt-wizard-preview-max-width);
+}
+
+.qr-wizard__rail-caption {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+  margin: 0;
+  text-align: center;
+}
+
+.qr-wizard__rail-spec {
+  display: grid;
+  font-size: var(--tt-table-font-size);
+  gap: 0.35rem;
+  inline-size: 100%;
+  margin: 0;
+}
+
+.qr-wizard__rail-spec > div {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.qr-wizard__rail-spec dt {
+  color: var(--tt-color-text-muted);
+}
+
+.qr-wizard__rail-spec dd {
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-semibold);
+  margin: 0;
+  text-align: right;
+}
+
+/* Choice surfaces. A selection is a brand border plus a tint, never a card. */
+.qr-choice-cards {
+  display: grid;
+  gap: var(--tt-choice-gap);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.qr-choice-cards label {
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-choice-radius);
+  cursor: pointer;
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+  padding: var(--tt-choice-padding-block);
+  text-align: center;
+}
+
+.qr-choice-cards label:hover {
+  background: var(--tt-color-surface-subtle);
+}
+
+.qr-choice-cards label:has(input:checked) {
+  border-color: var(--tt-color-brand);
+  box-shadow: var(--tt-choice-ring);
+}
+
+.qr-choice-cards input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.qr-choice-cards img {
+  block-size: auto;
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 7.5rem;
+}
+
+.qr-choice-cards strong {
+  font-size: var(--tt-table-font-size);
+}
+
+.qr-choice-cards small {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+}
+
+.qr-choice-rows {
+  display: grid;
+  gap: var(--tt-choice-gap);
+}
+
+.qr-choice-rows label {
+  align-items: center;
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-choice-radius);
+  cursor: pointer;
+  display: flex;
+  gap: 0.75rem;
+  padding: var(--tt-choice-padding-block) var(--tt-choice-padding-inline);
+}
+
+.qr-choice-rows label:hover {
+  background: var(--tt-color-surface-subtle);
+}
+
+.qr-choice-rows label:has(input:checked) {
+  background: var(--tt-color-brand-surface);
+  border-color: var(--tt-color-brand);
+}
+
+.qr-choice-rows input {
+  accent-color: var(--tt-color-brand);
+}
+
+.qr-choice-rows .qr-choice-rows__meta {
+  display: grid;
+  flex: 1;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.qr-choice-rows strong {
+  font-size: var(--tt-table-font-size);
+}
+
+.qr-choice-rows small {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+}
+
+/* Inline notice inside a panel. */
+.qr-note {
+  align-items: flex-start;
+  border-radius: var(--tt-note-radius);
+  display: flex;
+  font-size: var(--tt-table-font-size);
+  gap: 0.5rem;
+  margin: 0 0 var(--tt-card-gap);
+  padding: var(--tt-note-padding-block) var(--tt-note-padding-inline);
+}
+
+.qr-note--ok {
+  background: var(--tt-color-success-surface);
+  color: var(--tt-color-success-fg);
+}
+
+.qr-note--warn {
+  background: var(--tt-color-warning-surface);
+  color: var(--tt-color-warning-fg);
+}
+
+.qr-note--danger {
+  background: var(--tt-color-danger-surface);
+  color: var(--tt-color-danger-fg);
+}
+
+/* Review spec list: label left, value right, hairline between. */
+.qr-spec {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0 0 var(--tt-card-gap);
+}
+
+.qr-spec > div {
+  align-items: center;
+  border-bottom: 1px solid var(--tt-color-border);
+  display: flex;
+  font-size: var(--tt-table-font-size);
+  gap: 1rem;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+}
+
+.qr-spec > div:last-child {
+  border-bottom: 0;
+}
+
+.qr-spec dt {
+  color: var(--tt-color-text-muted);
+}
+
+.qr-spec dd {
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-semibold);
+  margin: 0;
+}
+
+/* Production track: one vertical line of stages, not a horizontal board. */
+.qr-track {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.qr-track__stage {
+  align-items: center;
+  display: flex;
+  font-size: var(--tt-table-font-size);
+  gap: 0.6rem;
+}
+
+.qr-track__dot {
+  background: var(--tt-color-neutral-surface);
+  block-size: var(--tt-wizard-track-dot-size);
+  border-radius: 50%;
+  color: var(--tt-color-neutral-fg);
+  display: grid;
+  flex: 0 0 auto;
+  font-size: var(--tt-table-meta-font-size);
+  font-weight: var(--tt-font-weight-bold);
+  inline-size: var(--tt-wizard-track-dot-size);
+  place-items: center;
+}
+
+.qr-track__stage[data-state="done"] .qr-track__dot {
+  background: var(--tt-color-success-surface);
+  color: var(--tt-color-success-fg);
+}
+
+.qr-track__stage[data-state="current"] .qr-track__dot {
+  background: var(--tt-color-brand);
+  color: var(--tt-color-on-brand);
+}
+
+.qr-track__state {
+  color: var(--tt-color-text-muted);
+  margin-left: auto;
+}
+
+.qr-progress-bar {
+  background: var(--tt-color-surface-muted);
+  block-size: 0.5rem;
+  border-radius: var(--tt-radius-pill);
+  display: block;
+  inline-size: 100%;
+  margin: 0.3rem 0 0.1rem;
+  overflow: hidden;
+}
+
+.qr-progress-bar > span {
+  background: var(--tt-color-brand);
+  block-size: 100%;
+  border-radius: inherit;
+  display: block;
+}
+
+@media (max-width: 68rem) {
+  .qr-wizard__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qr-wizard__rail {
+    position: static;
+  }
+
+  .qr-choice-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

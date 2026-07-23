@@ -20,11 +20,8 @@ import { createAdminServerClient } from "../../../../../auth/server-client";
 import { BrandAssetUploadView } from "../../../../../components/brand-asset-upload-view";
 import { QrBatchProgressView } from "../../../../../components/qr-batch-progress-view";
 import { QrInventoryAssignmentView } from "../../../../../components/qr-inventory-assignment-view";
-import {
-  QrInventorySampleView,
-  type QrInventorySection,
-  type QrOrderStep,
-} from "../../../../../components/qr-inventory-sample-view";
+import { QrInventorySampleView } from "../../../../../components/qr-inventory-sample-view";
+import { resolveQrWizardStep } from "../../../../../components/qr-wizard-stepper";
 import { ADMIN_QR_WORKFLOW_COPY } from "../../../../../content/admin-qr-workflow-copy";
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
@@ -40,7 +37,6 @@ export default async function QrInventoryPage({
   params: Promise<{ locale: string }>;
   searchParams: Promise<{
     error?: string | string[];
-    section?: string | string[];
     status?: string | string[];
     step?: string | string[];
   }>;
@@ -117,12 +113,7 @@ export default async function QrInventoryPage({
   };
   const error = readValue(query.error);
   const status = readValue(query.status);
-  const requestedSection = readValue(query.section);
-  const section: QrInventorySection =
-    requestedSection === "approvals" || requestedSection === "tracking"
-      ? requestedSection
-      : "order";
-  const step: QrOrderStep = readValue(query.step) === "quantity" ? "quantity" : "design";
+  const step = resolveQrWizardStep(readValue(query.step));
   const isPlatform = getAdminLandingArea(membership.role) === "platform";
 
   return (
@@ -262,15 +253,6 @@ export default async function QrInventoryPage({
           specBottomValue: copy["admin.qr.spec.bottom.value"],
           specSize: copy["admin.qr.spec.size"],
           specSizeValue: copy["admin.qr.spec.size.value"],
-          sections: {
-            approvals: copy["admin.qr.section.approvals"],
-            approvalsHint: copy["admin.qr.section.approvals.hint"],
-            order: copy["admin.qr.section.order"],
-            orderHint: copy["admin.qr.section.order.hint"],
-            title: copy["admin.qr.section.title"],
-            tracking: copy["admin.qr.section.tracking"],
-            trackingHint: copy["admin.qr.section.tracking.hint"],
-          },
           reason: copy["admin.qr.reason"],
           reasonPlaceholder: copy["admin.qr.reason.placeholder"],
           sampleApprove: copy["admin.qr.sample.approve"],
@@ -330,12 +312,11 @@ export default async function QrInventoryPage({
         }
         locale={locale}
         model={model}
-        section={section}
         step={step}
         statusMessage={status ? statusMessages[status] : undefined}
         workflowCopy={ADMIN_QR_WORKFLOW_COPY[locale]}
       />
-      {section === "tracking" ? (
+      {step === "production" ? (
         <QrBatchProgressView
           copy={{
             attempts: copy["admin.qr.progress.attempts"],
@@ -387,7 +368,7 @@ export default async function QrInventoryPage({
           items={progressModel}
         />
       ) : null}
-      {section === "tracking" ? (
+      {step === "production" ? (
         <QrInventoryAssignmentView
           canAssign={roleHasPermission(membership.role, "qr-asset:assign")}
           canRevoke={roleHasPermission(membership.role, "qr-asset:revoke")}

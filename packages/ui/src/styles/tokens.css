@@ -96,6 +96,33 @@
   --tt-stat-value-size: 2.125rem;
   --tt-stat-value-weight: 700;
 
+  /* Wizard metrics, taken from the approved canon (docs/design-canon/console-qr-wizard.html).
+     The canon writes these as literals; they live here so a screen never restates
+     them and so the whole wizard moves together. */
+  --tt-wizard-rail-width: 21.25rem;
+  --tt-wizard-column-gap: 1.25rem;
+  --tt-wizard-step-min-width: 8.25rem;
+  --tt-wizard-step-gap: 0.4rem;
+  --tt-wizard-step-padding-block: 0.55rem;
+  --tt-wizard-step-padding-inline: 0.6rem;
+  --tt-wizard-step-marker-size: 1.65rem;
+  --tt-wizard-preview-max-width: 15.625rem;
+  --tt-wizard-track-dot-size: 1.4rem;
+  --tt-wizard-rail-top: 5rem;
+
+  /* Choice surfaces: template cards and option rows. Selected state is a brand
+     border plus a tint, never a second card. */
+  --tt-choice-padding-block: 0.7rem;
+  --tt-choice-padding-inline: 0.85rem;
+  --tt-choice-radius: var(--tt-radius-sm);
+  --tt-choice-gap: 0.5rem;
+  --tt-choice-ring: 0 0 0 2px color-mix(in srgb, var(--tt-color-brand) 25%, transparent);
+
+  /* Inline notice inside a panel (success / warning / danger). */
+  --tt-note-padding-block: 0.7rem;
+  --tt-note-padding-inline: 0.85rem;
+  --tt-note-radius: var(--tt-radius-sm);
+
   /* Sidebar metrics, measured from the reference (206px rail, 50px item pitch). */
   --tt-sidebar-width: 12.875rem;
   --tt-sidebar-padding-block: 1.15rem;
