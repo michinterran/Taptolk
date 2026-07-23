@@ -23,6 +23,9 @@
   /* Informational accent (new) */
   --tt-color-info: #2f6bff;
 
+  /* Foreground for filled brand/state surfaces (new) */
+  --tt-color-on-brand: #ffffff;
+
   /* State tint pairs for badges / pills / tiles — bg + accessible foreground (new) */
   --tt-color-brand-surface: #eeeaff;
   --tt-color-brand-fg: #5540c9;

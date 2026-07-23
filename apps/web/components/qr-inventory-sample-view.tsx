@@ -29,7 +29,7 @@ import {
 import type { AdminQrWorkflowCopy } from "../content/admin-qr-workflow-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
-import { QrQuantityControl } from "./qr-quantity-control";
+import { QrQuantityControl, type QrQuantityLabels } from "./qr-quantity-control";
 
 interface QrInventoryCopy {
   actions: string;
@@ -83,6 +83,7 @@ interface QrInventoryCopy {
   noSite: string;
   purposePlaceholder: string;
   qaEvidence: string;
+  quantity: QrQuantityLabels;
   quietZone: string;
   reason: string;
   reasonPlaceholder: string;
@@ -885,10 +886,7 @@ export function QrInventorySampleView({
                         {design.siteName} · {design.templateCode}
                       </strong>
                       <div className="admin-approval-field-grid">
-                        <QrQuantityControl
-                          label={copy.batchQuantity}
-                          maxLabel={copy.wizardQuantityHint}
-                        />
+                        <QrQuantityControl labels={copy.quantity} locale={locale} />
                         <label className="admin-field" htmlFor={`purpose-${design.id}`}>
                           <span>{copy.batchPurpose}</span>
                           <input
