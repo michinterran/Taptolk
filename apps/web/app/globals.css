@@ -7339,3 +7339,15 @@ h3,
 .admin-overview-attention__items article {
   padding-inline: 0;
 }
+
+/* Console width. Screen shells each centred their own narrower column (76rem,
+   1280px, 88rem), so the console sat in the middle of the viewport while the
+   reference fills the space beside the sidebar. */
+.tt-admin-shell__main,
+.operations-shell,
+.admin-report-shell {
+  margin-inline: 0;
+  max-width: var(--tt-console-max-width);
+  padding-inline: var(--tt-console-gutter);
+  width: 100%;
+}

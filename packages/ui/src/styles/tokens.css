@@ -33,6 +33,9 @@
   --tt-card-padding-compact: 1rem;
   --tt-card-radius: 0.875rem;
   --tt-card-gap: 1.5rem;
+  /* The console fills its column like the reference; only the gutter is reserved. */
+  --tt-console-max-width: none;
+  --tt-console-gutter: clamp(1.25rem, 2.5vw, 2.5rem);
   --tt-section-gap: 1.5rem;
 
   /* Button metrics (new). Every button in the product resolves its size, shape and
