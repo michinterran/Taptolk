@@ -6847,3 +6847,16 @@ h3,
   color: var(--tt-color-text-muted);
   font-size: 0.68rem;
 }
+
+/* Marks a management company that Taptolk operates directly. Driven by
+   is_platform_direct, never by the company name. */
+.tt-direct-badge {
+  background: var(--tt-color-brand-surface);
+  border-radius: var(--tt-radius-pill);
+  color: var(--tt-color-brand-fg);
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  vertical-align: middle;
+}

@@ -111,6 +111,7 @@ export default async function ManagementCompaniesPage({
           localeTitle: copy["locale.switcher.label"],
           logoAlt: copy["admin.brand.logoAlt"],
           name: copy["admin.companies.name"],
+          platformDirect: copy["admin.companies.platformDirect"],
           next: copy["admin.companies.next"],
           noActiveTenant: copy["admin.companies.noActiveTenant"],
           page: copy["admin.companies.page"],

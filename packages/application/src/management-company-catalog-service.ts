@@ -10,6 +10,8 @@ export interface ManagementCompanyCatalogItem {
   contractVehicleLimit: number;
   createdAt: string;
   id: string;
+  /** Taptolk operates this company's sites directly rather than a customer's company. */
+  isPlatformDirect: boolean;
   name: string;
   siteCount: number;
   status: OrganizationStatus;

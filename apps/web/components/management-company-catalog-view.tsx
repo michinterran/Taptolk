@@ -50,6 +50,7 @@ interface ManagementCompanyCopy {
   localeTitle: string;
   logoAlt: string;
   name: string;
+  platformDirect: string;
   next: string;
   noActiveTenant: string;
   page: string;
@@ -339,7 +340,12 @@ export function ManagementCompanyCatalogView({
     {
       cell: (company) => (
         <span className="tt-table-entity">
-          <strong>{company.name}</strong>
+          <strong>
+            {company.name}
+            {company.isPlatformDirect ? (
+              <span className="tt-direct-badge">{copy.platformDirect}</span>
+            ) : null}
+          </strong>
           <small>{formatBusinessNumber(company.businessNumber)}</small>
         </span>
       ),

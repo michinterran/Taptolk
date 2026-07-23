@@ -55,6 +55,7 @@ function mapCompanyRow(
     contractVehicleLimit: metrics.get(candidate.id)?.contractVehicleLimit ?? 0,
     createdAt: candidate.created_at,
     id: candidate.id,
+    isPlatformDirect: candidate.is_platform_direct === true,
     name: candidate.name,
     siteCount: metrics.get(candidate.id)?.siteCount ?? 0,
     status: candidate.status,
@@ -72,7 +73,7 @@ export function createSupabaseManagementCompanyCatalogRepository(
       let query = client
         .from("management_companies")
         .select(
-          "id, tenant_id, name, business_number, status, version, created_at, tenants!inner(name)",
+          "id, tenant_id, name, business_number, status, version, created_at, is_platform_direct, tenants!inner(name)",
           { count: "exact" },
         )
         .is("deleted_at", null);
