@@ -31,7 +31,7 @@
      block must not restate them, which is how the console drifted apart. */
   --tt-card-padding: 1.5rem;
   --tt-card-padding-compact: 1rem;
-  --tt-card-radius: 1.25rem;
+  --tt-card-radius: 0.875rem;
   --tt-card-gap: 1.5rem;
   --tt-section-gap: 1.5rem;
 

@@ -7286,11 +7286,18 @@ h3,
 .admin-overview-section,
 .admin-command-grid,
 .admin-report-grid,
+.admin-report-rate-grid,
 .admin-revenue-grid,
+.admin-revenue-summary,
+.admin-analytics-grid,
 .operations-trend-panel,
 .operations-site-panel,
+.operations-kpi-strip,
+.operations-scope-summary,
 .admin-directory-panel,
-.admin-profile-panel {
+.admin-profile-panel,
+.admin-stat-strip,
+.tt-stat-strip {
   margin-bottom: var(--tt-section-gap);
 }
 
