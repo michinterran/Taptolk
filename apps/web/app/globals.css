@@ -7227,3 +7227,83 @@ h3,
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================================
+   Admin console surface rules — single source for card shape and spacing.
+
+   Screen-specific blocks above each carried their own padding (0.85rem, 1rem,
+   1.1rem, 1.25rem…) and corner (0.8rem, 1rem, 2rem…), which is why the console
+   never matched the reference and why fixing one screen never fixed the next.
+   These rules close that: every console card resolves from --tt-card-*.
+
+   Adding a new admin panel means adding its selector here, not writing another
+   background/border/radius/padding set.
+   ========================================================================== */
+
+.admin-overview-section,
+.admin-overview-attention,
+.admin-command-panel,
+.admin-analytics-card,
+.admin-revenue-panel,
+.admin-revenue-company-panel,
+.admin-directory-panel,
+.admin-profile-panel,
+.admin-portfolio-panel,
+.admin-context-card,
+.admin-catalog-summary,
+.admin-company-identity,
+.operations-metric,
+.operations-trend-panel,
+.operations-site-panel,
+.admin-report-section,
+.admin-report-detail,
+.qr-order__panel,
+.qr-order__rail,
+.qr-brand-upload {
+  border-radius: var(--tt-card-radius);
+  padding: var(--tt-card-padding);
+}
+
+/* Strips draw their own cell dividers, so they carry the frame without padding. */
+.admin-stat-strip,
+.operations-kpi-strip,
+.operations-scope-summary,
+.tt-stat-strip {
+  border-radius: var(--tt-card-radius);
+  padding: 0;
+}
+
+/* Console grids and stacks breathe at the reference spacing. */
+.admin-command-grid,
+.admin-report-grid,
+.admin-revenue-grid,
+.admin-revenue-summary,
+.admin-analytics-grid,
+.operations-flow-panel {
+  gap: var(--tt-card-gap);
+}
+
+.admin-overview-section,
+.admin-command-grid,
+.admin-report-grid,
+.admin-revenue-grid,
+.operations-trend-panel,
+.operations-site-panel,
+.admin-directory-panel,
+.admin-profile-panel {
+  margin-bottom: var(--tt-section-gap);
+}
+
+/* A card never sits inside another card. Where a group needs separating, it is a
+   hairline, not a second frame. */
+.admin-command-panel .admin-command-panel,
+.admin-report-section > dl,
+.admin-overview-attention__items article {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.admin-overview-attention__items article {
+  padding-inline: 0;
+}

@@ -26,6 +26,15 @@
   /* Foreground for filled brand/state surfaces (new) */
   --tt-color-on-brand: #ffffff;
 
+  /* Layout scale, measured from the reference console mockup. Every admin surface
+     card resolves its padding, corner and spacing from these — a screen-specific
+     block must not restate them, which is how the console drifted apart. */
+  --tt-card-padding: 1.5rem;
+  --tt-card-padding-compact: 1rem;
+  --tt-card-radius: 1.25rem;
+  --tt-card-gap: 1.5rem;
+  --tt-section-gap: 1.5rem;
+
   /* Button metrics (new). Every button in the product resolves its size, shape and
      type from these. Do not restate the values in a component stylesheet — change
      them here so the whole product moves together. */
