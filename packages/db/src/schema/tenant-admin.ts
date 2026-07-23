@@ -305,6 +305,8 @@ export const managementCompanies = pgTable(
     contactName: text("contact_name"),
     contactPhoneEncrypted: text("contact_phone_encrypted"),
     billingEmail: text("billing_email"),
+    /** Taptolk operates this company's sites directly. Never infer this from the name. */
+    isPlatformDirect: boolean("is_platform_direct").default(false).notNull(),
     ...commonColumns(),
     deletedAt: timestamp("deleted_at", { mode: "date", withTimezone: true }),
   },
