@@ -31,7 +31,7 @@ body::before {
   content: "";
   inset: 0;
   mask-image: linear-gradient(to bottom, transparent, black 16rem, transparent);
-  opacity: 0.55;
+  opacity: 0.28;
   pointer-events: none;
   position: fixed;
 }
@@ -878,9 +878,10 @@ h3,
   max-width: 58rem;
 }
 
+/* Stays a step below the hero title so the page keeps one clear heading order. */
 .landing-section-title {
-  font-size: clamp(2.5rem, 5vw, 5.25rem);
-  letter-spacing: -0.055em;
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  letter-spacing: -0.03em;
 }
 
 .landing-route {
@@ -1924,10 +1925,9 @@ h3,
 .admin-mfa-layout {
   align-items: center;
   display: grid;
-  gap: clamp(2rem, 7vw, 7rem);
+  gap: clamp(2rem, 5vw, 4.5rem);
   grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
-  min-height: calc(100vh - 8rem);
-  padding-block: var(--tt-space-7);
+  padding-block: var(--tt-space-6);
 }
 
 .admin-auth-intro {
@@ -1936,8 +1936,9 @@ h3,
 }
 
 .admin-auth-title {
-  font-size: clamp(2.6rem, 6vw, 5.4rem);
-  letter-spacing: -0.055em;
+  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  letter-spacing: -0.035em;
+  max-width: 18ch;
 }
 
 .admin-auth-title .semantic-line:last-child,
@@ -6563,37 +6564,19 @@ h3,
   width: clamp(7.5rem, 11vw, 9.5rem);
 }
 
+/* Public surfaces use the same restrained card language as the admin console:
+   token radii, a single hairline border, and one low shadow level. */
 .landing-hero {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--tt-color-surface) 96%, var(--tt-color-brand) 4%),
-    color-mix(in srgb, var(--tt-color-surface) 84%, var(--tt-color-brand) 16%)
-  );
+  background: var(--tt-color-surface);
   border: 1px solid var(--tt-color-border);
-  border-radius: clamp(2rem, 4vw, 3.5rem);
-  box-shadow: var(--tt-shadow-md);
-  gap: clamp(2rem, 6vw, 5rem);
-  margin-top: var(--tt-space-6);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-sm);
+  gap: clamp(2rem, 5vw, 4rem);
+  margin-top: var(--tt-space-5);
   min-height: auto;
   overflow: hidden;
-  padding: clamp(2rem, 6vw, 5rem);
+  padding: clamp(1.75rem, 4vw, 3.25rem);
   position: relative;
-}
-
-.landing-hero::after {
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--tt-color-brand) 11%, transparent) 1px, transparent 1px),
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--tt-color-brand) 11%, transparent) 1px,
-      transparent 1px
-    );
-  background-size: 4rem 4rem;
-  content: "";
-  inset: 0;
-  opacity: 0.32;
-  pointer-events: none;
-  position: absolute;
 }
 
 .landing-hero > * {
@@ -6602,7 +6585,9 @@ h3,
 }
 
 .landing-title {
-  font-size: clamp(3.2rem, 7vw, 6.4rem);
+  font-size: clamp(2.1rem, 4vw, 3.35rem);
+  letter-spacing: -0.04em;
+  max-width: 18ch;
 }
 
 .landing-hero__badges {
@@ -6647,26 +6632,25 @@ h3,
   background:
     radial-gradient(
       circle at 65% 20%,
-      color-mix(in srgb, var(--tt-color-brand) 34%, transparent),
-      transparent 10rem
+      color-mix(in srgb, var(--tt-color-brand) 26%, transparent),
+      transparent 12rem
     ),
     var(--tt-color-text);
   border: 1px solid color-mix(in srgb, var(--tt-color-surface) 12%, transparent);
-  box-shadow:
-    1rem 1rem 0 color-mix(in srgb, var(--tt-color-brand) 14%, transparent),
-    var(--tt-shadow-md);
-  min-height: 30rem;
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-sm);
+  min-height: 22rem;
 }
 
 .landing-journey,
 .landing-faq,
 .landing-privacy {
-  background: color-mix(in srgb, var(--tt-color-surface) 78%, transparent);
+  background: var(--tt-color-surface);
   border: 1px solid var(--tt-color-border);
-  border-radius: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: var(--tt-radius-md);
   box-shadow: var(--tt-shadow-sm);
   margin-top: var(--tt-space-5);
-  padding: clamp(2rem, 5vw, 4rem);
+  padding: clamp(1.75rem, 4vw, 3rem);
 }
 
 .landing-route {
@@ -6676,9 +6660,9 @@ h3,
 .landing-route > li {
   background: var(--tt-color-surface);
   border: 1px solid var(--tt-color-border);
-  border-radius: var(--tt-radius-lg);
+  border-radius: var(--tt-radius-md);
   box-shadow: var(--tt-shadow-sm);
-  min-height: 16rem;
+  min-height: 12rem;
 }
 
 .landing-route > li:last-child {
@@ -6695,9 +6679,9 @@ h3,
 }
 
 .landing-route h3 {
-  font-size: clamp(1.15rem, 2vw, 1.6rem);
-  letter-spacing: -0.035em;
-  margin-top: clamp(4rem, 7vw, 6rem);
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  letter-spacing: -0.03em;
+  margin-top: clamp(2.5rem, 4vw, 3.5rem);
 }
 
 .landing-privacy-list,
@@ -6710,36 +6694,17 @@ h3,
   box-shadow: var(--tt-shadow-sm);
 }
 
+/* The admin sign-in page is a work surface, not a marketing page: the console
+   card language, and a headline that does not crowd out the form. */
 .admin-auth-layout {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--tt-color-surface) 96%, var(--tt-color-brand) 4%),
-    color-mix(in srgb, var(--tt-color-surface) 86%, var(--tt-color-brand) 14%)
-  );
+  background: var(--tt-color-surface);
   border: 1px solid var(--tt-color-border);
-  border-radius: clamp(2rem, 4vw, 3.25rem);
-  box-shadow: var(--tt-shadow-md);
-  margin-top: var(--tt-space-6);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-sm);
+  margin-top: var(--tt-space-5);
   min-height: auto;
-  padding: clamp(2rem, 6vw, 5rem);
+  padding: clamp(1.75rem, 4vw, 3.25rem);
   position: relative;
-}
-
-.admin-auth-layout::before {
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--tt-color-brand) 10%, transparent) 1px, transparent 1px),
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--tt-color-brand) 10%, transparent) 1px,
-      transparent 1px
-    );
-  background-size: 4rem 4rem;
-  border-radius: inherit;
-  content: "";
-  inset: 0;
-  opacity: 0.28;
-  pointer-events: none;
-  position: absolute;
 }
 
 .admin-auth-layout > * {
