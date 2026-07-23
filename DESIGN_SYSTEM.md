@@ -50,6 +50,7 @@
 | `pwa/03-owner-reply.png` | **PWA** — 차주가 받은 메시지에 응답 |
 | `pwa/04-caller-response-received.png` | **PWA** — 차주 응답 도착, 호출 종료 |
 | `pwa/sticker-physical.png` | 실물 스티커 |
+| `pwa/README.md` | **시안이 없는 모바일 화면의 정본** — 활성화 3단계, 4개 탭, 오류 상태. Claude 설계, 승인 대기 |
 
 **PWA 공통**: 상단 taptolk 로고, 흰 카드 스택, 선택지는 아이콘 + 한 줄, 가장 많이 쓰는
 선택지에 브랜드 틴트, 하단 primary 버튼 1개(로고 마크 + 라벨),
