@@ -323,86 +323,90 @@ export default async function QrInventoryPage({
         statusMessage={status ? statusMessages[status] : undefined}
         workflowCopy={ADMIN_QR_WORKFLOW_COPY[locale]}
       />
-      <QrBatchProgressView
-        copy={{
-          attempts: copy["admin.qr.progress.attempts"],
-          empty: copy["admin.qr.progress.empty"],
-          exports: copy["admin.qr.progress.exports"],
-          failed: copy["admin.qr.progress.failed"],
-          generated: copy["admin.qr.progress.generated"],
-          progress: copy["admin.qr.progress.description"],
-          statusLabels: {
-            CANCELLED: copy["admin.qr.batch.status.cancelled"],
-            COMPLETED: copy["admin.qr.batch.status.completed"],
-            DELIVERED: copy["admin.qr.batch.status.delivered"],
-            DISTRIBUTING: copy["admin.qr.batch.status.distributing"],
-            DRAFT: copy["admin.qr.batch.status.draft"],
-            FAILED: copy["admin.qr.batch.status.failed"],
-            FINAL_APPROVAL_PENDING: copy["admin.qr.batch.status.finalApprovalPending"],
-            GENERATED: copy["admin.qr.batch.status.generated"],
-            GENERATING: copy["admin.qr.batch.status.generating"],
-            GENERATION_APPROVED: copy["admin.qr.batch.status.generationApproved"],
-            GENERATION_QUEUED: copy["admin.qr.batch.status.generationQueued"],
-            PARTIALLY_COMPLETED: copy["admin.qr.batch.status.partiallyCompleted"],
-            PRINTED: copy["admin.qr.batch.status.printed"],
-            PRINT_FILE_READY: copy["admin.qr.batch.status.printFileReady"],
-            QUALITY_CHECKED: copy["admin.qr.batch.status.qualityChecked"],
-            SAMPLE_APPROVED: copy["admin.qr.batch.status.sampleApproved"],
-            SAMPLE_READY: copy["admin.qr.batch.status.sampleReady"],
-            SAMPLE_RENDERING: copy["admin.qr.batch.status.sampleRendering"],
-            SENT_TO_PRINTER: copy["admin.qr.batch.status.sentToPrinter"],
-            SHIPPED: copy["admin.qr.batch.status.shipped"],
-          },
-          title: copy["admin.qr.progress.title"],
-        }}
-        items={progressModel}
-      />
-      <QrInventoryAssignmentView
-        canAssign={roleHasPermission(membership.role, "qr-asset:assign")}
-        canRevoke={roleHasPermission(membership.role, "qr-asset:revoke")}
-        copy={{
-          assign: copy["admin.qr.inventory.assign"],
-          assignDescription: copy["admin.qr.inventory.assign.description"],
-          assignTitle: copy["admin.qr.inventory.assign.title"],
-          batchReceive: copy["admin.qr.inventory.batch.receive"],
-          batchReceiveDescription: copy["admin.qr.inventory.batch.receive.description"],
-          batchReceiveTitle: copy["admin.qr.inventory.batch.receive.title"],
-          commit: copy["admin.qr.inventory.commit"],
-          csvFile: copy["admin.qr.inventory.csvFile"],
-          empty: copy["admin.qr.inventory.empty"],
-          humanCode: copy["admin.qr.inventory.humanCode"],
-          importDescription: copy["admin.qr.inventory.import.description"],
-          importTitle: copy["admin.qr.inventory.import.title"],
-          originalDeleted: copy["admin.qr.inventory.originalDeleted"],
-          reason: copy["admin.qr.reason"],
-          reasonPlaceholder: copy["admin.qr.reason.placeholder"],
-          replace: copy["admin.qr.inventory.replace"],
-          replacement: copy["admin.qr.inventory.replacement"],
-          revoke: copy["admin.qr.inventory.revoke"],
-          securityNote: copy["admin.qr.inventory.securityNote"],
-          site: copy["admin.qr.site"],
-          status: copy["admin.qr.inventory.status"],
-          statusLabels: {
-            ACTIVATION_PENDING: copy["admin.qr.asset.status.activationPending"],
-            ACTIVE: copy["admin.qr.asset.status.active"],
-            ASSIGNED: copy["admin.qr.asset.status.assigned"],
-            DAMAGED: copy["admin.qr.asset.status.damaged"],
-            EXPIRED: copy["admin.qr.asset.status.expired"],
-            GENERATED: copy["admin.qr.asset.status.generated"],
-            IN_STOCK: copy["admin.qr.asset.status.inStock"],
-            LOST: copy["admin.qr.asset.status.lost"],
-            PRINTED: copy["admin.qr.asset.status.printed"],
-            PRINT_READY: copy["admin.qr.asset.status.printReady"],
-            REPLACED: copy["admin.qr.asset.status.replaced"],
-            REVOKED: copy["admin.qr.asset.status.revoked"],
-            SUSPENDED: copy["admin.qr.asset.status.suspended"],
-          },
-          vehicleLast4: copy["admin.qr.inventory.vehicleLast4"],
-          vehiclePlate: copy["admin.qr.inventory.vehiclePlate"],
-        }}
-        locale={locale}
-        model={assignmentModel}
-      />
+      {section === "tracking" ? (
+        <QrBatchProgressView
+          copy={{
+            attempts: copy["admin.qr.progress.attempts"],
+            empty: copy["admin.qr.progress.empty"],
+            exports: copy["admin.qr.progress.exports"],
+            failed: copy["admin.qr.progress.failed"],
+            generated: copy["admin.qr.progress.generated"],
+            progress: copy["admin.qr.progress.description"],
+            statusLabels: {
+              CANCELLED: copy["admin.qr.batch.status.cancelled"],
+              COMPLETED: copy["admin.qr.batch.status.completed"],
+              DELIVERED: copy["admin.qr.batch.status.delivered"],
+              DISTRIBUTING: copy["admin.qr.batch.status.distributing"],
+              DRAFT: copy["admin.qr.batch.status.draft"],
+              FAILED: copy["admin.qr.batch.status.failed"],
+              FINAL_APPROVAL_PENDING: copy["admin.qr.batch.status.finalApprovalPending"],
+              GENERATED: copy["admin.qr.batch.status.generated"],
+              GENERATING: copy["admin.qr.batch.status.generating"],
+              GENERATION_APPROVED: copy["admin.qr.batch.status.generationApproved"],
+              GENERATION_QUEUED: copy["admin.qr.batch.status.generationQueued"],
+              PARTIALLY_COMPLETED: copy["admin.qr.batch.status.partiallyCompleted"],
+              PRINTED: copy["admin.qr.batch.status.printed"],
+              PRINT_FILE_READY: copy["admin.qr.batch.status.printFileReady"],
+              QUALITY_CHECKED: copy["admin.qr.batch.status.qualityChecked"],
+              SAMPLE_APPROVED: copy["admin.qr.batch.status.sampleApproved"],
+              SAMPLE_READY: copy["admin.qr.batch.status.sampleReady"],
+              SAMPLE_RENDERING: copy["admin.qr.batch.status.sampleRendering"],
+              SENT_TO_PRINTER: copy["admin.qr.batch.status.sentToPrinter"],
+              SHIPPED: copy["admin.qr.batch.status.shipped"],
+            },
+            title: copy["admin.qr.progress.title"],
+          }}
+          items={progressModel}
+        />
+      ) : null}
+      {section === "tracking" ? (
+        <QrInventoryAssignmentView
+          canAssign={roleHasPermission(membership.role, "qr-asset:assign")}
+          canRevoke={roleHasPermission(membership.role, "qr-asset:revoke")}
+          copy={{
+            assign: copy["admin.qr.inventory.assign"],
+            assignDescription: copy["admin.qr.inventory.assign.description"],
+            assignTitle: copy["admin.qr.inventory.assign.title"],
+            batchReceive: copy["admin.qr.inventory.batch.receive"],
+            batchReceiveDescription: copy["admin.qr.inventory.batch.receive.description"],
+            batchReceiveTitle: copy["admin.qr.inventory.batch.receive.title"],
+            commit: copy["admin.qr.inventory.commit"],
+            csvFile: copy["admin.qr.inventory.csvFile"],
+            empty: copy["admin.qr.inventory.empty"],
+            humanCode: copy["admin.qr.inventory.humanCode"],
+            importDescription: copy["admin.qr.inventory.import.description"],
+            importTitle: copy["admin.qr.inventory.import.title"],
+            originalDeleted: copy["admin.qr.inventory.originalDeleted"],
+            reason: copy["admin.qr.reason"],
+            reasonPlaceholder: copy["admin.qr.reason.placeholder"],
+            replace: copy["admin.qr.inventory.replace"],
+            replacement: copy["admin.qr.inventory.replacement"],
+            revoke: copy["admin.qr.inventory.revoke"],
+            securityNote: copy["admin.qr.inventory.securityNote"],
+            site: copy["admin.qr.site"],
+            status: copy["admin.qr.inventory.status"],
+            statusLabels: {
+              ACTIVATION_PENDING: copy["admin.qr.asset.status.activationPending"],
+              ACTIVE: copy["admin.qr.asset.status.active"],
+              ASSIGNED: copy["admin.qr.asset.status.assigned"],
+              DAMAGED: copy["admin.qr.asset.status.damaged"],
+              EXPIRED: copy["admin.qr.asset.status.expired"],
+              GENERATED: copy["admin.qr.asset.status.generated"],
+              IN_STOCK: copy["admin.qr.asset.status.inStock"],
+              LOST: copy["admin.qr.asset.status.lost"],
+              PRINTED: copy["admin.qr.asset.status.printed"],
+              PRINT_READY: copy["admin.qr.asset.status.printReady"],
+              REPLACED: copy["admin.qr.asset.status.replaced"],
+              REVOKED: copy["admin.qr.asset.status.revoked"],
+              SUSPENDED: copy["admin.qr.asset.status.suspended"],
+            },
+            vehicleLast4: copy["admin.qr.inventory.vehicleLast4"],
+            vehiclePlate: copy["admin.qr.inventory.vehiclePlate"],
+          }}
+          locale={locale}
+          model={assignmentModel}
+        />
+      ) : null}
     </main>
   );
 }

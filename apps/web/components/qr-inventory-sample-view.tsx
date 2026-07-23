@@ -681,31 +681,19 @@ export function QrInventorySampleView({
       <QrSectionNav labels={copy.sections} locale={locale} section={section} />
 
       {section === "order" ? (
-        <section
-          className="admin-qr-wizard admin-qr-wizard--workflow"
-          aria-labelledby="qr-wizard-title"
-        >
-          <div className="admin-qr-wizard__copy">
-            <p className="eyebrow">{copy.wizardTemplate}</p>
-            <h2 id="qr-wizard-title">{workflowCopy.title}</h2>
-            <p>{workflowCopy.description}</p>
-            <ol className="qr-steps">
-              {workflowCopy.steps.slice(0, ORDER_STEP_COUNT).map((step, index) => (
-                <WizardStep
-                  description={step.description}
-                  index={index + 1}
-                  key={step.title}
-                  title={step.title}
-                />
-              ))}
-            </ol>
-          </div>
-        </section>
+        <nav aria-label={workflowCopy.title} className="qr-steps-bar">
+          <ol className="qr-steps">
+            {workflowCopy.steps.slice(0, ORDER_STEP_COUNT).map((step, index) => (
+              <WizardStep
+                description={step.description}
+                index={index + 1}
+                key={step.title}
+                title={step.title}
+              />
+            ))}
+          </ol>
+        </nav>
       ) : null}
-
-      {/* BrandAssetUploadView already renders its own titled section; wrapping it again
-          produced a card inside a card with two headings. */}
-      {section === "order" ? brandAssetUpload : null}
 
       {section === "order" && canCreateDesign ? (
         <section aria-labelledby="qr-design-title" className="qr-order">
@@ -821,6 +809,10 @@ export function QrInventorySampleView({
           </aside>
         </section>
       ) : null}
+
+      {/* BrandAssetUploadView already renders its own titled section; wrapping it again
+          produced a card inside a card with two headings. */}
+      {section === "order" ? brandAssetUpload : null}
 
       {section === "approvals" && canApproveDesign ? (
         <section aria-labelledby="design-approval-title" className="admin-lifecycle-queue">

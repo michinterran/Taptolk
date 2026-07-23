@@ -7066,3 +7066,18 @@ h3,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Stepper bar. The page heading above already names the flow, so this carries
+   only the steps. */
+.qr-steps-bar {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-sm);
+  margin-bottom: var(--tt-space-4);
+  padding: 0.7rem;
+}
+
+.qr-steps-bar .qr-steps {
+  margin: 0;
+}
