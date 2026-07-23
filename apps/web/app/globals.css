@@ -1270,7 +1270,7 @@ h3,
     var(--tt-color-background);
   color: var(--tt-color-text);
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
+  grid-template-columns: var(--tt-sidebar-width) minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -1293,7 +1293,6 @@ h3,
   display: flex;
   flex-direction: column;
   gap: var(--tt-space-5);
-  padding: var(--tt-space-5) var(--tt-space-4);
 }
 
 .tt-sidebar__brand {
@@ -1305,7 +1304,6 @@ h3,
 .tt-sidebar__nav,
 .tt-sidebar__items {
   display: grid;
-  gap: var(--tt-space-2);
 }
 
 .tt-sidebar__section-label {
@@ -1319,21 +1317,10 @@ h3,
 
 .tt-sidebar__item {
   align-items: center;
-  border-radius: var(--tt-radius-md);
   color: var(--tt-color-text-muted);
   display: flex;
-  font-size: 0.92rem;
-  font-weight: 750;
   gap: var(--tt-space-3);
-  min-height: 2.75rem;
-  padding: 0 var(--tt-space-3);
   text-decoration: none;
-}
-
-.tt-sidebar__item:hover,
-.tt-sidebar__item--current {
-  background: var(--tt-color-brand-surface);
-  color: var(--tt-color-text);
 }
 
 .tt-sidebar__item-icon {
@@ -1574,26 +1561,10 @@ h3,
   overflow-x: auto;
 }
 
+/* Shape, spacing and header style come from the console table rule at the end of
+   this file. Only the column contract belongs to the screen. */
 .tt-data-table {
-  border-collapse: collapse;
   min-width: 760px;
-  width: 100%;
-}
-
-.tt-data-table th,
-.tt-data-table td {
-  border-bottom: 1px solid var(--tt-color-border);
-  padding: var(--tt-space-3) var(--tt-space-4);
-  text-align: left;
-  vertical-align: middle;
-}
-
-.tt-data-table th {
-  color: var(--tt-color-text-muted);
-  font-size: 0.74rem;
-  font-weight: 850;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .tt-data-table [data-align="center"] {
@@ -1619,7 +1590,6 @@ h3,
 .tt-table-entity small,
 .tt-table-meter span {
   color: var(--tt-color-text-muted);
-  font-size: 0.78rem;
   font-weight: 650;
 }
 
@@ -2541,26 +2511,7 @@ h3,
 
 .admin-data-table {
   background: var(--tt-color-surface);
-  border-collapse: collapse;
   min-width: 48rem;
-  width: 100%;
-}
-
-.admin-data-table th,
-.admin-data-table td {
-  border-bottom: 1px solid var(--tt-color-border);
-  padding: var(--tt-space-4) var(--tt-space-5);
-  text-align: left;
-}
-
-.admin-data-table th {
-  color: var(--tt-color-text-muted);
-  font-size: 0.78rem;
-  letter-spacing: 0.03em;
-}
-
-.admin-data-table tbody tr:last-child td {
-  border-bottom: 0;
 }
 
 .admin-data-table code {
@@ -2570,7 +2521,6 @@ h3,
 .admin-table-meta {
   color: var(--tt-color-text-muted);
   display: block;
-  font-size: 0.78rem;
   line-height: 1.5;
   margin-top: 0.35rem;
   max-width: 24rem;
@@ -3186,7 +3136,8 @@ h3,
 .admin-dashboard-shell {
   margin: 0;
   max-width: none;
-  padding: 4.8rem clamp(1.25rem, 2vw, 1.75rem) 2.5rem calc(13rem + clamp(1.25rem, 2vw, 1.75rem));
+  padding: 4.8rem clamp(1.25rem, 2vw, 1.75rem) 2.5rem
+    calc(var(--tt-sidebar-width) + clamp(1.25rem, 2vw, 1.75rem));
   width: 100%;
 }
 
@@ -3196,9 +3147,7 @@ h3,
   display: flex;
   flex-direction: column;
   inset: 0 auto 0 0;
-  padding: 1.15rem 0.75rem;
   position: fixed;
-  width: 13rem;
   z-index: 20;
 }
 
@@ -3235,13 +3184,11 @@ h3,
 
 .admin-console-nav {
   display: grid;
-  gap: 1rem;
   padding-block: 1.15rem;
 }
 
 .admin-console-nav__section {
   display: grid;
-  gap: 0.25rem;
 }
 
 .admin-console-nav__section > p {
@@ -3256,15 +3203,10 @@ h3,
 
 .admin-console-nav__item {
   align-items: center;
-  border-radius: 0.5rem;
   color: var(--tt-color-text-muted);
   display: grid;
-  font-size: 0.82rem;
-  font-weight: 720;
   gap: 0.65rem;
   grid-template-columns: 1.15rem minmax(0, 1fr);
-  min-height: 2.35rem;
-  padding: 0.48rem 0.7rem;
   text-decoration: none;
 }
 
@@ -3273,16 +3215,7 @@ h3,
   width: 1.15rem;
 }
 
-.admin-console-nav__item:hover {
-  background: var(--tt-color-background);
-  color: var(--tt-color-text);
-}
-
-.admin-console-nav__item[aria-current="page"] {
-  background: color-mix(in srgb, var(--tt-color-brand) 12%, var(--tt-color-surface));
-  box-shadow: inset 2px 0 0 var(--tt-color-brand-strong);
-  color: var(--tt-color-brand-strong);
-}
+/* Hover and current states resolve from the sidebar tokens at the end of this file. */
 
 .admin-console-profile-link {
   align-items: center;
@@ -3331,7 +3264,7 @@ h3,
   border-bottom: 1px solid var(--tt-color-border);
   display: flex;
   gap: var(--tt-space-5);
-  inset: 0 0 auto 13rem;
+  inset: 0 0 auto var(--tt-sidebar-width);
   justify-content: space-between;
   min-height: 4rem;
   padding: 0.6rem clamp(1.25rem, 2.2vw, 2rem);
@@ -3903,36 +3836,11 @@ h3,
 }
 
 .admin-command-table {
-  background: var(--tt-color-background);
-  border-collapse: collapse;
   color: var(--tt-color-text);
   min-width: 58rem;
-  width: 100%;
-}
-
-.admin-command-table th,
-.admin-command-table td {
-  border-bottom: 1px solid var(--tt-color-border);
-  font-size: 0.72rem;
-  padding: 0.55rem 0.65rem;
-  text-align: left;
-  vertical-align: middle;
-}
-
-.admin-command-table thead th {
-  background: color-mix(in srgb, var(--tt-color-brand) 5%, var(--tt-color-surface));
-  color: var(--tt-color-text-muted);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.03em;
-}
-
-.admin-command-table tbody tr:hover {
-  background: color-mix(in srgb, var(--tt-color-brand) 5%, var(--tt-color-background));
 }
 
 .admin-command-table tbody th {
-  font-size: 0.72rem;
   max-width: 12rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3948,7 +3856,6 @@ h3,
 
 .admin-command-table a {
   color: var(--tt-color-brand-strong);
-  font-size: 0.72rem;
   font-weight: 850;
   text-decoration: none;
 }
@@ -5688,13 +5595,6 @@ h3,
   width: 100%;
 }
 
-.admin-data-table--portfolio th,
-.admin-data-table--portfolio td {
-  font-size: 0.78rem;
-  padding: 0.8rem 1rem;
-  vertical-align: middle;
-}
-
 .admin-table-scroll--catalog {
   border: 0;
   border-radius: 0;
@@ -5706,7 +5606,6 @@ h3,
 
 .admin-data-table--portfolio time {
   color: var(--tt-color-text-muted);
-  font-size: 0.7rem;
   white-space: nowrap;
 }
 
@@ -5717,7 +5616,6 @@ h3,
 
 .admin-data-table--portfolio tbody th small {
   color: var(--tt-color-text-muted);
-  font-size: 0.68rem;
   font-weight: 650;
   margin-top: 0.25rem;
 }
@@ -6026,15 +5924,15 @@ h3,
 
 @media (max-width: 64rem) {
   .admin-dashboard-shell {
-    padding-left: calc(13rem + clamp(1.25rem, 3vw, 2rem));
+    padding-left: calc(var(--tt-sidebar-width) + clamp(1.25rem, 3vw, 2rem));
   }
 
   .admin-console-sidebar {
-    width: 13rem;
+    width: var(--tt-sidebar-width);
   }
 
   .admin-console-topbar {
-    left: 13rem;
+    left: var(--tt-sidebar-width);
   }
 
   .admin-overview-metrics,
@@ -7259,6 +7157,7 @@ h3,
 .admin-report-detail,
 .qr-order__panel,
 .qr-order__rail,
+.qr-board,
 .qr-brand-upload {
   border-radius: var(--tt-card-radius);
   padding: var(--tt-card-padding);
@@ -7350,4 +7249,428 @@ h3,
   max-width: var(--tt-console-max-width);
   padding-inline: var(--tt-console-gutter);
   width: 100%;
+}
+
+/* ============================================================================
+   Console tables — one definition for every admin table.
+
+   `.tt-data-table`, `.admin-data-table` and `.admin-command-table` each carried
+   their own row padding (1rem/1.5rem, 0.8rem/1rem, 0.55rem/0.65rem), header weight
+   (850/900) and header size (0.74/0.78/0.72rem). Measured against the reference the
+   row is 48px, the header band is 38px, and the header is body size, muted and
+   semibold — not a shrunken uppercase caption. Uppercase also does nothing for
+   Korean except break its letter rhythm.
+
+   A new table joins this list. It does not restate padding, size or weight.
+   ========================================================================== */
+.tt-data-table,
+.admin-data-table,
+.admin-command-table,
+.operations-site-table,
+.admin-report-table,
+.admin-revenue-company-table,
+.admin-directory-table {
+  border-collapse: collapse;
+  font-size: var(--tt-table-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  width: 100%;
+}
+
+:is(
+    .tt-data-table,
+    .admin-data-table,
+    .admin-command-table,
+    .operations-site-table,
+    .admin-report-table,
+    .admin-revenue-company-table,
+    .admin-directory-table
+  )
+  :is(th, td) {
+  border-bottom: 1px solid var(--tt-table-divider-color);
+  font-size: var(--tt-table-font-size);
+  padding: var(--tt-table-cell-padding-block) var(--tt-table-cell-padding-inline);
+  text-align: left;
+  vertical-align: middle;
+}
+
+:is(
+    .tt-data-table,
+    .admin-data-table,
+    .admin-command-table,
+    .operations-site-table,
+    .admin-report-table,
+    .admin-revenue-company-table,
+    .admin-directory-table
+  )
+  tbody
+  tr {
+  min-height: var(--tt-table-row-min-height);
+}
+
+:is(
+    .tt-data-table,
+    .admin-data-table,
+    .admin-command-table,
+    .operations-site-table,
+    .admin-report-table,
+    .admin-revenue-company-table,
+    .admin-directory-table
+  )
+  :is(th, td) {
+  height: var(--tt-table-row-min-height);
+}
+
+:is(
+    .tt-data-table,
+    .admin-data-table,
+    .admin-command-table,
+    .operations-site-table,
+    .admin-report-table,
+    .admin-revenue-company-table,
+    .admin-directory-table
+  )
+  thead
+  th {
+  background: var(--tt-table-header-surface);
+  color: var(--tt-table-header-color);
+  font-size: var(--tt-table-header-font-size);
+  font-weight: var(--tt-table-header-font-weight);
+  height: var(--tt-table-header-min-height);
+  letter-spacing: var(--tt-table-header-letter-spacing);
+  text-transform: var(--tt-table-header-transform);
+}
+
+:is(
+    .tt-data-table,
+    .admin-data-table,
+    .admin-command-table,
+    .operations-site-table,
+    .admin-report-table,
+    .admin-revenue-company-table,
+    .admin-directory-table
+  )
+  tbody
+  tr:hover {
+  background: var(--tt-table-row-hover-surface);
+}
+
+:is(
+    .tt-data-table,
+    .admin-data-table,
+    .admin-command-table,
+    .operations-site-table,
+    .admin-report-table,
+    .admin-revenue-company-table,
+    .admin-directory-table
+  )
+  tbody
+  tr:last-child
+  :is(th, td) {
+  border-bottom: 0;
+}
+
+/* The secondary line inside a cell — a code, a timestamp, a scope. */
+.tt-table-entity small,
+.tt-table-meter span,
+.admin-table-meta,
+.admin-data-table--portfolio tbody th small,
+.admin-data-table--portfolio time {
+  font-size: var(--tt-table-meta-font-size);
+}
+
+/* ============================================================================
+   Console typography — one scale for every admin surface.
+
+   Ranks were being set per screen, so the same rank read at a different size on
+   each page. h1 26px / h2 17px / h3 15px and the label size are measured from the
+   reference; figures use tabular numerals so columns line up.
+   ========================================================================== */
+.admin-dashboard-shell h1,
+.admin-console-page h1,
+.tt-admin-shell__main h1,
+.operations-shell h1,
+.admin-report-shell h1 {
+  font-size: var(--tt-heading-1-size);
+  font-weight: var(--tt-heading-1-weight);
+  line-height: var(--tt-heading-line-height);
+}
+
+.admin-dashboard-shell h2,
+.admin-console-page h2,
+.tt-admin-shell__main h2,
+.operations-shell h2,
+.admin-report-shell h2 {
+  font-size: var(--tt-heading-2-size);
+  font-weight: var(--tt-heading-2-weight);
+  line-height: var(--tt-heading-line-height);
+}
+
+.admin-dashboard-shell h3,
+.admin-console-page h3,
+.tt-admin-shell__main h3,
+.operations-shell h3,
+.admin-report-shell h3 {
+  font-size: var(--tt-heading-3-size);
+  font-weight: var(--tt-heading-3-weight);
+  line-height: var(--tt-heading-line-height);
+}
+
+/* Field labels and definition terms are one rank, not per-screen inventions. */
+.admin-dashboard-shell :is(dt, .admin-field > span, .admin-console-label),
+.operations-shell :is(dt, .admin-field > span),
+.admin-report-shell :is(dt, .admin-field > span) {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-label-size);
+  font-weight: var(--tt-label-weight);
+  letter-spacing: var(--tt-label-letter-spacing);
+  text-transform: var(--tt-label-transform);
+}
+
+/* Every figure in the console is tabular so columns align and counters do not
+   jitter as digits change width. */
+.admin-dashboard-shell :is(dd, time, data, .tt-stat-tile strong, .admin-stat-strip strong),
+.operations-shell :is(dd, time, data),
+.admin-report-shell :is(dd, time, data) {
+  font-variant-numeric: var(--tt-numeric-font-variant);
+}
+
+.tt-stat-tile strong,
+.admin-stat-strip strong,
+.operations-kpi-strip strong {
+  font-size: var(--tt-stat-value-size);
+  font-weight: var(--tt-stat-value-weight);
+  line-height: var(--tt-line-tight);
+}
+
+/* ============================================================================
+   Console sidebar — rail width, item height and states from tokens.
+
+   Measured from the reference: a 206px rail, a 40px item on a 50px pitch, and an
+   active item that is a tinted pill with brand text. The rail had also been drawing
+   an inset 2px brand bar the reference does not have.
+   ========================================================================== */
+.admin-console-sidebar {
+  padding: var(--tt-sidebar-padding-block) var(--tt-sidebar-padding-inline);
+  width: var(--tt-sidebar-width);
+}
+
+.admin-console-nav {
+  gap: var(--tt-sidebar-group-gap);
+}
+
+.admin-console-nav__section {
+  gap: var(--tt-sidebar-item-gap);
+}
+
+.admin-console-nav__item,
+.tt-sidebar__item {
+  border-radius: var(--tt-sidebar-item-radius);
+  font-size: var(--tt-sidebar-item-font-size);
+  font-weight: var(--tt-sidebar-item-font-weight);
+  min-height: var(--tt-sidebar-item-height);
+  padding-block: 0;
+  padding-inline: var(--tt-sidebar-item-padding-inline);
+}
+
+.admin-console-nav__item:hover,
+.tt-sidebar__item:hover {
+  background: var(--tt-sidebar-item-hover-surface);
+  color: var(--tt-color-text);
+}
+
+.admin-console-nav__item[aria-current="page"],
+.tt-sidebar__item--current {
+  background: var(--tt-sidebar-item-active-surface);
+  box-shadow: none;
+  color: var(--tt-sidebar-item-active-color);
+}
+
+.tt-sidebar {
+  padding: var(--tt-sidebar-padding-block) var(--tt-sidebar-padding-inline);
+}
+
+.tt-sidebar__nav {
+  gap: var(--tt-sidebar-group-gap);
+}
+
+.tt-sidebar__items {
+  gap: var(--tt-sidebar-item-gap);
+}
+
+/* ============================================================================
+   QR production tracking board.
+
+   Twenty statuses in one flat card list read as noise. The board is four lanes —
+   generation, print, shipping, distribution — that come from the domain phase
+   policy. Shape and spacing come from the card tokens; a lane is not a card inside
+   a card, it is a column separated by a hairline.
+   ========================================================================== */
+.qr-board {
+  margin-bottom: var(--tt-section-gap);
+}
+
+.qr-board__header {
+  margin-bottom: var(--tt-card-gap);
+}
+
+.qr-board__lanes {
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.qr-board__lane {
+  border-right: 1px solid var(--tt-table-divider-color);
+  display: grid;
+  gap: var(--tt-space-3);
+  min-width: 0;
+  padding: var(--tt-card-padding-compact);
+}
+
+.qr-board__lane:last-child {
+  border-right: 0;
+}
+
+.qr-board__lane-header {
+  align-items: baseline;
+  display: grid;
+  gap: 0 var(--tt-space-2);
+  grid-template-columns: auto 1fr;
+}
+
+.qr-board__lane-header h3 {
+  margin: 0;
+}
+
+.qr-board__lane-count {
+  color: var(--tt-color-text-muted);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-semibold);
+  justify-self: start;
+}
+
+.qr-board__lane-header p {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-label-size);
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.qr-board__lane-items,
+.qr-board__outcome-items {
+  display: grid;
+  gap: var(--tt-space-3);
+  min-width: 0;
+}
+
+.qr-board__outcome-items {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}
+
+.qr-board__batch {
+  background: var(--tt-color-surface-subtle);
+  border-radius: var(--tt-radius-xs);
+  display: grid;
+  gap: var(--tt-space-2);
+  min-width: 0;
+  padding: var(--tt-space-3);
+}
+
+.qr-board__batch-header {
+  align-items: start;
+  display: flex;
+  gap: var(--tt-space-2);
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.qr-board__batch-header h4 {
+  font-size: var(--tt-table-font-size);
+  font-weight: var(--tt-font-weight-semibold);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.qr-board__batch-code {
+  color: var(--tt-color-text-muted);
+  display: block;
+  font-size: var(--tt-table-meta-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+}
+
+.qr-board__progress {
+  display: grid;
+  gap: var(--tt-space-1);
+  font-size: var(--tt-table-meta-font-size);
+}
+
+.qr-board__progress progress {
+  inline-size: 100%;
+}
+
+.qr-board__batch-meta {
+  display: grid;
+  gap: var(--tt-space-1) var(--tt-space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.qr-board__batch-meta dt {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+}
+
+.qr-board__batch-meta dd {
+  font-size: var(--tt-table-meta-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  margin: 0;
+}
+
+.qr-board__lane-empty {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-label-size);
+  margin: 0;
+}
+
+.qr-board__outcomes {
+  border-top: 1px solid var(--tt-table-divider-color);
+  display: grid;
+  gap: var(--tt-space-3);
+  margin-top: var(--tt-card-gap);
+  padding-top: var(--tt-card-gap);
+}
+
+.qr-board__outcomes h3 {
+  margin: 0;
+}
+
+/* The approval-queue counts reuse the strip of cells, not three separate cards. */
+.qr-approval-summary .tt-stat-tile small {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-label-size);
+}
+
+@media (max-width: 68rem) {
+  .qr-board__lanes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qr-board__lane:nth-child(2) {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 44rem) {
+  .qr-board__lanes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qr-board__lane {
+    border-bottom: 1px solid var(--tt-table-divider-color);
+    border-right: 0;
+  }
+
+  .qr-board__lane:last-child {
+    border-bottom: 0;
+  }
 }

@@ -52,6 +52,65 @@
   --tt-button-radius: var(--tt-radius-pill);
   --tt-button-gap: 0.4rem;
 
+  /* Table metrics, measured from the reference console at 1487 CSS px.
+     Three separate table definitions had drifted apart (padding 0.55/0.8/1rem,
+     header weight 850/900, header size 0.72/0.74/0.78rem), so no screen matched the
+     reference. Every console table now resolves from these.
+
+     The reference header is not a shrunken uppercase caption: it is body size, muted,
+     semibold, on a light band. Korean has no uppercase, so the transform only broke
+     the letter rhythm. */
+  --tt-table-font-size: 0.8125rem;
+  --tt-table-meta-font-size: 0.6875rem;
+  --tt-table-row-min-height: 3rem;
+  --tt-table-cell-padding-block: 0.7rem;
+  --tt-table-cell-padding-inline: 1rem;
+  --tt-table-header-min-height: 2.375rem;
+  --tt-table-header-font-size: 0.8125rem;
+  --tt-table-header-font-weight: 600;
+  --tt-table-header-letter-spacing: 0;
+  --tt-table-header-transform: none;
+  --tt-table-header-surface: #f7f8fa;
+  --tt-table-header-color: var(--tt-color-text-muted);
+  /* Lighter than --tt-color-border on purpose: the reference separates rows inside a
+     card with a hairline that is softer than the card edge. */
+  --tt-table-divider-color: #f0f1f4;
+  --tt-table-row-hover-surface: color-mix(in srgb, var(--tt-color-brand) 4%, transparent);
+
+  /* Console type scale, measured from the reference. Screens had been setting their
+     own heading and label sizes, so the same rank read differently per page. */
+  --tt-heading-1-size: 1.625rem;
+  --tt-heading-1-weight: 700;
+  --tt-heading-2-size: 1.0625rem;
+  --tt-heading-2-weight: 700;
+  --tt-heading-3-size: 0.9375rem;
+  --tt-heading-3-weight: 700;
+  --tt-heading-line-height: 1.35;
+  --tt-body-size: 0.875rem;
+  --tt-label-size: 0.75rem;
+  --tt-label-weight: 600;
+  --tt-label-letter-spacing: 0.02em;
+  --tt-label-transform: none;
+  /* Figures line up in columns and stop jittering as they count. */
+  --tt-numeric-font-variant: tabular-nums;
+  --tt-stat-value-size: 2.125rem;
+  --tt-stat-value-weight: 700;
+
+  /* Sidebar metrics, measured from the reference (206px rail, 50px item pitch). */
+  --tt-sidebar-width: 12.875rem;
+  --tt-sidebar-padding-block: 1.15rem;
+  --tt-sidebar-padding-inline: 0.625rem;
+  --tt-sidebar-item-height: 2.5rem;
+  --tt-sidebar-item-gap: 0.625rem;
+  --tt-sidebar-item-radius: 0.625rem;
+  --tt-sidebar-item-padding-inline: 0.7rem;
+  --tt-sidebar-item-font-size: 0.8125rem;
+  --tt-sidebar-item-font-weight: 600;
+  --tt-sidebar-group-gap: 1.25rem;
+  --tt-sidebar-item-hover-surface: #f7f8fa;
+  --tt-sidebar-item-active-surface: color-mix(in srgb, var(--tt-color-brand) 8%, #ffffff);
+  --tt-sidebar-item-active-color: var(--tt-color-brand-strong);
+
   /* State tint pairs for badges / pills / tiles — bg + accessible foreground (new) */
   --tt-color-brand-surface: #eeeaff;
   --tt-color-brand-fg: #5540c9;
