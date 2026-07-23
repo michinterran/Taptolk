@@ -1478,9 +1478,14 @@ h3,
   gap: var(--tt-space-2);
 }
 
+/* One card holding cells divided by hairlines, per the reference mockup. Tiles are
+   not cards themselves — that is what produced a card inside a card. */
 .tt-stat-strip {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-sm);
   display: grid;
-  gap: 1px;
   overflow: hidden;
 }
 
@@ -1492,7 +1497,6 @@ h3,
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
-.tt-stat-tile,
 .tt-side-card,
 .tt-auth-card,
 .tt-empty-state,
@@ -1507,8 +1511,12 @@ h3,
 .tt-stat-tile {
   display: grid;
   gap: var(--tt-space-2);
-  min-height: 8.5rem;
+  min-height: 6.5rem;
   padding: var(--tt-space-4);
+}
+
+.tt-stat-tile + .tt-stat-tile {
+  border-left: 1px solid var(--tt-color-border);
 }
 
 .tt-stat-tile__header,
@@ -1886,6 +1894,20 @@ h3,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .tt-stat-tile + .tt-stat-tile {
+    border-left: 0;
+  }
+
+  .tt-stat-strip--4 .tt-stat-tile:nth-child(2n),
+  .tt-stat-strip--6 .tt-stat-tile:nth-child(2n) {
+    border-left: 1px solid var(--tt-color-border);
+  }
+
+  .tt-stat-strip--4 .tt-stat-tile:nth-child(n + 3),
+  .tt-stat-strip--6 .tt-stat-tile:nth-child(n + 3) {
+    border-top: 1px solid var(--tt-color-border);
+  }
+
   .tt-page-header,
   .tt-filter-bar,
   .tt-footer {
@@ -1895,6 +1917,16 @@ h3,
 }
 
 @media (max-width: 520px) {
+  .tt-stat-strip--4 .tt-stat-tile,
+  .tt-stat-strip--6 .tt-stat-tile {
+    border-left: 0;
+  }
+
+  .tt-stat-strip--4 .tt-stat-tile + .tt-stat-tile,
+  .tt-stat-strip--6 .tt-stat-tile + .tt-stat-tile {
+    border-top: 1px solid var(--tt-color-border);
+  }
+
   .tt-stat-strip--4,
   .tt-stat-strip--6 {
     grid-template-columns: 1fr;
@@ -4410,28 +4442,34 @@ h3,
   min-height: 2.3rem;
 }
 
+/* One bordered group divided by hairlines, not three boxes inside a card. */
 .admin-report-section dl {
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-sm);
   display: grid;
-  gap: 1px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 1rem 0 0;
+  overflow: hidden;
 }
 
 .admin-report-section dl div {
-  background: var(--tt-color-background);
-  border: 1px solid var(--tt-color-border);
   padding: 0.75rem;
+}
+
+.admin-report-section dl div + div {
+  border-left: 1px solid var(--tt-color-border);
 }
 
 .admin-report-section dt {
   color: var(--tt-color-text-muted);
-  font-size: 0.66rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .admin-report-section dd {
   font-size: 1.2rem;
-  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   margin: 0.35rem 0 0;
 }
 
