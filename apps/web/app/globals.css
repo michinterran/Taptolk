@@ -1207,19 +1207,28 @@ h3,
   place-content: center;
 }
 
+/* Matches the confirmed button spec: brand fill, one low shadow, 0.85rem/600.
+   The previous 3rem/750 sizing read much heavier than the rest of the console. */
 .tt-button {
   align-items: center;
-  background: var(--tt-color-brand-strong);
+  background: var(--tt-color-brand);
   border: 0;
-  border-radius: 999px;
-  color: var(--tt-color-surface);
+  border-radius: var(--tt-radius-pill);
+  box-shadow: var(--tt-shadow-sm);
+  color: var(--tt-color-on-brand);
   cursor: pointer;
   display: inline-flex;
-  font-weight: 750;
+  font-size: 0.85rem;
+  font-weight: 600;
+  gap: 0.4rem;
   justify-content: center;
-  min-height: 3rem;
-  padding: 0 var(--tt-space-5);
+  min-height: 2.5rem;
+  padding: 0.6rem 1.15rem;
   text-decoration: none;
+}
+
+.tt-button:hover {
+  background: var(--tt-color-brand-strong);
 }
 
 .tt-button--compact {
@@ -5076,8 +5085,8 @@ h3,
   color: var(--tt-color-on-brand);
   cursor: pointer;
   font: inherit;
-  font-size: 0.79rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 600;
   padding: 0.42rem 0.95rem;
 }
 
@@ -7106,10 +7115,13 @@ h3,
 
 .qr-stepnav__back,
 .qr-stepnav__next {
+  align-items: center;
   border-radius: var(--tt-radius-pill);
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.5rem 1.1rem;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-height: 2.5rem;
+  padding: 0.6rem 1.15rem;
   text-decoration: none;
 }
 
@@ -7121,6 +7133,7 @@ h3,
 
 .qr-stepnav__next {
   background: var(--tt-color-brand);
+  box-shadow: var(--tt-shadow-sm);
   color: var(--tt-color-on-brand);
 }
 
