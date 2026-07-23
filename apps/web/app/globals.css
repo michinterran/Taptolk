@@ -6860,3 +6860,209 @@ h3,
   padding: 0.1rem 0.45rem;
   vertical-align: middle;
 }
+
+/* QR ordering: work panel on the left, live preview rail on the right.
+   The rail renders every template and reveals the checked one via :has(), so the
+   preview follows the selection without making this a client component. */
+.qr-order {
+  align-items: start;
+  display: grid;
+  gap: var(--tt-space-4);
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  margin-bottom: var(--tt-space-5);
+}
+
+.qr-order__panel {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-sm);
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+}
+
+.qr-order__head h2 {
+  font-size: 1.02rem;
+  margin: 0 0 0.2rem;
+}
+
+.qr-order__head p {
+  color: var(--tt-color-text-muted);
+  font-size: 0.8rem;
+  margin: 0 0 1.1rem;
+}
+
+.qr-order__form {
+  display: grid;
+  gap: var(--tt-space-4);
+}
+
+.qr-order__templates {
+  border: 0;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+}
+
+.qr-order__templates legend {
+  color: var(--tt-color-text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+  padding: 0;
+  text-transform: uppercase;
+}
+
+.qr-order__tpl {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  cursor: pointer;
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  padding: 0.8rem;
+  text-align: center;
+}
+
+.qr-order__tpl:has(input:checked) {
+  border-color: var(--tt-color-brand);
+  box-shadow: 0 0 0 2px var(--tt-color-brand-surface);
+}
+
+.qr-order__tpl input {
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+}
+
+.qr-order__tpl:has(input:focus-visible) {
+  outline: var(--tt-focus-ring);
+  outline-offset: 2px;
+}
+
+.qr-order__tpl-art img {
+  aspect-ratio: 1;
+  display: block;
+  max-width: 118px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.qr-order__tpl strong {
+  font-size: 0.83rem;
+}
+
+.qr-order__tpl small {
+  color: var(--tt-color-text-muted);
+  font-size: 0.71rem;
+}
+
+.qr-order__note {
+  color: var(--tt-color-text-muted);
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.qr-order__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.qr-order__rail {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-sm);
+  display: grid;
+  gap: 0.7rem;
+  justify-items: center;
+  padding: 1.1rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.qr-order__rail h3 {
+  font-size: 0.86rem;
+  justify-self: start;
+  margin: 0;
+}
+
+.qr-order__preview {
+  display: none;
+  margin: 0;
+  width: 100%;
+}
+
+.qr-order__preview img {
+  display: block;
+  height: auto;
+  margin: 0 auto;
+  max-width: 220px;
+  width: 100%;
+}
+
+.qr-order__cap {
+  color: var(--tt-color-text-muted);
+  font-size: 0.72rem;
+  margin: 0;
+  text-align: center;
+}
+
+.qr-order__spec {
+  display: grid;
+  font-size: 0.76rem;
+  gap: 0.35rem;
+  margin: 0;
+  width: 100%;
+}
+
+.qr-order__spec div {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.qr-order__spec dt {
+  color: var(--tt-color-text-muted);
+}
+
+.qr-order__spec dd {
+  font-weight: 600;
+  margin: 0;
+  text-align: right;
+}
+
+.qr-order__spec dd span {
+  display: none;
+}
+
+/* Reveal the rail entry matching the selected template. */
+.qr-order:has(.qr-order__tpl input[value="ROUND_BLUE_HOLOGRAM_V1"]:checked)
+:is(.qr-order__preview, .qr-order__spec dd span)[data-template="ROUND_BLUE_HOLOGRAM_V1"],
+.qr-order:has(.qr-order__tpl input[value="ROUND_PURPLE_GRADIENT_V1"]:checked)
+  :is(.qr-order__preview, .qr-order__spec dd span)[data-template="ROUND_PURPLE_GRADIENT_V1"],
+.qr-order:has(.qr-order__tpl input[value="ROUND_WHITE_MINIMAL_V1"]:checked)
+  :is(.qr-order__preview, .qr-order__spec dd span)[data-template="ROUND_WHITE_MINIMAL_V1"],
+.qr-order:has(.qr-order__tpl input[value="SQUARE_DARK_PREMIUM_V1"]:checked)
+  :is(.qr-order__preview, .qr-order__spec dd span)[data-template="SQUARE_DARK_PREMIUM_V1"] {
+  display: block;
+}
+
+@media (max-width: 1100px) {
+  .qr-order {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-order__rail {
+    position: static;
+  }
+
+  .qr-order__templates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

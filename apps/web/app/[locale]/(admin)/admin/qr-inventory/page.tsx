@@ -247,6 +247,10 @@ export default async function QrInventoryPage({
             warnOver: copy["admin.qr.quantity.warn.over"],
           },
           quietZone: copy["admin.qr.quietZone"],
+          specBottom: copy["admin.qr.spec.bottom"],
+          specBottomValue: copy["admin.qr.spec.bottom.value"],
+          specSize: copy["admin.qr.spec.size"],
+          specSizeValue: copy["admin.qr.spec.size.value"],
           sections: {
             approvals: copy["admin.qr.section.approvals"],
             approvalsHint: copy["admin.qr.section.approvals.hint"],

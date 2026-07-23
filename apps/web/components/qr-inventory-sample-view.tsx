@@ -85,6 +85,10 @@ interface QrInventoryCopy {
   purposePlaceholder: string;
   qaEvidence: string;
   quantity: QrQuantityLabels;
+  specBottom: string;
+  specBottomValue: string;
+  specSize: string;
+  specSizeValue: string;
   sections: QrSectionNavLabels;
   quietZone: string;
   reason: string;
@@ -699,26 +703,20 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {section === "order" && brandAssetUpload ? (
-        <section className="admin-qr-wizard-panel" aria-labelledby="qr-brand-title">
-          <div>
-            <p className="eyebrow">{copy.wizardBrand}</p>
-            <h2 id="qr-brand-title">{copy.wizardBrandDescription}</h2>
-          </div>
-          {brandAssetUpload}
-        </section>
-      ) : null}
+      {/* BrandAssetUploadView already renders its own titled section; wrapping it again
+          produced a card inside a card with two headings. */}
+      {section === "order" ? brandAssetUpload : null}
 
       {section === "order" && canCreateDesign ? (
-        <details className="admin-tenant-create admin-qr-wizard-panel">
-          <summary>
-            <span>{copy.designCreateTitle}</span>
-            <small>{copy.designCreateDescription}</small>
-          </summary>
-          {model.siteOptions.length > 0 ? (
-            <form action={createStickerDesignVersion} className="admin-tenant-form">
-              <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
-              <div className="admin-tenant-field-grid">
+        <section aria-labelledby="qr-design-title" className="qr-order">
+          <div className="qr-order__panel">
+            <header className="qr-order__head">
+              <h2 id="qr-design-title">{copy.designCreateTitle}</h2>
+              <p>{copy.designCreateDescription}</p>
+            </header>
+            {model.siteOptions.length > 0 ? (
+              <form action={createStickerDesignVersion} className="qr-order__form">
+                <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
                 <label className="admin-field" htmlFor="design-site">
                   <span>{copy.site}</span>
                   <select id="design-site" name="siteScope" required>
@@ -732,10 +730,11 @@ export function QrInventorySampleView({
                     ))}
                   </select>
                 </label>
-                <fieldset className="admin-template-options">
+
+                <fieldset className="qr-order__templates">
                   <legend>{workflowCopy.templateLegend}</legend>
                   {STICKER_TEMPLATE_CODES.map((templateCode, index) => (
-                    <label className="admin-template-option" key={templateCode}>
+                    <label className="qr-order__tpl" key={templateCode}>
                       <input
                         aria-label={workflowCopy.templateLabels[templateCode]}
                         defaultChecked={index === 0}
@@ -744,7 +743,7 @@ export function QrInventorySampleView({
                         type="radio"
                         value={templateCode}
                       />
-                      <span className="admin-template-option__preview">
+                      <span className="qr-order__tpl-art">
                         {/* biome-ignore lint/performance/noImgElement: protected route returns a generated production renderer preview */}
                         <img
                           alt={`${workflowCopy.templateLabels[templateCode]} · ${workflowCopy.previewAlt}`}
@@ -756,6 +755,7 @@ export function QrInventorySampleView({
                     </label>
                   ))}
                 </fieldset>
+
                 <label className="admin-field" htmlFor="design-brand-asset">
                   <span>{copy.designLogo}</span>
                   <select id="design-brand-asset" name="brandAssetId">
@@ -770,17 +770,56 @@ export function QrInventorySampleView({
                     ))}
                   </select>
                 </label>
+
+                <p className="qr-order__note">{copy.designConfig}</p>
+                <ReasonField copy={copy} id="design-create-reason" />
+                <div className="qr-order__actions">
+                  <button className="tt-button tt-button--primary" type="submit">
+                    {copy.designCreate}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <p className="admin-catalog-read-only">{copy.noSite}</p>
+            )}
+          </div>
+
+          {/* The rail renders every template and CSS reveals the checked one, so the
+              preview tracks the selection without turning this into a client component. */}
+          <aside className="qr-order__rail">
+            <h3>{copy.wizardPreview}</h3>
+            {STICKER_TEMPLATE_CODES.map((templateCode) => (
+              <figure className="qr-order__preview" data-template={templateCode} key={templateCode}>
+                {/* biome-ignore lint/performance/noImgElement: protected route returns a generated production renderer preview */}
+                <img
+                  alt={`${workflowCopy.templateLabels[templateCode]} · ${workflowCopy.previewAlt}`}
+                  src={`/api/admin/qr-preview?template=${templateCode}`}
+                />
+              </figure>
+            ))}
+            <p className="qr-order__cap">{copy.decode}</p>
+            <dl className="qr-order__spec">
+              <div>
+                <dt>{workflowCopy.templateLegend}</dt>
+                <dd>
+                  {STICKER_TEMPLATE_CODES.map((templateCode) => (
+                    <span data-template={templateCode} key={templateCode}>
+                      {workflowCopy.templateLabels[templateCode]}
+                    </span>
+                  ))}
+                </dd>
               </div>
-              <p className="admin-catalog-read-only">{copy.designConfig}</p>
-              <ReasonField copy={copy} id="design-create-reason" />
-              <button className="tt-button" type="submit">
-                {copy.designCreate}
-              </button>
-            </form>
-          ) : (
-            <p className="admin-catalog-read-only">{copy.noSite}</p>
-          )}
-        </details>
+              <div>
+                <dt>{copy.specSize}</dt>
+                <dd>{copy.specSizeValue}</dd>
+              </div>
+              <div>
+                <dt>{copy.specBottom}</dt>
+                <dd>{copy.specBottomValue}</dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
       ) : null}
 
       {section === "approvals" && canApproveDesign ? (
