@@ -96,6 +96,32 @@
   --tt-stat-value-size: 2.125rem;
   --tt-stat-value-weight: 700;
 
+  /* List-page metrics, taken from the approved canon
+     (docs/design-canon/console-pages.html) and the measured reference. A list page
+     is a header, a metric strip, then a panel beside a rail — every admin list
+     resolves its spacing from here instead of inventing its own. */
+  --tt-page-rail-width: 21.25rem;
+  --tt-page-column-gap: 1.25rem;
+  --tt-panel-head-padding-block: 1rem;
+  --tt-panel-head-padding-inline: 1.15rem;
+  --tt-panel-body-padding: 1.15rem;
+  --tt-panel-edge-inline: 1.15rem;
+  --tt-filter-bar-padding-block: 0.85rem;
+  --tt-filter-bar-gap: 0.6rem;
+  --tt-filter-field-min-width: 11.25rem;
+  --tt-filter-select-min-width: 9.5rem;
+  --tt-metric-tile-padding-block: 1rem;
+  --tt-metric-tile-padding-inline: 1.1rem;
+  --tt-metric-tile-gap: 0.5rem;
+  --tt-metric-icon-size: 2.1rem;
+  --tt-metric-value-size: 1.55rem;
+  --tt-pager-size: 2rem;
+  --tt-pager-gap: 0.3rem;
+  --tt-queue-row-gap: 0.6rem;
+  --tt-queue-icon-size: 1.9rem;
+  --tt-meter-track-height: 0.42rem;
+  --tt-meter-min-width: 6rem;
+
   /* Wizard metrics, taken from the approved canon (docs/design-canon/console-qr-wizard.html).
      The canon writes these as literals; they live here so a screen never restates
      them and so the whole wizard moves together. */

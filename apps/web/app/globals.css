@@ -1465,25 +1465,6 @@ h3,
   gap: var(--tt-space-2);
 }
 
-/* One card holding cells divided by hairlines, per the reference mockup. Tiles are
-   not cards themselves — that is what produced a card inside a card. */
-.tt-stat-strip {
-  background: var(--tt-color-surface);
-  border: 1px solid var(--tt-color-border);
-  border-radius: var(--tt-radius-md);
-  box-shadow: var(--tt-shadow-sm);
-  display: grid;
-  overflow: hidden;
-}
-
-.tt-stat-strip--4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.tt-stat-strip--6 {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-}
-
 .tt-side-card,
 .tt-auth-card,
 .tt-empty-state,
@@ -1495,17 +1476,6 @@ h3,
   box-shadow: var(--tt-shadow-sm);
 }
 
-.tt-stat-tile {
-  display: grid;
-  gap: var(--tt-space-2);
-  min-height: 6.5rem;
-  padding: var(--tt-space-4);
-}
-
-.tt-stat-tile + .tt-stat-tile {
-  border-left: 1px solid var(--tt-color-border);
-}
-
 .tt-stat-tile__header,
 .tt-stat-tile__meta,
 .tt-side-card__header {
@@ -1513,28 +1483,6 @@ h3,
   display: flex;
   gap: var(--tt-space-2);
   justify-content: space-between;
-}
-
-.tt-stat-tile__label {
-  color: var(--tt-color-text-muted);
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.tt-stat-tile__icon {
-  color: var(--tt-color-brand-strong);
-}
-
-.tt-stat-tile__value {
-  font-size: clamp(1.55rem, 2.5vw, 2.15rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-}
-
-.tt-stat-tile__meta {
-  color: var(--tt-color-text-muted);
-  font-size: 0.78rem;
-  justify-content: flex-start;
 }
 
 .tt-filter-bar {
@@ -1864,20 +1812,6 @@ h3,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .tt-stat-tile + .tt-stat-tile {
-    border-left: 0;
-  }
-
-  .tt-stat-strip--4 .tt-stat-tile:nth-child(2n),
-  .tt-stat-strip--6 .tt-stat-tile:nth-child(2n) {
-    border-left: 1px solid var(--tt-color-border);
-  }
-
-  .tt-stat-strip--4 .tt-stat-tile:nth-child(n + 3),
-  .tt-stat-strip--6 .tt-stat-tile:nth-child(n + 3) {
-    border-top: 1px solid var(--tt-color-border);
-  }
-
   .tt-page-header,
   .tt-filter-bar,
   .tt-footer {
@@ -1887,16 +1821,6 @@ h3,
 }
 
 @media (max-width: 520px) {
-  .tt-stat-strip--4 .tt-stat-tile,
-  .tt-stat-strip--6 .tt-stat-tile {
-    border-left: 0;
-  }
-
-  .tt-stat-strip--4 .tt-stat-tile + .tt-stat-tile,
-  .tt-stat-strip--6 .tt-stat-tile + .tt-stat-tile {
-    border-top: 1px solid var(--tt-color-border);
-  }
-
   .tt-stat-strip--4,
   .tt-stat-strip--6 {
     grid-template-columns: 1fr;
@@ -7161,6 +7085,8 @@ h3,
 .qr-wizard__steps,
 .qr-wizard__panel,
 .qr-wizard__rail,
+.tt-panel,
+.tt-rail,
 .qr-brand-upload {
   border-radius: var(--tt-card-radius);
   padding: var(--tt-card-padding);
@@ -8072,5 +7998,452 @@ h3,
 
   .qr-choice-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ============================================================================
+   Console list page — header, metric strip, panel beside a rail.
+
+   Structure from docs/design-canon/console-pages.html and the measured
+   reference: a page header with one primary action, a metric strip that is one
+   card of cells divided by hairlines, then a panel carrying its own filter bar,
+   table and pager, with an approval rail alongside.
+
+   Every admin list resolves from these. A screen adds its columns, not its
+   spacing.
+   ========================================================================== */
+.tt-page-header {
+  align-items: flex-end;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: var(--tt-section-gap);
+}
+
+.tt-page-header__eyebrow {
+  color: var(--tt-color-brand-strong);
+  font-size: var(--tt-label-size);
+  font-weight: var(--tt-font-weight-bold);
+  margin: 0 0 0.3rem;
+}
+
+.tt-page-header h1 {
+  margin: 0 0 0.35rem;
+}
+
+.tt-page-header__description {
+  color: var(--tt-color-text-muted);
+  margin: 0;
+  max-width: 64ch;
+}
+
+/* One card of cells. The hairlines are the grid gap showing the border through,
+   so a cell is never a card of its own. */
+.tt-stat-strip {
+  background: var(--tt-color-border);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-card-radius);
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-bottom: var(--tt-section-gap);
+  overflow: hidden;
+}
+
+.tt-stat-strip--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tt-stat-strip--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tt-stat-tile {
+  background: var(--tt-color-surface);
+  display: grid;
+  gap: var(--tt-metric-tile-gap);
+  padding: var(--tt-metric-tile-padding-block) var(--tt-metric-tile-padding-inline);
+}
+
+.tt-stat-tile__icon {
+  background: var(--tt-color-brand-surface);
+  block-size: var(--tt-metric-icon-size);
+  border-radius: var(--tt-radius-xs);
+  color: var(--tt-color-brand-fg);
+  display: grid;
+  inline-size: var(--tt-metric-icon-size);
+  place-items: center;
+}
+
+.tt-stat-tile[data-tone="success"] .tt-stat-tile__icon {
+  background: var(--tt-color-success-surface);
+  color: var(--tt-color-success-fg);
+}
+
+.tt-stat-tile[data-tone="warning"] .tt-stat-tile__icon {
+  background: var(--tt-color-warning-surface);
+  color: var(--tt-color-warning-fg);
+}
+
+.tt-stat-tile[data-tone="danger"] .tt-stat-tile__icon {
+  background: var(--tt-color-danger-surface);
+  color: var(--tt-color-danger-fg);
+}
+
+.tt-stat-tile__label {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-label-size);
+  font-weight: var(--tt-font-weight-semibold);
+}
+
+.tt-stat-tile__value {
+  font-size: var(--tt-metric-value-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-bold);
+  line-height: var(--tt-line-tight);
+}
+
+.tt-stat-tile__meta {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+}
+
+.tt-stat-tile[data-tone="success"] .tt-stat-tile__meta {
+  color: var(--tt-color-success-fg);
+}
+
+.tt-stat-tile[data-tone="warning"] .tt-stat-tile__meta {
+  color: var(--tt-color-warning-fg);
+}
+
+.tt-stat-tile[data-tone="danger"] .tt-stat-tile__meta {
+  color: var(--tt-color-danger-fg);
+}
+
+/* Panel beside a rail. */
+.tt-page-columns {
+  align-items: start;
+  display: grid;
+  gap: var(--tt-page-column-gap);
+  grid-template-columns: minmax(0, 1fr) var(--tt-page-rail-width);
+}
+
+/* The panel owns its own edges so the filter bar, table and pager can run to
+   them. Its padding is therefore zero and the sections carry it. */
+.tt-panel {
+  overflow: hidden;
+  padding: 0;
+}
+
+.tt-panel__head {
+  align-items: flex-end;
+  border-bottom: 1px solid var(--tt-color-border);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: var(--tt-panel-head-padding-block) var(--tt-panel-head-padding-inline);
+}
+
+.tt-panel__head h2 {
+  margin: 0 0 0.15rem;
+}
+
+.tt-panel__head p {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-font-size);
+  margin: 0;
+}
+
+.tt-panel__breadcrumb {
+  color: var(--tt-color-brand-strong);
+  font-size: var(--tt-table-meta-font-size);
+  font-weight: var(--tt-font-weight-semibold);
+  margin: 0 0 0.25rem;
+}
+
+.tt-panel__body {
+  padding: var(--tt-panel-body-padding);
+}
+
+.tt-panel .tt-filter-bar {
+  background: var(--tt-color-surface-subtle);
+  border-bottom: 1px solid var(--tt-color-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tt-filter-bar-gap);
+  padding: var(--tt-filter-bar-padding-block) var(--tt-panel-edge-inline);
+}
+
+.tt-panel .tt-filter-bar label {
+  align-items: center;
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-sm);
+  display: flex;
+  flex: 1;
+  gap: 0.5rem;
+  min-width: var(--tt-filter-field-min-width);
+  padding: 0.5rem 0.75rem;
+}
+
+.tt-panel .tt-filter-bar label[data-kind="select"] {
+  flex: 0 0 auto;
+  min-width: var(--tt-filter-select-min-width);
+}
+
+.tt-panel .tt-filter-bar :is(input, select) {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  inline-size: 100%;
+  outline: 0;
+}
+
+.tt-panel__scroll {
+  overflow-x: auto;
+}
+
+/* The table runs to the panel edge, so the first and last cell take the panel
+   inset rather than the table's own cell padding. */
+.tt-panel :is(thead th, tbody :is(td, th)):first-child {
+  padding-left: var(--tt-panel-edge-inline);
+}
+
+.tt-panel :is(thead th, tbody :is(td, th)):last-child {
+  padding-right: var(--tt-panel-edge-inline);
+}
+
+.tt-panel__footer {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: var(--tt-filter-bar-padding-block) var(--tt-panel-edge-inline);
+}
+
+.tt-panel__total {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-font-size);
+}
+
+.tt-pagination__controls {
+  align-items: center;
+  display: flex;
+  gap: var(--tt-pager-gap);
+}
+
+.tt-pagination__controls :is(a, span) {
+  background: var(--tt-color-surface);
+  block-size: var(--tt-pager-size);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-xs);
+  color: var(--tt-color-text);
+  display: grid;
+  font-size: var(--tt-table-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-semibold);
+  min-inline-size: var(--tt-pager-size);
+  place-items: center;
+  text-decoration: none;
+}
+
+.tt-pagination__controls a[aria-current="page"] {
+  background: var(--tt-color-brand);
+  border-color: var(--tt-color-brand);
+  color: var(--tt-color-on-brand);
+}
+
+/* Approval rail. */
+.tt-rail__count {
+  background: var(--tt-color-brand-surface);
+  border-radius: var(--tt-radius-pill);
+  color: var(--tt-color-brand-fg);
+  font-size: var(--tt-table-meta-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-bold);
+  padding: 0.16rem 0.5rem;
+}
+
+.tt-queue-list {
+  display: grid;
+  gap: var(--tt-queue-row-gap);
+}
+
+.tt-queue-row {
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-sm);
+  display: grid;
+  gap: 0.55rem;
+  padding: var(--tt-choice-padding-block) var(--tt-choice-padding-inline);
+}
+
+.tt-queue-row__lead {
+  align-items: center;
+  display: flex;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.tt-queue-row__icon {
+  background: var(--tt-color-info-surface);
+  block-size: var(--tt-queue-icon-size);
+  border-radius: var(--tt-radius-xs);
+  color: var(--tt-color-info-fg);
+  display: grid;
+  flex: 0 0 auto;
+  inline-size: var(--tt-queue-icon-size);
+  place-items: center;
+}
+
+.tt-queue-row[data-tone="warning"] .tt-queue-row__icon {
+  background: var(--tt-color-warning-surface);
+  color: var(--tt-color-warning-fg);
+}
+
+.tt-queue-row[data-tone="danger"] .tt-queue-row__icon {
+  background: var(--tt-color-danger-surface);
+  color: var(--tt-color-danger-fg);
+}
+
+.tt-queue-row__text {
+  display: grid;
+  flex: 1;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.tt-queue-row__text strong {
+  font-size: var(--tt-table-font-size);
+}
+
+.tt-queue-row__text small {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+}
+
+.tt-queue-row__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tt-queue-row__actions > * {
+  flex: 1;
+}
+
+/* Cell contents shared by every table. */
+.tt-cell-entity {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 9.375rem;
+}
+
+.tt-cell-entity strong {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--tt-table-font-size);
+  font-weight: var(--tt-font-weight-semibold);
+  gap: 0.4rem;
+  word-break: keep-all;
+}
+
+.tt-cell-entity small {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+}
+
+.tt-meter {
+  display: grid;
+  gap: 0.3rem;
+  min-width: var(--tt-meter-min-width);
+}
+
+.tt-meter__bar-track {
+  background: var(--tt-color-surface-muted);
+  block-size: var(--tt-meter-track-height);
+  border-radius: var(--tt-radius-pill);
+  display: block;
+  overflow: hidden;
+}
+
+.tt-meter__bar {
+  background: var(--tt-color-success);
+  block-size: 100%;
+  border-radius: inherit;
+  display: block;
+}
+
+.tt-meter[data-tone="brand"] .tt-meter__bar {
+  background: var(--tt-color-brand);
+}
+
+.tt-meter[data-tone="warning"] .tt-meter__bar {
+  background: var(--tt-color-warning);
+}
+
+.tt-meter[data-tone="danger"] .tt-meter__bar {
+  background: var(--tt-color-danger);
+}
+
+.tt-meter__value {
+  font-size: var(--tt-table-font-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-semibold);
+}
+
+.tt-row-action {
+  align-items: center;
+  color: var(--tt-color-brand-strong);
+  display: inline-flex;
+  font-size: var(--tt-table-font-size);
+  font-weight: var(--tt-font-weight-semibold);
+  gap: 0.3rem;
+  text-decoration: none;
+}
+
+/* Detail form: two columns of fields, footer actions, footnote. */
+.tt-form-grid {
+  display: grid;
+  gap: var(--tt-card-gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tt-form-grid > [data-span="full"] {
+  grid-column: 1 / -1;
+}
+
+.tt-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+@media (max-width: 68rem) {
+  .tt-page-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tt-stat-strip,
+  .tt-stat-strip--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tt-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 44rem) {
+  .tt-stat-strip,
+  .tt-stat-strip--4,
+  .tt-stat-strip--3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tt-page-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

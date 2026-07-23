@@ -330,9 +330,6 @@
     ".qr-step|padding",
     ".tt-admin-shell__main|padding",
     ".tt-sidebar__section-label|font-size",
-    ".tt-stat-tile__label|font-size",
-    ".tt-stat-tile__meta|font-size",
-    ".tt-stat-tile__value|font-size",
     ".tt-topbar__eyebrow,.tt-page-header__eyebrow|font-size",
     ".tt-topbar__title|font-size",
     ".tt-topbar|padding"
