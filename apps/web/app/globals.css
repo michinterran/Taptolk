@@ -7127,3 +7127,47 @@ h3,
 .qr-stepnav__next:hover {
   background: var(--tt-color-brand-strong);
 }
+
+/* Site brand logo upload. It previously reused the list and approval-card styles,
+   which are not form layouts, so the fields escaped the card. */
+.qr-brand-upload {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-sm);
+  margin-bottom: var(--tt-space-5);
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+}
+
+.qr-brand-upload > header h2 {
+  font-size: 1.02rem;
+  margin: 0 0 0.2rem;
+}
+
+.qr-brand-upload > header p {
+  color: var(--tt-color-text-muted);
+  font-size: 0.8rem;
+  margin: 0 0 1.1rem;
+}
+
+.qr-brand-upload__form {
+  display: grid;
+  gap: var(--tt-space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.qr-brand-upload__form .admin-field {
+  min-width: 0;
+}
+
+.qr-brand-upload__actions {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .qr-brand-upload__form {
+    grid-template-columns: 1fr;
+  }
+}

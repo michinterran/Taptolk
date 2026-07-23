@@ -834,6 +834,10 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
+      {/* BrandAssetUploadView already renders its own titled section; wrapping it again
+          produced a card inside a card with two headings. */}
+      {section === "order" && step === "design" ? brandAssetUpload : null}
+
       {section === "order" ? (
         <nav aria-label={copy.stepNavLabel} className="qr-stepnav">
           {step === "quantity" ? (
@@ -850,10 +854,6 @@ export function QrInventorySampleView({
           ) : null}
         </nav>
       ) : null}
-
-      {/* BrandAssetUploadView already renders its own titled section; wrapping it again
-          produced a card inside a card with two headings. */}
-      {section === "order" && step === "design" ? brandAssetUpload : null}
 
       {section === "approvals" && canApproveDesign ? (
         <section aria-labelledby="design-approval-title" className="admin-lifecycle-queue">

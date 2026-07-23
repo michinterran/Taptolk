@@ -23,13 +23,13 @@ export function BrandAssetUploadView({
   sites: readonly QrInventorySiteOption[];
 }) {
   return (
-    <section aria-labelledby="brand-asset-upload-title" className="admin-lifecycle-queue">
+    <section aria-labelledby="brand-asset-upload-title" className="qr-brand-upload">
       <header>
         <h2 id="brand-asset-upload-title">{copy.title}</h2>
         <p>{copy.description}</p>
       </header>
       {sites.length > 0 ? (
-        <form action={uploadBrandAsset} className="admin-approval-card">
+        <form action={uploadBrandAsset} className="qr-brand-upload__form">
           <input aria-label="locale" name="locale" type="hidden" value={locale} />
           <label className="admin-field" htmlFor="brand-asset-site">
             <span>{copy.site}</span>
@@ -69,9 +69,11 @@ export function BrandAssetUploadView({
               required
             />
           </label>
-          <button className="tt-button" type="submit">
-            {copy.submit}
-          </button>
+          <div className="qr-brand-upload__actions">
+            <button className="tt-button" type="submit">
+              {copy.submit}
+            </button>
+          </div>
         </form>
       ) : null}
     </section>
