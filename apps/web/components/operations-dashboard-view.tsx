@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   BellRinging,
   ChartLineUp,
   CheckCircle,
@@ -7,9 +6,9 @@ import {
   QrCode,
   WarningCircle,
 } from "@phosphor-icons/react/dist/ssr";
-import type { OperationsDashboardModel } from "@taptolk/application";
-import { SemanticHeading } from "@taptolk/ui";
-import type { CSSProperties, ReactNode } from "react";
+import type { OperationsDashboardModel, OperationsSitePerformance } from "@taptolk/application";
+import { DataTable, PageHeader, SideCard, StatStrip, StatTile } from "@taptolk/ui";
+import type { CSSProperties } from "react";
 import type { OperationsCopy } from "../content/operations-copy";
 import type { AppLocale } from "../i18n/config";
 
@@ -20,27 +19,6 @@ function scopeQuery(companyId?: string, siteId?: string, days?: number): string 
   if (days) query.set("days", String(days));
   const value = query.toString();
   return value ? `?${value}` : "";
-}
-
-function MetricCard({
-  href,
-  icon,
-  label,
-  value,
-}: {
-  href: string;
-  icon: ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <a className="operations-metric operations-metric--link" href={href}>
-      <span className="operations-metric__icon">{icon}</span>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <ArrowRight aria-hidden="true" size={16} />
-    </a>
-  );
 }
 
 export function OperationsDashboardView({
@@ -73,33 +51,69 @@ export function OperationsDashboardView({
     ]),
   );
   const scopeLabel = model.scopeSiteName ?? model.scopeManagementCompanyName ?? copy.scopeAll;
+  const siteColumns = [
+    {
+      cell: (site: OperationsSitePerformance) => (
+        <>
+          <MapPin aria-hidden="true" size={16} /> {site.siteName}
+        </>
+      ),
+      header: copy.siteCount,
+      key: "site",
+    },
+    {
+      align: "right" as const,
+      cell: (site: OperationsSitePerformance) => number.format(site.contactCount),
+      header: copy.contactCount,
+      key: "contacts",
+    },
+    {
+      align: "right" as const,
+      cell: (site: OperationsSitePerformance) => number.format(site.unresolvedCount),
+      header: copy.unresolved,
+      key: "unresolved",
+    },
+    {
+      align: "right" as const,
+      cell: (site: OperationsSitePerformance) => number.format(site.activeQrCount),
+      header: copy.activeQr,
+      key: "activeQr",
+    },
+    {
+      cell: (site: OperationsSitePerformance) => (
+        <a href={`/${locale}/admin/sites/${site.siteId}`}>{copy.detail}</a>
+      ),
+      header: copy.detail,
+      key: "detail",
+    },
+  ];
 
   return (
     <div className="operations-shell operations-command-center">
-      <header className="admin-compact-heading">
-        <div>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <SemanticHeading className="admin-compact-title" lines={[copy.line1, copy.line2]} />
-          <p>{copy.description}</p>
-        </div>
-        <dl className="operations-scope-summary">
-          <div>
-            <dt>{copy.scope}</dt>
-            <dd>{scopeLabel}</dd>
-          </div>
-          <div>
-            <dt>{copy.freshAt}</dt>
-            <dd>
-              <time dateTime={model.freshAt}>
-                {new Intl.DateTimeFormat(locale, {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                }).format(new Date(model.freshAt))}
-              </time>
-            </dd>
-          </div>
-        </dl>
-      </header>
+      <PageHeader
+        description={copy.description}
+        eyebrow={copy.eyebrow}
+        lines={[copy.line1, copy.line2]}
+        actions={
+          <dl className="operations-scope-summary">
+            <div>
+              <dt>{copy.scope}</dt>
+              <dd>{scopeLabel}</dd>
+            </div>
+            <div>
+              <dt>{copy.freshAt}</dt>
+              <dd>
+                <time dateTime={model.freshAt}>
+                  {new Intl.DateTimeFormat(locale, {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  }).format(new Date(model.freshAt))}
+                </time>
+              </dd>
+            </div>
+          </dl>
+        }
+      />
 
       <nav className="operations-period-nav" aria-label={copy.period}>
         <span>{copy.period}</span>
@@ -115,44 +129,42 @@ export function OperationsDashboardView({
         ))}
       </nav>
 
-      <section className="operations-kpi-strip" aria-label={copy.todayGroup}>
-        <MetricCard
-          href={`${reportHref}#response-quality`}
+      <StatStrip aria-label={copy.todayGroup}>
+        <StatTile
           icon={<ChartLineUp aria-hidden="true" size={20} />}
           label={copy.contactCount}
           value={number.format(model.contactCount)}
         />
-        <MetricCard
-          href={`${reportHref}#response-quality`}
+        <StatTile
           icon={<WarningCircle aria-hidden="true" size={20} />}
           label={copy.unresolved}
+          tone={model.unresolvedCount > 0 ? "warning" : "success"}
           value={number.format(model.unresolvedCount)}
         />
-        <MetricCard
-          href={`${reportHref}#delivery-quality`}
+        <StatTile
           icon={<BellRinging aria-hidden="true" size={20} />}
           label={copy.sent}
           value={number.format(model.notificationSentCount)}
         />
-        <MetricCard
-          href={`${reportHref}#delivery-quality`}
+        <StatTile
           icon={<WarningCircle aria-hidden="true" size={20} />}
           label={copy.failed}
+          tone={model.notificationFailedCount > 0 ? "danger" : "success"}
           value={number.format(model.notificationFailedCount)}
         />
-        <MetricCard
-          href={`${reportHref}#safety`}
+        <StatTile
           icon={<CheckCircle aria-hidden="true" size={20} />}
           label={copy.openReports}
+          tone={model.openReportCount > 0 ? "warning" : "success"}
           value={number.format(model.openReportCount)}
         />
-        <MetricCard
-          href={`${reportHref}#qr-readiness`}
+        <StatTile
+          badge={<a href={`${reportHref}#qr-readiness`}>{copy.detail}</a>}
           icon={<QrCode aria-hidden="true" size={20} />}
           label={copy.activeQr}
           value={number.format(model.activeQrCount)}
         />
-      </section>
+      </StatStrip>
 
       <section className="operations-trend-panel" aria-labelledby="operations-trend-title">
         <header>
@@ -202,43 +214,18 @@ export function OperationsDashboardView({
         </div>
       </section>
 
-      <section className="operations-site-panel" aria-labelledby="site-comparison-title">
-        <header>
-          <div>
-            <h2 id="site-comparison-title">{copy.siteComparison}</h2>
-            <p>{copy.siteComparisonDescription}</p>
-          </div>
-          <strong>{number.format(model.siteCount)}</strong>
-        </header>
-        <div className="admin-command-table-wrap">
-          <table className="admin-command-table operations-site-table">
-            <thead>
-              <tr>
-                <th scope="col">{copy.siteCount}</th>
-                <th scope="col">{copy.contactCount}</th>
-                <th scope="col">{copy.unresolved}</th>
-                <th scope="col">{copy.activeQr}</th>
-                <th scope="col">{copy.detail}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {model.sitePerformance.map((site) => (
-                <tr key={site.siteId}>
-                  <th scope="row">
-                    <MapPin aria-hidden="true" size={16} /> {site.siteName}
-                  </th>
-                  <td>{number.format(site.contactCount)}</td>
-                  <td>{number.format(site.unresolvedCount)}</td>
-                  <td>{number.format(site.activeQrCount)}</td>
-                  <td>
-                    <a href={`/${locale}/admin/sites/${site.siteId}`}>{copy.detail}</a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <SideCard
+        className="operations-site-panel"
+        title={copy.siteComparison}
+        actions={<strong>{number.format(model.siteCount)}</strong>}
+      >
+        <p>{copy.siteComparisonDescription}</p>
+        <DataTable
+          columns={siteColumns}
+          getRowKey={(site) => site.siteId}
+          rows={model.sitePerformance}
+        />
+      </SideCard>
 
       <aside className="operations-manual">
         <h2>{copy.manualGates}</h2>

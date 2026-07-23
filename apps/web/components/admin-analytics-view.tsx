@@ -5,28 +5,14 @@ import {
   QrCode,
   ShieldWarning,
 } from "@phosphor-icons/react/dist/ssr";
-import type { OperationsDashboardModel } from "@taptolk/application";
-import { SemanticHeading } from "@taptolk/ui";
-import type { CSSProperties, ReactNode } from "react";
+import type { OperationsDailyPoint, OperationsDashboardModel } from "@taptolk/application";
+import { DataTable, PageHeader, SideCard, StatStrip, StatTile } from "@taptolk/ui";
 import type { AdminAnalyticsCopy } from "../content/admin-analytics-copy";
 import type { AppLocale } from "../i18n/config";
 
 function percent(part: number, total: number): number {
   if (total <= 0) return 0;
   return Math.max(0, Math.min(100, Math.round((part / total) * 100)));
-}
-
-function RateCard({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
-  return (
-    <article className="admin-report-rate-card">
-      <span>{icon}</span>
-      <div>
-        <small>{label}</small>
-        <strong>{value}%</strong>
-      </div>
-      <i aria-hidden="true" style={{ "--report-rate": `${value}%` } as CSSProperties} />
-    </article>
-  );
 }
 
 export function AdminAnalyticsView({
@@ -50,59 +36,104 @@ export function AdminAnalyticsView({
   const deliveryRate = percent(model.notificationSentCount, deliveryTotal);
   const escalationRate = percent(model.escalatedCount, contactTotal);
   const scopeLabel = model.scopeSiteName ?? model.scopeManagementCompanyName ?? copy.scopeAll;
+  const dailyColumns = [
+    {
+      cell: (point: OperationsDailyPoint) =>
+        new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
+          new Date(`${point.date}T00:00:00Z`),
+        ),
+      header: copy.date,
+      key: "date",
+    },
+    {
+      align: "right" as const,
+      cell: (point: OperationsDailyPoint) => number.format(point.contactCount),
+      header: copy.contactCount,
+      key: "contacts",
+    },
+    {
+      align: "right" as const,
+      cell: (point: OperationsDailyPoint) => number.format(point.unresolvedCount),
+      header: copy.unresolved,
+      key: "unresolved",
+    },
+    {
+      align: "right" as const,
+      cell: (point: OperationsDailyPoint) => number.format(point.escalatedCount),
+      header: copy.escalated,
+      key: "escalated",
+    },
+    {
+      align: "right" as const,
+      cell: (point: OperationsDailyPoint) => number.format(point.notificationSentCount),
+      header: copy.sent,
+      key: "sent",
+    },
+    {
+      align: "right" as const,
+      cell: (point: OperationsDailyPoint) => number.format(point.notificationFailedCount),
+      header: copy.failed,
+      key: "failed",
+    },
+  ];
 
   return (
     <div className="operations-shell admin-report-shell">
-      <header className="admin-compact-heading">
-        <div>
-          <a className="operations-back operations-back--compact" href={backHref}>
-            <ArrowLeft aria-hidden="true" size={15} /> {copy.back}
-          </a>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <SemanticHeading className="admin-compact-title" lines={[copy.line1, copy.line2]} />
-          <p>{copy.description}</p>
-        </div>
-        <dl className="operations-scope-summary">
-          <div>
-            <dt>{copy.scope}</dt>
-            <dd>{scopeLabel}</dd>
-          </div>
-          <div>
-            <dt>{copy.freshAt}</dt>
-            <dd>
-              <time dateTime={model.freshAt}>
-                {new Intl.DateTimeFormat(locale, {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                }).format(new Date(model.freshAt))}
-              </time>
-            </dd>
-          </div>
-        </dl>
-      </header>
+      <PageHeader
+        description={copy.description}
+        eyebrow={copy.eyebrow}
+        lines={[copy.line1, copy.line2]}
+        actions={
+          <>
+            <a className="operations-back operations-back--compact" href={backHref}>
+              <ArrowLeft aria-hidden="true" size={15} /> {copy.back}
+            </a>
+            <dl className="operations-scope-summary">
+              <div>
+                <dt>{copy.scope}</dt>
+                <dd>{scopeLabel}</dd>
+              </div>
+              <div>
+                <dt>{copy.freshAt}</dt>
+                <dd>
+                  <time dateTime={model.freshAt}>
+                    {new Intl.DateTimeFormat(locale, {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    }).format(new Date(model.freshAt))}
+                  </time>
+                </dd>
+              </div>
+            </dl>
+          </>
+        }
+      />
 
-      <section className="admin-report-rate-grid" aria-label={copy.responseQuality}>
-        <RateCard
+      <StatStrip columns={4} aria-label={copy.responseQuality}>
+        <StatTile
           icon={<ChartLine aria-hidden="true" size={22} />}
           label={copy.resolutionRate}
-          value={resolutionRate}
+          tone={resolutionRate >= 80 ? "success" : resolutionRate >= 50 ? "warning" : "danger"}
+          value={`${resolutionRate}%`}
         />
-        <RateCard
+        <StatTile
           icon={<BellRinging aria-hidden="true" size={22} />}
           label={copy.deliveryRate}
-          value={deliveryRate}
+          tone={deliveryRate >= 80 ? "success" : deliveryRate >= 50 ? "warning" : "danger"}
+          value={`${deliveryRate}%`}
         />
-        <RateCard
+        <StatTile
           icon={<ShieldWarning aria-hidden="true" size={22} />}
           label={copy.escalationRate}
-          value={escalationRate}
+          tone={escalationRate > 0 ? "warning" : "success"}
+          value={`${escalationRate}%`}
         />
-        <RateCard
+        <StatTile
           icon={<QrCode aria-hidden="true" size={22} />}
           label={copy.activeQr}
-          value={percent(model.activeQrCount, Math.max(model.activeQrCount + model.siteCount, 1))}
+          value={`${percent(model.activeQrCount, Math.max(model.activeQrCount + model.siteCount, 1))}%`}
         />
-      </section>
+      </StatStrip>
 
       <section className="admin-report-grid">
         <article className="admin-report-section" id="response-quality">
@@ -167,42 +198,17 @@ export function AdminAnalyticsView({
         </article>
       </section>
 
-      <section className="admin-report-detail" aria-labelledby="daily-report-title">
-        <header>
-          <h2 id="daily-report-title">{copy.dailyDetail}</h2>
-          <span>{model.windowDays}</span>
-        </header>
-        <div className="admin-command-table-wrap">
-          <table className="admin-command-table admin-report-table">
-            <thead>
-              <tr>
-                <th scope="col">{copy.date}</th>
-                <th scope="col">{copy.contactCount}</th>
-                <th scope="col">{copy.unresolved}</th>
-                <th scope="col">{copy.escalated}</th>
-                <th scope="col">{copy.sent}</th>
-                <th scope="col">{copy.failed}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {model.dailySeries.map((point) => (
-                <tr key={point.date}>
-                  <th scope="row">
-                    {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-                      new Date(`${point.date}T00:00:00Z`),
-                    )}
-                  </th>
-                  <td>{number.format(point.contactCount)}</td>
-                  <td>{number.format(point.unresolvedCount)}</td>
-                  <td>{number.format(point.escalatedCount)}</td>
-                  <td>{number.format(point.notificationSentCount)}</td>
-                  <td>{number.format(point.notificationFailedCount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <SideCard
+        className="admin-report-detail"
+        title={copy.dailyDetail}
+        actions={<span>{model.windowDays}</span>}
+      >
+        <DataTable
+          columns={dailyColumns}
+          getRowKey={(point) => point.date}
+          rows={model.dailySeries}
+        />
+      </SideCard>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { IdentificationCard } from "@phosphor-icons/react/dist/ssr";
 import type { AdminProfileModel } from "@taptolk/application";
+import { PageHeader, SideCard, StatusPill } from "@taptolk/ui";
 import { updateCurrentAdminProfile } from "../admin/admin-profile-actions";
 import type { AdminProfileCopy } from "../content/admin-profile-copy";
 import type { AppLocale } from "../i18n/config";
@@ -21,14 +22,8 @@ export function AdminProfileView({
 }) {
   return (
     <div className="operations-shell admin-profile-shell">
-      <header className="admin-compact-heading">
-        <div>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <h1>{copy.title}</h1>
-          <p>{copy.description}</p>
-        </div>
-      </header>
-      <section className="admin-profile-panel">
+      <PageHeader description={copy.description} eyebrow={copy.eyebrow} lines={[copy.title]} />
+      <SideCard className="admin-profile-panel" title={copy.title}>
         <aside>
           <IdentificationCard aria-hidden="true" size={32} />
           <dl>
@@ -42,7 +37,11 @@ export function AdminProfileView({
             </div>
             <div>
               <dt>{copy.status}</dt>
-              <dd>{model.status}</dd>
+              <dd>
+                <StatusPill tone={model.status === "ACTIVE" ? "success" : "warning"}>
+                  {model.status}
+                </StatusPill>
+              </dd>
             </div>
           </dl>
         </aside>
@@ -84,7 +83,7 @@ export function AdminProfileView({
             {copy.save}
           </button>
         </form>
-      </section>
+      </SideCard>
     </div>
   );
 }

@@ -7,8 +7,15 @@ import {
   WarningCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import type { ManagementCompanyCatalogItem, OperationsDashboardModel } from "@taptolk/application";
-import { SemanticHeading } from "@taptolk/ui";
-import type { CSSProperties, ReactNode } from "react";
+import {
+  DataTable,
+  MeterBar,
+  PageHeader,
+  SideCard,
+  StatStrip,
+  StatTile,
+  StatusPill,
+} from "@taptolk/ui";
 import type { AdminOverviewCopy } from "../content/admin-overview-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -28,41 +35,11 @@ interface AdminDashboardViewProps {
   variant: DashboardVariant;
 }
 
-function MetricCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
-  return (
-    <article className="admin-overview-metric">
-      <span className="admin-overview-metric__icon">{icon}</span>
-      <span className="admin-overview-metric__label">{label}</span>
-      <strong>{value}</strong>
-    </article>
-  );
-}
-
 function percent(part: number, total: number): number {
   if (total <= 0) {
     return 0;
   }
   return Math.max(0, Math.min(100, Math.round((part / total) * 100)));
-}
-
-function BarMeter({
-  label,
-  value,
-  tone = "violet",
-}: {
-  label: string;
-  tone?: "green" | "orange" | "red" | "violet";
-  value: number;
-}) {
-  return (
-    <div className={`admin-command-meter admin-command-meter--${tone}`}>
-      <div>
-        <span>{label}</span>
-        <strong>{value}%</strong>
-      </div>
-      <i aria-hidden="true" style={{ "--admin-meter-value": `${value}%` } as CSSProperties} />
-    </div>
-  );
 }
 
 export function AdminDashboardView({
@@ -182,6 +159,109 @@ export function AdminDashboardView({
     name: site.siteName,
     unresolvedCount: site.unresolvedCount,
   }));
+  const platformColumns = [
+    {
+      cell: (company: ManagementCompanyCatalogItem) => company.name,
+      header: copy.company,
+      key: "company",
+    },
+    {
+      align: "right" as const,
+      cell: (company: ManagementCompanyCatalogItem) => number.format(company.siteCount),
+      header: copy.tableLocations,
+      key: "locations",
+    },
+    {
+      align: "right" as const,
+      cell: (company: ManagementCompanyCatalogItem) => number.format(company.contractVehicleLimit),
+      header: copy.contractCapacity,
+      key: "capacity",
+    },
+    {
+      align: "right" as const,
+      cell: (company: ManagementCompanyCatalogItem) => number.format(company.activeQrCount),
+      header: copy.activeQr,
+      key: "activeQr",
+    },
+    {
+      cell: (company: ManagementCompanyCatalogItem) => {
+        const rate = percent(company.activeQrCount, company.contractVehicleLimit);
+        return (
+          <div className="admin-command-meter">
+            <div>
+              <span>{copy.activationRate}</span>
+              <strong>{rate}%</strong>
+            </div>
+            <MeterBar value={rate} />
+          </div>
+        );
+      },
+      header: copy.activationRate,
+      key: "activation",
+    },
+    {
+      cell: (company: ManagementCompanyCatalogItem) => (
+        <StatusPill tone={company.status === "ACTIVE" ? "success" : "warning"}>
+          {company.status === "ACTIVE" ? copy.statusHealthy : copy.statusAttention}
+        </StatusPill>
+      ),
+      header: copy.tableHealth,
+      key: "status",
+    },
+    {
+      cell: (company: ManagementCompanyCatalogItem) => (
+        <a href={`${prefix}/platform/management-companies/${company.id}`}>{copy.viewDetails}</a>
+      ),
+      header: copy.tableAction,
+      key: "action",
+    },
+  ];
+  const customerColumns = [
+    {
+      cell: (row: (typeof customerRows)[number]) => row.name,
+      header: copy.tableName,
+      key: "name",
+    },
+    {
+      align: "right" as const,
+      cell: (row: (typeof customerRows)[number]) => number.format(row.contactCount),
+      header: copy.tableRequests,
+      key: "requests",
+    },
+    {
+      align: "right" as const,
+      cell: (row: (typeof customerRows)[number]) => number.format(row.activeQr),
+      header: copy.activeQr,
+      key: "activeQr",
+    },
+    {
+      align: "right" as const,
+      cell: (row: (typeof customerRows)[number]) => number.format(row.unresolvedCount),
+      header: copy.tableOpenIssues,
+      key: "openIssues",
+    },
+    {
+      cell: (row: (typeof customerRows)[number]) => (
+        <div className="admin-command-meter">
+          <div>
+            <span>{copy.statusHealthy}</span>
+            <strong>{row.health}%</strong>
+          </div>
+          <MeterBar
+            tone={row.health >= 80 ? "success" : row.health >= 50 ? "warning" : "danger"}
+            value={row.health}
+          />
+        </div>
+      ),
+      header: copy.tableHealth,
+      key: "health",
+    },
+    {
+      cell: (row: (typeof customerRows)[number]) => <a href={row.href}>{copy.viewDetails}</a>,
+      header: copy.tableAction,
+      key: "action",
+    },
+  ];
 
   return (
     <>
@@ -193,138 +273,63 @@ export function AdminDashboardView({
         pathname={pathname}
       />
 
-      <header className="admin-compact-heading admin-overview-heading">
-        <div>
-          <SemanticHeading className="admin-compact-title" lines={titleLines} />
-          <p className="admin-overview-description">
-            {variant === "platform" ? copy.platformDescription : copy.workspaceDescription}
-          </p>
-        </div>
-        <a className="admin-dashboard-refresh" href={pathname}>
-          {copy.refreshData}
-        </a>
-      </header>
+      <PageHeader
+        actions={
+          <a className="admin-dashboard-refresh" href={pathname}>
+            {copy.refreshData}
+          </a>
+        }
+        description={variant === "platform" ? copy.platformDescription : copy.workspaceDescription}
+        eyebrow={variant === "platform" ? copy.platformEyebrow : copy.workspaceEyebrow}
+        lines={titleLines}
+      />
 
-      <section className="admin-overview-section" aria-labelledby="operations-overview-title">
-        <header className="admin-overview-section__header">
-          <div>
-            <h2 id="operations-overview-title">{copy.overviewTitle}</h2>
-            <p>{copy.overviewDescription}</p>
-          </div>
-          <p className="admin-overview-freshness">
-            {copy.freshAt}:{" "}
-            <time dateTime={model.freshAt}>
-              {new Intl.DateTimeFormat(locale, {
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(new Date(model.freshAt))}
-            </time>
-          </p>
-        </header>
-        <div className="admin-overview-metrics">
+      <SideCard className="admin-overview-section" title={copy.overviewTitle}>
+        <p>{copy.overviewDescription}</p>
+        <p className="admin-overview-freshness">
+          {copy.freshAt}:{" "}
+          <time dateTime={model.freshAt}>
+            {new Intl.DateTimeFormat(locale, {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }).format(new Date(model.freshAt))}
+          </time>
+        </p>
+        <StatStrip>
           {metrics.map((metric) => (
-            <MetricCard key={metric.label} {...metric} />
+            <StatTile key={metric.label} {...metric} />
           ))}
-        </div>
+        </StatStrip>
         <p className="admin-overview-scope-note">{copy.scopeNotice}</p>
-      </section>
+      </SideCard>
 
       <section className="admin-command-grid" aria-labelledby="portfolio-title">
-        <div className="admin-command-panel admin-command-panel--wide">
-          <header className="admin-command-panel__header">
-            <div>
-              <p className="eyebrow">{copy.customerPortfolio}</p>
-              <h2 id="portfolio-title">{copy.customerPortfolioTitle}</h2>
-              <p>{copy.customerPortfolioDescription}</p>
-            </div>
-          </header>
-          <div className="admin-command-table-wrap">
-            {variant === "platform" ? (
-              <table className="admin-command-table">
-                <thead>
-                  <tr>
-                    <th scope="col">{copy.company}</th>
-                    <th scope="col">{copy.tableLocations}</th>
-                    <th scope="col">{copy.contractCapacity}</th>
-                    <th scope="col">{copy.activeQr}</th>
-                    <th scope="col">{copy.activationRate}</th>
-                    <th scope="col">{copy.tableHealth}</th>
-                    <th scope="col">{copy.tableAction}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {companyPortfolio.map((company) => {
-                    const rate = percent(company.activeQrCount, company.contractVehicleLimit);
-                    return (
-                      <tr key={company.id}>
-                        <th scope="row" title={company.name}>
-                          {company.name}
-                        </th>
-                        <td>{number.format(company.siteCount)}</td>
-                        <td>{number.format(company.contractVehicleLimit)}</td>
-                        <td>{number.format(company.activeQrCount)}</td>
-                        <td>
-                          <BarMeter label={copy.activationRate} value={rate} />
-                        </td>
-                        <td>
-                          <span
-                            className={`admin-health-pill ${company.status === "ACTIVE" ? "is-healthy" : "is-attention"}`}
-                          >
-                            {company.status === "ACTIVE"
-                              ? copy.statusHealthy
-                              : copy.statusAttention}
-                          </span>
-                        </td>
-                        <td>
-                          <a href={`${prefix}/platform/management-companies/${company.id}`}>
-                            {copy.viewDetails} →
-                          </a>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            ) : (
-              <table className="admin-command-table">
-                <thead>
-                  <tr>
-                    <th scope="col">{copy.tableName}</th>
-                    <th scope="col">{copy.tableRequests}</th>
-                    <th scope="col">{copy.activeQr}</th>
-                    <th scope="col">{copy.tableOpenIssues}</th>
-                    <th scope="col">{copy.tableHealth}</th>
-                    <th scope="col">{copy.tableAction}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {customerRows.map((row) => (
-                    <tr key={row.name}>
-                      <th scope="row">{row.name}</th>
-                      <td>{number.format(row.contactCount)}</td>
-                      <td>{number.format(row.activeQr)}</td>
-                      <td>{number.format(row.unresolvedCount)}</td>
-                      <td>
-                        <BarMeter
-                          label={copy.statusHealthy}
-                          tone={row.health >= 80 ? "green" : row.health >= 50 ? "orange" : "red"}
-                          value={row.health}
-                        />
-                      </td>
-                      <td>
-                        <a href={row.href}>{copy.viewDetails} →</a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
+        <SideCard
+          className="admin-command-panel admin-command-panel--wide"
+          title={copy.customerPortfolioTitle}
+        >
+          <p className="eyebrow">{copy.customerPortfolio}</p>
+          <p>{copy.customerPortfolioDescription}</p>
+          {variant === "platform" ? (
+            <DataTable
+              columns={platformColumns}
+              getRowKey={(company) => company.id}
+              rows={companyPortfolio}
+            />
+          ) : (
+            <DataTable
+              columns={customerColumns}
+              getRowKey={(row) => row.name}
+              rows={customerRows}
+            />
+          )}
+        </SideCard>
 
-        <aside className="admin-command-panel admin-command-panel--queue">
+        <SideCard
+          className="admin-command-panel admin-command-panel--queue"
+          title={copy.approvalQueue}
+        >
           <p className="eyebrow">{copy.actionsTitle}</p>
-          <h2>{copy.approvalQueue}</h2>
           <div className="admin-command-queue">
             {attentionItems.length > 0 ? (
               attentionItems.map((item) => (
@@ -346,62 +351,55 @@ export function AdminDashboardView({
               </a>
             ) : null}
           </div>
-        </aside>
+        </SideCard>
       </section>
 
       <section
         className="admin-command-grid admin-command-grid--charts"
         aria-label={copy.actionReports}
       >
-        <article className="admin-command-panel">
+        <SideCard className="admin-command-panel" title={copy.operationFlow}>
           <p className="eyebrow">{copy.operationFlow}</p>
-          <h2>{copy.operationFlowDescription}</h2>
+          <p>{copy.operationFlowDescription}</p>
           <div className="admin-command-bars">
-            <BarMeter
-              label={copy.contactCount}
-              value={percent(model.contactCount, Math.max(model.contactCount, 1))}
-            />
-            <BarMeter
-              label={copy.unresolved}
-              tone="orange"
+            <MeterBar value={percent(model.contactCount, Math.max(model.contactCount, 1))} />
+            <MeterBar
+              tone="warning"
               value={percent(model.unresolvedCount, Math.max(model.contactCount, 1))}
             />
-            <BarMeter
-              label={copy.escalated}
-              tone="red"
+            <MeterBar
+              tone="danger"
               value={percent(model.escalatedCount, Math.max(model.contactCount, 1))}
             />
           </div>
-        </article>
-        <article className="admin-command-panel">
+        </SideCard>
+        <SideCard className="admin-command-panel" title={copy.deliveryHealth}>
           <p className="eyebrow">{copy.deliveryHealth}</p>
-          <h2>{copy.deliveryHealthDescription}</h2>
+          <p>{copy.deliveryHealthDescription}</p>
           <div className="admin-command-bars">
-            <BarMeter label={copy.sentNotifications} tone="green" value={deliverySuccessRate} />
-            <BarMeter
-              label={copy.failedNotifications}
-              tone="red"
+            <MeterBar tone="success" value={deliverySuccessRate} />
+            <MeterBar
+              tone="danger"
               value={percent(
                 model.notificationFailedCount,
                 Math.max(model.notificationSentCount, 1),
               )}
             />
-            <BarMeter
-              label={copy.openReports}
-              tone="orange"
+            <MeterBar
+              tone="warning"
               value={percent(model.openReportCount, Math.max(totalSignals, 1))}
             />
           </div>
-        </article>
-        <article className="admin-command-panel">
+        </SideCard>
+        <SideCard className="admin-command-panel" title={copy.locationHierarchy}>
           <p className="eyebrow">{copy.locationHierarchy}</p>
-          <h2>{copy.locationHierarchyDescription}</h2>
+          <p>{copy.locationHierarchyDescription}</p>
           <div className="admin-command-hierarchy admin-command-hierarchy--two" aria-hidden="true">
             <span>{copy.actionManagementCompanies}</span>
             <i />
             <span>{copy.actionSites}</span>
           </div>
-        </article>
+        </SideCard>
       </section>
     </>
   );
