@@ -77,6 +77,46 @@ Badge(neutral/info/success/warning/danger) · StatusPill(점+tone) · **MeterBar
 - 임계·룰(응답품질 버킷, 리스크 등급 룰, 만료 임박 30일)은 **타입 있는 도메인 정책**이 소유
   (컴포넌트·Route Handler 하드코딩 금지). 응답품질·리스크 룰 수치는 착수 전 사용자 확정 필요.
 
+## 5.0 레이아웃 규칙 (2026-07-23 확정 — 레퍼런스1 기준)
+
+**왜 이 절이 생겼나:** globals.css의 **68개 규칙이 각자 카드를 정의**하고 있었다.
+padding이 `0.85rem`/`1rem`/`1.1rem`/`1.25rem`, radius가 `0.8rem`/`1rem`/`2rem`으로 제각각이라
+레퍼런스와 맞을 수 없었고, **한 화면을 고쳐도 다음 화면이 그대로**였다.
+화면별로 고치는 접근이 실패한 원인이 이것이다.
+
+### 레이아웃 토큰 (`packages/ui/src/styles/tokens.css`)
+
+| 토큰 | 값 | 용도 |
+|---|---|---|
+| `--tt-card-padding` | `1.5rem` | 콘솔 카드 내부 여백 |
+| `--tt-card-padding-compact` | `1rem` | 좁은 카드 |
+| `--tt-card-radius` | `0.875rem` | 카드 모서리 |
+| `--tt-card-gap` | `1.5rem` | 카드 사이 간격 |
+| `--tt-section-gap` | `1.5rem` | 섹션 사이 여백 |
+| `--tt-console-max-width` | `none` | 콘솔은 사이드바 옆 공간을 채운다 |
+| `--tt-console-gutter` | `clamp(1.25rem, 2.5vw, 2.5rem)` | 콘솔 좌우 여백 |
+
+### 단일 카드 규칙
+
+`apps/web/app/globals.css` **최하단**에 `콘솔 표면 규칙` 블록이 있다.
+관리자 패널 20종이 여기서 shape·spacing을 가져온다.
+
+- **새 관리자 패널을 만들면 그 블록에 셀렉터를 추가한다.**
+  `background`/`border`/`border-radius`/`padding` 세트를 또 쓰지 않는다.
+- 값을 바꿔야 하면 **토큰을 바꾼다.** 그러면 콘솔 전체가 함께 움직인다.
+- 지표 스트립(`.tt-stat-strip`, `.admin-stat-strip`, `.operations-kpi-strip`)은
+  자체 셀 구분선을 그리므로 **프레임만 갖고 padding은 0**이다.
+
+### 카드 안에 카드 금지 (CSS로 강제됨)
+
+레퍼런스는 카드 안에 카드를 두지 않는다. 구분이 필요하면 **헤어라인**이다.
+
+- 지표는 개별 카드가 아니라 **한 카드 안의 셀**이다.
+  `.tt-stat-tile`이 `.tt-side-card`와 카드 스타일을 공유하던 것이 박스-인-박스의 근원이었다.
+- `.tt-data-table-wrap` · `.tt-filter-bar` · `.tt-empty-state` · `.tt-side-card`는
+  **독립 사용을 위해** 카드 스타일을 갖는다. 패널 안에 놓이면 규칙 블록이 프레임을 제거한다.
+- 패널 안에서 수치 그룹을 나눌 때 테두리 상자를 만들지 않는다. 구분선 하나면 된다.
+
 ## 5.1 버튼 (2026-07-23 확정 — 이 규격을 벗어난 버튼을 만들지 않는다)
 
 버튼은 **하나의 정의**만 존재한다. 새 버튼을 만들 때 크기·모양·타입을 직접 쓰지 말고
