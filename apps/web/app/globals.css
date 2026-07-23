@@ -7081,3 +7081,49 @@ h3,
 .qr-steps-bar .qr-steps {
   margin: 0;
 }
+
+/* Step states on the ordering stepper. */
+.qr-step--done .qr-step__n {
+  background: var(--tt-color-success-surface);
+  color: var(--tt-color-success-fg);
+}
+
+.qr-step--now {
+  background: var(--tt-color-brand-surface);
+  border-radius: var(--tt-radius-xs);
+}
+
+.qr-step--now .qr-step__n {
+  background: var(--tt-color-brand);
+  color: var(--tt-color-on-brand);
+}
+
+.qr-stepnav {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--tt-space-5);
+}
+
+.qr-stepnav__back,
+.qr-stepnav__next {
+  border-radius: var(--tt-radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.5rem 1.1rem;
+  text-decoration: none;
+}
+
+.qr-stepnav__back {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  color: var(--tt-color-text);
+}
+
+.qr-stepnav__next {
+  background: var(--tt-color-brand);
+  color: var(--tt-color-on-brand);
+}
+
+.qr-stepnav__next:hover {
+  background: var(--tt-color-brand-strong);
+}

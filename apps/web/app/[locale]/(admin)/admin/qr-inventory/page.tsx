@@ -23,6 +23,7 @@ import { QrInventoryAssignmentView } from "../../../../../components/qr-inventor
 import {
   QrInventorySampleView,
   type QrInventorySection,
+  type QrOrderStep,
 } from "../../../../../components/qr-inventory-sample-view";
 import { ADMIN_QR_WORKFLOW_COPY } from "../../../../../content/admin-qr-workflow-copy";
 import { getMessages } from "../../../../../content/messages";
@@ -41,6 +42,7 @@ export default async function QrInventoryPage({
     error?: string | string[];
     section?: string | string[];
     status?: string | string[];
+    step?: string | string[];
   }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
@@ -120,6 +122,7 @@ export default async function QrInventoryPage({
     requestedSection === "approvals" || requestedSection === "tracking"
       ? requestedSection
       : "order";
+  const step: QrOrderStep = readValue(query.step) === "quantity" ? "quantity" : "design";
   const isPlatform = getAdminLandingArea(membership.role) === "platform";
 
   return (
@@ -248,6 +251,9 @@ export default async function QrInventoryPage({
           },
           quietZone: copy["admin.qr.quietZone"],
           specBottom: copy["admin.qr.spec.bottom"],
+          stepBackDesign: copy["admin.qr.step.back.design"],
+          stepNavLabel: copy["admin.qr.step.nav"],
+          stepNextQuantity: copy["admin.qr.step.next.quantity"],
           specBottomValue: copy["admin.qr.spec.bottom.value"],
           specSize: copy["admin.qr.spec.size"],
           specSizeValue: copy["admin.qr.spec.size.value"],
@@ -320,6 +326,7 @@ export default async function QrInventoryPage({
         locale={locale}
         model={model}
         section={section}
+        step={step}
         statusMessage={status ? statusMessages[status] : undefined}
         workflowCopy={ADMIN_QR_WORKFLOW_COPY[locale]}
       />
