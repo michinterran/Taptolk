@@ -6693,6 +6693,478 @@ h3,
 }
 
 /* ============================================================================
+   Mobile surface rules (owner + caller) — docs/design-canon/pwa/.
+
+   The four approved mockups are one system: a single column of white cards on a
+   near-white ground, a centred taptolk logo instead of a title bar, choice rows
+   that are an icon chip plus one line, one full-width primary per screen, and a
+   bottom tab bar whose active item alone is brand-coloured.
+
+   Every value here resolves from a --tt-m-* token, and the design system gate
+   holds this block to that. A mobile screen composes these classes; it does not
+   describe a card again. The owner-activation and public-contact blocks near the
+   top of this file predate the canon and are the drift this replaces.
+   ========================================================================== */
+
+/* Shell ---------------------------------------------------------------------- */
+
+.tt-m-shell {
+  background: var(--tt-m-background);
+  display: flex;
+  flex-direction: column;
+  margin-inline: auto;
+  max-width: var(--tt-m-max-width);
+  min-height: 100dvh;
+  padding-inline: var(--tt-m-gutter);
+  width: 100%;
+}
+
+/* No back arrow and no title bar: the mockups put the logo alone at the top. */
+.tt-m-shell__header {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--tt-m-card-padding);
+}
+
+.tt-m-shell__header img {
+  block-size: auto;
+  display: block;
+  inline-size: var(--tt-m-brand-width);
+}
+
+.tt-m-stack {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--tt-m-stack-gap);
+}
+
+/* The action area stays with the content rather than floating: the mockups show
+   it after the last card, above the tab bar. */
+.tt-m-shell__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-m-choice-gap);
+  padding-block: var(--tt-m-stack-gap);
+}
+
+/* Tab bar -------------------------------------------------------------------- */
+
+.tt-m-tabbar {
+  background: var(--tt-m-surface);
+  display: grid;
+  gap: 0;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  inset-inline: 0;
+  margin-inline: calc(var(--tt-m-gutter) * -1);
+  min-height: var(--tt-m-tabbar-height);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tt-m-tab {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--tt-color-text);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-space-1);
+  justify-content: center;
+  min-height: var(--tt-m-tabbar-height);
+  text-decoration: none;
+}
+
+.tt-m-tab svg {
+  block-size: var(--tt-m-tab-icon-size);
+  inline-size: var(--tt-m-tab-icon-size);
+}
+
+.tt-m-tab > span {
+  font-size: var(--tt-m-tab-label-size);
+  font-weight: var(--tt-font-weight-bold);
+  letter-spacing: var(--tt-m-tab-label-letter-spacing);
+}
+
+/* Only the active tab carries the brand colour. */
+.tt-m-tab[aria-current="page"] {
+  color: var(--tt-m-accent);
+}
+
+/* Cards ---------------------------------------------------------------------- */
+
+.tt-m-card {
+  background: var(--tt-m-surface);
+  border-radius: var(--tt-m-card-radius);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-space-2);
+  padding: var(--tt-m-card-padding);
+}
+
+/* The owner's own reply is the one card the canon outlines (04). */
+.tt-m-card--accent {
+  border: 1px solid var(--tt-m-accent);
+}
+
+.tt-m-card--center {
+  align-items: center;
+  text-align: center;
+}
+
+.tt-m-card__label {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-m-label-size);
+}
+
+.tt-m-card__body {
+  font-size: var(--tt-m-title-size);
+  font-weight: var(--tt-font-weight-bold);
+  margin: 0;
+}
+
+.tt-m-card__note {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-m-meta-size);
+  margin: 0;
+}
+
+/* The plate is the largest figure on the screen and always brand-coloured. */
+.tt-m-plate {
+  color: var(--tt-m-accent);
+  font-size: var(--tt-m-plate-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-m-plate-weight);
+  letter-spacing: var(--tt-m-plate-letter-spacing);
+  line-height: var(--tt-line-tight);
+}
+
+.tt-m-heading {
+  font-size: var(--tt-m-heading-size);
+  font-weight: var(--tt-font-weight-bold);
+  padding-block: var(--tt-space-4);
+  text-align: center;
+}
+
+/* Choice rows ---------------------------------------------------------------- */
+
+.tt-m-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-m-choice-gap);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tt-m-choice {
+  align-items: center;
+  background: var(--tt-m-surface);
+  border: 1px solid var(--tt-m-hairline);
+  border-radius: var(--tt-m-choice-radius);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  gap: var(--tt-space-3);
+  min-height: var(--tt-m-choice-height);
+  padding-inline: var(--tt-m-choice-padding-inline);
+  text-align: start;
+  text-decoration: none;
+  width: 100%;
+}
+
+/* Selected is a brand border plus a tint — never a second card. */
+.tt-m-choice[aria-pressed="true"],
+.tt-m-choice[aria-current="true"],
+.tt-m-choice:has(input:checked) {
+  background: var(--tt-m-accent-surface);
+  border-color: var(--tt-m-accent);
+}
+
+.tt-m-choice:has(input:focus-visible) {
+  box-shadow: var(--tt-focus-ring);
+}
+
+.tt-m-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tt-m-choice__chip {
+  align-items: center;
+  background: var(--tt-m-chip-surface);
+  border-radius: var(--tt-m-chip-radius);
+  block-size: var(--tt-m-chip-size);
+  color: var(--tt-color-text);
+  display: inline-flex;
+  flex: none;
+  inline-size: var(--tt-m-chip-size);
+  justify-content: center;
+}
+
+.tt-m-choice[aria-pressed="true"] .tt-m-choice__chip,
+.tt-m-choice[aria-current="true"] .tt-m-choice__chip,
+.tt-m-choice:has(input:checked) .tt-m-choice__chip {
+  background: var(--tt-m-accent);
+  color: var(--tt-m-on-accent);
+}
+
+.tt-m-choice__text {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--tt-m-title-size);
+  font-weight: var(--tt-font-weight-bold);
+  gap: var(--tt-space-1);
+  min-width: 0;
+}
+
+.tt-m-choice__eyebrow {
+  color: var(--tt-m-accent);
+  font-size: var(--tt-m-meta-size);
+  font-weight: var(--tt-font-weight-semibold);
+}
+
+/* Fields --------------------------------------------------------------------- */
+
+.tt-m-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-space-2);
+}
+
+.tt-m-field > label {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-m-label-size);
+}
+
+.tt-m-field input,
+.tt-m-field textarea {
+  background: var(--tt-m-surface);
+  border: 1px solid var(--tt-m-hairline);
+  border-radius: var(--tt-m-field-radius);
+  color: var(--tt-color-text);
+  font-size: var(--tt-m-body-size);
+  min-height: var(--tt-m-field-height);
+  padding-block: var(--tt-space-3);
+  padding-inline: var(--tt-m-card-padding);
+  width: 100%;
+}
+
+.tt-m-field textarea {
+  min-height: var(--tt-m-textarea-min-height);
+  resize: vertical;
+}
+
+/* The plate a driver types is shown at the size it is shown back to them. */
+.tt-m-field--plate input {
+  color: var(--tt-m-accent);
+  font-size: var(--tt-m-plate-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-m-plate-weight);
+  text-align: center;
+}
+
+.tt-m-field--code input {
+  font-size: var(--tt-m-heading-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  letter-spacing: var(--tt-m-tab-label-letter-spacing);
+  text-align: center;
+}
+
+.tt-m-field__hint {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-m-meta-size);
+  margin: 0;
+}
+
+/* Actions -------------------------------------------------------------------- */
+
+.tt-m-primary,
+.tt-m-secondary {
+  align-items: center;
+  border-radius: var(--tt-m-button-radius);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--tt-m-button-font-size);
+  font-weight: var(--tt-font-weight-bold);
+  gap: var(--tt-space-3);
+  justify-content: center;
+  min-height: var(--tt-m-button-height);
+  padding-inline: var(--tt-m-card-padding);
+  text-decoration: none;
+  width: 100%;
+}
+
+.tt-m-primary {
+  background: var(--tt-m-accent);
+  border: 1px solid var(--tt-m-accent);
+  color: var(--tt-m-on-accent);
+}
+
+.tt-m-secondary {
+  background: var(--tt-m-surface);
+  border: 1px solid var(--tt-m-accent);
+  color: var(--tt-m-accent);
+}
+
+.tt-m-primary:disabled,
+.tt-m-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* The send action carries the logo mark; a confirmation does not. */
+.tt-m-primary img {
+  block-size: auto;
+  inline-size: var(--tt-m-button-mark-size);
+}
+
+/* Wizard steps put back beside next; everything else keeps one primary. */
+.tt-m-actions {
+  display: flex;
+  gap: var(--tt-m-choice-gap);
+}
+
+.tt-m-actions > .tt-m-secondary {
+  flex: 0 1 35%;
+}
+
+.tt-m-link,
+.tt-m-quiet-link {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--tt-m-title-size);
+  font-weight: var(--tt-font-weight-bold);
+  justify-content: center;
+  min-height: var(--tt-m-button-height);
+  align-items: center;
+  width: 100%;
+}
+
+.tt-m-link {
+  color: var(--tt-m-accent);
+  text-decoration: none;
+}
+
+.tt-m-quiet-link {
+  color: var(--tt-color-text-muted);
+  font-weight: var(--tt-font-weight-medium);
+}
+
+/* Status and readouts -------------------------------------------------------- */
+
+.tt-m-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-space-2);
+  padding-block: var(--tt-m-card-padding);
+  text-align: center;
+}
+
+.tt-m-status__label {
+  color: var(--tt-color-text);
+  font-size: var(--tt-m-label-size);
+}
+
+.tt-m-status__value {
+  color: var(--tt-m-accent);
+  font-size: var(--tt-m-heading-size);
+  font-weight: var(--tt-font-weight-bold);
+}
+
+.tt-m-status__meta {
+  color: var(--tt-color-text);
+  font-size: var(--tt-m-label-size);
+}
+
+.tt-m-kv {
+  display: grid;
+  gap: var(--tt-space-2);
+  grid-template-columns: auto auto;
+  justify-content: center;
+  margin: 0;
+}
+
+.tt-m-kv dt {
+  color: var(--tt-color-text);
+  font-size: var(--tt-m-label-size);
+  font-weight: var(--tt-font-weight-semibold);
+  text-align: end;
+}
+
+.tt-m-kv dd {
+  font-size: var(--tt-m-label-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  margin: 0;
+}
+
+/* A row of facts inside a settings card, separated by a hairline — not a card. */
+.tt-m-rows {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tt-m-rows > li {
+  align-items: center;
+  display: flex;
+  gap: var(--tt-space-3);
+  justify-content: space-between;
+  min-height: var(--tt-m-choice-height);
+}
+
+.tt-m-rows > li + li {
+  border-top: 1px solid var(--tt-m-hairline);
+}
+
+.tt-m-rows dt,
+.tt-m-rows__label {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-m-label-size);
+}
+
+.tt-m-rows dd,
+.tt-m-rows__value {
+  font-size: var(--tt-m-title-size);
+  font-variant-numeric: var(--tt-numeric-font-variant);
+  font-weight: var(--tt-font-weight-semibold);
+  margin: 0;
+}
+
+/* Empty states say what will happen, they do not fill the space with a sample. */
+.tt-m-empty {
+  align-items: center;
+  color: var(--tt-color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-space-2);
+  padding-block: var(--tt-space-6);
+  text-align: center;
+}
+
+.tt-m-empty > strong {
+  color: var(--tt-color-text);
+  font-size: var(--tt-m-title-size);
+}
+
+.tt-m-notice {
+  color: var(--tt-color-text-muted);
+  display: flex;
+  font-size: var(--tt-m-meta-size);
+  gap: var(--tt-space-2);
+  margin: 0;
+}
+
+.tt-m-notice--danger {
+  color: var(--tt-color-danger);
+}
+
+/* ============================================================================
    Admin console surface rules — single source for card shape and spacing.
 
    Screen-specific blocks above each carried their own padding (0.85rem, 1rem,

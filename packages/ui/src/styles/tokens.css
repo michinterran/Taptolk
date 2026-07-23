@@ -164,6 +164,79 @@
   --tt-sidebar-item-active-surface: color-mix(in srgb, var(--tt-color-brand) 8%, #ffffff);
   --tt-sidebar-item-active-color: var(--tt-color-brand-strong);
 
+  /* ---------------------------------------------------------------------------
+     Mobile metrics (owner + caller), measured from docs/design-canon/pwa/*.png.
+
+     The mobile screens are a different system from the console: a single column
+     of white cards on a very light ground, one primary button per screen, and a
+     bottom tab bar. They are built token-first for the same reason the console
+     is — the owner activation and public contact screens each grew their own
+     padding, radius and control heights, and no two of them matched.
+
+     Measurement note: the four approved mockups were not rendered at one common
+     viewport (the gutter reads 18.3 CSS px in 01-caller-compose and 22.3 in
+     03-owner-reply), so ratios were normalised against the card width and the
+     nearest round value taken. Heights and colours agreed across all four.
+     --------------------------------------------------------------------------- */
+
+  /* The column stops growing past a phone; a 900px-wide card stack is not the canon. */
+  --tt-m-max-width: 30rem;
+  --tt-m-gutter: 1.25rem;
+  --tt-m-stack-gap: 1.25rem;
+
+  /* The mockups sit on a near-white ground so the white cards separate without a border. */
+  --tt-m-background: #f8f9fb;
+  --tt-m-surface: var(--tt-color-surface);
+  --tt-m-hairline: #e5e7eb;
+  --tt-m-chip-surface: #f3f4f6;
+
+  /* The canon's mobile purple is the logo tone, one step lighter than the console
+     brand: sampled #8a6eff on the primary button, the plate figures, the selected
+     row border and the active tab. The 12% tint resolves to the sampled #f1eeff. */
+  --tt-m-accent: var(--tt-color-logo-purple);
+  --tt-m-accent-surface: color-mix(in srgb, var(--tt-color-logo-purple) 12%, #ffffff);
+  --tt-m-on-accent: #ffffff;
+
+  --tt-m-card-radius: 1rem;
+  --tt-m-card-padding: 1.25rem;
+
+  /* Choice row: icon chip + one line. 64px keeps the 18.7% of card width the
+     mockups hold and stays above the 44px touch minimum. */
+  --tt-m-choice-height: 4rem;
+  --tt-m-choice-gap: 0.625rem;
+  --tt-m-choice-padding-inline: 1.125rem;
+  --tt-m-choice-radius: 1rem;
+  --tt-m-chip-size: 2rem;
+  --tt-m-chip-radius: 0.625rem;
+
+  /* One primary per screen, full width. */
+  --tt-m-button-height: 2.875rem;
+  --tt-m-button-radius: 1rem;
+  --tt-m-button-font-size: 1rem;
+  --tt-m-button-mark-size: 1.25rem;
+
+  /* Fields are taller than console fields because they are typed on a phone. */
+  --tt-m-field-height: 3.25rem;
+  --tt-m-field-radius: 0.875rem;
+  --tt-m-textarea-min-height: 6.5rem;
+
+  /* The plate is the largest figure on any mobile screen and always brand-coloured. */
+  --tt-m-plate-size: 2rem;
+  --tt-m-plate-weight: 700;
+  --tt-m-plate-letter-spacing: -0.01em;
+
+  --tt-m-heading-size: 1.3125rem;
+  --tt-m-title-size: 1rem;
+  --tt-m-body-size: 1rem;
+  --tt-m-label-size: 0.9375rem;
+  --tt-m-meta-size: 0.8125rem;
+
+  --tt-m-brand-width: 8.75rem;
+  --tt-m-tabbar-height: 4.25rem;
+  --tt-m-tab-icon-size: 1.5rem;
+  --tt-m-tab-label-size: 0.75rem;
+  --tt-m-tab-label-letter-spacing: 0.06em;
+
   /* State tint pairs for badges / pills / tiles — bg + accessible foreground (new) */
   --tt-color-brand-surface: #eeeaff;
   --tt-color-brand-fg: #5540c9;

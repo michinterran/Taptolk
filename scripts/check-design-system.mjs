@@ -40,6 +40,19 @@ const REQUIRED_CANON = [
 ];
 
 /**
+ * The mobile canon. The owner and caller screens were rebuilt more than once from
+ * prose because the approved mockups lived outside the repository, so the gate
+ * now requires them the same way it requires the console reference.
+ */
+const REQUIRED_MOBILE_CANON = [
+  "01-caller-compose.png",
+  "02-caller-sent-waiting.png",
+  "03-owner-reply.png",
+  "04-caller-response-received.png",
+  "README.md",
+];
+
+/**
  * Properties the tokens own. A console rule that sets one of these to a literal is
  * re-deciding something the design system already decided.
  */
@@ -197,12 +210,14 @@ for (const rule of readRules(screenSource)) {
   ) {
     continue;
   }
-  const isConsoleRule = selectors.some((selector) =>
-    /(?:^|\s)\.(?:admin-|operations-|qr-|tt-(?:data-table|stat|side-card|filter-bar|empty-state|sidebar|admin-shell|topbar))/u.test(
+  // `.tt-m-` is the mobile layer (docs/design-canon/pwa/). It is held to the same
+  // contract from its first line, so it never accumulates the debt the console did.
+  const isSystemSurface = selectors.some((selector) =>
+    /(?:^|\s)\.(?:admin-|operations-|qr-|tt-m-|tt-(?:data-table|stat|side-card|filter-bar|empty-state|sidebar|admin-shell|topbar))/u.test(
       selector,
     ),
   );
-  if (!isConsoleRule) {
+  if (!isSystemSurface) {
     continue;
   }
   for (const declaration of readDeclarations(rule.body)) {
@@ -219,7 +234,7 @@ for (const rule of readRules(screenSource)) {
     }
     fail(
       `globals.css:${rule.line + screenLineOffset} — "${rule.selector.split("\n")[0].trim()}" sets ${declaration.property}: ${declaration.value}. ` +
-        "Console surfaces resolve this from a token (DESIGN_SYSTEM.md §2).",
+        "Console and mobile surfaces resolve this from a token (DESIGN_SYSTEM.md §2).",
     );
   }
 }
@@ -233,6 +248,16 @@ if (nestedCardPattern.test(stripComments(globalsSource))) {
   );
 }
 
+// The mobile canon stacks cards; it never nests one. `.tt-m-card--accent` is the
+// only outlined card and it is a top-level card, not a card inside a card.
+const nestedMobileCardPattern =
+  /\.tt-m-card\b[^{,]*\s\.tt-m-card\b[^{]*\{[^}]*\bborder\s*:\s*(?!0)/gu;
+if (nestedMobileCardPattern.test(stripComments(globalsSource))) {
+  fail(
+    "A mobile card draws a border inside another card. Separate with a hairline (DESIGN_SYSTEM.md §3.10).",
+  );
+}
+
 // The canon has to exist, and it must not ship.
 let canonEntries = [];
 try {
@@ -243,6 +268,18 @@ try {
 for (const required of REQUIRED_CANON) {
   if (canonEntries.length > 0 && !canonEntries.includes(required)) {
     fail(`docs/design-canon/${required} is missing (DESIGN_SYSTEM.md §1).`);
+  }
+}
+
+let mobileCanonEntries = [];
+try {
+  mobileCanonEntries = await readdir(path.join(canonDirectory, "pwa"));
+} catch {
+  fail("docs/design-canon/pwa/ is missing; the owner and caller screens have no canon.");
+}
+for (const required of REQUIRED_MOBILE_CANON) {
+  if (mobileCanonEntries.length > 0 && !mobileCanonEntries.includes(required)) {
+    fail(`docs/design-canon/pwa/${required} is missing (DESIGN_SYSTEM.md §1).`);
   }
 }
 
@@ -278,6 +315,20 @@ const REQUIRED_TOKENS = [
   "--tt-card-padding",
   "--tt-card-radius",
   "--tt-button-height",
+  // Mobile layer (DESIGN_SYSTEM.md §3.10). The owner and caller screens resolve
+  // their column, card, choice row, plate and tab bar from these.
+  "--tt-m-max-width",
+  "--tt-m-gutter",
+  "--tt-m-stack-gap",
+  "--tt-m-card-radius",
+  "--tt-m-card-padding",
+  "--tt-m-accent",
+  "--tt-m-accent-surface",
+  "--tt-m-choice-height",
+  "--tt-m-button-height",
+  "--tt-m-field-height",
+  "--tt-m-plate-size",
+  "--tt-m-tabbar-height",
 ];
 for (const token of REQUIRED_TOKENS) {
   if (!tokensSource.includes(`${token}:`)) {
