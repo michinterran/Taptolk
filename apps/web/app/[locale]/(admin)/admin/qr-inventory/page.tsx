@@ -138,8 +138,11 @@ export default async function QrInventoryPage({
         )}
         canOperateSample={roleHasPermission(membership.role, "qr-batch:sample-approve")}
         canRequestBatch={roleHasPermission(membership.role, "qr-batch:request")}
+        canonicalQrHostReady={Boolean(environment.PUBLIC_QR_BASE_URL)}
         copy={{
           actions: copy["admin.qr.actions"],
+          approvalsCount: copy["admin.qr.approvals.count"],
+          approvalsSummary: copy["admin.qr.approvals.summary"],
           approve: copy["admin.qr.approve"],
           archive: copy["admin.qr.archive"],
           artifact: copy["admin.qr.artifact"],
@@ -200,7 +203,9 @@ export default async function QrInventoryPage({
           designTitle: copy["admin.qr.design.title"],
           emptyQueue: copy["admin.qr.emptyQueue"],
           eyebrow: copy["admin.qr.eyebrow"],
+          finalApprovalBlocked: copy["admin.qr.final.blocked"],
           finalApprovalNotice: copy["admin.qr.finalApprovalNotice"],
+          finalApprovalSuperAdminOnly: copy["admin.qr.final.superAdminOnly"],
           finalApprovalApprove: copy["admin.qr.final.approve"],
           finalApprovalDescription: copy["admin.qr.final.approval.description"],
           finalApprovalRequest: copy["admin.qr.final.request"],
@@ -338,6 +343,21 @@ export default async function QrInventoryPage({
             exports: copy["admin.qr.progress.exports"],
             failed: copy["admin.qr.progress.failed"],
             generated: copy["admin.qr.progress.generated"],
+            laneEmpty: copy["admin.qr.board.laneEmpty"],
+            laneHints: {
+              DISTRIBUTION: copy["admin.qr.board.lane.distribution.hint"],
+              GENERATION: copy["admin.qr.board.lane.generation.hint"],
+              PRINT: copy["admin.qr.board.lane.print.hint"],
+              SHIPPING: copy["admin.qr.board.lane.shipping.hint"],
+            },
+            laneLabels: {
+              DISTRIBUTION: copy["admin.qr.board.lane.distribution"],
+              GENERATION: copy["admin.qr.board.lane.generation"],
+              PRINT: copy["admin.qr.board.lane.print"],
+              SHIPPING: copy["admin.qr.board.lane.shipping"],
+            },
+            outcomes: copy["admin.qr.board.outcomes"],
+            outcomesEmpty: copy["admin.qr.board.outcomesEmpty"],
             progress: copy["admin.qr.progress.description"],
             statusLabels: {
               CANCELLED: copy["admin.qr.batch.status.cancelled"],
@@ -362,6 +382,7 @@ export default async function QrInventoryPage({
               SHIPPED: copy["admin.qr.batch.status.shipped"],
             },
             title: copy["admin.qr.progress.title"],
+            unplaced: copy["admin.qr.board.unplaced"],
           }}
           items={progressModel}
         />

@@ -34,6 +34,8 @@ import { QrSectionNav, type QrSectionNavLabels } from "./qr-section-nav";
 
 interface QrInventoryCopy {
   actions: string;
+  approvalsCount: string;
+  approvalsSummary: string;
   approve: string;
   archive: string;
   artifact: string;
@@ -69,7 +71,9 @@ interface QrInventoryCopy {
   designTitle: string;
   emptyQueue: string;
   eyebrow: string;
+  finalApprovalBlocked: string;
   finalApprovalNotice: string;
+  finalApprovalSuperAdminOnly: string;
   finalApprovalApprove: string;
   finalApprovalDescription: string;
   finalApprovalRequest: string;
@@ -145,6 +149,7 @@ interface QrInventorySampleViewProps {
   backHref: string;
   canApproveDesign: boolean;
   canApproveFinalGeneration: boolean;
+  canonicalQrHostReady: boolean;
   canArchiveDesign: boolean;
   canCreateDesign: boolean;
   canOperateSample: boolean;
@@ -604,11 +609,13 @@ function BatchCard({
 
 function FinalGenerationApprovalCard({
   batch,
+  canonicalQrHostReady,
   copy,
   locale,
   templateCode,
 }: {
   batch: QrFinalApprovalBatchItem;
+  canonicalQrHostReady: boolean;
   copy: QrInventoryCopy;
   locale: AppLocale;
   templateCode: string;
@@ -643,7 +650,11 @@ function FinalGenerationApprovalCard({
       <form action={approveQrBatchFinalGeneration} className="admin-approval-form">
         <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
         <ReasonField copy={copy} id={`final-approve-${batch.id}`} />
-        <button className="tt-button admin-approval-primary-action" type="submit">
+        <button
+          className="tt-button admin-approval-primary-action"
+          disabled={!canonicalQrHostReady}
+          type="submit"
+        >
           {copy.finalApprovalApprove}
         </button>
       </form>
@@ -654,6 +665,7 @@ function FinalGenerationApprovalCard({
 export function QrInventorySampleView({
   canApproveDesign,
   canApproveFinalGeneration,
+  canonicalQrHostReady,
   canArchiveDesign,
   canCreateDesign,
   canOperateSample,
@@ -855,6 +867,36 @@ export function QrInventorySampleView({
         </nav>
       ) : null}
 
+      {section === "approvals" ? (
+        <section
+          aria-label={copy.approvalsSummary}
+          className="admin-stat-strip qr-approval-summary"
+        >
+          {[
+            {
+              count: canApproveDesign ? model.designApprovalQueue.length : null,
+              label: copy.designApproveTitle,
+            },
+            {
+              count: canOperateSample ? model.sampleApprovalQueue.length : null,
+              label: copy.sampleApproveTitle,
+            },
+            {
+              count: canApproveFinalGeneration
+                ? finalApprovalModel.finalApprovalQueue.length
+                : null,
+              label: copy.finalApprovalTitle,
+            },
+          ].map((entry) => (
+            <article className="tt-stat-tile" key={entry.label}>
+              <span>{entry.label}</span>
+              <strong>{entry.count === null ? "—" : entry.count.toLocaleString()}</strong>
+              <small>{copy.approvalsCount}</small>
+            </article>
+          ))}
+        </section>
+      ) : null}
+
       {section === "approvals" && canApproveDesign ? (
         <section aria-labelledby="design-approval-title" className="admin-lifecycle-queue">
           <header>
@@ -1029,9 +1071,17 @@ export function QrInventorySampleView({
       {section === "approvals" && canApproveFinalGeneration ? (
         <section aria-labelledby="final-approval-title" className="admin-lifecycle-queue">
           <header>
-            <h2 id="final-approval-title">{copy.finalApprovalTitle}</h2>
+            <h2 id="final-approval-title">
+              {copy.finalApprovalTitle}{" "}
+              <StatusPill tone="info">{copy.finalApprovalSuperAdminOnly}</StatusPill>
+            </h2>
             <p>{copy.finalApprovalDescription}</p>
           </header>
+          {canonicalQrHostReady ? null : (
+            <p className="admin-notice admin-notice--danger" role="status">
+              <strong>{copy.finalApprovalBlocked}</strong>
+            </p>
+          )}
           {finalApprovalModel.finalApprovalQueue.length > 0 ? (
             <div className="admin-approval-list">
               {finalApprovalModel.finalApprovalQueue.map((batch) => {
@@ -1039,6 +1089,7 @@ export function QrInventorySampleView({
                 return inventoryBatch ? (
                   <FinalGenerationApprovalCard
                     batch={batch}
+                    canonicalQrHostReady={canonicalQrHostReady}
                     copy={copy}
                     key={batch.id}
                     locale={locale}

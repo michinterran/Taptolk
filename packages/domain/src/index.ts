@@ -65,6 +65,18 @@ export {
   type PublicContactStatus,
 } from "./public-contact-policy.js";
 export {
+  buildQrBatchBoard,
+  getQrBatchPhase,
+  getQrBatchPhaseIndex,
+  getQrBatchPlacement,
+  QR_BATCH_PHASES,
+  type QrBatchBoard,
+  type QrBatchLane,
+  type QrBatchOutcome,
+  type QrBatchPhase,
+  type QrBatchPlacement,
+} from "./qr-batch-phase-policy.js";
+export {
   clampQrBatchTotal,
   planQrBatchOrder,
   QR_BATCH_ITEM_MAX,
