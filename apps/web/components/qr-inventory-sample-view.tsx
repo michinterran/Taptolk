@@ -9,21 +9,13 @@ import {
   type StickerDesignVersionItem,
 } from "@taptolk/application";
 import { StatusPill } from "@taptolk/ui";
-import Image from "next/image";
 import type { ReactNode } from "react";
-import {
-  approveQrBatchFinalGeneration,
-  cancelQrBatchBeforeGenerationApproval,
-  requestQrBatchFinalApproval,
-} from "../admin/qr-final-generation-approval-actions";
+import { approveQrBatchFinalGeneration } from "../admin/qr-final-generation-approval-actions";
 import {
   approveQrBatchSample,
   approveStickerDesignVersion,
   archiveStickerDesignVersion,
-  cancelQrBatch,
   createStickerDesignVersion,
-  generateQrBatchSample,
-  invalidateQrBatchSample,
   requestQrBatch,
 } from "../admin/qr-inventory-sample-actions";
 import type { AdminQrWorkflowCopy } from "../content/admin-qr-workflow-copy";
@@ -94,8 +86,10 @@ interface QrInventoryCopy {
   purposePlaceholder: string;
   qaEvidence: string;
   quantity: QrQuantityLabels;
+  stepBack: string;
   stepBackDesign: string;
   stepNavLabel: string;
+  stepNext: string;
   stepNextQuantity: string;
   specBottom: string;
   specBottomValue: string;
@@ -117,6 +111,7 @@ interface QrInventoryCopy {
   securityNote: string;
   signOut: string;
   site: string;
+  siteRequired: string;
   storageBucket: string;
   storagePath: string;
   templateCode: string;
@@ -416,164 +411,6 @@ function SampleApprovalCard({
   );
 }
 
-function BatchCard({
-  batch,
-  canOperateSample,
-  canCancel,
-  canCancelFinalApproval,
-  canRequestFinalApproval,
-  copy,
-  locale,
-}: {
-  batch: QrBatchItem;
-  canCancel: boolean;
-  canCancelFinalApproval: boolean;
-  canOperateSample: boolean;
-  canRequestFinalApproval: boolean;
-  copy: QrInventoryCopy;
-  locale: AppLocale;
-}) {
-  const canAttach = canOperateSample && batch.status === "DRAFT" && !batch.sample;
-  const canInvalidate =
-    canOperateSample &&
-    batch.sample &&
-    (batch.status === "SAMPLE_READY" || batch.status === "SAMPLE_APPROVED");
-  const waiting =
-    batch.status === "DRAFT"
-      ? copy.waitingSample
-      : batch.status === "SAMPLE_READY"
-        ? copy.sampleApproveDescription
-        : batch.status === "SAMPLE_APPROVED"
-          ? copy.waitingFinal
-          : copy.batchStatusLabels[batch.status];
-
-  return (
-    <article className="qr-review-card">
-      <header className="qr-track-batch__header">
-        <div>
-          <span className="qr-track-batch__code">{batch.batchCode}</span>
-          <h3>{batch.siteName}</h3>
-        </div>
-        <StatusPill tone={getQrBatchStatusTone(batch.status)}>
-          {copy.batchStatusLabels[batch.status]}
-        </StatusPill>
-      </header>
-      <dl className="qr-spec">
-        <div>
-          <dt>{copy.batchQuantity}</dt>
-          <dd>{batch.requestedQuantity.toLocaleString(locale === "ko" ? "ko-KR" : "en")}</dd>
-        </div>
-        <div>
-          <dt>{copy.templateCode}</dt>
-          <dd>{batch.templateCode}</dd>
-        </div>
-        <div>
-          <dt>{copy.createdAt}</dt>
-          <dd>
-            <time dateTime={batch.createdAt}>{formatDate(locale, batch.createdAt)}</time>
-          </dd>
-        </div>
-      </dl>
-      {batch.sample ? (
-        <div className="admin-qr-preview-grid">
-          <figure className="admin-qr-preview admin-qr-preview--desktop">
-            <figcaption>{copy.samplePreviewDesktop}</figcaption>
-            <Image
-              alt={`${batch.siteName} · ${copy.samplePreviewAlt}`}
-              height={300}
-              loading="lazy"
-              src={`/api/admin/qr-samples/${batch.sample.id}`}
-              unoptimized
-              width={300}
-            />
-          </figure>
-          <figure className="admin-qr-preview admin-qr-preview--mobile">
-            <figcaption>{copy.samplePreviewMobile}</figcaption>
-            <Image
-              alt={`${batch.siteName} · ${copy.samplePreviewAlt}`}
-              height={300}
-              loading="lazy"
-              src={`/api/admin/qr-samples/${batch.sample.id}`}
-              unoptimized
-              width={300}
-            />
-          </figure>
-        </div>
-      ) : null}
-      <div className="qr-review-card__form">
-        <p className="admin-catalog-read-only">{waiting}</p>
-      </div>
-      {canAttach ? (
-        <details className="admin-rejection-panel">
-          <summary>{copy.sampleAttach}</summary>
-          <form action={generateQrBatchSample} className="admin-rejection-form">
-            <BatchFields batch={batch} copy={copy} locale={locale} />
-            <input
-              aria-label={copy.templateCode}
-              name="templateCode"
-              type="hidden"
-              value={batch.templateCode}
-            />
-            <p className="admin-catalog-read-only">{copy.sampleAttachDescription}</p>
-            <ReasonField copy={copy} id={`sample-attach-reason-${batch.id}`} />
-            <button className="tt-button" type="submit">
-              {copy.sampleAttach}
-            </button>
-          </form>
-        </details>
-      ) : null}
-      {canInvalidate ? (
-        <details className="admin-rejection-panel">
-          <summary>{copy.invalidate}</summary>
-          <form action={invalidateQrBatchSample} className="admin-rejection-form">
-            <BatchFields batch={batch} copy={copy} locale={locale} />
-            <ReasonField copy={copy} id={`sample-invalidate-${batch.id}`} />
-            <button className="tt-button admin-danger-action" type="submit">
-              {copy.invalidate}
-            </button>
-          </form>
-        </details>
-      ) : null}
-      {canCancel ? (
-        <details className="admin-rejection-panel">
-          <summary>{copy.batchCancel}</summary>
-          <form action={cancelQrBatch} className="admin-rejection-form">
-            <BatchFields batch={batch} copy={copy} locale={locale} />
-            <ReasonField copy={copy} id={`batch-cancel-${batch.id}`} />
-            <button className="tt-button admin-danger-action" type="submit">
-              {copy.batchCancel}
-            </button>
-          </form>
-        </details>
-      ) : null}
-      {canRequestFinalApproval ? (
-        <details className="admin-rejection-panel">
-          <summary>{copy.finalApprovalRequest}</summary>
-          <form action={requestQrBatchFinalApproval} className="admin-rejection-form">
-            <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
-            <ReasonField copy={copy} id={`final-request-${batch.id}`} />
-            <button className="tt-button admin-approval-primary-action" type="submit">
-              {copy.finalApprovalRequest}
-            </button>
-          </form>
-        </details>
-      ) : null}
-      {canCancelFinalApproval ? (
-        <details className="admin-rejection-panel">
-          <summary>{copy.batchCancel}</summary>
-          <form action={cancelQrBatchBeforeGenerationApproval} className="admin-rejection-form">
-            <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
-            <ReasonField copy={copy} id={`final-cancel-${batch.id}`} />
-            <button className="tt-button admin-danger-action" type="submit">
-              {copy.batchCancel}
-            </button>
-          </form>
-        </details>
-      ) : null}
-    </article>
-  );
-}
-
 function FinalGenerationApprovalCard({
   batch,
   canonicalQrHostReady,
@@ -663,6 +500,26 @@ export function QrInventorySampleView({
     ...(canOperateSample || canApproveFinalGeneration ? [] : (["review"] as const)),
   ]);
 
+  const stepFooter = (
+    <nav aria-label={copy.stepNavLabel} className="qr-wizard__footer">
+      {previousStep ? (
+        <a
+          className="tt-button tt-button--secondary"
+          href={getQrWizardStepHref(locale, previousStep)}
+        >
+          {copy.stepBack} · {workflowCopy.steps[stepIndex - 1]?.title}
+        </a>
+      ) : (
+        <span />
+      )}
+      {nextStep ? (
+        <a className="tt-button" href={getQrWizardStepHref(locale, nextStep)}>
+          {copy.stepNext} · {workflowCopy.steps[stepIndex + 1]?.title}
+        </a>
+      ) : null}
+    </nav>
+  );
+
   return (
     <>
       <AdminPageHeader
@@ -729,6 +586,7 @@ export function QrInventorySampleView({
           ) : (
             <p className="admin-catalog-read-only">{copy.noSite}</p>
           )}
+          {stepFooter}
         </section>
       ) : null}
 
@@ -815,7 +673,7 @@ export function QrInventorySampleView({
                     className="tt-button tt-button--secondary"
                     href={getQrWizardStepHref(locale, "site")}
                   >
-                    {copy.stepBackDesign}
+                    {copy.stepBack} · {workflowCopy.steps[0]?.title}
                   </a>
                   <button className="tt-button" type="submit">
                     {copy.designCreate}
@@ -823,8 +681,10 @@ export function QrInventorySampleView({
                 </div>
               </form>
             ) : (
-              <p className="admin-catalog-read-only">
-                <a href={getQrWizardStepHref(locale, "site")}>{copy.noSite}</a>
+              <p className="qr-note qr-note--warn">
+                <a href={getQrWizardStepHref(locale, "site")}>
+                  {model.siteOptions.length > 0 ? copy.siteRequired : copy.noSite}
+                </a>
               </p>
             )}
           </div>
@@ -878,24 +738,6 @@ export function QrInventorySampleView({
       {/* BrandAssetUploadView already renders its own titled section; wrapping it again
           produced a card inside a card with two headings. */}
       {step === "design" ? brandAssetUpload : null}
-
-      <nav aria-label={copy.stepNavLabel} className="qr-wizard__footer">
-        {previousStep ? (
-          <a
-            className="tt-button tt-button--secondary"
-            href={getQrWizardStepHref(locale, previousStep)}
-          >
-            {copy.stepBackDesign}
-          </a>
-        ) : (
-          <span />
-        )}
-        {nextStep ? (
-          <a className="tt-button" href={getQrWizardStepHref(locale, nextStep)}>
-            {copy.stepNextQuantity}
-          </a>
-        ) : null}
-      </nav>
 
       {step === "review" ? (
         <section aria-label={copy.approvalsSummary} className="tt-stat-strip tt-stat-strip--3">
@@ -959,7 +801,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {step === "quantity" ? (
+      {step === "design" ? (
         <section aria-labelledby="design-catalog-title" className="qr-wizard__panel">
           <header>
             <h2 id="design-catalog-title">{copy.designTitle}</h2>
@@ -993,6 +835,7 @@ export function QrInventorySampleView({
           ) : (
             <p className="admin-catalog-read-only">{copy.designEmpty}</p>
           )}
+          {stepFooter}
         </section>
       ) : null}
 
@@ -1129,33 +972,6 @@ export function QrInventorySampleView({
             </div>
           ) : (
             <p className="admin-catalog-read-only">{copy.emptyQueue}</p>
-          )}
-        </section>
-      ) : null}
-
-      {step === "production" ? (
-        <section aria-labelledby="batch-catalog-title" className="qr-wizard__panel">
-          <header>
-            <h2 id="batch-catalog-title">{copy.batchTitle}</h2>
-            <p>{copy.securityNote}</p>
-          </header>
-          {model.batches.length > 0 ? (
-            <div className="qr-review-list">
-              {model.batches.map((batch) => (
-                <BatchCard
-                  batch={batch}
-                  canCancel={model.cancellableBatchIds.has(batch.id)}
-                  canCancelFinalApproval={finalApprovalModel.cancellableBatchIds.has(batch.id)}
-                  canOperateSample={canOperateSample}
-                  canRequestFinalApproval={finalApprovalModel.requestableBatchIds.has(batch.id)}
-                  copy={copy}
-                  key={batch.id}
-                  locale={locale}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="admin-catalog-read-only">{copy.batchEmpty}</p>
           )}
         </section>
       ) : null}

@@ -8090,3 +8090,11 @@ h3,
 .qr-review-card__form > .tt-button {
   justify-self: end;
 }
+
+/* The rail always shows a sticker. Before anything is checked it shows the first
+   template, because an empty rail reads as a broken preview rather than as a
+   pending choice. */
+.qr-wizard__columns:not(:has(.qr-choice-cards input:checked))
+:is(.qr-wizard__preview, .qr-wizard__rail-spec dd span):first-of-type {
+  display: block;
+}
