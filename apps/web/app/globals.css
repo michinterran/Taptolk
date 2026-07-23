@@ -6799,3 +6799,51 @@ h3,
 .qr-sections__item[aria-current="page"] small {
   color: var(--tt-color-brand-fg);
 }
+
+/* Ordering progress marker. Steps 1-4 are the order request; 5 and 6 live in the
+   approval and tracking areas, so they are not shown here. */
+.qr-steps {
+  display: flex;
+  gap: 0.4rem;
+  list-style: none;
+  margin: var(--tt-space-4) 0 0;
+  overflow-x: auto;
+  padding: 0;
+}
+
+.qr-step {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 0.55rem;
+  min-width: 10rem;
+  padding: 0.55rem 0.6rem;
+}
+
+.qr-step__n {
+  background: var(--tt-color-neutral-surface);
+  border-radius: 50%;
+  color: var(--tt-color-neutral-fg);
+  display: grid;
+  flex: 0 0 auto;
+  font-size: 0.76rem;
+  font-weight: 700;
+  height: 1.65rem;
+  place-items: center;
+  width: 1.65rem;
+}
+
+.qr-step__t {
+  display: grid;
+  min-width: 0;
+}
+
+.qr-step__t strong {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.qr-step__t small {
+  color: var(--tt-color-text-muted);
+  font-size: 0.68rem;
+}

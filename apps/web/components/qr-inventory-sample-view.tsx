@@ -146,6 +146,9 @@ interface QrInventorySampleViewProps {
   workflowCopy: AdminQrWorkflowCopy;
 }
 
+/** Steps 1-4 belong to ordering; step 5 is the approval area and step 6 is tracking. */
+const ORDER_STEP_COUNT = 4;
+
 function formatDate(locale: AppLocale, value: string): string {
   return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en", {
     dateStyle: "medium",
@@ -339,6 +342,11 @@ function ReasonField({ copy, id }: { copy: QrInventoryCopy; id: string }) {
   );
 }
 
+/**
+ * Progress marker for the ordering area. It reports where a request sits in the
+ * workflow; it is not navigation, because the forms below are separate server
+ * actions (design version, then batch request) rather than one paged wizard.
+ */
 function WizardStep({
   description,
   index,
@@ -349,11 +357,13 @@ function WizardStep({
   title: string;
 }) {
   return (
-    <article className="admin-qr-wizard-step">
-      <span>{String(index).padStart(2, "0")}</span>
-      <strong>{title}</strong>
-      <p>{description}</p>
-    </article>
+    <li className="qr-step">
+      <span className="qr-step__n">{index}</span>
+      <span className="qr-step__t">
+        <strong>{title}</strong>
+        <small>{description}</small>
+      </span>
+    </li>
   );
 }
 
@@ -675,8 +685,8 @@ export function QrInventorySampleView({
             <p className="eyebrow">{copy.wizardTemplate}</p>
             <h2 id="qr-wizard-title">{workflowCopy.title}</h2>
             <p>{workflowCopy.description}</p>
-            <div className="admin-qr-wizard__steps">
-              {workflowCopy.steps.map((step, index) => (
+            <ol className="qr-steps">
+              {workflowCopy.steps.slice(0, ORDER_STEP_COUNT).map((step, index) => (
                 <WizardStep
                   description={step.description}
                   index={index + 1}
@@ -684,7 +694,7 @@ export function QrInventorySampleView({
                   title={step.title}
                 />
               ))}
-            </div>
+            </ol>
           </div>
         </section>
       ) : null}
