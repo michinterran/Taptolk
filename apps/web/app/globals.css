@@ -7302,7 +7302,32 @@ h3,
 }
 
 /* A card never sits inside another card. Where a group needs separating, it is a
-   hairline, not a second frame. */
+   hairline, not a second frame. Table wraps, filter bars and side cards all carry
+   the card style for standalone use, so inside a panel they must be flattened. */
+:is(
+    .admin-overview-section,
+    .admin-command-panel,
+    .admin-analytics-card,
+    .admin-revenue-panel,
+    .admin-revenue-company-panel,
+    .admin-directory-panel,
+    .admin-profile-panel,
+    .admin-portfolio-panel,
+    .admin-report-section,
+    .admin-report-detail,
+    .operations-trend-panel,
+    .operations-site-panel,
+    .qr-order__panel,
+    .qr-brand-upload,
+    .tt-side-card
+  )
+  :is(.tt-data-table-wrap, .tt-filter-bar, .tt-empty-state, .tt-side-card) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .admin-command-panel .admin-command-panel,
 .admin-report-section > dl,
 .admin-overview-attention__items article {
