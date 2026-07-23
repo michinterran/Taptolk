@@ -11,6 +11,17 @@ import type {
   OrganizationStatus,
   SiteType,
 } from "@taptolk/application";
+import {
+  DataTable,
+  type DataTableColumn,
+  EmptyState,
+  MeterBar,
+  PageHeader,
+  SideCard,
+  StatStrip,
+  StatTile,
+  StatusPill,
+} from "@taptolk/ui";
 import type { AdminCompanyWorkspaceCopy } from "../content/admin-company-workspace-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -26,8 +37,18 @@ interface ManagementCompanyWorkspaceViewProps {
   statusLabels: Readonly<Record<OrganizationStatus, string>>;
 }
 
+type SiteRow = ManagementCompanyWorkspace["sites"][number];
+
 function formatBusinessNumber(value: string | null): string {
   return value?.length === 10 ? `${value.slice(0, 3)}-${value.slice(3, 5)}-${value.slice(5)}` : "—";
+}
+
+function headingLine(value: string): readonly [string] {
+  return [value];
+}
+
+function statusTone(status: OrganizationStatus): "success" | "warning" {
+  return status === "ACTIVE" ? "success" : "warning";
 }
 
 export function ManagementCompanyWorkspaceView({
@@ -42,6 +63,71 @@ export function ManagementCompanyWorkspaceView({
 }: ManagementCompanyWorkspaceViewProps) {
   const number = new Intl.NumberFormat(locale);
   const prefix = `/${locale}/admin`;
+  const siteColumns = [
+    {
+      cell: (site) => (
+        <span className="tt-table-entity">
+          <strong>{site.name}</strong>
+          <small>
+            {copy.type}: {siteTypeLabels[site.type]}
+          </small>
+        </span>
+      ),
+      header: copy.locationName,
+      key: "location",
+    },
+    {
+      align: "right",
+      cell: (site) => number.format(site.contractVehicleLimit),
+      header: copy.capacity,
+      key: "capacity",
+    },
+    {
+      align: "right",
+      cell: (site) => number.format(site.totalQrCount),
+      header: copy.totalQr,
+      key: "totalQr",
+    },
+    {
+      cell: (site) => {
+        const activation =
+          site.totalQrCount > 0 ? Math.round((site.activeQrCount / site.totalQrCount) * 100) : 0;
+        return (
+          <div className="tt-table-meter">
+            <MeterBar value={activation} />
+            <span>{activation}%</span>
+          </div>
+        );
+      },
+      header: copy.qrActivation,
+      key: "activation",
+    },
+    {
+      align: "right",
+      cell: (site) => number.format(site.batchCount),
+      header: copy.batches,
+      key: "batches",
+    },
+    {
+      cell: (site) => (
+        <StatusPill tone={statusTone(site.status)}>{statusLabels[site.status]}</StatusPill>
+      ),
+      header: copy.status,
+      key: "status",
+    },
+    {
+      align: "right",
+      cell: (site) => (
+        <a className="admin-row-primary" href={`${prefix}/sites/${site.id}`}>
+          {copy.viewLocation}
+          <ArrowRight aria-hidden="true" size={15} />
+        </a>
+      ),
+      header: <span className="sr-only">{copy.viewLocation}</span>,
+      key: "actions",
+    },
+  ] satisfies Array<DataTableColumn<SiteRow>>;
+
   return (
     <>
       <AdminPageHeader
@@ -51,46 +137,47 @@ export function ManagementCompanyWorkspaceView({
         logoAlt={logoAlt}
         pathname={`${prefix}/platform/management-companies`}
       />
-      <section className="admin-compact-heading admin-compact-heading--workspace">
-        <div>
-          <a className="admin-inline-back" href={`${prefix}/platform/management-companies`}>
-            <ArrowLeft aria-hidden="true" size={15} />
-            {copy.allCompanies}
-          </a>
-          <p className="eyebrow">{copy.companyWorkspace}</p>
-          <h1>{model.name}</h1>
-          <p>{copy.workspaceDescription}</p>
-        </div>
-        <nav aria-label={copy.companyWorkspace} className="admin-workspace-actions">
-          <a href={`${prefix}/qr-inventory?company=${model.id}`}>{copy.manageQr}</a>
-          <a href={`${prefix}/operations?company=${model.id}`}>{copy.operations}</a>
-          <a href={`${prefix}/reports?company=${model.id}`}>{copy.reports}</a>
-          <a href={`${prefix}/platform/access?company=${model.id}`}>{copy.manageAccounts}</a>
-        </nav>
-      </section>
+      <a className="admin-inline-back" href={`${prefix}/platform/management-companies`}>
+        <ArrowLeft aria-hidden="true" size={15} />
+        {copy.allCompanies}
+      </a>
+      <PageHeader
+        actions={
+          <nav aria-label={copy.companyWorkspace} className="admin-workspace-actions">
+            <a href={`${prefix}/qr-inventory?company=${model.id}`}>{copy.manageQr}</a>
+            <a href={`${prefix}/operations?company=${model.id}`}>{copy.operations}</a>
+            <a href={`${prefix}/reports?company=${model.id}`}>{copy.reports}</a>
+            <a href={`${prefix}/platform/access?company=${model.id}`}>{copy.manageAccounts}</a>
+          </nav>
+        }
+        className="admin-compact-heading admin-compact-heading--workspace"
+        description={copy.workspaceDescription}
+        eyebrow={copy.companyWorkspace}
+        lines={headingLine(model.name)}
+      />
 
-      <section className="admin-stat-strip admin-stat-strip--workspace">
-        <article>
-          <Buildings aria-hidden="true" size={24} />
-          <span>{copy.locations}</span>
-          <strong>{number.format(model.sites.length)}</strong>
-        </article>
-        <article>
-          <QrCode aria-hidden="true" size={24} />
-          <span>{copy.activeQr}</span>
-          <strong>{number.format(model.activeQrCount)}</strong>
-        </article>
-        <article>
-          <IdentificationCard aria-hidden="true" size={24} />
-          <span>{copy.activeContracts}</span>
-          <strong>{number.format(model.activeContractCount)}</strong>
-        </article>
-        <article>
-          <UsersThree aria-hidden="true" size={24} />
-          <span>{copy.administrators}</span>
-          <strong>{number.format(model.adminCount)}</strong>
-        </article>
-      </section>
+      <StatStrip className="admin-stat-strip admin-stat-strip--workspace" columns={4}>
+        <StatTile
+          icon={<Buildings aria-hidden="true" size={24} />}
+          label={copy.locations}
+          value={number.format(model.sites.length)}
+        />
+        <StatTile
+          icon={<QrCode aria-hidden="true" size={24} />}
+          label={copy.activeQr}
+          value={number.format(model.activeQrCount)}
+        />
+        <StatTile
+          icon={<IdentificationCard aria-hidden="true" size={24} />}
+          label={copy.activeContracts}
+          value={number.format(model.activeContractCount)}
+        />
+        <StatTile
+          icon={<UsersThree aria-hidden="true" size={24} />}
+          label={copy.administrators}
+          value={number.format(model.adminCount)}
+        />
+      </StatStrip>
 
       <div className="admin-workspace-grid">
         <section className="admin-portfolio-panel admin-workspace-locations">
@@ -100,76 +187,16 @@ export function ManagementCompanyWorkspaceView({
               <p>{copy.workspaceDescription}</p>
             </div>
           </header>
-          {model.sites.length === 0 ? (
-            <p className="admin-workspace-empty">{copy.noLocations}</p>
-          ) : (
-            <div className="admin-table-scroll">
-              <table className="admin-data-table admin-data-table--portfolio">
-                <thead>
-                  <tr>
-                    <th scope="col">{copy.locationName}</th>
-                    <th scope="col">{copy.capacity}</th>
-                    <th scope="col">{copy.totalQr}</th>
-                    <th scope="col">{copy.qrActivation}</th>
-                    <th scope="col">{copy.batches}</th>
-                    <th scope="col">{copy.status}</th>
-                    <th scope="col">
-                      <span className="sr-only">{copy.viewLocation}</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {model.sites.map((site) => {
-                    const activation =
-                      site.totalQrCount > 0
-                        ? Math.round((site.activeQrCount / site.totalQrCount) * 100)
-                        : 0;
-                    return (
-                      <tr key={site.id}>
-                        <th scope="row">
-                          <strong>{site.name}</strong>
-                          <small>
-                            {copy.type}: {siteTypeLabels[site.type]}
-                          </small>
-                        </th>
-                        <td>{number.format(site.contractVehicleLimit)}</td>
-                        <td>{number.format(site.totalQrCount)}</td>
-                        <td>
-                          <div className="admin-progress-cell">
-                            <progress max={100} value={activation}>
-                              {activation}%
-                            </progress>
-                            <span>{activation}%</span>
-                          </div>
-                        </td>
-                        <td>{number.format(site.batchCount)}</td>
-                        <td>
-                          <span
-                            className={`admin-health-pill ${site.status === "ACTIVE" ? "is-healthy" : "is-attention"}`}
-                          >
-                            {statusLabels[site.status]}
-                          </span>
-                        </td>
-                        <td>
-                          <a className="admin-row-primary" href={`${prefix}/sites/${site.id}`}>
-                            {copy.viewLocation}
-                            <ArrowRight aria-hidden="true" size={15} />
-                          </a>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <DataTable
+            columns={siteColumns}
+            empty={<EmptyState title={copy.noLocations} />}
+            getRowKey={(site) => site.id}
+            rows={model.sites}
+          />
         </section>
 
-        <aside className="admin-company-identity">
-          <header>
-            <h2>{copy.companyInformation}</h2>
-            <p>{copy.companyInformationDescription}</p>
-          </header>
+        <SideCard className="admin-company-identity" title={copy.companyInformation}>
+          <p>{copy.companyInformationDescription}</p>
           <dl>
             <div>
               <dt>{copy.companyWorkspace}</dt>
@@ -177,7 +204,11 @@ export function ManagementCompanyWorkspaceView({
             </div>
             <div>
               <dt>{copy.status}</dt>
-              <dd>{statusLabels[model.status]}</dd>
+              <dd>
+                <StatusPill tone={statusTone(model.status)}>
+                  {statusLabels[model.status]}
+                </StatusPill>
+              </dd>
             </div>
             <div>
               <dt>{copy.capacity}</dt>
@@ -193,7 +224,7 @@ export function ManagementCompanyWorkspaceView({
             </div>
           </dl>
           <p>{copy.scopeNote}</p>
-        </aside>
+        </SideCard>
       </div>
     </>
   );

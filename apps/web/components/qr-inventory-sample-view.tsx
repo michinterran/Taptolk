@@ -8,6 +8,7 @@ import {
   type StickerDesignStatus,
   type StickerDesignVersionItem,
 } from "@taptolk/application";
+import { StatusPill } from "@taptolk/ui";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import {
@@ -144,6 +145,46 @@ function formatDate(locale: AppLocale, value: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function getQrBatchStatusTone(
+  status: QrBatchStatus,
+): "neutral" | "info" | "success" | "warning" | "danger" {
+  if (status === "FAILED" || status === "CANCELLED") {
+    return "danger";
+  }
+
+  if (status === "COMPLETED" || status === "DELIVERED") {
+    return "success";
+  }
+
+  if (status === "DRAFT") {
+    return "neutral";
+  }
+
+  if (
+    status === "PARTIALLY_COMPLETED" ||
+    status === "SAMPLE_READY" ||
+    status === "FINAL_APPROVAL_PENDING"
+  ) {
+    return "warning";
+  }
+
+  return "info";
+}
+
+function getStickerDesignStatusTone(
+  status: StickerDesignStatus,
+): "neutral" | "success" | "warning" {
+  if (status === "APPROVED") {
+    return "success";
+  }
+
+  if (status === "ARCHIVED") {
+    return "neutral";
+  }
+
+  return "warning";
 }
 
 function ScopeFields({
@@ -329,7 +370,7 @@ function SampleApprovalCard({
           <span className="admin-approval-card__label">{batch.batchCode}</span>
           <h3>{batch.siteName}</h3>
         </div>
-        <span className="admin-status-badge admin-status-badge--suspended">{copy.sampleReady}</span>
+        <StatusPill tone="warning">{copy.sampleReady}</StatusPill>
       </header>
       <dl className="admin-approval-meta">
         <div>
@@ -399,7 +440,9 @@ function BatchCard({
           <span className="admin-approval-card__label">{batch.batchCode}</span>
           <h3>{batch.siteName}</h3>
         </div>
-        <span className="admin-status-badge">{copy.batchStatusLabels[batch.status]}</span>
+        <StatusPill tone={getQrBatchStatusTone(batch.status)}>
+          {copy.batchStatusLabels[batch.status]}
+        </StatusPill>
       </header>
       <dl className="admin-approval-meta">
         <div>
@@ -535,9 +578,9 @@ function FinalGenerationApprovalCard({
           <span className="admin-approval-card__label">{batch.batchCode}</span>
           <h3>{batch.siteName}</h3>
         </div>
-        <span className="admin-status-badge admin-status-badge--suspended">
+        <StatusPill tone={getQrBatchStatusTone(batch.status)}>
           {copy.batchStatusLabels[batch.status]}
-        </span>
+        </StatusPill>
       </header>
       <dl className="admin-approval-meta">
         <div>
@@ -734,9 +777,7 @@ export function QrInventorySampleView({
                       <span className="admin-approval-card__label">{design.templateCode}</span>
                       <h3>{design.siteName}</h3>
                     </div>
-                    <span className="admin-status-badge admin-status-badge--suspended">
-                      {copy.waitingDesign}
-                    </span>
+                    <StatusPill tone="warning">{copy.waitingDesign}</StatusPill>
                   </header>
                   <form action={approveStickerDesignVersion} className="admin-approval-form">
                     <DesignFields copy={copy} design={design} locale={locale} />
@@ -768,9 +809,9 @@ export function QrInventorySampleView({
                     <span className="admin-approval-card__label">{design.templateCode}</span>
                     <h3>{design.siteName}</h3>
                   </div>
-                  <span className="admin-status-badge">
+                  <StatusPill tone={getStickerDesignStatusTone(design.status)}>
                     {copy.designStatusLabels[design.status]}
-                  </span>
+                  </StatusPill>
                 </header>
                 {canArchiveDesign && design.status === "APPROVED" ? (
                   <form action={archiveStickerDesignVersion} className="admin-approval-form">

@@ -23,6 +23,14 @@ export {
   AdminProfileService,
 } from "./admin-profile-service.js";
 export {
+  ADMIN_SCOPE_NAVIGATION_LIMIT,
+  type AdminScopeNavigationCompany,
+  type AdminScopeNavigationModel,
+  type AdminScopeNavigationRepository,
+  AdminScopeNavigationService,
+  type AdminScopeNavigationSite,
+} from "./admin-scope-navigation-service.js";
+export {
   AdminAuthorizationError,
   assertAdminAuthorized,
 } from "./authorization-error.js";

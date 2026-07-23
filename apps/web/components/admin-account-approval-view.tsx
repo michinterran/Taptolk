@@ -9,7 +9,7 @@ import {
   type AdminRole,
   type AdminScopeType,
 } from "@taptolk/domain";
-import { SemanticHeading } from "@taptolk/ui";
+import { EmptyState, PageHeader, Pagination, StatusPill } from "@taptolk/ui";
 import { approvePendingAdmin, rejectPendingAdmin } from "../admin/account-approval-actions";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -83,6 +83,10 @@ function getPageHref(locale: AppLocale, page: number): string {
   return `/${locale}/admin/platform/access?page=${page}`;
 }
 
+function getFormatterLocale(locale: AppLocale): string {
+  return locale === "ko" ? "ko-KR" : "en";
+}
+
 function CandidateCard({
   account,
   copy,
@@ -104,16 +108,12 @@ function CandidateCard({
           <h2>{account.email}</h2>
         </div>
         <div className="admin-approval-signals">
-          <span className="admin-status-badge">{copy.providerLabels[account.provider]}</span>
-          <span
-            className={`admin-status-badge admin-status-badge--${
-              account.emailVerified ? "active" : "suspended"
-            }`}
-          >
+          <StatusPill tone="neutral">{copy.providerLabels[account.provider]}</StatusPill>
+          <StatusPill tone={account.emailVerified ? "success" : "warning"}>
             {account.emailVerified
               ? copy.verificationLabels.verified
               : copy.verificationLabels.pending}
-          </span>
+          </StatusPill>
         </div>
       </header>
 
@@ -134,7 +134,7 @@ function CandidateCard({
           <dt>{copy.joinedAt}</dt>
           <dd>
             <time dateTime={account.createdAt}>
-              {new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en", {
+              {new Intl.DateTimeFormat(getFormatterLocale(locale), {
                 dateStyle: "medium",
                 timeStyle: "short",
               }).format(new Date(account.createdAt))}
@@ -301,6 +301,9 @@ export function AdminAccountApprovalView({
   const totalPages = Math.max(1, Math.ceil(queue.total / queue.pageSize));
   const hasPrevious = queue.page > 1;
   const hasNext = queue.page < totalPages;
+  const pageSummary = copy.page
+    .replace("{current}", String(queue.page))
+    .replace("{total}", String(totalPages));
 
   return (
     <>
@@ -312,16 +315,16 @@ export function AdminAccountApprovalView({
         pathname={`/${locale}/admin/platform/access`}
       />
 
-      <section className="admin-section-hero">
-        <div>
-          <a className="admin-back-link" href={`/${locale}/admin/platform`}>
+      <PageHeader
+        actions={
+          <a className="tt-button tt-button--secondary" href={`/${locale}/admin/platform`}>
             {copy.back}
           </a>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <SemanticHeading className="admin-section-title" lines={copy.titleLines} />
-          <p className="admin-dashboard-description">{copy.description}</p>
-        </div>
-      </section>
+        }
+        description={copy.description}
+        eyebrow={copy.eyebrow}
+        lines={copy.titleLines}
+      />
 
       {status ? (
         <section className="admin-notice admin-notice--success" role="status">
@@ -364,15 +367,9 @@ export function AdminAccountApprovalView({
       </section>
 
       {configurationMissing ? (
-        <section className="admin-catalog-empty">
-          <h2>{copy.configurationTitle}</h2>
-          <p>{copy.configurationDescription}</p>
-        </section>
+        <EmptyState description={copy.configurationDescription} title={copy.configurationTitle} />
       ) : queue.accounts.length === 0 ? (
-        <section className="admin-catalog-empty">
-          <h2>{copy.emptyTitle}</h2>
-          <p>{copy.emptyDescription}</p>
-        </section>
+        <EmptyState description={copy.emptyDescription} title={copy.emptyTitle} />
       ) : (
         <section aria-label={copy.eyebrow} className="admin-approval-list">
           {queue.accounts.map((account) => (
@@ -387,27 +384,30 @@ export function AdminAccountApprovalView({
         </section>
       )}
 
-      <nav aria-label={copy.paginationLabel} className="admin-pagination">
-        {hasPrevious ? (
-          <a className="tt-button tt-button--secondary" href={getPageHref(locale, queue.page - 1)}>
-            {copy.previous}
-          </a>
-        ) : (
-          <span />
-        )}
-        <span>
-          {copy.page
-            .replace("{current}", String(queue.page))
-            .replace("{total}", String(totalPages))}
-        </span>
-        {hasNext ? (
-          <a className="tt-button tt-button--secondary" href={getPageHref(locale, queue.page + 1)}>
-            {copy.next}
-          </a>
-        ) : (
-          <span />
-        )}
-      </nav>
+      <Pagination
+        aria-label={copy.paginationLabel}
+        next={
+          hasNext ? (
+            <a
+              className="tt-button tt-button--secondary"
+              href={getPageHref(locale, queue.page + 1)}
+            >
+              {copy.next}
+            </a>
+          ) : null
+        }
+        previous={
+          hasPrevious ? (
+            <a
+              className="tt-button tt-button--secondary"
+              href={getPageHref(locale, queue.page - 1)}
+            >
+              {copy.previous}
+            </a>
+          ) : null
+        }
+        summary={pageSummary}
+      />
     </>
   );
 }

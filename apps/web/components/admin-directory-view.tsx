@@ -1,6 +1,7 @@
 import { ShieldCheck, UserCircle } from "@phosphor-icons/react/dist/ssr";
 import type { AdminDirectoryItem } from "@taptolk/application";
 import type { AdminRole } from "@taptolk/domain";
+import { StatusPill } from "@taptolk/ui";
 import { updateAdminDirectoryMembership } from "../admin/admin-directory-actions";
 import { getAdminRoleLabel } from "../content/admin-copy";
 import type { AdminDirectoryCopy } from "../content/admin-directory-copy";
@@ -21,6 +22,24 @@ function availableRoles(
 
 function scopeLabel(item: AdminDirectoryItem): string {
   return item.siteName ?? item.managementCompanyName ?? item.tenantName ?? "Taptolk";
+}
+
+function getDirectoryStatusTone(
+  status: AdminDirectoryItem["status"],
+): "info" | "success" | "warning" | "danger" {
+  if (status === "ACTIVE") {
+    return "success";
+  }
+
+  if (status === "REVOKED") {
+    return "danger";
+  }
+
+  if (status === "INVITED") {
+    return "info";
+  }
+
+  return "warning";
 }
 
 export function AdminDirectoryView({
@@ -87,7 +106,9 @@ export function AdminDirectoryView({
                   <td>{getAdminRoleLabel(messages, item.role)}</td>
                   <td>{scopeLabel(item)}</td>
                   <td>
-                    <span className="admin-status-badge">{statusLabel[item.status]}</span>
+                    <StatusPill tone={getDirectoryStatusTone(item.status)}>
+                      {statusLabel[item.status]}
+                    </StatusPill>
                   </td>
                   <td>
                     {item.userId === currentUserId ? (

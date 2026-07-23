@@ -1,4 +1,27 @@
 import type { QrBatchProgressItem, QrBatchStatus } from "@taptolk/application";
+import { StatusPill } from "@taptolk/ui";
+
+function getQrBatchStatusTone(
+  status: QrBatchStatus,
+): "neutral" | "info" | "success" | "warning" | "danger" {
+  if (status === "FAILED" || status === "CANCELLED") {
+    return "danger";
+  }
+
+  if (status === "COMPLETED" || status === "DELIVERED") {
+    return "success";
+  }
+
+  if (status === "DRAFT") {
+    return "neutral";
+  }
+
+  if (status === "PARTIALLY_COMPLETED") {
+    return "warning";
+  }
+
+  return "info";
+}
 
 export function QrBatchProgressView({
   copy,
@@ -31,7 +54,9 @@ export function QrBatchProgressView({
                   <span className="admin-approval-card__label">{item.batchCode}</span>
                   <h3>{item.siteName}</h3>
                 </div>
-                <span className="admin-status-badge">{copy.statusLabels[item.status]}</span>
+                <StatusPill tone={getQrBatchStatusTone(item.status)}>
+                  {copy.statusLabels[item.status]}
+                </StatusPill>
               </header>
               <label className="admin-field" htmlFor={`batch-progress-${item.id}`}>
                 <span>

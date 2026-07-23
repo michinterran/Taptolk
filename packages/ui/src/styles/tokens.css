@@ -45,7 +45,8 @@
   --tt-radius-pill: 999px;
 
   /* Elevation (existing card + new sm/md) */
-  --tt-shadow-sm: 0 1px 2px color-mix(in srgb, var(--tt-color-text) 6%, transparent),
+  --tt-shadow-sm:
+    0 1px 2px color-mix(in srgb, var(--tt-color-text) 6%, transparent),
     0 1px 3px color-mix(in srgb, var(--tt-color-text) 4%, transparent);
   --tt-shadow-md: 0 4px 14px color-mix(in srgb, var(--tt-color-text) 9%, transparent);
   --tt-shadow-card: 0 1rem 3rem color-mix(in srgb, var(--tt-color-text) 8%, transparent);

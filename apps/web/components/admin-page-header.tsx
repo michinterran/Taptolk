@@ -11,10 +11,14 @@ import {
   SignOutIcon,
   UserCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { AdminScopeNavigationService } from "@taptolk/application";
 import { getAdminLandingArea } from "@taptolk/auth";
+import { ScopeSwitcher } from "@taptolk/ui";
 import type { ReactNode } from "react";
+import { createSupabaseAdminScopeNavigationRepository } from "../admin/supabase-admin-scope-navigation-repository";
 import { signOutAdmin } from "../auth/actions";
 import { loadAdminContext } from "../auth/admin-context";
+import { createAdminServerClient } from "../auth/server-client";
 import { getAdminRoleLabel, getAdminScopeLabel } from "../content/admin-copy";
 import { getMessages } from "../content/messages";
 import type { AppLocale } from "../i18n/config";
@@ -180,6 +184,15 @@ export async function AdminPageHeader({
         (item) => item.href !== workspaceHref && pathname.startsWith(`${item.href}/`),
       ) ??
       (isProfile ? undefined : navigation[0]);
+    const scopeSwitcher =
+      isPlatform && membership.role === "SUPER_ADMIN"
+        ? await loadSuperAdminScopeSwitcher({
+            copy,
+            locale,
+            mfaVerified: context.mfaLevel === "aal2",
+            pathname,
+          })
+        : null;
 
     return (
       <>
@@ -245,14 +258,16 @@ export async function AdminPageHeader({
 
         <header className="admin-console-topbar">
           <div className="admin-console-topbar__leading">
-            <a className="admin-console-scope" href={workspaceHref}>
-              {isPlatform ? (
-                <CirclesFourIcon aria-hidden="true" weight="duotone" />
-              ) : (
-                <MapPinAreaIcon aria-hidden="true" weight="duotone" />
-              )}
-              <span>{getAdminScopeLabel(copy, membership.scopeType)}</span>
-            </a>
+            {scopeSwitcher ?? (
+              <a className="admin-console-scope" href={workspaceHref}>
+                {isPlatform ? (
+                  <CirclesFourIcon aria-hidden="true" weight="duotone" />
+                ) : (
+                  <MapPinAreaIcon aria-hidden="true" weight="duotone" />
+                )}
+                <span>{getAdminScopeLabel(copy, membership.scopeType)}</span>
+              </a>
+            )}
             <div className="admin-console-location">
               <span>{copy["admin.nav.current"]}</span>
               <strong>
@@ -316,5 +331,77 @@ export async function AdminPageHeader({
         title={localeTitle}
       />
     </header>
+  );
+}
+
+async function loadSuperAdminScopeSwitcher({
+  copy,
+  locale,
+  mfaVerified,
+  pathname,
+}: {
+  copy: ReturnType<typeof getMessages>;
+  locale: AppLocale;
+  mfaVerified: boolean;
+  pathname: string;
+}) {
+  const client = await createAdminServerClient();
+  if (!client) {
+    return null;
+  }
+
+  const model = await new AdminScopeNavigationService(
+    createSupabaseAdminScopeNavigationRepository(client),
+  ).list({
+    actor: {
+      mfaVerified,
+      role: "SUPER_ADMIN",
+      scope: { type: "PLATFORM" },
+    },
+  });
+
+  if (!model.canSwitch) {
+    return null;
+  }
+
+  const platformHref = `/${locale}/admin/platform`;
+  const companyBaseHref = `/${locale}/admin/platform/management-companies`;
+  const siteBaseHref = `/${locale}/admin/sites`;
+
+  return (
+    <ScopeSwitcher
+      icon={<CirclesFourIcon aria-hidden="true" weight="duotone" />}
+      label={copy["admin.platform.eyebrow"]}
+      groups={[
+        {
+          items: [
+            {
+              href: platformHref,
+              label: copy["admin.platform.eyebrow"],
+              selected: pathname === platformHref,
+            },
+          ],
+          label: copy["admin.dashboard.context"],
+        },
+        {
+          items: model.managementCompanies.map((company) => ({
+            description: company.tenantName,
+            href: `${companyBaseHref}/${company.id}`,
+            label: company.name,
+            selected: pathname.startsWith(`${companyBaseHref}/${company.id}`),
+          })),
+          label: copy["admin.nav.managementCompanies"],
+        },
+        {
+          items: model.sites.map((site) => ({
+            description: site.managementCompanyName,
+            href: `${siteBaseHref}/${site.id}`,
+            label: site.name,
+            selected: pathname.startsWith(`${siteBaseHref}/${site.id}`),
+          })),
+          label: copy["admin.nav.sites"],
+        },
+      ]}
+    />
   );
 }

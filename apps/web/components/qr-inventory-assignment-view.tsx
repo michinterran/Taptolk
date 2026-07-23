@@ -3,6 +3,7 @@ import type {
   QrInventoryAssignmentAssetItem,
   QrInventoryAssignmentReadModel,
 } from "@taptolk/application";
+import { StatusPill } from "@taptolk/ui";
 import {
   assignQrAsset,
   commitVehicleImport,
@@ -86,6 +87,28 @@ function ReasonField({ copy, id }: { copy: InventoryAssignmentCopy; id: string }
   );
 }
 
+function getQrAssetStatusTone(
+  status: QrAssetStatus,
+): "neutral" | "info" | "success" | "warning" | "danger" {
+  if (status === "ACTIVE" || status === "IN_STOCK") {
+    return "success";
+  }
+
+  if (status === "REVOKED" || status === "EXPIRED" || status === "LOST" || status === "DAMAGED") {
+    return "danger";
+  }
+
+  if (status === "SUSPENDED" || status === "REPLACED") {
+    return "warning";
+  }
+
+  if (status === "GENERATED" || status === "PRINT_READY" || status === "PRINTED") {
+    return "neutral";
+  }
+
+  return "info";
+}
+
 function AssetIdentity({
   asset,
   copy,
@@ -104,7 +127,9 @@ function AssetIdentity({
           </small>
         ) : null}
       </div>
-      <span className="admin-status-badge">{copy.statusLabels[asset.status]}</span>
+      <StatusPill tone={getQrAssetStatusTone(asset.status)}>
+        {copy.statusLabels[asset.status]}
+      </StatusPill>
     </header>
   );
 }

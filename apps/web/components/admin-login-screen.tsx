@@ -1,4 +1,4 @@
-import { SemanticHeading } from "@taptolk/ui";
+import { AuthCard, SemanticHeading } from "@taptolk/ui";
 import { redirect } from "next/navigation";
 import { signInAdmin } from "../auth/actions";
 import { loadAdminContext } from "../auth/admin-context";
@@ -68,7 +68,12 @@ export async function AdminLoginScreen({ locale, queryError }: AdminLoginScreenP
           <p className="admin-security-note">{copy["admin.auth.securityNote"]}</p>
         </div>
 
-        <section aria-label={intro.submit} className="admin-auth-card">
+        <AuthCard
+          aria-label={intro.submit}
+          className="admin-auth-card admin-auth-card--login"
+          description={copy["admin.auth.securityNote"]}
+          title={intro.submit}
+        >
           {configurationMissing ? (
             <AdminAuthNotice
               description={copy["admin.auth.configuration.description"]}
@@ -138,7 +143,7 @@ export async function AdminLoginScreen({ locale, queryError }: AdminLoginScreenP
             secondaryHref={getAdminRegistrationPath(locale)}
             secondaryPrompt={copy["admin.login.signupPrompt"]}
           />
-        </section>
+        </AuthCard>
       </section>
     </>
   );

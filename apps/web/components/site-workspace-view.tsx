@@ -1,5 +1,15 @@
 import { ArrowLeft, Bell, Car, QrCode, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import type { OrganizationStatus, SiteType, SiteWorkspace } from "@taptolk/application";
+import {
+  DataTable,
+  type DataTableColumn,
+  EmptyState,
+  PageHeader,
+  SideCard,
+  StatStrip,
+  StatTile,
+  StatusPill,
+} from "@taptolk/ui";
 import type { AdminSiteWorkspaceCopy } from "../content/admin-site-workspace-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -16,6 +26,18 @@ interface SiteWorkspaceViewProps {
   statusLabels: Readonly<Record<OrganizationStatus, string>>;
 }
 
+type BatchRow = SiteWorkspace["batches"][number] & {
+  sequence: number;
+};
+
+function headingLine(value: string): readonly [string] {
+  return [value];
+}
+
+function statusTone(status: OrganizationStatus): "success" | "warning" {
+  return status === "ACTIVE" ? "success" : "warning";
+}
+
 export function SiteWorkspaceView({
   batchStatusLabels,
   copy,
@@ -29,6 +51,35 @@ export function SiteWorkspaceView({
 }: SiteWorkspaceViewProps) {
   const number = new Intl.NumberFormat(locale);
   const prefix = `/${locale}/admin`;
+  const batchRows = model.batches.map((batch, index) => ({
+    ...batch,
+    sequence: index + 1,
+  }));
+  const batchColumns = [
+    {
+      cell: (batch) => (
+        <strong>
+          {copy.batchRequest} {batch.sequence}
+        </strong>
+      ),
+      header: copy.batchHistory,
+      key: "batch",
+    },
+    {
+      align: "right",
+      cell: (batch) => number.format(batch.quantity),
+      header: copy.quantity,
+      key: "quantity",
+    },
+    {
+      cell: (batch) => (
+        <StatusPill tone="success">{batchStatusLabels[batch.status] ?? copy.status}</StatusPill>
+      ),
+      header: copy.status,
+      key: "status",
+    },
+  ] satisfies Array<DataTableColumn<BatchRow>>;
+
   return (
     <>
       <AdminPageHeader
@@ -38,46 +89,45 @@ export function SiteWorkspaceView({
         logoAlt={logoAlt}
         pathname={`${prefix}/sites`}
       />
-      <section className="admin-compact-heading admin-compact-heading--workspace">
-        <div>
-          <a className="admin-inline-back" href={`${prefix}/sites`}>
-            <ArrowLeft aria-hidden="true" size={15} />
-            {copy.allLocations}
-          </a>
-          <p className="eyebrow">{copy.locationWorkspace}</p>
-          <h1>{model.name}</h1>
-          <p>
-            {model.managementCompanyName} · {copy.workspaceDescription}
-          </p>
-        </div>
-        <nav aria-label={copy.locationWorkspace} className="admin-workspace-actions">
-          <a href={`${prefix}/qr-inventory?site=${model.id}`}>{copy.qrProduction}</a>
-          <a href={`${prefix}/operations?site=${model.id}`}>{copy.operations}</a>
-          <a href={`${prefix}/reports?site=${model.id}`}>{copy.reports}</a>
-        </nav>
-      </section>
-      <section className="admin-stat-strip">
-        <article>
-          <QrCode aria-hidden="true" size={24} />
-          <span>{copy.activeQr}</span>
-          <strong>{number.format(model.activeQrCount)}</strong>
-        </article>
-        <article>
-          <Car aria-hidden="true" size={24} />
-          <span>{copy.contactRequests}</span>
-          <strong>{number.format(model.contactCount)}</strong>
-        </article>
-        <article>
-          <WarningCircle aria-hidden="true" size={24} />
-          <span>{copy.openRequests}</span>
-          <strong>{number.format(model.openContactCount)}</strong>
-        </article>
-        <article>
-          <Bell aria-hidden="true" size={24} />
-          <span>{copy.failedNotifications}</span>
-          <strong>{number.format(model.failedNotificationCount)}</strong>
-        </article>
-      </section>
+      <a className="admin-inline-back" href={`${prefix}/sites`}>
+        <ArrowLeft aria-hidden="true" size={15} />
+        {copy.allLocations}
+      </a>
+      <PageHeader
+        actions={
+          <nav aria-label={copy.locationWorkspace} className="admin-workspace-actions">
+            <a href={`${prefix}/qr-inventory?site=${model.id}`}>{copy.qrProduction}</a>
+            <a href={`${prefix}/operations?site=${model.id}`}>{copy.operations}</a>
+            <a href={`${prefix}/reports?site=${model.id}`}>{copy.reports}</a>
+          </nav>
+        }
+        className="admin-compact-heading admin-compact-heading--workspace"
+        description={`${model.managementCompanyName} · ${copy.workspaceDescription}`}
+        eyebrow={copy.locationWorkspace}
+        lines={headingLine(model.name)}
+      />
+      <StatStrip className="admin-stat-strip" columns={4}>
+        <StatTile
+          icon={<QrCode aria-hidden="true" size={24} />}
+          label={copy.activeQr}
+          value={number.format(model.activeQrCount)}
+        />
+        <StatTile
+          icon={<Car aria-hidden="true" size={24} />}
+          label={copy.contactRequests}
+          value={number.format(model.contactCount)}
+        />
+        <StatTile
+          icon={<WarningCircle aria-hidden="true" size={24} />}
+          label={copy.openRequests}
+          value={number.format(model.openContactCount)}
+        />
+        <StatTile
+          icon={<Bell aria-hidden="true" size={24} />}
+          label={copy.failedNotifications}
+          value={number.format(model.failedNotificationCount)}
+        />
+      </StatStrip>
       <div className="admin-workspace-grid">
         <section className="admin-portfolio-panel">
           <header className="admin-portfolio-panel__header">
@@ -86,42 +136,15 @@ export function SiteWorkspaceView({
               <p>{copy.batchHistoryDescription}</p>
             </div>
           </header>
-          {model.batches.length === 0 ? (
-            <p className="admin-workspace-empty">{copy.noBatches}</p>
-          ) : (
-            <div className="admin-table-scroll">
-              <table className="admin-data-table admin-data-table--portfolio">
-                <thead>
-                  <tr>
-                    <th scope="col">{copy.batchHistory}</th>
-                    <th scope="col">{copy.quantity}</th>
-                    <th scope="col">{copy.status}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {model.batches.map((batch, index) => (
-                    <tr key={batch.id}>
-                      <th scope="row">
-                        {copy.batchRequest} {index + 1}
-                      </th>
-                      <td>{number.format(batch.quantity)}</td>
-                      <td>
-                        <span className="admin-health-pill is-healthy">
-                          {batchStatusLabels[batch.status] ?? copy.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <DataTable
+            columns={batchColumns}
+            empty={<EmptyState title={copy.noBatches} />}
+            getRowKey={(batch) => batch.id}
+            rows={batchRows}
+          />
         </section>
-        <aside className="admin-company-identity">
-          <header>
-            <h2>{copy.locationInformation}</h2>
-            <p>{copy.workspaceDescription}</p>
-          </header>
+        <SideCard className="admin-company-identity" title={copy.locationInformation}>
+          <p>{copy.workspaceDescription}</p>
           <dl>
             <div>
               <dt>{copy.locationWorkspace}</dt>
@@ -133,7 +156,11 @@ export function SiteWorkspaceView({
             </div>
             <div>
               <dt>{copy.status}</dt>
-              <dd>{statusLabels[model.status]}</dd>
+              <dd>
+                <StatusPill tone={statusTone(model.status)}>
+                  {statusLabels[model.status]}
+                </StatusPill>
+              </dd>
             </div>
             <div>
               <dt>{copy.capacity}</dt>
@@ -148,7 +175,7 @@ export function SiteWorkspaceView({
               <dd>{model.address ?? copy.noAddress}</dd>
             </div>
           </dl>
-        </aside>
+        </SideCard>
       </div>
     </>
   );

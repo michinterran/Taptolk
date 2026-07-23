@@ -11,6 +11,17 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { ManagementCompanyCatalogPage, OrganizationStatus } from "@taptolk/application";
 import {
+  DataTable,
+  type DataTableColumn,
+  EmptyState,
+  FilterBar,
+  PageHeader,
+  Pagination,
+  StatStrip,
+  StatTile,
+  StatusPill,
+} from "@taptolk/ui";
+import {
   changeManagementCompanyStatus,
   createManagementCompany,
   updateManagementCompany,
@@ -70,6 +81,8 @@ interface ManagementCompanyCatalogViewProps {
   statusMessage?: string | undefined;
 }
 
+type CompanyRow = ManagementCompanyCatalogPage["items"][number];
+
 function getPageHref(
   locale: AppLocale,
   page: number,
@@ -88,12 +101,20 @@ function formatBusinessNumber(value: string | null): string {
     : "—";
 }
 
+function headingLine(value: string): readonly [string] {
+  return [value];
+}
+
+function riskTone(status: OrganizationStatus): "success" | "warning" {
+  return status === "ACTIVE" ? "success" : "warning";
+}
+
 function HiddenFields({
   company,
   copy,
   locale,
 }: {
-  company: ManagementCompanyCatalogPage["items"][number];
+  company: CompanyRow;
   copy: ManagementCompanyCopy;
   locale: AppLocale;
 }) {
@@ -109,6 +130,186 @@ function HiddenFields({
         value={company.version}
       />
     </>
+  );
+}
+
+function ManagementCompanyCreatePanel({
+  catalog,
+  copy,
+  locale,
+}: {
+  catalog: ManagementCompanyCatalogPage;
+  copy: ManagementCompanyCopy;
+  locale: AppLocale;
+}) {
+  return (
+    <details className="admin-toolbar-create">
+      <summary>
+        <Plus aria-hidden="true" size={16} />
+        {copy.createTitle}
+      </summary>
+      <div className="admin-toolbar-popover">
+        <p>{copy.createDescription}</p>
+        {catalog.tenantOptions.length > 0 ? (
+          <form action={createManagementCompany} className="admin-tenant-form">
+            <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+            <label className="admin-field" htmlFor="company-create-tenant">
+              <span>{copy.tenant}</span>
+              <select id="company-create-tenant" name="tenantId" required>
+                {catalog.tenantOptions.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="admin-field" htmlFor="company-create-name">
+              <span>{copy.name}</span>
+              <input id="company-create-name" maxLength={200} name="name" required />
+            </label>
+            <label className="admin-field" htmlFor="company-create-business-number">
+              <span>{copy.businessNumber}</span>
+              <input
+                id="company-create-business-number"
+                inputMode="numeric"
+                name="businessNumber"
+                pattern="[0-9-]*"
+              />
+              <small>{copy.businessNumberHelp}</small>
+            </label>
+            <label className="admin-field" htmlFor="company-create-reason">
+              <span>{copy.reason}</span>
+              <textarea
+                id="company-create-reason"
+                maxLength={500}
+                minLength={3}
+                name="reason"
+                placeholder={copy.reasonPlaceholder}
+                required
+              />
+            </label>
+            <button className="tt-button tt-button--compact" type="submit">
+              {copy.create}
+            </button>
+          </form>
+        ) : (
+          <p>{copy.noActiveTenant}</p>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function ManagementCompanyRowActions({
+  canManage,
+  company,
+  copy,
+  locale,
+  portfolioCopy,
+}: {
+  canManage: boolean;
+  company: CompanyRow;
+  copy: ManagementCompanyCopy;
+  locale: AppLocale;
+  portfolioCopy: AdminCompanyPortfolioCopy;
+}) {
+  const prefix = `company-${company.id}`;
+
+  return (
+    <div className="admin-row-actions">
+      <a
+        className="admin-row-primary"
+        href={`/${locale}/admin/platform/management-companies/${company.id}`}
+      >
+        {portfolioCopy.details}
+        <ArrowRight aria-hidden="true" size={15} />
+      </a>
+      {canManage && company.status !== "CLOSED" ? (
+        <details className="admin-row-menu">
+          <summary aria-label={copy.edit}>
+            <DotsThree aria-hidden="true" size={18} weight="bold" />
+          </summary>
+          <div className="admin-row-menu__popover">
+            <form action={updateManagementCompany} className="admin-tenant-form">
+              <HiddenFields company={company} copy={copy} locale={locale} />
+              <p>{copy.editDescription}</p>
+              <label className="admin-field" htmlFor={`${prefix}-name`}>
+                <span>{copy.name}</span>
+                <input
+                  defaultValue={company.name}
+                  id={`${prefix}-name`}
+                  maxLength={200}
+                  name="name"
+                  required
+                />
+              </label>
+              <label className="admin-field" htmlFor={`${prefix}-business-number`}>
+                <span>{copy.businessNumber}</span>
+                <input
+                  defaultValue={formatBusinessNumber(company.businessNumber).replace("—", "")}
+                  id={`${prefix}-business-number`}
+                  inputMode="numeric"
+                  name="businessNumber"
+                  pattern="[0-9-]*"
+                />
+              </label>
+              <label className="admin-field" htmlFor={`${prefix}-edit-reason`}>
+                <span>{copy.reason}</span>
+                <textarea
+                  id={`${prefix}-edit-reason`}
+                  maxLength={500}
+                  minLength={3}
+                  name="reason"
+                  placeholder={copy.reasonPlaceholder}
+                  required
+                />
+              </label>
+              <button className="tt-button tt-button--compact" type="submit">
+                {copy.save}
+              </button>
+            </form>
+            <form action={changeManagementCompanyStatus} className="admin-tenant-status-form">
+              <HiddenFields company={company} copy={copy} locale={locale} />
+              <input
+                aria-label={copy.status}
+                name="currentStatus"
+                type="hidden"
+                value={company.status}
+              />
+              <label className="admin-field" htmlFor={`${prefix}-status-reason`}>
+                <span>{copy.reason}</span>
+                <textarea
+                  id={`${prefix}-status-reason`}
+                  maxLength={500}
+                  minLength={3}
+                  name="reason"
+                  placeholder={copy.reasonPlaceholder}
+                  required
+                />
+              </label>
+              <div className="admin-tenant-status-actions">
+                <button
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  name="nextStatus"
+                  type="submit"
+                  value={company.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE"}
+                >
+                  {company.status === "ACTIVE" ? copy.suspend : copy.reactivate}
+                </button>
+                <button
+                  className="tt-button tt-button--compact admin-danger-button"
+                  name="nextStatus"
+                  type="submit"
+                  value="CLOSED"
+                >
+                  {copy.close}
+                </button>
+              </div>
+            </form>
+          </div>
+        </details>
+      ) : null}
+    </div>
   );
 }
 
@@ -132,6 +333,71 @@ export function ManagementCompanyCatalogView({
     dateStyle: "medium",
   });
   const number = new Intl.NumberFormat(locale);
+  const hasPrevious = catalog.page > 1;
+  const hasNext = catalog.page < totalPages;
+  const columns = [
+    {
+      cell: (company) => (
+        <span className="tt-table-entity">
+          <strong>{company.name}</strong>
+          <small>{formatBusinessNumber(company.businessNumber)}</small>
+        </span>
+      ),
+      header: copy.name,
+      key: "name",
+    },
+    {
+      align: "right",
+      cell: (company) => number.format(company.siteCount),
+      header: portfolioCopy.sites,
+      key: "sites",
+    },
+    {
+      align: "right",
+      cell: (company) => number.format(company.contractVehicleLimit),
+      header: portfolioCopy.capacity,
+      key: "capacity",
+    },
+    {
+      align: "right",
+      cell: (company) => number.format(company.activeQrCount),
+      header: portfolioCopy.activeQr,
+      key: "activeQr",
+    },
+    {
+      cell: (company) => (
+        <StatusPill tone={riskTone(company.status)}>
+          {company.status === "ACTIVE"
+            ? portfolioCopy.healthGood
+            : portfolioCopy.healthNeedsAttention}
+        </StatusPill>
+      ),
+      header: portfolioCopy.contractHealth,
+      key: "riskLevel",
+    },
+    {
+      cell: (company) => (
+        <time dateTime={company.createdAt}>
+          {formattedDate.format(new Date(company.createdAt))}
+        </time>
+      ),
+      header: copy.createdAt,
+      key: "createdAt",
+    },
+    {
+      cell: (company) => (
+        <ManagementCompanyRowActions
+          canManage={canManage}
+          company={company}
+          copy={copy}
+          locale={locale}
+          portfolioCopy={portfolioCopy}
+        />
+      ),
+      header: copy.actions,
+      key: "actions",
+    },
+  ] satisfies Array<DataTableColumn<CompanyRow>>;
 
   return (
     <>
@@ -143,69 +409,17 @@ export function ManagementCompanyCatalogView({
         pathname={`/${locale}/admin/platform/management-companies`}
       />
 
-      <section className="admin-compact-heading">
-        <div>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <h1>{portfolioCopy.portfolioTitle}</h1>
-          <p>{portfolioCopy.portfolioDescription}</p>
-        </div>
-        {canManage ? (
-          <details className="admin-toolbar-create">
-            <summary>
-              <Plus aria-hidden="true" size={16} />
-              {copy.createTitle}
-            </summary>
-            <div className="admin-toolbar-popover">
-              <p>{copy.createDescription}</p>
-              {catalog.tenantOptions.length > 0 ? (
-                <form action={createManagementCompany} className="admin-tenant-form">
-                  <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
-                  <label className="admin-field" htmlFor="company-create-tenant">
-                    <span>{copy.tenant}</span>
-                    <select id="company-create-tenant" name="tenantId" required>
-                      {catalog.tenantOptions.map((tenant) => (
-                        <option key={tenant.id} value={tenant.id}>
-                          {tenant.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="admin-field" htmlFor="company-create-name">
-                    <span>{copy.name}</span>
-                    <input id="company-create-name" maxLength={200} name="name" required />
-                  </label>
-                  <label className="admin-field" htmlFor="company-create-business-number">
-                    <span>{copy.businessNumber}</span>
-                    <input
-                      id="company-create-business-number"
-                      inputMode="numeric"
-                      name="businessNumber"
-                      pattern="[0-9-]*"
-                    />
-                    <small>{copy.businessNumberHelp}</small>
-                  </label>
-                  <label className="admin-field" htmlFor="company-create-reason">
-                    <span>{copy.reason}</span>
-                    <textarea
-                      id="company-create-reason"
-                      maxLength={500}
-                      minLength={3}
-                      name="reason"
-                      placeholder={copy.reasonPlaceholder}
-                      required
-                    />
-                  </label>
-                  <button className="tt-button tt-button--compact" type="submit">
-                    {copy.create}
-                  </button>
-                </form>
-              ) : (
-                <p>{copy.noActiveTenant}</p>
-              )}
-            </div>
-          </details>
-        ) : null}
-      </section>
+      <PageHeader
+        actions={
+          canManage ? (
+            <ManagementCompanyCreatePanel catalog={catalog} copy={copy} locale={locale} />
+          ) : null
+        }
+        className="admin-compact-heading"
+        description={portfolioCopy.portfolioDescription}
+        eyebrow={copy.eyebrow}
+        lines={headingLine(portfolioCopy.portfolioTitle)}
+      />
 
       {statusMessage ? (
         <aside aria-live="polite" className="admin-notice admin-notice--success">
@@ -218,28 +432,32 @@ export function ManagementCompanyCatalogView({
         </aside>
       ) : null}
 
-      <section className="admin-stat-strip" aria-label={portfolioCopy.companyPortfolio}>
-        <article>
-          <UsersThree aria-hidden="true" size={24} />
-          <span>{portfolioCopy.resultCompanies}</span>
-          <strong>{number.format(catalog.total)}</strong>
-        </article>
-        <article>
-          <Buildings aria-hidden="true" size={24} />
-          <span>{portfolioCopy.currentPageActive}</span>
-          <strong>{number.format(activeCompanyCount)}</strong>
-        </article>
-        <article>
-          <Buildings aria-hidden="true" size={24} />
-          <span>{portfolioCopy.currentPageSites}</span>
-          <strong>{number.format(siteCount)}</strong>
-        </article>
-        <article>
-          <QrCode aria-hidden="true" size={24} />
-          <span>{portfolioCopy.currentPageQr}</span>
-          <strong>{number.format(activeQrCount)}</strong>
-        </article>
-      </section>
+      <StatStrip
+        aria-label={portfolioCopy.companyPortfolio}
+        className="admin-stat-strip"
+        columns={4}
+      >
+        <StatTile
+          icon={<UsersThree aria-hidden="true" size={24} />}
+          label={portfolioCopy.resultCompanies}
+          value={number.format(catalog.total)}
+        />
+        <StatTile
+          icon={<Buildings aria-hidden="true" size={24} />}
+          label={portfolioCopy.currentPageActive}
+          value={number.format(activeCompanyCount)}
+        />
+        <StatTile
+          icon={<Buildings aria-hidden="true" size={24} />}
+          label={portfolioCopy.currentPageSites}
+          value={number.format(siteCount)}
+        />
+        <StatTile
+          icon={<QrCode aria-hidden="true" size={24} />}
+          label={portfolioCopy.currentPageQr}
+          value={number.format(activeQrCount)}
+        />
+      </StatStrip>
 
       <div className="admin-catalog-layout">
         <section className="admin-portfolio-panel">
@@ -251,240 +469,99 @@ export function ManagementCompanyCatalogView({
             </div>
           </header>
 
-          <form className="admin-catalog-filter-bar" method="get">
-            <div className="admin-search-control admin-search-control--catalog">
-              <MagnifyingGlass aria-hidden="true" size={17} />
-              <label className="sr-only" htmlFor="company-search">
-                {portfolioCopy.companySearch}
-              </label>
-              <input
-                defaultValue={search}
-                id="company-search"
-                name="q"
-                placeholder={portfolioCopy.companySearch}
-                type="search"
-              />
-            </div>
-            <label className="admin-filter-select" htmlFor="company-state-filter">
-              <Funnel aria-hidden="true" size={16} />
-              <span className="sr-only">{portfolioCopy.statusFilter}</span>
-              <select defaultValue={stateFilter ?? ""} id="company-state-filter" name="state">
-                <option value="">{portfolioCopy.allStatuses}</option>
-                <option value="ACTIVE">{copy.statusLabels.ACTIVE}</option>
-                <option value="SUSPENDED">{copy.statusLabels.SUSPENDED}</option>
-                <option value="CLOSED">{copy.statusLabels.CLOSED}</option>
-              </select>
-            </label>
-            <button className="tt-button tt-button--compact" type="submit">
-              {portfolioCopy.applyFilters}
-            </button>
-            <a
-              className="tt-button tt-button--secondary tt-button--compact"
-              href={`/${locale}/admin/platform/management-companies`}
-            >
-              {portfolioCopy.clearFilters}
-            </a>
+          <form method="get">
+            <FilterBar
+              actions={
+                <>
+                  <button className="tt-button tt-button--compact" type="submit">
+                    {portfolioCopy.applyFilters}
+                  </button>
+                  <a
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    href={`/${locale}/admin/platform/management-companies`}
+                  >
+                    {portfolioCopy.clearFilters}
+                  </a>
+                </>
+              }
+              className="admin-catalog-filter-bar"
+              filters={
+                <label className="admin-filter-select" htmlFor="company-state-filter">
+                  <Funnel aria-hidden="true" size={16} />
+                  <span className="sr-only">{portfolioCopy.statusFilter}</span>
+                  <select defaultValue={stateFilter ?? ""} id="company-state-filter" name="state">
+                    <option value="">{portfolioCopy.allStatuses}</option>
+                    <option value="ACTIVE">{copy.statusLabels.ACTIVE}</option>
+                    <option value="SUSPENDED">{copy.statusLabels.SUSPENDED}</option>
+                    <option value="CLOSED">{copy.statusLabels.CLOSED}</option>
+                  </select>
+                </label>
+              }
+              search={
+                <div className="admin-search-control admin-search-control--catalog">
+                  <MagnifyingGlass aria-hidden="true" size={17} />
+                  <label className="sr-only" htmlFor="company-search">
+                    {portfolioCopy.companySearch}
+                  </label>
+                  <input
+                    defaultValue={search}
+                    id="company-search"
+                    name="q"
+                    placeholder={portfolioCopy.companySearch}
+                    type="search"
+                  />
+                </div>
+              }
+            />
           </form>
 
-          {catalog.items.length === 0 ? (
-            <section className="admin-catalog-empty admin-catalog-empty--compact">
-              <h2>{copy.emptyTitle}</h2>
-              <p>{copy.emptyDescription}</p>
-            </section>
-          ) : (
-            <div className="admin-table-scroll admin-table-scroll--catalog">
-              <table className="admin-data-table admin-data-table--portfolio">
-                <thead>
-                  <tr>
-                    <th scope="col">{copy.name}</th>
-                    <th scope="col">{portfolioCopy.sites}</th>
-                    <th scope="col">{portfolioCopy.capacity}</th>
-                    <th scope="col">{portfolioCopy.activeQr}</th>
-                    <th scope="col">{portfolioCopy.contractHealth}</th>
-                    <th scope="col">{copy.createdAt}</th>
-                    <th scope="col">{copy.actions}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {catalog.items.map((company) => {
-                    const prefix = `company-${company.id}`;
-                    const healthy = company.status === "ACTIVE";
-                    return (
-                      <tr key={company.id}>
-                        <th scope="row">
-                          <strong>{company.name}</strong>
-                          <small>{formatBusinessNumber(company.businessNumber)}</small>
-                        </th>
-                        <td>{number.format(company.siteCount)}</td>
-                        <td>{number.format(company.contractVehicleLimit)}</td>
-                        <td>{number.format(company.activeQrCount)}</td>
-                        <td>
-                          <span
-                            className={`admin-health-pill ${healthy ? "is-healthy" : "is-attention"}`}
-                          >
-                            {healthy ? portfolioCopy.healthGood : copy.statusLabels[company.status]}
-                          </span>
-                        </td>
-                        <td>
-                          <time dateTime={company.createdAt}>
-                            {formattedDate.format(new Date(company.createdAt))}
-                          </time>
-                        </td>
-                        <td>
-                          <div className="admin-row-actions">
-                            <a
-                              className="admin-row-primary"
-                              href={`/${locale}/admin/platform/management-companies/${company.id}`}
-                            >
-                              {portfolioCopy.details}
-                              <ArrowRight aria-hidden="true" size={15} />
-                            </a>
-                            {canManage && company.status !== "CLOSED" ? (
-                              <details className="admin-row-menu">
-                                <summary aria-label={copy.edit}>
-                                  <DotsThree aria-hidden="true" size={18} weight="bold" />
-                                </summary>
-                                <div className="admin-row-menu__popover">
-                                  <form
-                                    action={updateManagementCompany}
-                                    className="admin-tenant-form"
-                                  >
-                                    <HiddenFields company={company} copy={copy} locale={locale} />
-                                    <p>{copy.editDescription}</p>
-                                    <label className="admin-field" htmlFor={`${prefix}-name`}>
-                                      <span>{copy.name}</span>
-                                      <input
-                                        defaultValue={company.name}
-                                        id={`${prefix}-name`}
-                                        maxLength={200}
-                                        name="name"
-                                        required
-                                      />
-                                    </label>
-                                    <label
-                                      className="admin-field"
-                                      htmlFor={`${prefix}-business-number`}
-                                    >
-                                      <span>{copy.businessNumber}</span>
-                                      <input
-                                        defaultValue={formatBusinessNumber(
-                                          company.businessNumber,
-                                        ).replace("—", "")}
-                                        id={`${prefix}-business-number`}
-                                        inputMode="numeric"
-                                        name="businessNumber"
-                                        pattern="[0-9-]*"
-                                      />
-                                    </label>
-                                    <label
-                                      className="admin-field"
-                                      htmlFor={`${prefix}-edit-reason`}
-                                    >
-                                      <span>{copy.reason}</span>
-                                      <textarea
-                                        id={`${prefix}-edit-reason`}
-                                        maxLength={500}
-                                        minLength={3}
-                                        name="reason"
-                                        placeholder={copy.reasonPlaceholder}
-                                        required
-                                      />
-                                    </label>
-                                    <button className="tt-button tt-button--compact" type="submit">
-                                      {copy.save}
-                                    </button>
-                                  </form>
-                                  <form
-                                    action={changeManagementCompanyStatus}
-                                    className="admin-tenant-status-form"
-                                  >
-                                    <HiddenFields company={company} copy={copy} locale={locale} />
-                                    <input
-                                      aria-label={copy.status}
-                                      name="currentStatus"
-                                      type="hidden"
-                                      value={company.status}
-                                    />
-                                    <label
-                                      className="admin-field"
-                                      htmlFor={`${prefix}-status-reason`}
-                                    >
-                                      <span>{copy.reason}</span>
-                                      <textarea
-                                        id={`${prefix}-status-reason`}
-                                        maxLength={500}
-                                        minLength={3}
-                                        name="reason"
-                                        placeholder={copy.reasonPlaceholder}
-                                        required
-                                      />
-                                    </label>
-                                    <div className="admin-tenant-status-actions">
-                                      <button
-                                        className="tt-button tt-button--secondary tt-button--compact"
-                                        name="nextStatus"
-                                        type="submit"
-                                        value={company.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE"}
-                                      >
-                                        {company.status === "ACTIVE"
-                                          ? copy.suspend
-                                          : copy.reactivate}
-                                      </button>
-                                      <button
-                                        className="tt-button tt-button--compact admin-danger-button"
-                                        name="nextStatus"
-                                        type="submit"
-                                        value="CLOSED"
-                                      >
-                                        {copy.close}
-                                      </button>
-                                    </div>
-                                  </form>
-                                </div>
-                              </details>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <DataTable
+            className="admin-table-scroll admin-table-scroll--catalog"
+            columns={columns}
+            empty={
+              <EmptyState
+                className="admin-catalog-empty admin-catalog-empty--compact"
+                description={copy.emptyDescription}
+                title={copy.emptyTitle}
+              />
+            }
+            getRowKey={(company) => company.id}
+            rows={catalog.items}
+          />
 
           <footer className="admin-catalog-footer">
             <span>{copy.total.replace("{count}", number.format(catalog.total))}</span>
-            <nav
+            <Pagination
               aria-label={copy.paginationLabel}
               className="admin-pagination admin-pagination--compact"
-            >
-              {catalog.page > 1 ? (
-                <a
-                  className="tt-button tt-button--secondary tt-button--compact"
-                  href={getPageHref(locale, catalog.page - 1, search, stateFilter)}
-                >
-                  {copy.previous}
-                </a>
-              ) : (
-                <span />
-              )}
-              <span>
-                {copy.page
-                  .replace("{current}", String(catalog.page))
-                  .replace("{total}", String(totalPages))}
-              </span>
-              {catalog.page < totalPages ? (
-                <a
-                  className="tt-button tt-button--secondary tt-button--compact"
-                  href={getPageHref(locale, catalog.page + 1, search, stateFilter)}
-                >
-                  {copy.next}
-                </a>
-              ) : (
-                <span />
-              )}
-            </nav>
+              next={
+                hasNext ? (
+                  <a
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    href={getPageHref(locale, catalog.page + 1, search, stateFilter)}
+                  >
+                    {copy.next}
+                  </a>
+                ) : (
+                  <span />
+                )
+              }
+              previous={
+                hasPrevious ? (
+                  <a
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    href={getPageHref(locale, catalog.page - 1, search, stateFilter)}
+                  >
+                    {copy.previous}
+                  </a>
+                ) : (
+                  <span />
+                )
+              }
+              summary={copy.page
+                .replace("{current}", String(catalog.page))
+                .replace("{total}", String(totalPages))}
+            />
           </footer>
         </section>
 

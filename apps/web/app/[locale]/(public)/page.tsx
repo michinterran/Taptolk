@@ -107,6 +107,10 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             lines={[copy["landing.hero.line1"], copy["landing.hero.line2"]]}
           />
           <p className="landing-description">{copy["landing.hero.description"]}</p>
+          <ul className="landing-hero__badges">
+            <li>{copy["landing.privacy.numbers"]}</li>
+            <li>{copy["landing.privacy.temporary"]}</li>
+          </ul>
           <div className="landing-actions">
             <a className="tt-button landing-primary" href="#how-it-works">
               {copy["landing.hero.primary"]}
@@ -116,6 +120,9 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
         <aside aria-hidden="true" className="landing-signal-card">
           <LandingHeroVisual />
+          <p>{copy["landing.privacy.eyebrow"]}</p>
+          <strong>{copy["landing.owner.step2.title"]}</strong>
+          <span>{copy["landing.privacy.numbers"]}</span>
         </aside>
       </section>
 

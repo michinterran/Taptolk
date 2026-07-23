@@ -6,7 +6,14 @@ import type {
   SiteLifecycleRequestReadModel,
   SiteType,
 } from "@taptolk/application";
-import { SemanticHeading } from "@taptolk/ui";
+import {
+  DataTable,
+  type DataTableColumn,
+  EmptyState,
+  PageHeader,
+  Pagination,
+  StatusPill,
+} from "@taptolk/ui";
 import {
   changeSiteStatus,
   createSite,
@@ -108,6 +115,8 @@ interface SiteCatalogViewProps {
   statusMessage?: string | undefined;
 }
 
+type SiteRow = SiteCatalogPage["items"][number];
+
 function LifecycleRequestHiddenFields({
   copy,
   locale,
@@ -175,6 +184,322 @@ function SiteHiddenFields({
   );
 }
 
+function getFormatterLocale(locale: AppLocale): string {
+  return locale === "ko" ? "ko-KR" : "en";
+}
+
+function getSiteStatusTone(
+  status: OrganizationStatus,
+): "success" | "warning" | "danger" | "neutral" {
+  if (status === "ACTIVE") {
+    return "success";
+  }
+
+  if (status === "CLOSED") {
+    return "danger";
+  }
+
+  return "warning";
+}
+
+function SiteRowActions({
+  canChangeStatus,
+  canClose,
+  canRequestClose,
+  canRequestStatus,
+  canUpdateContract,
+  canUpdateOperational,
+  contractVehicleLimitMax,
+  copy,
+  lifecycleRequests,
+  locale,
+  site,
+}: {
+  canChangeStatus: boolean;
+  canClose: boolean;
+  canRequestClose: boolean;
+  canRequestStatus: boolean;
+  canUpdateContract: boolean;
+  canUpdateOperational: boolean;
+  contractVehicleLimitMax: number;
+  copy: SiteCatalogCopy;
+  lifecycleRequests: SiteLifecycleRequestReadModel;
+  locale: AppLocale;
+  site: SiteRow;
+}) {
+  const prefix = `site-${site.id}`;
+  const mutable = site.status !== "CLOSED";
+  const pendingRequest = lifecycleRequests.pendingBySiteId.get(site.id);
+  const canRenderLifecycle = mutable && (canChangeStatus || (canClose && site.status !== "CLOSED"));
+  const canRenderLifecycleRequest =
+    mutable && !pendingRequest && (canRequestStatus || canRequestClose);
+
+  if (!mutable) {
+    return <span className="admin-table-closed">{copy.statusLabels.CLOSED}</span>;
+  }
+
+  return (
+    <details className="admin-tenant-row-actions">
+      <summary>{copy.edit}</summary>
+      <div className="admin-tenant-row-actions__body">
+        {canUpdateOperational ? (
+          <form action={updateSiteOperational} className="admin-tenant-form">
+            <SiteHiddenFields copy={copy} locale={locale} site={site} />
+            <h3>{copy.operationalTitle}</h3>
+            <p>{copy.operationalDescription}</p>
+            <div className="admin-tenant-field-grid">
+              <label className="admin-field" htmlFor={`${prefix}-name`}>
+                <span>{copy.name}</span>
+                <input
+                  defaultValue={site.name}
+                  id={`${prefix}-name`}
+                  maxLength={200}
+                  name="name"
+                  required
+                />
+              </label>
+              <label className="admin-field" htmlFor={`${prefix}-type`}>
+                <span>{copy.type}</span>
+                <select defaultValue={site.type} id={`${prefix}-type`} name="siteType" required>
+                  {Object.entries(copy.typeLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="admin-field" htmlFor={`${prefix}-timezone`}>
+                <span>{copy.timezone}</span>
+                <input
+                  defaultValue={site.timezone}
+                  id={`${prefix}-timezone`}
+                  maxLength={64}
+                  name="timezone"
+                  required
+                />
+              </label>
+              <label className="admin-field" htmlFor={`${prefix}-address`}>
+                <span>{copy.address}</span>
+                <input
+                  defaultValue={site.address ?? ""}
+                  id={`${prefix}-address`}
+                  maxLength={500}
+                  name="address"
+                />
+              </label>
+            </div>
+            <label className="admin-field" htmlFor={`${prefix}-edit-reason`}>
+              <span>{copy.reason}</span>
+              <textarea
+                id={`${prefix}-edit-reason`}
+                maxLength={500}
+                minLength={3}
+                name="reason"
+                placeholder={copy.reasonPlaceholder}
+                required
+              />
+            </label>
+            <button className="tt-button tt-button--compact" type="submit">
+              {copy.saveOperational}
+            </button>
+          </form>
+        ) : null}
+
+        {canUpdateContract ? (
+          <form action={updateSiteContract} className="admin-tenant-form">
+            <SiteHiddenFields copy={copy} locale={locale} site={site} />
+            <h3>{copy.contractTitle}</h3>
+            <label className="admin-field" htmlFor={`${prefix}-limit`}>
+              <span>{copy.contractLimit}</span>
+              <input
+                defaultValue={site.contractVehicleLimit}
+                id={`${prefix}-limit`}
+                max={contractVehicleLimitMax}
+                min={0}
+                name="contractVehicleLimit"
+                required
+                type="number"
+              />
+            </label>
+            <label className="admin-field" htmlFor={`${prefix}-contract-reason`}>
+              <span>{copy.reason}</span>
+              <textarea
+                id={`${prefix}-contract-reason`}
+                maxLength={500}
+                minLength={3}
+                name="reason"
+                placeholder={copy.reasonPlaceholder}
+                required
+              />
+            </label>
+            <button className="tt-button tt-button--compact" type="submit">
+              {copy.saveContract}
+            </button>
+          </form>
+        ) : null}
+
+        {pendingRequest ? (
+          <section aria-label={copy.lifecyclePending} className="admin-lifecycle-pending">
+            <h3>{copy.lifecyclePending}</h3>
+            <p>
+              {copy.lifecyclePendingDescription.replace(
+                "{action}",
+                copy.lifecycleActionLabels[pendingRequest.action],
+              )}
+            </p>
+            <p>
+              {copy.lifecyclePendingAt.replace(
+                "{date}",
+                new Intl.DateTimeFormat(getFormatterLocale(locale), {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(new Date(pendingRequest.createdAt)),
+              )}
+            </p>
+            {lifecycleRequests.cancellableRequestIds.has(pendingRequest.id) ? (
+              <form action={cancelSiteLifecycleRequest} className="admin-tenant-status-form">
+                <LifecycleRequestHiddenFields
+                  copy={copy}
+                  locale={locale}
+                  request={pendingRequest}
+                />
+                <label className="admin-field" htmlFor={`${prefix}-cancel-reason`}>
+                  <span>{copy.reason}</span>
+                  <textarea
+                    id={`${prefix}-cancel-reason`}
+                    maxLength={500}
+                    minLength={3}
+                    name="reason"
+                    placeholder={copy.reasonPlaceholder}
+                    required
+                  />
+                </label>
+                <button className="tt-button tt-button--secondary tt-button--compact" type="submit">
+                  {copy.lifecycleCancel}
+                </button>
+              </form>
+            ) : (
+              <p>{copy.lifecycleCancelDescription}</p>
+            )}
+          </section>
+        ) : null}
+
+        {canRenderLifecycleRequest ? (
+          <form action={requestSiteLifecycle} className="admin-tenant-status-form">
+            <SiteHiddenFields copy={copy} locale={locale} site={site} />
+            <input
+              aria-label={copy.status}
+              name="currentStatus"
+              type="hidden"
+              value={site.status}
+            />
+            <input
+              aria-label={copy.actions}
+              name="expectedSiteVersion"
+              type="hidden"
+              value={site.version}
+            />
+            <h3>{copy.lifecycleRequest}</h3>
+            <p>{copy.lifecycleRequestDescription}</p>
+            <label className="admin-field" htmlFor={`${prefix}-request-reason`}>
+              <span>{copy.reason}</span>
+              <textarea
+                id={`${prefix}-request-reason`}
+                maxLength={500}
+                minLength={3}
+                name="reason"
+                placeholder={copy.reasonPlaceholder}
+                required
+              />
+            </label>
+            <div className="admin-tenant-status-actions">
+              {canRequestStatus ? (
+                <button
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  name="action"
+                  type="submit"
+                  value={site.status === "ACTIVE" ? "SUSPEND" : "REACTIVATE"}
+                >
+                  {site.status === "ACTIVE"
+                    ? copy.lifecycleActionLabels.SUSPEND
+                    : copy.lifecycleActionLabels.REACTIVATE}
+                </button>
+              ) : null}
+              {canRequestClose ? (
+                <button
+                  className="tt-button tt-button--compact admin-danger-button"
+                  name="action"
+                  type="submit"
+                  value="CLOSE"
+                >
+                  {copy.lifecycleActionLabels.CLOSE}
+                </button>
+              ) : null}
+            </div>
+          </form>
+        ) : null}
+
+        {canRenderLifecycle ? (
+          <form action={changeSiteStatus} className="admin-tenant-status-form">
+            <SiteHiddenFields copy={copy} locale={locale} site={site} />
+            <input
+              aria-label={copy.status}
+              name="currentStatus"
+              type="hidden"
+              value={site.status}
+            />
+            <p>{copy.statusDescription}</p>
+            <label className="admin-field" htmlFor={`${prefix}-status-reason`}>
+              <span>{copy.reason}</span>
+              <textarea
+                id={`${prefix}-status-reason`}
+                maxLength={500}
+                minLength={3}
+                name="reason"
+                placeholder={copy.reasonPlaceholder}
+                required
+              />
+            </label>
+            <div className="admin-tenant-status-actions">
+              {canChangeStatus ? (
+                site.status === "ACTIVE" ? (
+                  <button
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    name="nextStatus"
+                    type="submit"
+                    value="SUSPENDED"
+                  >
+                    {copy.suspend}
+                  </button>
+                ) : (
+                  <button
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    name="nextStatus"
+                    type="submit"
+                    value="ACTIVE"
+                  >
+                    {copy.reactivate}
+                  </button>
+                )
+              ) : null}
+              {canClose ? (
+                <button
+                  className="tt-button tt-button--compact admin-danger-button"
+                  name="nextStatus"
+                  type="submit"
+                  value="CLOSED"
+                >
+                  {copy.close}
+                </button>
+              ) : null}
+            </div>
+          </form>
+        ) : null}
+      </div>
+    </details>
+  );
+}
+
 export function SiteCatalogView({
   backHref,
   canChangeStatus,
@@ -204,6 +529,89 @@ export function SiteCatalogView({
     canRequestStatus ||
     canRequestClose ||
     lifecycleRequests.pendingBySiteId.size > 0;
+  const pageSummary = copy.page
+    .replace("{current}", String(catalog.page))
+    .replace("{total}", String(totalPages));
+  const columns: Array<DataTableColumn<SiteRow>> = [
+    {
+      cell: (site) => (
+        <div className="tt-table-entity">
+          <a className="admin-row-primary" href={`/${locale}/admin/sites/${site.id}`}>
+            {site.name}
+          </a>
+          <small>
+            {site.address ?? copy.notAvailable} · {site.timezone}
+          </small>
+        </div>
+      ),
+      header: copy.name,
+      key: "name",
+    },
+    {
+      cell: (site) => (
+        <div className="tt-table-entity">
+          <span>{site.tenantName}</span>
+          <small>{site.managementCompanyName}</small>
+        </div>
+      ),
+      header: copy.company,
+      key: "company",
+    },
+    {
+      cell: (site) => copy.typeLabels[site.type],
+      header: copy.type,
+      key: "type",
+    },
+    {
+      align: "right",
+      cell: (site) => site.contractVehicleLimit.toLocaleString(getFormatterLocale(locale)),
+      header: copy.contractLimit,
+      key: "contractLimit",
+    },
+    {
+      cell: (site) => (
+        <StatusPill tone={getSiteStatusTone(site.status)}>
+          {copy.statusLabels[site.status]}
+        </StatusPill>
+      ),
+      header: copy.status,
+      key: "status",
+    },
+    {
+      cell: (site) => (
+        <time dateTime={site.createdAt}>
+          {new Intl.DateTimeFormat(getFormatterLocale(locale), {
+            dateStyle: "medium",
+          }).format(new Date(site.createdAt))}
+        </time>
+      ),
+      header: copy.createdAt,
+      key: "createdAt",
+    },
+    ...(hasRowActions
+      ? [
+          {
+            cell: (site) => (
+              <SiteRowActions
+                canChangeStatus={canChangeStatus}
+                canClose={canClose}
+                canRequestClose={canRequestClose}
+                canRequestStatus={canRequestStatus}
+                canUpdateContract={canUpdateContract}
+                canUpdateOperational={canUpdateOperational}
+                contractVehicleLimitMax={contractVehicleLimitMax}
+                copy={copy}
+                lifecycleRequests={lifecycleRequests}
+                locale={locale}
+                site={site}
+              />
+            ),
+            header: copy.actions,
+            key: "actions",
+          } satisfies DataTableColumn<SiteRow>,
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -215,22 +623,24 @@ export function SiteCatalogView({
         pathname={`/${locale}/admin/sites`}
       />
 
-      <section className="admin-section-hero">
-        <div>
-          <a className="admin-back-link" href={backHref}>
-            {copy.back}
-          </a>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <SemanticHeading className="admin-section-title" lines={copy.titleLines} />
-          <p className="admin-dashboard-description">{copy.description}</p>
-        </div>
-        <form action={signOutAdmin}>
-          <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
-          <button className="tt-button tt-button--secondary" type="submit">
-            {copy.signOut}
-          </button>
-        </form>
-      </section>
+      <PageHeader
+        actions={
+          <>
+            <a className="tt-button tt-button--secondary" href={backHref}>
+              {copy.back}
+            </a>
+            <form action={signOutAdmin}>
+              <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+              <button className="tt-button tt-button--secondary" type="submit">
+                {copy.signOut}
+              </button>
+            </form>
+          </>
+        }
+        description={copy.description}
+        eyebrow={copy.eyebrow}
+        lines={copy.titleLines}
+      />
 
       {statusMessage ? (
         <aside aria-live="polite" className="admin-notice admin-notice--success">
@@ -266,9 +676,7 @@ export function SiteCatalogView({
                       </span>
                       <h3>{request.siteName}</h3>
                     </div>
-                    <span className="admin-status-badge admin-status-badge--suspended">
-                      {copy.lifecyclePending}
-                    </span>
+                    <StatusPill tone="warning">{copy.lifecyclePending}</StatusPill>
                   </header>
                   <dl className="admin-approval-meta">
                     <div>
@@ -419,401 +827,38 @@ export function SiteCatalogView({
         <span>{copy.securityNote}</span>
       </section>
 
-      {catalog.items.length === 0 ? (
-        <section className="admin-catalog-empty">
-          <h2>{copy.emptyTitle}</h2>
-          <p>{copy.emptyDescription}</p>
-        </section>
-      ) : (
-        <div className="admin-table-scroll">
-          <table className="admin-data-table">
-            <thead>
-              <tr>
-                <th scope="col">{copy.name}</th>
-                <th scope="col">{copy.company}</th>
-                <th scope="col">{copy.type}</th>
-                <th scope="col">{copy.contractLimit}</th>
-                <th scope="col">{copy.status}</th>
-                <th scope="col">{copy.createdAt}</th>
-                {hasRowActions ? <th scope="col">{copy.actions}</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {catalog.items.map((site) => {
-                const prefix = `site-${site.id}`;
-                const mutable = site.status !== "CLOSED";
-                const pendingRequest = lifecycleRequests.pendingBySiteId.get(site.id);
-                const canRenderLifecycle =
-                  mutable && (canChangeStatus || (canClose && site.status !== "CLOSED"));
-                const canRenderLifecycleRequest =
-                  mutable && !pendingRequest && (canRequestStatus || canRequestClose);
-                return (
-                  <tr key={site.id}>
-                    <td>
-                      <a className="admin-row-primary" href={`/${locale}/admin/sites/${site.id}`}>
-                        {site.name}
-                      </a>
-                      <small className="admin-table-meta">
-                        {site.address ?? copy.notAvailable} · {site.timezone}
-                      </small>
-                    </td>
-                    <td>
-                      {site.tenantName}
-                      <small className="admin-table-meta">{site.managementCompanyName}</small>
-                    </td>
-                    <td>{copy.typeLabels[site.type]}</td>
-                    <td>
-                      {site.contractVehicleLimit.toLocaleString(locale === "ko" ? "ko-KR" : "en")}
-                    </td>
-                    <td>
-                      <span
-                        className={`admin-status-badge admin-status-badge--${site.status.toLowerCase()}`}
-                      >
-                        {copy.statusLabels[site.status]}
-                      </span>
-                    </td>
-                    <td>
-                      <time dateTime={site.createdAt}>
-                        {new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en", {
-                          dateStyle: "medium",
-                        }).format(new Date(site.createdAt))}
-                      </time>
-                    </td>
-                    {hasRowActions ? (
-                      <td>
-                        {!mutable ? (
-                          <span className="admin-table-closed">{copy.statusLabels.CLOSED}</span>
-                        ) : (
-                          <details className="admin-tenant-row-actions">
-                            <summary>{copy.edit}</summary>
-                            <div className="admin-tenant-row-actions__body">
-                              {canUpdateOperational ? (
-                                <form action={updateSiteOperational} className="admin-tenant-form">
-                                  <SiteHiddenFields copy={copy} locale={locale} site={site} />
-                                  <h3>{copy.operationalTitle}</h3>
-                                  <p>{copy.operationalDescription}</p>
-                                  <div className="admin-tenant-field-grid">
-                                    <label className="admin-field" htmlFor={`${prefix}-name`}>
-                                      <span>{copy.name}</span>
-                                      <input
-                                        defaultValue={site.name}
-                                        id={`${prefix}-name`}
-                                        maxLength={200}
-                                        name="name"
-                                        required
-                                      />
-                                    </label>
-                                    <label className="admin-field" htmlFor={`${prefix}-type`}>
-                                      <span>{copy.type}</span>
-                                      <select
-                                        defaultValue={site.type}
-                                        id={`${prefix}-type`}
-                                        name="siteType"
-                                        required
-                                      >
-                                        {Object.entries(copy.typeLabels).map(([value, label]) => (
-                                          <option key={value} value={value}>
-                                            {label}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </label>
-                                    <label className="admin-field" htmlFor={`${prefix}-timezone`}>
-                                      <span>{copy.timezone}</span>
-                                      <input
-                                        defaultValue={site.timezone}
-                                        id={`${prefix}-timezone`}
-                                        maxLength={64}
-                                        name="timezone"
-                                        required
-                                      />
-                                    </label>
-                                    <label className="admin-field" htmlFor={`${prefix}-address`}>
-                                      <span>{copy.address}</span>
-                                      <input
-                                        defaultValue={site.address ?? ""}
-                                        id={`${prefix}-address`}
-                                        maxLength={500}
-                                        name="address"
-                                      />
-                                    </label>
-                                  </div>
-                                  <label className="admin-field" htmlFor={`${prefix}-edit-reason`}>
-                                    <span>{copy.reason}</span>
-                                    <textarea
-                                      id={`${prefix}-edit-reason`}
-                                      maxLength={500}
-                                      minLength={3}
-                                      name="reason"
-                                      placeholder={copy.reasonPlaceholder}
-                                      required
-                                    />
-                                  </label>
-                                  <button className="tt-button tt-button--compact" type="submit">
-                                    {copy.saveOperational}
-                                  </button>
-                                </form>
-                              ) : null}
+      <DataTable
+        aria-label={copy.paginationLabel}
+        columns={columns}
+        empty={<EmptyState description={copy.emptyDescription} title={copy.emptyTitle} />}
+        getRowKey={(site) => site.id}
+        rows={catalog.items}
+      />
 
-                              {canUpdateContract ? (
-                                <form action={updateSiteContract} className="admin-tenant-form">
-                                  <SiteHiddenFields copy={copy} locale={locale} site={site} />
-                                  <h3>{copy.contractTitle}</h3>
-                                  <label className="admin-field" htmlFor={`${prefix}-limit`}>
-                                    <span>{copy.contractLimit}</span>
-                                    <input
-                                      defaultValue={site.contractVehicleLimit}
-                                      id={`${prefix}-limit`}
-                                      max={contractVehicleLimitMax}
-                                      min={0}
-                                      name="contractVehicleLimit"
-                                      required
-                                      type="number"
-                                    />
-                                  </label>
-                                  <label
-                                    className="admin-field"
-                                    htmlFor={`${prefix}-contract-reason`}
-                                  >
-                                    <span>{copy.reason}</span>
-                                    <textarea
-                                      id={`${prefix}-contract-reason`}
-                                      maxLength={500}
-                                      minLength={3}
-                                      name="reason"
-                                      placeholder={copy.reasonPlaceholder}
-                                      required
-                                    />
-                                  </label>
-                                  <button className="tt-button tt-button--compact" type="submit">
-                                    {copy.saveContract}
-                                  </button>
-                                </form>
-                              ) : null}
-
-                              {pendingRequest ? (
-                                <section
-                                  aria-label={copy.lifecyclePending}
-                                  className="admin-lifecycle-pending"
-                                >
-                                  <h3>{copy.lifecyclePending}</h3>
-                                  <p>
-                                    {copy.lifecyclePendingDescription.replace(
-                                      "{action}",
-                                      copy.lifecycleActionLabels[pendingRequest.action],
-                                    )}
-                                  </p>
-                                  <p>
-                                    {copy.lifecyclePendingAt.replace(
-                                      "{date}",
-                                      new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en", {
-                                        dateStyle: "medium",
-                                        timeStyle: "short",
-                                      }).format(new Date(pendingRequest.createdAt)),
-                                    )}
-                                  </p>
-                                  {lifecycleRequests.cancellableRequestIds.has(
-                                    pendingRequest.id,
-                                  ) ? (
-                                    <form
-                                      action={cancelSiteLifecycleRequest}
-                                      className="admin-tenant-status-form"
-                                    >
-                                      <LifecycleRequestHiddenFields
-                                        copy={copy}
-                                        locale={locale}
-                                        request={pendingRequest}
-                                      />
-                                      <label
-                                        className="admin-field"
-                                        htmlFor={`${prefix}-cancel-reason`}
-                                      >
-                                        <span>{copy.reason}</span>
-                                        <textarea
-                                          id={`${prefix}-cancel-reason`}
-                                          maxLength={500}
-                                          minLength={3}
-                                          name="reason"
-                                          placeholder={copy.reasonPlaceholder}
-                                          required
-                                        />
-                                      </label>
-                                      <button
-                                        className="tt-button tt-button--secondary tt-button--compact"
-                                        type="submit"
-                                      >
-                                        {copy.lifecycleCancel}
-                                      </button>
-                                    </form>
-                                  ) : (
-                                    <p>{copy.lifecycleCancelDescription}</p>
-                                  )}
-                                </section>
-                              ) : null}
-
-                              {canRenderLifecycleRequest ? (
-                                <form
-                                  action={requestSiteLifecycle}
-                                  className="admin-tenant-status-form"
-                                >
-                                  <SiteHiddenFields copy={copy} locale={locale} site={site} />
-                                  <input
-                                    aria-label={copy.status}
-                                    name="currentStatus"
-                                    type="hidden"
-                                    value={site.status}
-                                  />
-                                  <input
-                                    aria-label={copy.actions}
-                                    name="expectedSiteVersion"
-                                    type="hidden"
-                                    value={site.version}
-                                  />
-                                  <h3>{copy.lifecycleRequest}</h3>
-                                  <p>{copy.lifecycleRequestDescription}</p>
-                                  <label
-                                    className="admin-field"
-                                    htmlFor={`${prefix}-request-reason`}
-                                  >
-                                    <span>{copy.reason}</span>
-                                    <textarea
-                                      id={`${prefix}-request-reason`}
-                                      maxLength={500}
-                                      minLength={3}
-                                      name="reason"
-                                      placeholder={copy.reasonPlaceholder}
-                                      required
-                                    />
-                                  </label>
-                                  <div className="admin-tenant-status-actions">
-                                    {canRequestStatus ? (
-                                      <button
-                                        className="tt-button tt-button--secondary tt-button--compact"
-                                        name="action"
-                                        type="submit"
-                                        value={site.status === "ACTIVE" ? "SUSPEND" : "REACTIVATE"}
-                                      >
-                                        {site.status === "ACTIVE"
-                                          ? copy.lifecycleActionLabels.SUSPEND
-                                          : copy.lifecycleActionLabels.REACTIVATE}
-                                      </button>
-                                    ) : null}
-                                    {canRequestClose ? (
-                                      <button
-                                        className="tt-button tt-button--compact admin-danger-button"
-                                        name="action"
-                                        type="submit"
-                                        value="CLOSE"
-                                      >
-                                        {copy.lifecycleActionLabels.CLOSE}
-                                      </button>
-                                    ) : null}
-                                  </div>
-                                </form>
-                              ) : null}
-
-                              {canRenderLifecycle ? (
-                                <form
-                                  action={changeSiteStatus}
-                                  className="admin-tenant-status-form"
-                                >
-                                  <SiteHiddenFields copy={copy} locale={locale} site={site} />
-                                  <input
-                                    aria-label={copy.status}
-                                    name="currentStatus"
-                                    type="hidden"
-                                    value={site.status}
-                                  />
-                                  <p>{copy.statusDescription}</p>
-                                  <label
-                                    className="admin-field"
-                                    htmlFor={`${prefix}-status-reason`}
-                                  >
-                                    <span>{copy.reason}</span>
-                                    <textarea
-                                      id={`${prefix}-status-reason`}
-                                      maxLength={500}
-                                      minLength={3}
-                                      name="reason"
-                                      placeholder={copy.reasonPlaceholder}
-                                      required
-                                    />
-                                  </label>
-                                  <div className="admin-tenant-status-actions">
-                                    {canChangeStatus ? (
-                                      site.status === "ACTIVE" ? (
-                                        <button
-                                          className="tt-button tt-button--secondary tt-button--compact"
-                                          name="nextStatus"
-                                          type="submit"
-                                          value="SUSPENDED"
-                                        >
-                                          {copy.suspend}
-                                        </button>
-                                      ) : (
-                                        <button
-                                          className="tt-button tt-button--secondary tt-button--compact"
-                                          name="nextStatus"
-                                          type="submit"
-                                          value="ACTIVE"
-                                        >
-                                          {copy.reactivate}
-                                        </button>
-                                      )
-                                    ) : null}
-                                    {canClose ? (
-                                      <button
-                                        className="tt-button tt-button--compact admin-danger-button"
-                                        name="nextStatus"
-                                        type="submit"
-                                        value="CLOSED"
-                                      >
-                                        {copy.close}
-                                      </button>
-                                    ) : null}
-                                  </div>
-                                </form>
-                              ) : null}
-                            </div>
-                          </details>
-                        )}
-                      </td>
-                    ) : null}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <nav aria-label={copy.paginationLabel} className="admin-pagination">
-        {hasPrevious ? (
-          <a
-            className="tt-button tt-button--secondary"
-            href={getPageHref(locale, catalog.page - 1)}
-          >
-            {copy.previous}
-          </a>
-        ) : (
-          <span />
-        )}
-        <span>
-          {copy.page
-            .replace("{current}", String(catalog.page))
-            .replace("{total}", String(totalPages))}
-        </span>
-        {hasNext ? (
-          <a
-            className="tt-button tt-button--secondary"
-            href={getPageHref(locale, catalog.page + 1)}
-          >
-            {copy.next}
-          </a>
-        ) : (
-          <span />
-        )}
-      </nav>
+      <Pagination
+        aria-label={copy.paginationLabel}
+        next={
+          hasNext ? (
+            <a
+              className="tt-button tt-button--secondary"
+              href={getPageHref(locale, catalog.page + 1)}
+            >
+              {copy.next}
+            </a>
+          ) : null
+        }
+        previous={
+          hasPrevious ? (
+            <a
+              className="tt-button tt-button--secondary"
+              href={getPageHref(locale, catalog.page - 1)}
+            >
+              {copy.previous}
+            </a>
+          ) : null
+        }
+        summary={pageSummary}
+      />
     </>
   );
 }
