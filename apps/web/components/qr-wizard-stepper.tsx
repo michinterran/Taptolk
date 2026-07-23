@@ -30,10 +30,25 @@ export function resolveQrWizardStep(value: string | undefined): QrWizardStep {
   return isQrWizardStep(value) ? value : "site";
 }
 
-export function getQrWizardStepHref(locale: AppLocale, step: QrWizardStep): string {
-  return step === "site"
-    ? `/${locale}/admin/qr-inventory`
-    : `/${locale}/admin/qr-inventory?step=${step}`;
+/**
+ * The chosen site travels with every step link. Without it a later step forgets
+ * which site the operator picked and silently falls back to asking again.
+ */
+export function getQrWizardStepHref(
+  locale: AppLocale,
+  step: QrWizardStep,
+  siteId?: string,
+): string {
+  const base = `/${locale}/admin/qr-inventory`;
+  const query = new URLSearchParams();
+  if (step !== "site") {
+    query.set("step", step);
+  }
+  if (siteId) {
+    query.set("site", siteId);
+  }
+  const search = query.toString();
+  return search ? `${base}?${search}` : base;
 }
 
 export interface QrWizardStepCopy {
@@ -46,6 +61,7 @@ export function QrWizardStepper({
   label,
   locale,
   lockedSteps,
+  siteId,
   steps,
 }: {
   current: QrWizardStep;
@@ -53,6 +69,7 @@ export function QrWizardStepper({
   locale: AppLocale;
   /** Steps the signed-in role may not act on. They are shown, dimmed, not hidden. */
   lockedSteps: ReadonlySet<QrWizardStep>;
+  siteId?: string | undefined;
   steps: readonly QrWizardStepCopy[];
 }) {
   const currentIndex = getQrWizardStepIndex(current);
@@ -76,7 +93,7 @@ export function QrWizardStepper({
             aria-current={state === "current" ? "step" : undefined}
             className="qr-wizard__step"
             data-state={state}
-            href={getQrWizardStepHref(locale, step)}
+            href={getQrWizardStepHref(locale, step, siteId)}
             key={step}
           >
             <span aria-hidden="true" className="qr-wizard__step-marker">

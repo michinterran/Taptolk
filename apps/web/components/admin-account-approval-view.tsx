@@ -246,7 +246,7 @@ function CandidateCard({
           />
         </label>
 
-        <button className="tt-button admin-approval-primary-action" type="submit">
+        <button className="tt-button" type="submit">
           {copy.approve}
         </button>
       </form>
@@ -280,7 +280,7 @@ function CandidateCard({
               rows={3}
             />
           </label>
-          <button className="tt-button admin-danger-action" type="submit">
+          <button className="tt-button tt-button--danger" type="submit">
             {copy.reject}
           </button>
         </form>

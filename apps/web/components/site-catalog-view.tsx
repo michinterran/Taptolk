@@ -427,7 +427,7 @@ function SiteRowActions({
               ) : null}
               {canRequestClose ? (
                 <button
-                  className="tt-button tt-button--compact admin-danger-button"
+                  className="tt-button tt-button--danger tt-button--compact"
                   name="action"
                   type="submit"
                   value="CLOSE"
@@ -484,7 +484,7 @@ function SiteRowActions({
               ) : null}
               {canClose ? (
                 <button
-                  className="tt-button tt-button--compact admin-danger-button"
+                  className="tt-button tt-button--danger tt-button--compact"
                   name="nextStatus"
                   type="submit"
                   value="CLOSED"
@@ -705,7 +705,7 @@ export function SiteCatalogView({
                         required
                       />
                     </label>
-                    <button className="tt-button admin-approval-primary-action" type="submit">
+                    <button className="tt-button" type="submit">
                       {copy.lifecycleApprovalApprove}
                     </button>
                   </form>
@@ -724,7 +724,7 @@ export function SiteCatalogView({
                           required
                         />
                       </label>
-                      <button className="tt-button admin-danger-action" type="submit">
+                      <button className="tt-button tt-button--danger" type="submit">
                         {copy.lifecycleApprovalReject}
                       </button>
                     </form>

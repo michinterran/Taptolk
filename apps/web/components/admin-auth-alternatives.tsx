@@ -33,11 +33,7 @@ export function AdminAuthAlternatives({
       <form action={signInWithGoogle}>
         <input aria-label={googleLabel} name="flow" type="hidden" value={flow} />
         <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
-        <button
-          className="tt-button tt-button--secondary admin-submit"
-          disabled={disabled}
-          type="submit"
-        >
+        <button className="tt-button tt-button--secondary" disabled={disabled} type="submit">
           <span aria-hidden="true" className="admin-google-mark">
             G
           </span>

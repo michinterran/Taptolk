@@ -13,13 +13,22 @@ interface BrandAssetUploadCopy {
   title: string;
 }
 
+/**
+ * Uploads a logo for one managed location.
+ *
+ * When the wizard already knows which site it is working on, the form states it
+ * rather than offering the list again — asking twice invites uploading a logo to
+ * the wrong site.
+ */
 export function BrandAssetUploadView({
   copy,
   locale,
+  selectedSite,
   sites,
 }: {
   copy: BrandAssetUploadCopy;
   locale: AppLocale;
+  selectedSite?: QrInventorySiteOption | undefined;
   sites: readonly QrInventorySiteOption[];
 }) {
   return (
@@ -31,19 +40,35 @@ export function BrandAssetUploadView({
       {sites.length > 0 ? (
         <form action={uploadBrandAsset} className="qr-brand-upload__form">
           <input aria-label="locale" name="locale" type="hidden" value={locale} />
-          <label className="admin-field" htmlFor="brand-asset-site">
-            <span>{copy.site}</span>
-            <select id="brand-asset-site" name="siteScope" required>
-              {sites.map((site) => (
-                <option
-                  key={site.id}
-                  value={`${site.tenantId}|${site.managementCompanyId}|${site.id}`}
-                >
-                  {site.tenantName} / {site.managementCompanyName} / {site.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {selectedSite ? (
+            <>
+              <input
+                id="brand-asset-site"
+                name="siteScope"
+                type="hidden"
+                value={`${selectedSite.tenantId}|${selectedSite.managementCompanyId}|${selectedSite.id}`}
+              />
+              <p className="qr-wizard__context">
+                <span>{copy.site}</span>
+                <strong>{selectedSite.name}</strong>
+                <small>{selectedSite.managementCompanyName}</small>
+              </p>
+            </>
+          ) : (
+            <label className="admin-field" htmlFor="brand-asset-site">
+              <span>{copy.site}</span>
+              <select id="brand-asset-site" name="siteScope" required>
+                {sites.map((site) => (
+                  <option
+                    key={site.id}
+                    value={`${site.tenantId}|${site.managementCompanyId}|${site.id}`}
+                  >
+                    {site.tenantName} / {site.managementCompanyName} / {site.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="admin-field" htmlFor="brand-asset-name">
             <span>{copy.name}</span>
             <input id="brand-asset-name" maxLength={200} minLength={1} name="name" required />

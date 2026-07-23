@@ -123,7 +123,6 @@ export default async function QrInventoryPage({
       <QrInventorySampleView
         backHref={getLocalizedAdminPath(locale, isPlatform ? "/platform" : "/dashboard")}
         canApproveDesign={roleHasPermission(membership.role, "sticker-design:approve")}
-        canArchiveDesign={roleHasPermission(membership.role, "sticker-design:archive")}
         canCreateDesign={roleHasPermission(membership.role, "sticker-design:create")}
         canApproveFinalGeneration={roleHasPermission(
           membership.role,
@@ -312,6 +311,7 @@ export default async function QrInventoryPage({
                 title: copy["admin.qr.brand.upload.title"],
               }}
               locale={locale}
+              selectedSite={model.siteOptions.find((site) => site.id === selectedSiteId)}
               sites={model.siteOptions}
             />
           ) : null

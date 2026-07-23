@@ -14,7 +14,6 @@ import { approveQrBatchFinalGeneration } from "../admin/qr-final-generation-appr
 import {
   approveQrBatchSample,
   approveStickerDesignVersion,
-  archiveStickerDesignVersion,
   createStickerDesignVersion,
   requestQrBatch,
 } from "../admin/qr-inventory-sample-actions";
@@ -152,7 +151,6 @@ interface QrInventorySampleViewProps {
   canonicalQrHostReady: boolean;
   /** Site chosen on step one and carried in the query, so the flow keeps one page. */
   selectedSiteId?: string | undefined;
-  canArchiveDesign: boolean;
   canCreateDesign: boolean;
   canOperateSample: boolean;
   canRequestBatch: boolean;
@@ -200,7 +198,7 @@ function getQrBatchStatusTone(
   return "info";
 }
 
-function getStickerDesignStatusTone(
+function _getStickerDesignStatusTone(
   status: StickerDesignStatus,
 ): "neutral" | "success" | "warning" {
   if (status === "APPROVED") {
@@ -403,7 +401,7 @@ function SampleApprovalCard({
         <input aria-label={copy.quietZone} name="quietZonePassed" type="hidden" value="on" />
         <input aria-label={copy.contrast} name="contrastPassed" type="hidden" value="on" />
         <ReasonField copy={copy} id={`sample-approve-${batch.id}`} />
-        <button className="tt-button admin-approval-primary-action" type="submit">
+        <button className="tt-button" type="submit">
           {copy.sampleApprove}
         </button>
       </form>
@@ -454,11 +452,7 @@ function FinalGenerationApprovalCard({
       <form action={approveQrBatchFinalGeneration} className="qr-review-card__form">
         <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
         <ReasonField copy={copy} id={`final-approve-${batch.id}`} />
-        <button
-          className="tt-button admin-approval-primary-action"
-          disabled={!canonicalQrHostReady}
-          type="submit"
-        >
+        <button className="tt-button" disabled={!canonicalQrHostReady} type="submit">
           {copy.finalApprovalApprove}
         </button>
       </form>
@@ -471,7 +465,6 @@ export function QrInventorySampleView({
   canApproveFinalGeneration,
   canonicalQrHostReady,
   selectedSiteId,
-  canArchiveDesign,
   canCreateDesign,
   canOperateSample,
   canRequestBatch,
@@ -505,7 +498,7 @@ export function QrInventorySampleView({
       {previousStep ? (
         <a
           className="tt-button tt-button--secondary"
-          href={getQrWizardStepHref(locale, previousStep)}
+          href={getQrWizardStepHref(locale, previousStep, selectedSiteId)}
         >
           {copy.stepBack} · {workflowCopy.steps[stepIndex - 1]?.title}
         </a>
@@ -513,7 +506,7 @@ export function QrInventorySampleView({
         <span />
       )}
       {nextStep ? (
-        <a className="tt-button" href={getQrWizardStepHref(locale, nextStep)}>
+        <a className="tt-button" href={getQrWizardStepHref(locale, nextStep, selectedSiteId)}>
           {copy.stepNext} · {workflowCopy.steps[stepIndex + 1]?.title}
         </a>
       ) : null}
@@ -557,6 +550,7 @@ export function QrInventorySampleView({
         label={copy.stepNavLabel}
         locale={locale}
         lockedSteps={lockedSteps}
+        siteId={selectedSiteId}
         steps={workflowCopy.steps}
       />
 
@@ -605,10 +599,10 @@ export function QrInventorySampleView({
                   value={`${selectedSite.tenantId}|${selectedSite.managementCompanyId}|${selectedSite.id}|${selectedSite.version}|${selectedSite.status}`}
                 />
 
-                <p className="qr-note qr-note--ok">
-                  <span>
-                    {copy.site} · {selectedSite.name} ({selectedSite.managementCompanyName})
-                  </span>
+                <p className="qr-wizard__context">
+                  <span>{copy.site}</span>
+                  <strong>{selectedSite.name}</strong>
+                  <small>{selectedSite.managementCompanyName}</small>
                 </p>
 
                 <fieldset className="qr-choice-cards">
@@ -788,7 +782,7 @@ export function QrInventorySampleView({
                   <form action={approveStickerDesignVersion} className="qr-review-card__form">
                     <DesignFields copy={copy} design={design} locale={locale} />
                     <ReasonField copy={copy} id={`design-approve-${design.id}`} />
-                    <button className="tt-button admin-approval-primary-action" type="submit">
+                    <button className="tt-button" type="submit">
                       {copy.approve}
                     </button>
                   </form>
@@ -798,44 +792,6 @@ export function QrInventorySampleView({
           ) : (
             <p className="admin-catalog-read-only">{copy.emptyQueue}</p>
           )}
-        </section>
-      ) : null}
-
-      {step === "design" ? (
-        <section aria-labelledby="design-catalog-title" className="qr-wizard__panel">
-          <header>
-            <h2 id="design-catalog-title">{copy.designTitle}</h2>
-            <p>{copy.securityNote}</p>
-          </header>
-          {model.designs.length > 0 ? (
-            <div className="qr-review-list">
-              {model.designs.map((design) => (
-                <article className="qr-review-card" key={design.id}>
-                  <header className="qr-track-batch__header">
-                    <div>
-                      <span className="qr-track-batch__code">{design.templateCode}</span>
-                      <h3>{design.siteName}</h3>
-                    </div>
-                    <StatusPill tone={getStickerDesignStatusTone(design.status)}>
-                      {copy.designStatusLabels[design.status]}
-                    </StatusPill>
-                  </header>
-                  {canArchiveDesign && design.status === "APPROVED" ? (
-                    <form action={archiveStickerDesignVersion} className="qr-review-card__form">
-                      <DesignFields copy={copy} design={design} locale={locale} />
-                      <ReasonField copy={copy} id={`design-archive-${design.id}`} />
-                      <button className="tt-button tt-button--secondary" type="submit">
-                        {copy.archive}
-                      </button>
-                    </form>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="admin-catalog-read-only">{copy.designEmpty}</p>
-          )}
-          {stepFooter}
         </section>
       ) : null}
 

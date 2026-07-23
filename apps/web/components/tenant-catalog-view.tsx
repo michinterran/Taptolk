@@ -206,7 +206,7 @@ function TenantRowActions({
               </button>
             )}
             <button
-              className="tt-button tt-button--compact admin-danger-button"
+              className="tt-button tt-button--danger tt-button--compact"
               name="nextStatus"
               type="submit"
               value="CLOSED"
