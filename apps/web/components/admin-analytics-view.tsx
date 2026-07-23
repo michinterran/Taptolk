@@ -10,8 +10,14 @@ import { DataTable, PageHeader, SideCard, StatStrip, StatTile } from "@taptolk/u
 import type { AdminAnalyticsCopy } from "../content/admin-analytics-copy";
 import type { AppLocale } from "../i18n/config";
 
-function percent(part: number, total: number): number {
-  if (total <= 0) return 0;
+const EMPTY_VALUE = "—";
+
+/** Null when there is no basis to divide by, so a scope with no activity reads as
+    "no data" instead of a perfect score. */
+function percent(part: number, total: number): number | null {
+  if (total <= 0) {
+    return null;
+  }
   return Math.max(0, Math.min(100, Math.round((part / total) * 100)));
 }
 
@@ -27,12 +33,11 @@ export function AdminAnalyticsView({
   model: OperationsDashboardModel;
 }) {
   const number = new Intl.NumberFormat(locale);
-  const contactTotal = Math.max(model.contactCount, 1);
-  const deliveryTotal = Math.max(
-    model.notificationSentCount + model.notificationFailedCount + model.notificationRetryCount,
-    1,
-  );
-  const resolutionRate = 100 - percent(model.unresolvedCount, contactTotal);
+  const contactTotal = model.contactCount;
+  const deliveryTotal =
+    model.notificationSentCount + model.notificationFailedCount + model.notificationRetryCount;
+  const unresolvedRate = percent(model.unresolvedCount, contactTotal);
+  const resolutionRate = unresolvedRate === null ? null : 100 - unresolvedRate;
   const deliveryRate = percent(model.notificationSentCount, deliveryTotal);
   const escalationRate = percent(model.escalatedCount, contactTotal);
   const scopeLabel = model.scopeSiteName ?? model.scopeManagementCompanyName ?? copy.scopeAll;
@@ -113,20 +118,18 @@ export function AdminAnalyticsView({
         <StatTile
           icon={<ChartLine aria-hidden="true" size={22} />}
           label={copy.resolutionRate}
-          tone={resolutionRate >= 80 ? "success" : resolutionRate >= 50 ? "warning" : "danger"}
-          value={`${resolutionRate}%`}
+          value={resolutionRate === null ? EMPTY_VALUE : `${resolutionRate}%`}
         />
         <StatTile
           icon={<BellRinging aria-hidden="true" size={22} />}
           label={copy.deliveryRate}
-          tone={deliveryRate >= 80 ? "success" : deliveryRate >= 50 ? "warning" : "danger"}
-          value={`${deliveryRate}%`}
+          value={deliveryRate === null ? EMPTY_VALUE : `${deliveryRate}%`}
         />
         <StatTile
           icon={<ShieldWarning aria-hidden="true" size={22} />}
           label={copy.escalationRate}
-          tone={escalationRate > 0 ? "warning" : "success"}
-          value={`${escalationRate}%`}
+          {...(escalationRate !== null && escalationRate > 0 ? ({ tone: "warning" } as const) : {})}
+          value={escalationRate === null ? EMPTY_VALUE : `${escalationRate}%`}
         />
         <StatTile
           icon={<QrCode aria-hidden="true" size={22} />}
