@@ -30,6 +30,7 @@ import type { AdminQrWorkflowCopy } from "../content/admin-qr-workflow-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
 import { QrQuantityControl, type QrQuantityLabels } from "./qr-quantity-control";
+import { QrSectionNav, type QrSectionNavLabels } from "./qr-section-nav";
 
 interface QrInventoryCopy {
   actions: string;
@@ -84,6 +85,7 @@ interface QrInventoryCopy {
   purposePlaceholder: string;
   qaEvidence: string;
   quantity: QrQuantityLabels;
+  sections: QrSectionNavLabels;
   quietZone: string;
   reason: string;
   reasonPlaceholder: string;
@@ -123,6 +125,8 @@ interface QrInventoryCopy {
   waitingSample: string;
 }
 
+export type QrInventorySection = "order" | "approvals" | "tracking";
+
 interface QrInventorySampleViewProps {
   backHref: string;
   canApproveDesign: boolean;
@@ -136,6 +140,7 @@ interface QrInventorySampleViewProps {
   finalApprovalModel: QrFinalGenerationApprovalReadModel;
   locale: AppLocale;
   model: QrInventorySampleReadModel;
+  section: QrInventorySection;
   statusMessage?: string | undefined;
   brandAssetUpload?: ReactNode;
   workflowCopy: AdminQrWorkflowCopy;
@@ -623,6 +628,7 @@ export function QrInventorySampleView({
   brandAssetUpload,
   locale,
   model,
+  section,
   statusMessage,
   workflowCopy,
 }: QrInventorySampleViewProps) {
@@ -658,28 +664,32 @@ export function QrInventorySampleView({
         <strong>{copy.finalApprovalNotice}</strong>
       </aside>
 
-      <section
-        className="admin-qr-wizard admin-qr-wizard--workflow"
-        aria-labelledby="qr-wizard-title"
-      >
-        <div className="admin-qr-wizard__copy">
-          <p className="eyebrow">{copy.wizardTemplate}</p>
-          <h2 id="qr-wizard-title">{workflowCopy.title}</h2>
-          <p>{workflowCopy.description}</p>
-          <div className="admin-qr-wizard__steps">
-            {workflowCopy.steps.map((step, index) => (
-              <WizardStep
-                description={step.description}
-                index={index + 1}
-                key={step.title}
-                title={step.title}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+      <QrSectionNav labels={copy.sections} locale={locale} section={section} />
 
-      {brandAssetUpload ? (
+      {section === "order" ? (
+        <section
+          className="admin-qr-wizard admin-qr-wizard--workflow"
+          aria-labelledby="qr-wizard-title"
+        >
+          <div className="admin-qr-wizard__copy">
+            <p className="eyebrow">{copy.wizardTemplate}</p>
+            <h2 id="qr-wizard-title">{workflowCopy.title}</h2>
+            <p>{workflowCopy.description}</p>
+            <div className="admin-qr-wizard__steps">
+              {workflowCopy.steps.map((step, index) => (
+                <WizardStep
+                  description={step.description}
+                  index={index + 1}
+                  key={step.title}
+                  title={step.title}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {section === "order" && brandAssetUpload ? (
         <section className="admin-qr-wizard-panel" aria-labelledby="qr-brand-title">
           <div>
             <p className="eyebrow">{copy.wizardBrand}</p>
@@ -689,7 +699,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {canCreateDesign ? (
+      {section === "order" && canCreateDesign ? (
         <details className="admin-tenant-create admin-qr-wizard-panel">
           <summary>
             <span>{copy.designCreateTitle}</span>
@@ -763,7 +773,7 @@ export function QrInventorySampleView({
         </details>
       ) : null}
 
-      {canApproveDesign ? (
+      {section === "approvals" && canApproveDesign ? (
         <section aria-labelledby="design-approval-title" className="admin-lifecycle-queue">
           <header>
             <h2 id="design-approval-title">{copy.designApproveTitle}</h2>
@@ -796,42 +806,44 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      <section aria-labelledby="design-catalog-title" className="admin-lifecycle-queue">
-        <header>
-          <h2 id="design-catalog-title">{copy.designTitle}</h2>
-          <p>{copy.securityNote}</p>
-        </header>
-        {model.designs.length > 0 ? (
-          <div className="admin-approval-list">
-            {model.designs.map((design) => (
-              <article className="admin-approval-card" key={design.id}>
-                <header className="admin-approval-card__header">
-                  <div>
-                    <span className="admin-approval-card__label">{design.templateCode}</span>
-                    <h3>{design.siteName}</h3>
-                  </div>
-                  <StatusPill tone={getStickerDesignStatusTone(design.status)}>
-                    {copy.designStatusLabels[design.status]}
-                  </StatusPill>
-                </header>
-                {canArchiveDesign && design.status === "APPROVED" ? (
-                  <form action={archiveStickerDesignVersion} className="admin-approval-form">
-                    <DesignFields copy={copy} design={design} locale={locale} />
-                    <ReasonField copy={copy} id={`design-archive-${design.id}`} />
-                    <button className="tt-button tt-button--secondary" type="submit">
-                      {copy.archive}
-                    </button>
-                  </form>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="admin-catalog-read-only">{copy.designEmpty}</p>
-        )}
-      </section>
+      {section === "order" ? (
+        <section aria-labelledby="design-catalog-title" className="admin-lifecycle-queue">
+          <header>
+            <h2 id="design-catalog-title">{copy.designTitle}</h2>
+            <p>{copy.securityNote}</p>
+          </header>
+          {model.designs.length > 0 ? (
+            <div className="admin-approval-list">
+              {model.designs.map((design) => (
+                <article className="admin-approval-card" key={design.id}>
+                  <header className="admin-approval-card__header">
+                    <div>
+                      <span className="admin-approval-card__label">{design.templateCode}</span>
+                      <h3>{design.siteName}</h3>
+                    </div>
+                    <StatusPill tone={getStickerDesignStatusTone(design.status)}>
+                      {copy.designStatusLabels[design.status]}
+                    </StatusPill>
+                  </header>
+                  {canArchiveDesign && design.status === "APPROVED" ? (
+                    <form action={archiveStickerDesignVersion} className="admin-approval-form">
+                      <DesignFields copy={copy} design={design} locale={locale} />
+                      <ReasonField copy={copy} id={`design-archive-${design.id}`} />
+                      <button className="tt-button tt-button--secondary" type="submit">
+                        {copy.archive}
+                      </button>
+                    </form>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.designEmpty}</p>
+          )}
+        </section>
+      ) : null}
 
-      {canRequestBatch ? (
+      {section === "order" && canRequestBatch ? (
         <section
           aria-labelledby="batch-request-title"
           className="admin-lifecycle-queue admin-qr-wizard-panel"
@@ -914,7 +926,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {canOperateSample ? (
+      {section === "approvals" && canOperateSample ? (
         <section aria-labelledby="sample-approval-title" className="admin-lifecycle-queue">
           <header>
             <h2 id="sample-approval-title">{copy.sampleApproveTitle}</h2>
@@ -932,7 +944,7 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      {canApproveFinalGeneration ? (
+      {section === "approvals" && canApproveFinalGeneration ? (
         <section aria-labelledby="final-approval-title" className="admin-lifecycle-queue">
           <header>
             <h2 id="final-approval-title">{copy.finalApprovalTitle}</h2>
@@ -959,30 +971,32 @@ export function QrInventorySampleView({
         </section>
       ) : null}
 
-      <section aria-labelledby="batch-catalog-title" className="admin-lifecycle-queue">
-        <header>
-          <h2 id="batch-catalog-title">{copy.batchTitle}</h2>
-          <p>{copy.securityNote}</p>
-        </header>
-        {model.batches.length > 0 ? (
-          <div className="admin-approval-list">
-            {model.batches.map((batch) => (
-              <BatchCard
-                batch={batch}
-                canCancel={model.cancellableBatchIds.has(batch.id)}
-                canCancelFinalApproval={finalApprovalModel.cancellableBatchIds.has(batch.id)}
-                canOperateSample={canOperateSample}
-                canRequestFinalApproval={finalApprovalModel.requestableBatchIds.has(batch.id)}
-                copy={copy}
-                key={batch.id}
-                locale={locale}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="admin-catalog-read-only">{copy.batchEmpty}</p>
-        )}
-      </section>
+      {section === "tracking" ? (
+        <section aria-labelledby="batch-catalog-title" className="admin-lifecycle-queue">
+          <header>
+            <h2 id="batch-catalog-title">{copy.batchTitle}</h2>
+            <p>{copy.securityNote}</p>
+          </header>
+          {model.batches.length > 0 ? (
+            <div className="admin-approval-list">
+              {model.batches.map((batch) => (
+                <BatchCard
+                  batch={batch}
+                  canCancel={model.cancellableBatchIds.has(batch.id)}
+                  canCancelFinalApproval={finalApprovalModel.cancellableBatchIds.has(batch.id)}
+                  canOperateSample={canOperateSample}
+                  canRequestFinalApproval={finalApprovalModel.requestableBatchIds.has(batch.id)}
+                  copy={copy}
+                  key={batch.id}
+                  locale={locale}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.batchEmpty}</p>
+          )}
+        </section>
+      ) : null}
     </>
   );
 }

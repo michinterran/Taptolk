@@ -6755,3 +6755,47 @@ h3,
     padding: var(--tt-space-5);
   }
 }
+
+/* QR production area switcher. The three areas exist because the work does:
+   ordering is one sitting, approval is a different actor later, and tracking
+   spans days to weeks across many batches. */
+.qr-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tt-space-2);
+  margin-bottom: var(--tt-space-5);
+}
+
+.qr-sections__item {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-md);
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.95rem;
+  text-decoration: none;
+}
+
+.qr-sections__item strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.qr-sections__item small {
+  color: var(--tt-color-text-muted);
+  font-size: 0.71rem;
+}
+
+.qr-sections__item:hover {
+  border-color: var(--tt-color-brand);
+}
+
+.qr-sections__item[aria-current="page"] {
+  background: var(--tt-color-brand-surface);
+  border-color: var(--tt-color-brand);
+  color: var(--tt-color-brand-fg);
+}
+
+.qr-sections__item[aria-current="page"] small {
+  color: var(--tt-color-brand-fg);
+}
