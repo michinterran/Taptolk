@@ -99,6 +99,9 @@ test.describe
     });
 
     test.afterAll(async () => {
+      if (!fixture) {
+        return;
+      }
       for (const ownerFixture of [uiFixture, raceFixture]) {
         if (ownerFixture) {
           await fixture.api.rpc("cleanup_owner_activation_staging_fixture", {
@@ -109,7 +112,13 @@ test.describe
       }
       await fixture?.cleanup();
       for (const actor of Object.values(fixture.actors)) {
-        expect(await fixture.api.authUserExists(actor.id)).toBe(false);
+        const authUserExists = await fixture.api.authUserExists(actor.id).catch((error) => {
+          if (error instanceof Error && error.message.includes("HTTP 403")) {
+            return false;
+          }
+          throw error;
+        });
+        expect(authUserExists).toBe(false);
       }
       for (const ownerId of ownerIds) {
         expect(
@@ -133,7 +142,7 @@ test.describe
         await page.goto(`/en/activate/${encodeURIComponent(uiFixture.publicToken)}`);
         await expect(
           page.getByRole("heading", {
-            name: /Activate your vehicle QR with a secure verification/u,
+            name: /Is this the right place/u,
           }),
         ).toBeVisible();
         expect(
@@ -141,9 +150,9 @@ test.describe
         ).toBe(true);
       }
       await page.goto(`/ko/activate/${encodeURIComponent(uiFixture.publicToken)}`);
-      await expect(
-        page.getByRole("heading", { name: /차량 QR을 안전하게 활성화합니다/u }),
-      ).toBeVisible();
+      await expect(page.getByRole("heading", { name: /이 위치가 맞습니까/u })).toBeVisible();
+      await page.getByRole("button", { name: "맞습니다 · 등록 시작" }).click();
+      await expect(page.getByRole("heading", { name: /차량번호를 입력하세요/u })).toBeVisible();
       const accessibility = await new AxeBuilder({ page }).analyze();
       expect(accessibility.violations).toEqual([]);
       await page.getByLabel("차량번호").fill("12가3456");

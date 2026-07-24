@@ -11,6 +11,8 @@ node_modules/
 **/.next/
 .turbo/
 **/.turbo/
+.taptolk-demo/
+**/.taptolk-demo/
 dist/
 **/dist/
 coverage/

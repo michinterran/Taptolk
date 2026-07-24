@@ -20,6 +20,8 @@
     "dev": "corepack pnpm build:packages && turbo run dev --parallel",
     "dev:local": "corepack pnpm db:start && corepack pnpm dev",
     "dev:web": "corepack pnpm build:packages && corepack pnpm --filter @taptolk/web dev",
+    "demo:owner:cleanup": "node scripts/owner-demo-fixture.mjs cleanup",
+    "demo:owner:prepare": "node scripts/owner-demo-fixture.mjs prepare",
     "e2e:smoke": "playwright test",
     "e2e:staging": "playwright test --config=playwright.staging.config.ts",
     "e2e:staging:qr-generation-acceptance": "corepack pnpm build:packages && corepack pnpm --filter @taptolk/worker build && RUN_QR_GENERATION_ACCEPTANCE=1 playwright test --config=playwright.staging.config.ts e2e/staging/qr-generation-worker-acceptance.spec.ts",

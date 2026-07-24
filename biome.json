@@ -5,6 +5,7 @@
       "**",
       "!!**/.next",
       "!!**/.turbo",
+      "!!**/.taptolk-demo",
       "!!**/.vercel",
       "!!**/coverage",
       "!!**/dist",

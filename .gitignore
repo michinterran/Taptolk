@@ -21,6 +21,7 @@ test-results/
 output/
 wcj-report.json
 artifacts/
+.taptolk-demo/
 
 supabase/.branches/
 supabase/.temp/

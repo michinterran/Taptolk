@@ -182,6 +182,7 @@ export class StagingServiceApi {
   private headers(prefer?: string): HeadersInit {
     return {
       apikey: this.secretKey,
+      Authorization: `Bearer ${this.secretKey}`,
       "Content-Type": "application/json",
       ...(prefer ? { Prefer: prefer } : {}),
     };
