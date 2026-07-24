@@ -14,7 +14,6 @@
     ".admin-approval-meta > div|padding",
     ".admin-approval-meta dt|font-size",
     ".admin-approval-scope-help|font-size",
-    ".admin-auth-description,.admin-dashboard-description|font-size",
     ".admin-auth-layout,.admin-mfa-layout|padding-top",
     ".admin-auth-shell,.admin-dashboard-shell|padding",
     ".admin-back-link|font-size",
