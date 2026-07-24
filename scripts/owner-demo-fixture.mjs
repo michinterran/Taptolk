@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 const root = process.cwd();
+const scriptPath = fileURLToPath(import.meta.url);
 const defaultEnvPath = path.join(root, "apps/web/.env.local");
 const linkedProjectPath = path.join(root, "supabase/.temp/project-ref");
 const statePath = path.join(root, ".taptolk-demo/owner-activation-state.json");
 const qrSheetPath = path.join(root, ".taptolk-demo/owner-demo-qr-sheet.html");
 const notificationInboxPath = path.join(root, ".taptolk-demo/owner-demo-notification-inbox.html");
+const dispatcherPidPath = path.join(root, ".taptolk-demo/owner-demo-dispatcher.pid");
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
@@ -19,6 +22,7 @@ function parseArgs(argv) {
     baseUrl: process.env.TAPTOLK_DEMO_BASE_URL ?? "",
     count: Number.parseInt(process.env.TAPTOLK_DEMO_COUNT ?? "10", 10),
     envFile: process.env.TAPTOLK_DEMO_ENV_FILE ?? defaultEnvPath,
+    intervalMs: Number.parseInt(process.env.TAPTOLK_DEMO_DISPATCH_INTERVAL_MS ?? "5000", 10),
     locale: process.env.TAPTOLK_DEMO_LOCALE ?? "ko",
     open: false,
   };
@@ -32,6 +36,10 @@ function parseArgs(argv) {
       options.count = Number.parseInt(argument.slice("--count=".length), 10);
     } else if (argument.startsWith("--env-file=")) {
       options.envFile = argument.slice("--env-file=".length);
+    } else if (argument.startsWith("--interval-ms=")) {
+      options.intervalMs = Number.parseInt(argument.slice("--interval-ms=".length), 10);
+    } else if (argument.startsWith("--interval-seconds=")) {
+      options.intervalMs = Number.parseInt(argument.slice("--interval-seconds=".length), 10) * 1000;
     } else if (argument.startsWith("--locale=")) {
       options.locale = argument.slice("--locale=".length);
     } else if (argument === "--open") {
@@ -238,6 +246,48 @@ function copyToClipboard(value) {
 
 function openUrl(value) {
   spawnSync("open", [value], { stdio: "ignore" });
+}
+
+function isProcessAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) {
+    return false;
+  }
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code === "EPERM";
+  }
+}
+
+async function readDispatcherPid() {
+  try {
+    const value = Number.parseInt((await readFile(dispatcherPidPath, "utf8")).trim(), 10);
+    return Number.isInteger(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function assertDispatchInterval(value) {
+  if (!Number.isInteger(value) || value < 1000 || value > 60000) {
+    throw new Error("--interval-ms must be an integer from 1000 to 60000.");
+  }
+}
+
+function optionArgs(options) {
+  return [
+    ...(options.baseUrl ? [`--base-url=${options.baseUrl}`] : []),
+    ...(options.envFile ? [`--env-file=${options.envFile}`] : []),
+    `--interval-ms=${options.intervalMs}`,
+    ...(options.locale ? [`--locale=${options.locale}`] : []),
+  ];
 }
 
 function assertDemoCount(value) {
@@ -714,7 +764,7 @@ async function cleanup() {
   console.log("[owner-demo] demo fixture cleaned up.");
 }
 
-async function dispatch(options) {
+async function dispatchTick(options) {
   const state = await readState();
   const environment = await loadEnvironment(options.envFile ?? state.envFile ?? defaultEnvPath);
   const baseUrl = normalizeBaseUrl(options.baseUrl || state.baseUrl);
@@ -745,6 +795,20 @@ async function dispatch(options) {
     items,
     locale,
   });
+  return { baseUrl, dispatched, itemCount: items.length };
+}
+
+async function assertDispatchReady(options) {
+  const state = await readState();
+  const environment = await loadEnvironment(options.envFile ?? state.envFile ?? defaultEnvPath);
+  normalizeBaseUrl(options.baseUrl || state.baseUrl);
+  if (!environment.queueWorkerSecret || environment.queueWorkerSecret.length < 16) {
+    throw new Error("Owner demo dispatch requires QUEUE_WORKER_SECRET in the demo env file.");
+  }
+}
+
+async function dispatch(options) {
+  const result = await dispatchTick(options);
   copyToClipboard(notificationInboxPath);
   if (options.open) {
     openUrl(notificationInboxPath);
@@ -752,13 +816,83 @@ async function dispatch(options) {
   console.log("[owner-demo] notification dispatch requested.");
   console.log(
     "[owner-demo] dispatched result keys:",
-    Object.keys(dispatched.data ?? {}).join(", "),
+    Object.keys(result.dispatched.data ?? {}).join(", "),
   );
-  console.log("[owner-demo] inbox item count:", items.length);
+  console.log("[owner-demo] inbox item count:", result.itemCount);
   console.log(
     "[owner-demo] notification inbox contains response token material; do not commit or paste it into chat/logs.",
   );
   console.log("[owner-demo] inbox saved at .taptolk-demo/owner-demo-notification-inbox.html.");
+}
+
+async function dispatchStart(options) {
+  assertDispatchInterval(options.intervalMs);
+  await assertDispatchReady(options);
+  const existingPid = await readDispatcherPid();
+  if (existingPid && isProcessAlive(existingPid)) {
+    console.log(`[owner-demo] dispatch watcher already running with pid ${existingPid}.`);
+    return;
+  }
+  await mkdir(path.dirname(dispatcherPidPath), { recursive: true });
+  const child = spawn(process.execPath, [scriptPath, "dispatch-watch", ...optionArgs(options)], {
+    cwd: root,
+    detached: true,
+    env: process.env,
+    stdio: "ignore",
+  });
+  child.unref();
+  await writeFile(dispatcherPidPath, `${child.pid}\n`, "utf8");
+  console.log(`[owner-demo] dispatch watcher started with pid ${child.pid}.`);
+  console.log("[owner-demo] stop command: corepack pnpm demo:owner:dispatch:stop");
+}
+
+async function dispatchStop() {
+  const pid = await readDispatcherPid();
+  if (!pid || !isProcessAlive(pid)) {
+    await unlink(dispatcherPidPath).catch(() => undefined);
+    console.log("[owner-demo] dispatch watcher is not running.");
+    return;
+  }
+  process.kill(pid, "SIGTERM");
+  await unlink(dispatcherPidPath).catch(() => undefined);
+  console.log(`[owner-demo] dispatch watcher stopped with pid ${pid}.`);
+}
+
+async function dispatchStatus() {
+  const pid = await readDispatcherPid();
+  if (pid && isProcessAlive(pid)) {
+    console.log(`[owner-demo] dispatch watcher running with pid ${pid}.`);
+    return;
+  }
+  console.log("[owner-demo] dispatch watcher is not running.");
+}
+
+async function dispatchWatch(options) {
+  assertDispatchInterval(options.intervalMs);
+  let running = true;
+  const stop = () => {
+    running = false;
+  };
+  process.on("SIGINT", stop);
+  process.on("SIGTERM", stop);
+  while (running) {
+    try {
+      const result = await dispatchTick(options);
+      console.log(
+        `[owner-demo] dispatch tick ${new Date().toISOString()} keys=${Object.keys(
+          result.dispatched.data ?? {},
+        ).join(",")} inbox=${result.itemCount}`,
+      );
+    } catch (error) {
+      console.error(
+        `[owner-demo] dispatch tick failed: ${error instanceof Error ? error.message : "UNKNOWN"}`,
+      );
+    }
+    if (running) {
+      await sleep(options.intervalMs);
+    }
+  }
+  await unlink(dispatcherPidPath).catch(() => undefined);
 }
 
 async function main() {
@@ -775,8 +909,24 @@ async function main() {
     await dispatch(options);
     return;
   }
+  if (command === "dispatch-start") {
+    await dispatchStart(options);
+    return;
+  }
+  if (command === "dispatch-stop") {
+    await dispatchStop();
+    return;
+  }
+  if (command === "dispatch-status") {
+    await dispatchStatus();
+    return;
+  }
+  if (command === "dispatch-watch") {
+    await dispatchWatch(options);
+    return;
+  }
   throw new Error(
-    "Usage: owner-demo-fixture.mjs prepare --base-url=https://... [--count=10] [--env-file=.taptolk-demo/vercel-preview.env] [--open] | dispatch [--open] | cleanup",
+    "Usage: owner-demo-fixture.mjs prepare --base-url=https://... [--count=10] [--env-file=.taptolk-demo/vercel-preview.env] [--open] | dispatch [--open] | dispatch-start [--interval-ms=5000] | dispatch-stop | dispatch-status | cleanup",
   );
 }
 

@@ -39,7 +39,8 @@ export async function generateMetadata({
     },
     description: copy["metadata.description"],
     icons: {
-      icon: "/brand/taptolk-logo.png",
+      apple: "/brand/pwa/taptolk-owner-icon-192.png",
+      icon: "/brand/pwa/taptolk-owner-icon-192.png",
     },
     metadataBase: new URL(environment.APP_URL ?? "http://localhost:3000"),
     title: copy["metadata.title"],

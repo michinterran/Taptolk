@@ -14,8 +14,20 @@ export function GET(request: Request) {
       icons: [
         {
           purpose: "any",
+          sizes: "192x192",
+          src: "/brand/pwa/taptolk-owner-icon-192.png",
+          type: "image/png",
+        },
+        {
+          purpose: "any",
           sizes: "512x512",
-          src: "/brand/taptolk-logo.png",
+          src: "/brand/pwa/taptolk-owner-icon-512.png",
+          type: "image/png",
+        },
+        {
+          purpose: "maskable",
+          sizes: "512x512",
+          src: "/brand/pwa/taptolk-owner-maskable-512.png",
           type: "image/png",
         },
       ],

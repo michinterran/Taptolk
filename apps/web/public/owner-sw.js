@@ -55,7 +55,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(title, {
       body,
       data: { url },
-      icon: "/brand/taptolk-logo.png",
+      icon: "/brand/pwa/taptolk-owner-icon-192.png",
       tag,
     }),
   );
