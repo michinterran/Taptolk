@@ -727,9 +727,11 @@ h3,
 }
 
 .landing-title {
-  font-size: clamp(3.2rem, 7.4vw, 7.25rem);
-  letter-spacing: -0.067em;
-  max-width: 12ch;
+  font-size: var(--tt-pub-display-size);
+  font-weight: var(--tt-pub-display-weight);
+  letter-spacing: var(--tt-pub-display-tracking);
+  line-height: var(--tt-pub-display-line);
+  max-width: 14ch;
 }
 
 .landing-title .semantic-line:last-child {
@@ -738,7 +740,8 @@ h3,
 
 .landing-description {
   color: var(--tt-color-text-muted);
-  font-size: clamp(1rem, 1.6vw, 1.22rem);
+  font-size: var(--tt-pub-lead-size);
+  line-height: var(--tt-line-body);
   margin: var(--tt-space-5) 0 0;
   max-width: 43rem;
 }
@@ -839,7 +842,7 @@ h3,
 }
 
 .landing-signal-card > strong {
-  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  font-size: var(--tt-pub-subtitle-size);
   letter-spacing: -0.04em;
 }
 
@@ -880,8 +883,9 @@ h3,
 
 /* Stays a step below the hero title so the page keeps one clear heading order. */
 .landing-section-title {
-  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
-  letter-spacing: -0.03em;
+  font-size: var(--tt-pub-title-size);
+  font-weight: var(--tt-pub-title-weight);
+  letter-spacing: -0.02em;
 }
 
 .landing-route {
@@ -936,7 +940,7 @@ h3,
 }
 
 .landing-route h2 {
-  font-size: clamp(1.45rem, 2.4vw, 2.25rem);
+  font-size: var(--tt-pub-title-size);
   letter-spacing: -0.035em;
   margin-top: clamp(5rem, 9vw, 8rem);
 }
@@ -975,7 +979,7 @@ h3,
 
 .landing-audience-card h2 {
   align-self: end;
-  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  font-size: var(--tt-pub-subtitle-size);
   letter-spacing: -0.035em;
   margin-top: var(--tt-space-7);
 }
@@ -1013,7 +1017,7 @@ h3,
 }
 
 .landing-privacy h2 {
-  font-size: clamp(2.2rem, 5vw, 5rem);
+  font-size: var(--tt-pub-title-size);
   letter-spacing: -0.055em;
   max-width: 18ch;
 }
@@ -1127,8 +1131,9 @@ h3,
 
 .onboarding-path h2 {
   align-self: end;
-  font-size: clamp(1.7rem, 3.5vw, 2.8rem);
-  letter-spacing: -0.04em;
+  font-size: var(--tt-pub-title-size);
+  font-weight: var(--tt-pub-title-weight);
+  letter-spacing: -0.02em;
   margin-top: var(--tt-space-8);
   max-width: 16ch;
 }
@@ -1188,7 +1193,7 @@ h3,
 }
 
 .onboarding-token-note h2 {
-  font-size: clamp(1.5rem, 3vw, 2.4rem);
+  font-size: var(--tt-pub-title-size);
 }
 
 .onboarding-token-note p {
@@ -1872,7 +1877,7 @@ h3,
 }
 
 .admin-auth-title {
-  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  font-size: var(--tt-pub-display-size);
   letter-spacing: -0.035em;
   max-width: 18ch;
 }
@@ -2858,7 +2863,7 @@ h3,
 
   .landing-title,
   .onboarding-title {
-    font-size: clamp(2.55rem, 14vw, 4rem);
+    font-size: var(--tt-pub-display-size);
   }
 
   .landing-actions {
@@ -6252,7 +6257,7 @@ h3,
 }
 
 .admin-portal-title {
-  font-size: clamp(2.3rem, 5.4vw, 4.4rem);
+  font-size: var(--tt-pub-display-size);
   letter-spacing: -0.045em;
   max-width: 22ch;
 }
@@ -6284,8 +6289,9 @@ h3,
 }
 
 .admin-portal-section-title {
-  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
-  letter-spacing: -0.03em;
+  font-size: var(--tt-pub-title-size);
+  font-weight: var(--tt-pub-title-weight);
+  letter-spacing: -0.02em;
   margin-bottom: var(--tt-space-6);
   max-width: 26ch;
 }
@@ -6437,8 +6443,8 @@ h3,
 }
 
 .landing-title {
-  font-size: clamp(2.1rem, 4vw, 3.35rem);
-  letter-spacing: -0.04em;
+  font-size: var(--tt-pub-display-size);
+  letter-spacing: var(--tt-pub-display-tracking);
   max-width: 18ch;
 }
 

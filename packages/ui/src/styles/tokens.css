@@ -96,6 +96,31 @@
   --tt-stat-value-size: 2.125rem;
   --tt-stat-value-weight: 700;
 
+  /* ---------------------------------------------------------------------------
+     Public type scale (landing, auth). The public pages had grown a marketing
+     language of their own — a 116px hero with section titles at 64px, almost as
+     large, and body copy scattered across ten one-off sizes. That is not a
+     hierarchy; it is noise (operator, 2026-07-24).
+
+     One controlled ladder, so the hero is clearly the largest and each rank
+     below is clearly smaller. Brand colour and spacing still come from the
+     existing tokens; only the type sizes are set here. Sizes are responsive but
+     capped so a wide viewport cannot re-inflate the hero.
+     --------------------------------------------------------------------------- */
+  --tt-pub-display-size: clamp(2.5rem, 5vw, 3.5rem);
+  --tt-pub-display-weight: 800;
+  --tt-pub-display-line: 1.08;
+  --tt-pub-display-tracking: -0.03em;
+  --tt-pub-title-size: clamp(1.6rem, 3vw, 2.125rem);
+  --tt-pub-title-weight: 700;
+  --tt-pub-title-line: 1.15;
+  --tt-pub-subtitle-size: 1.375rem;
+  --tt-pub-subtitle-weight: 700;
+  --tt-pub-lead-size: 1.125rem;
+  --tt-pub-body-size: 1rem;
+  --tt-pub-caption-size: 0.875rem;
+  --tt-pub-eyebrow-size: 0.8125rem;
+
   /* List-page metrics, taken from the approved canon
      (docs/design-canon/console-pages.html) and the measured reference. A list page
      is a header, a metric strip, then a panel beside a rail — every admin list
