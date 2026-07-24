@@ -51,6 +51,7 @@ export {
   type MobileNoticeProps,
   MobilePrimary,
   type MobilePrimaryProps,
+  MobileQuietButton,
   type MobileRow,
   MobileRows,
   type MobileRowsProps,

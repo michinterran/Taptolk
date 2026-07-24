@@ -6741,7 +6741,6 @@ body:has(.tt-m-shell)::before {
 
 .tt-m-stack {
   display: flex;
-  flex: 1;
   flex-direction: column;
   gap: var(--tt-m-stack-gap);
 }
@@ -6759,6 +6758,8 @@ body:has(.tt-m-shell)::before {
 
 .tt-m-tabbar {
   background: var(--tt-m-surface);
+  /* The bar sits at the foot of the screen even when the stack is short. */
+  margin-top: auto;
   display: grid;
   gap: 0;
   grid-auto-columns: 1fr;
@@ -6961,6 +6962,18 @@ body:has(.tt-m-shell)::before {
 .tt-m-field textarea {
   min-height: var(--tt-m-textarea-min-height);
   resize: vertical;
+}
+
+/* The plate step already carries a heading that names the field, and the canon
+   draws no second label above the input — so the label stays for assistive
+   technology and leaves the layout alone. */
+.tt-m-field--plate > label {
+  block-size: 1px;
+  clip-path: inset(50%);
+  inline-size: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
 }
 
 /* The plate a driver types is shown at the size it is shown back to them. */
@@ -7172,8 +7185,14 @@ body:has(.tt-m-shell)::before {
   text-align: center;
 }
 
+/* An error has to be readable at a glance and carry a way forward, so it takes a
+   surface rather than a coloured line (DESIGN_SYSTEM.md §3.9, WCJ J004). */
 .tt-m-notice--danger {
-  color: var(--tt-color-danger);
+  background: var(--tt-color-danger-surface);
+  border-radius: var(--tt-m-choice-radius);
+  color: var(--tt-color-danger-fg);
+  font-size: var(--tt-m-label-size);
+  padding: var(--tt-m-card-padding);
 }
 
 /* ============================================================================

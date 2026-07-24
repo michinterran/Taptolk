@@ -256,6 +256,23 @@ export function MobileSecondary({
   );
 }
 
+/**
+ * The muted way out of a step — the canon's "this is not my location". It is an
+ * action, not navigation, so it is a button that happens to read as a link.
+ */
+export function MobileQuietButton({
+  children,
+  className,
+  type = "button",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button className={cx("tt-m-quiet-link", className)} type={type} {...props}>
+      {children}
+    </button>
+  );
+}
+
 export type MobileLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   /** `quiet` is the muted way out of a step, e.g. "this is not my location". */
   tone?: "accent" | "quiet";

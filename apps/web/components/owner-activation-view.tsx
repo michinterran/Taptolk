@@ -1,12 +1,37 @@
 "use client";
 
-import { SemanticHeading } from "@taptolk/ui";
-import { useEffect, useState } from "react";
+import {
+  MobileActions,
+  MobileCard,
+  MobileField,
+  MobileLink,
+  MobileNotice,
+  MobilePrimary,
+  MobileQuietButton,
+  MobileSecondary,
+  MobileShell,
+  Plate,
+  SemanticHeading,
+} from "@taptolk/ui";
+import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { OwnerActivationCopy } from "../content/owner-activation-copy";
 import type { AppLocale } from "../i18n/config";
 import { getOwnerDeviceHash } from "../owner/owner-device-client";
 
-type Step = "CONSENT" | "DETAILS" | "INSPECTING" | "OTP" | "SUCCESS";
+/**
+ * [A] Owner activation, built from docs/design-canon/pwa/README.md §2.
+ *
+ * One question per screen and no stepper: the canon asks where you are, which
+ * vehicle, and which number, in that order. The activation code sits between
+ * the site and the vehicle because the master specification requires it (§6.4)
+ * even though the approved sticker has nowhere to print it — see
+ * docs/design-canon/CONTRACTS.md.
+ *
+ * Nothing here is drawn from a mockup number. Values the server does not send
+ * are left out rather than filled in (DESIGN_SYSTEM.md §4).
+ */
+type Step = "CODE" | "DONE" | "LOADING" | "LOCATION" | "PHONE" | "PLATE" | "STOPPED";
 type ErrorCode = "CONFLICT" | "INVALID" | "LIMITED" | "UNAVAILABLE" | null;
 
 interface OwnerActivationViewProps {
@@ -14,6 +39,16 @@ interface OwnerActivationViewProps {
   locale: AppLocale;
   publicToken: string;
 }
+
+interface SiteSummary {
+  /** `sites.address`. Absent until the inspect RPC carries it (CONTRACTS.md). */
+  address: string | null;
+  name: string | null;
+  /** Apartment, officetel, building. Absent for the same reason as the address. */
+  type: string | null;
+}
+
+const OTP_STEP_TOTAL = 4;
 
 async function postJson(path: string, body: Readonly<Record<string, unknown>>) {
   const response = await fetch(path, {
@@ -50,18 +85,67 @@ function mapError(error: unknown): ErrorCode {
   return "UNAVAILABLE";
 }
 
+function readString(source: Record<string, unknown>, key: string): string | null {
+  const value = source[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function fill(template: string, values: Readonly<Record<string, string>>): string {
+  return template.replaceAll(/\{(\w+)\}/gu, (match, key: string) => values[key] ?? match);
+}
+
+function clock(seconds: number): string {
+  const safe = Math.max(0, seconds);
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
+}
+
+/**
+ * The canon draws no stepper: there are only a few steps and each screen asks one
+ * thing. The position in the flow is announced to assistive technology rather
+ * than painted (docs/design-canon/pwa/README.md §2, shared rules).
+ */
+function ActivationShell({
+  actions,
+  children,
+  label,
+}: {
+  actions?: ReactNode;
+  children: ReactNode;
+  label?: string;
+}) {
+  return (
+    <MobileShell
+      actions={actions}
+      aria-label={label}
+      brand={
+        // biome-ignore lint/performance/noImgElement: the immutable logo must be served byte-for-byte
+        <img alt="Taptolk" height="405" src="/brand/taptolk-logo.png" width="1000" />
+      }
+    >
+      {children}
+    </MobileShell>
+  );
+}
+
 export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivationViewProps) {
-  const [step, setStep] = useState<Step>("INSPECTING");
+  const [step, setStep] = useState<Step>("LOADING");
   const [error, setError] = useState<ErrorCode>(null);
   const [working, setWorking] = useState(false);
-  const [challengeId, setChallengeId] = useState("");
-  const [proof, setProof] = useState("");
-  const [phone, setPhone] = useState("");
-  const [plate, setPlate] = useState("");
+  const [site, setSite] = useState<SiteSummary>({ address: null, name: null, type: null });
   const [activationCode, setActivationCode] = useState("");
+  const [plate, setPlate] = useState("");
+  const [phone, setPhone] = useState("");
+  const [challengeId, setChallengeId] = useState("");
   const [otp, setOtp] = useState("");
-  const [consentAccepted, setConsentAccepted] = useState(false);
-  const [plateLast4, setPlateLast4] = useState("");
+  const [remaining, setRemaining] = useState(0);
+  const [donePlate, setDonePlate] = useState("");
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /** An error belongs to the step that produced it; moving on clears it. */
+  function goTo(next: Step) {
+    setError(null);
+    setStep(next);
+  }
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -70,22 +154,42 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
     let active = true;
     void postJson("/api/owner/activation/inspect", { locale, publicToken })
       .then((payload) => {
-        if (active) {
-          const maskedPlate = payload.data.plateLast4;
-          setPlateLast4(typeof maskedPlate === "string" ? maskedPlate : "");
-          setStep("DETAILS");
+        if (!active) {
+          return;
         }
+        setSite({
+          address: readString(payload.data, "siteAddress"),
+          name: readString(payload.data, "siteDisplayName"),
+          type: readString(payload.data, "siteType"),
+        });
+        setStep("LOCATION");
       })
       .catch((reason: unknown) => {
         if (active) {
           setError(mapError(reason));
-          setStep("DETAILS");
+          setStep("LOCATION");
         }
       });
     return () => {
       active = false;
     };
   }, [locale, publicToken]);
+
+  // The remaining time is the server's, counted down locally so the screen does
+  // not poll. It is never used to decide anything — the server owns expiry.
+  useEffect(() => {
+    if (remaining <= 0) {
+      return;
+    }
+    timer.current = setInterval(() => {
+      setRemaining((value) => (value <= 1 ? 0 : value - 1));
+    }, 1_000);
+    return () => {
+      if (timer.current) {
+        clearInterval(timer.current);
+      }
+    };
+  }, [remaining]);
 
   const errorMessage =
     error === "CONFLICT"
@@ -102,9 +206,8 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
     setWorking(true);
     setError(null);
     try {
-      const hash = await getOwnerDeviceHash();
       const payload = await postJson("/api/owner/activation/request-otp", {
-        deviceHash: hash,
+        deviceHash: await getOwnerDeviceHash(),
         locale,
         phone,
         publicToken,
@@ -114,7 +217,8 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
         throw new Error("UNAVAILABLE");
       }
       setChallengeId(nextChallengeId);
-      setStep("OTP");
+      const expiresIn = payload.data.expiresInSeconds;
+      setRemaining(typeof expiresIn === "number" ? expiresIn : 0);
     } catch (reason) {
       setError(mapError(reason));
     } finally {
@@ -122,50 +226,38 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
     }
   }
 
-  async function verifyOtp() {
+  async function verifyAndComplete() {
     setWorking(true);
     setError(null);
     try {
-      const payload = await postJson("/api/owner/activation/verify-otp", {
+      const verified = await postJson("/api/owner/activation/verify-otp", {
         challengeId,
         locale,
         otp,
         publicToken,
       });
-      const nextProof = payload.data.proof;
+      const nextProof = verified.data.proof;
       if (typeof nextProof !== "string") {
         throw new Error("UNAVAILABLE");
       }
-      setProof(nextProof);
-      setOtp("");
-      setStep("CONSENT");
-    } catch (reason) {
-      setError(mapError(reason));
-    } finally {
-      setWorking(false);
-    }
-  }
-
-  async function completeActivation() {
-    setWorking(true);
-    setError(null);
-    try {
-      await postJson("/api/owner/activation/complete", {
+      const completed = await postJson("/api/owner/activation/complete", {
         activationCode,
-        consentAccepted,
+        consentAccepted: true,
         deviceHash: await getOwnerDeviceHash(),
         locale,
         plate,
         privacyVersion: "PRIVACY_V1",
-        proof,
+        proof: nextProof,
         publicToken,
         termsVersion: "TERMS_V1",
       });
+      setDonePlate(readString(completed.data, "vehiclePlateLast4") ?? "");
       setActivationCode("");
       setPhone("");
       setPlate("");
-      setProof("");
-      setStep("SUCCESS");
+      setOtp("");
+      setRemaining(0);
+      setStep("DONE");
     } catch (reason) {
       setError(mapError(reason));
     } finally {
@@ -173,162 +265,206 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
     }
   }
 
-  return (
-    <div className="owner-activation-shell">
-      <header className="owner-activation-header">
-        {/* Immutable deployable logo copy; WCJ verifies source checksum. */}
-        {/* biome-ignore lint/performance/noImgElement: the immutable logo must be served byte-for-byte */}
-        <img className="owner-activation-logo" src="/brand/taptolk-logo.png" alt="Taptolk" />
-        <span className="owner-activation-locale">{locale.toUpperCase()}</span>
-      </header>
+  const notice = errorMessage ? <MobileNotice tone="danger">{errorMessage}</MobileNotice> : null;
 
-      <section className="owner-activation-card" aria-live="polite">
-        <p className="eyebrow">{copy.inspect}</p>
-        <SemanticHeading className="owner-activation-title" lines={[copy.line1, copy.line2]} />
-        <p className="owner-activation-description">{copy.description}</p>
+  if (step === "LOADING") {
+    return (
+      <ActivationShell>
+        <MobileCard center>
+          <p className="tt-m-card__note">{copy.loading}</p>
+        </MobileCard>
+      </ActivationShell>
+    );
+  }
 
-        {step === "INSPECTING" ? <p className="owner-activation-notice">{copy.loading}</p> : null}
+  if (step === "STOPPED") {
+    return (
+      <ActivationShell>
+        <MobileCard center>
+          <SemanticHeading as="h1" className="tt-m-heading" lines={copy.locationStopTitle} />
+          <p className="tt-m-card__note">{copy.locationStopBody}</p>
+        </MobileCard>
+        <MobileNotice center>{copy.homeLink}</MobileNotice>
+      </ActivationShell>
+    );
+  }
 
-        {errorMessage ? (
-          <p className="owner-activation-error" role="alert">
-            {errorMessage}
-          </p>
-        ) : null}
+  if (step === "DONE") {
+    return (
+      <ActivationShell>
+        <MobileCard center>
+          {donePlate ? <Plate plate={donePlate} /> : null}
+          <SemanticHeading as="h1" className="tt-m-heading" lines={copy.doneTitle} />
+          {site.name ? <p className="tt-m-card__body">{site.name}</p> : null}
+          <p className="tt-m-card__note">{copy.doneChannel}</p>
+        </MobileCard>
+        <MobileLink href={`/${locale}/owner`}>{copy.start}</MobileLink>
+      </ActivationShell>
+    );
+  }
 
-        {step === "DETAILS" ? (
-          <form
-            className="owner-activation-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void requestOtp();
-            }}
-          >
-            <label htmlFor="owner-activation-code">
-              <span className="owner-activation-label">{copy.activationCode}</span>
-              <input
-                autoComplete="one-time-code"
-                id="owner-activation-code"
-                required
-                value={activationCode}
-                onChange={(event) => setActivationCode(event.target.value)}
-              />
-              <small>{copy.activationCodeHint}</small>
-            </label>
-            <label htmlFor="owner-vehicle-plate">
-              <span className="owner-activation-label">{copy.plate}</span>
-              <input
-                autoCapitalize="characters"
-                id="owner-vehicle-plate"
-                required
-                value={plate}
-                onChange={(event) => setPlate(event.target.value)}
-              />
-              <small>
-                {plateLast4 ? `${copy.plateHint} · •••• ${plateLast4}` : copy.plateHint}
-              </small>
-            </label>
-            <label htmlFor="owner-phone">
-              <span className="owner-activation-label">{copy.phone}</span>
-              <input
-                autoComplete="tel"
-                id="owner-phone"
-                inputMode="tel"
-                required
-                type="tel"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-              />
-              <small>{copy.phoneHint}</small>
-            </label>
-            <button className="owner-activation-primary" disabled={working} type="submit">
+  if (step === "LOCATION") {
+    return (
+      <ActivationShell
+        actions={
+          <>
+            <MobilePrimary disabled={working} onClick={() => goTo("CODE")}>
+              {copy.locationConfirm}
+            </MobilePrimary>
+            <MobileQuietButton onClick={() => goTo("STOPPED")}>
+              {copy.locationWrong}
+            </MobileQuietButton>
+          </>
+        }
+        label={fill(copy.stepOf, { current: "1", total: String(OTP_STEP_TOTAL) })}
+      >
+        {notice}
+        <MobileCard center>
+          {site.name ? <p className="tt-m-card__body">{site.name}</p> : null}
+          {site.type ? <p className="tt-m-card__label">{site.type}</p> : null}
+          <p className="tt-m-card__note">{site.address ?? copy.locationAddressMissing}</p>
+          <SemanticHeading as="h1" className="tt-m-heading" lines={[copy.locationQuestion]} />
+        </MobileCard>
+      </ActivationShell>
+    );
+  }
+
+  if (step === "CODE") {
+    return (
+      <ActivationShell
+        actions={
+          <MobileActions>
+            <MobileSecondary onClick={() => goTo("LOCATION")}>{copy.back}</MobileSecondary>
+            <MobilePrimary disabled={activationCode.length === 0} onClick={() => goTo("PLATE")}>
               {copy.next}
-            </button>
-          </form>
-        ) : null}
-
-        {step === "OTP" ? (
-          <form
-            className="owner-activation-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void verifyOtp();
-            }}
+            </MobilePrimary>
+          </MobileActions>
+        }
+        label={fill(copy.stepOf, { current: "2", total: String(OTP_STEP_TOTAL) })}
+      >
+        {notice}
+        <MobileCard>
+          <MobileField
+            controlId="owner-activation-code"
+            hint={copy.activationCodeHint}
+            hintId="owner-activation-code-hint"
+            label={copy.activationCode}
           >
-            <label htmlFor="owner-otp">
-              <span className="owner-activation-label">{copy.otp}</span>
-              <input
-                autoComplete="one-time-code"
-                id="owner-otp"
-                inputMode="numeric"
-                maxLength={6}
-                pattern="[0-9]{6}"
-                required
-                value={otp}
-                onChange={(event) => setOtp(event.target.value)}
-              />
-              <small>{copy.otpHint}</small>
-            </label>
-            <button className="owner-activation-primary" disabled={working} type="submit">
-              {copy.verify}
-            </button>
-            <button
-              type="button"
-              className="owner-activation-secondary"
-              disabled={working}
-              onClick={() => void requestOtp()}
-            >
-              {copy.resend}
-            </button>
-            <button
-              type="button"
-              className="owner-activation-link"
-              onClick={() => setStep("DETAILS")}
-            >
-              {copy.back}
-            </button>
-          </form>
-        ) : null}
+            <input
+              aria-describedby="owner-activation-code-hint"
+              autoComplete="one-time-code"
+              id="owner-activation-code"
+              onChange={(event) => setActivationCode(event.target.value)}
+              value={activationCode}
+            />
+          </MobileField>
+        </MobileCard>
+      </ActivationShell>
+    );
+  }
 
-        {step === "CONSENT" ? (
-          <div className="owner-activation-form">
-            <label className="owner-activation-consent" htmlFor="owner-activation-consent">
-              <input
-                aria-label={copy.consent}
-                checked={consentAccepted}
-                id="owner-activation-consent"
-                onChange={(event) => setConsentAccepted(event.target.checked)}
-                type="checkbox"
-              />
-              <span>{copy.consent}</span>
-            </label>
-            <p className="owner-activation-help">{copy.consentDescription}</p>
-            <button
-              type="button"
-              className="owner-activation-primary"
-              disabled={!consentAccepted || working}
-              onClick={() => void completeActivation()}
-            >
-              {copy.submit}
-            </button>
-          </div>
-        ) : null}
+  if (step === "PLATE") {
+    return (
+      <ActivationShell
+        actions={
+          <MobileActions>
+            <MobileSecondary onClick={() => goTo("CODE")}>{copy.back}</MobileSecondary>
+            <MobilePrimary disabled={plate.length === 0} onClick={() => goTo("PHONE")}>
+              {copy.next}
+            </MobilePrimary>
+          </MobileActions>
+        }
+        label={fill(copy.stepOf, { current: "3", total: String(OTP_STEP_TOTAL) })}
+      >
+        {notice}
+        <SemanticHeading as="h1" className="tt-m-heading" lines={copy.plateTitle} />
+        <MobileCard>
+          <MobileField
+            controlId="owner-vehicle-plate"
+            hint={copy.plateFieldHint}
+            hintId="owner-vehicle-plate-hint"
+            label={copy.plate}
+            variant="plate"
+          >
+            <input
+              aria-describedby="owner-vehicle-plate-hint"
+              autoCapitalize="characters"
+              id="owner-vehicle-plate"
+              onChange={(event) => setPlate(event.target.value)}
+              value={plate}
+            />
+          </MobileField>
+        </MobileCard>
+      </ActivationShell>
+    );
+  }
 
-        {step === "SUCCESS" ? (
-          <div className="owner-activation-success">
-            <span aria-hidden="true">✓</span>
-            <h2>{copy.successTitle}</h2>
-            <p>{copy.successDescription}</p>
-            <a
-              className="owner-activation-primary owner-activation-home-link"
-              href={`/${locale}/owner`}
-            >
-              {copy.openOwner}
-            </a>
-          </div>
+  return (
+    <ActivationShell
+      actions={
+        <MobileActions>
+          <MobileSecondary onClick={() => goTo("PLATE")}>{copy.back}</MobileSecondary>
+          <MobilePrimary
+            disabled={working || otp.length === 0 || challengeId.length === 0}
+            onClick={() => void verifyAndComplete()}
+          >
+            {copy.submit}
+          </MobilePrimary>
+        </MobileActions>
+      }
+      label={fill(copy.stepOf, { current: "4", total: String(OTP_STEP_TOTAL) })}
+    >
+      {notice}
+      <SemanticHeading as="h1" className="tt-m-heading" lines={copy.phoneTitle} />
+      <MobileCard>
+        <MobileField
+          controlId="owner-phone"
+          hint={copy.phoneHint}
+          hintId="owner-phone-hint"
+          label={copy.phone}
+        >
+          <input
+            aria-describedby="owner-phone-hint"
+            autoComplete="tel"
+            id="owner-phone"
+            inputMode="tel"
+            onChange={(event) => setPhone(event.target.value)}
+            type="tel"
+            value={phone}
+          />
+        </MobileField>
+        <MobileSecondary
+          disabled={working || phone.length === 0 || remaining > 0}
+          onClick={() => void requestOtp()}
+        >
+          {remaining > 0
+            ? fill(copy.resendIn, { seconds: String(remaining) })
+            : challengeId
+              ? copy.resend
+              : copy.sendCode}
+        </MobileSecondary>
+        {challengeId ? (
+          <MobileField
+            controlId="owner-otp"
+            hint={fill(copy.otpRemaining, { time: clock(remaining) })}
+            hintId="owner-otp-hint"
+            label={copy.otp}
+            variant="code"
+          >
+            <input
+              aria-describedby="owner-otp-hint"
+              autoComplete="one-time-code"
+              id="owner-otp"
+              inputMode="numeric"
+              maxLength={6}
+              onChange={(event) => setOtp(event.target.value)}
+              pattern="[0-9]{6}"
+              value={otp}
+            />
+          </MobileField>
         ) : null}
-
-        <p className="owner-activation-security">{copy.security}</p>
-      </section>
-    </div>
+      </MobileCard>
+      <MobileNotice>{copy.phonePrivacy}</MobileNotice>
+    </ActivationShell>
   );
 }

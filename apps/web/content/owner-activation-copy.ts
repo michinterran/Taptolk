@@ -1,6 +1,33 @@
 import type { AppLocale } from "../i18n/config";
 
 export interface OwnerActivationCopy {
+  /** A-1 · the sticker decides the site; the owner only confirms it. */
+  locationQuestion: string;
+  locationConfirm: string;
+  locationWrong: string;
+  /** A-1 · chosen "this is not my location". The flow stops here on purpose. */
+  locationStopTitle: readonly [string, ...string[]];
+  locationStopBody: string;
+  /** A-1 · shown when the server has no address for this site yet. */
+  locationAddressMissing: string;
+  /** A-2 */
+  plateTitle: readonly [string, ...string[]];
+  plateFieldHint: string;
+  /** A-3 */
+  phoneTitle: readonly [string, ...string[]];
+  sendCode: string;
+  resendIn: string;
+  otpRemaining: string;
+  phonePrivacy: string;
+  otpExpired: string;
+  otpMismatch: string;
+  otpAttemptsExhausted: string;
+  /** A-4 */
+  doneTitle: readonly [string, ...string[]];
+  doneChannel: string;
+  start: string;
+  /** Step counter, e.g. "2 / 3". Announced, not drawn as a stepper. */
+  stepOf: string;
   activationCode: string;
   activationCodeHint: string;
   back: string;
@@ -38,6 +65,27 @@ export interface OwnerActivationCopy {
 }
 
 const ko: OwnerActivationCopy = {
+  locationQuestion: "이 위치가 맞습니까?",
+  locationConfirm: "맞습니다 · 등록 시작",
+  locationWrong: "위치가 다릅니다",
+  locationStopTitle: ["등록을", "진행하지 않았습니다"],
+  locationStopBody:
+    "스티커가 소속을 정하기 때문에 다른 현장을 고를 수 없습니다. 관리사무소에 문의해 주세요.",
+  locationAddressMissing: "주소가 등록되어 있지 않습니다.",
+  plateTitle: ["차량번호를", "입력하세요"],
+  plateFieldHint: "스티커를 붙인 차량의 번호",
+  phoneTitle: ["연락받을", "번호"],
+  sendCode: "인증번호 받기",
+  resendIn: "다시 받기까지 {seconds}초",
+  otpRemaining: "남은 시간 {time}",
+  phonePrivacy: "번호는 암호화해 저장하고 호출자에게 보이지 않습니다.",
+  otpExpired: "인증번호가 만료되었습니다. 다시 받아 주세요.",
+  otpMismatch: "인증번호가 맞지 않습니다.",
+  otpAttemptsExhausted: "시도 횟수를 넘겼습니다. 인증번호를 다시 받아 주세요.",
+  doneTitle: ["등록이", "끝났습니다."],
+  doneChannel: "알림톡으로 연락을 받습니다.",
+  start: "시작하기",
+  stepOf: "{current} / {total} 단계",
   activationCode: "활성화 코드",
   activationCodeHint: "스티커와 함께 전달받은 코드를 입력해 주세요.",
   back: "이전 단계",
@@ -56,7 +104,7 @@ const ko: OwnerActivationCopy = {
   loading: "활성화 가능 상태를 확인하고 있습니다.",
   manifestDescription: "전화번호를 공개하지 않는 차량 QR 연락 서비스",
   manifestName: "Taptolk 차주",
-  next: "인증번호 받기",
+  next: "다음",
   openOwner: "내 차량 보기",
   otp: "휴대전화 인증번호",
   otpHint: "3분 안에 6자리 인증번호를 입력해 주세요.",
@@ -77,6 +125,27 @@ const ko: OwnerActivationCopy = {
 };
 
 const en: OwnerActivationCopy = {
+  locationQuestion: "Is this the right place?",
+  locationConfirm: "Yes · start registration",
+  locationWrong: "This is not my location",
+  locationStopTitle: ["Registration", "did not continue"],
+  locationStopBody:
+    "The sticker decides which site it belongs to, so another site cannot be chosen here. Please contact the management office.",
+  locationAddressMissing: "No address is on file for this site.",
+  plateTitle: ["Enter the", "vehicle plate"],
+  plateFieldHint: "The plate of the vehicle carrying this sticker",
+  phoneTitle: ["Number to", "be reached on"],
+  sendCode: "Send a code",
+  resendIn: "You can ask again in {seconds}s",
+  otpRemaining: "{time} left",
+  phonePrivacy: "Your number is stored encrypted and is never shown to the caller.",
+  otpExpired: "That code has expired. Please ask for a new one.",
+  otpMismatch: "That code does not match.",
+  otpAttemptsExhausted: "Too many attempts. Please ask for a new code.",
+  doneTitle: ["Registration", "is complete."],
+  doneChannel: "You will be contacted through KakaoTalk notifications.",
+  start: "Get started",
+  stepOf: "Step {current} of {total}",
   activationCode: "Activation code",
   activationCodeHint: "Enter the code supplied with the sticker.",
   back: "Previous step",
@@ -95,7 +164,7 @@ const en: OwnerActivationCopy = {
   loading: "Checking whether this QR can be activated.",
   manifestDescription: "Vehicle QR contact without exposing a phone number",
   manifestName: "Taptolk Owner",
-  next: "Send verification code",
+  next: "Next",
   openOwner: "View my vehicle",
   otp: "Phone verification code",
   otpHint: "Enter the six-digit code within three minutes.",
