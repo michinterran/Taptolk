@@ -12,6 +12,8 @@ type ErrorCode = "CONFLICT" | "INVALID" | "LIMITED" | "UNAVAILABLE" | null;
 interface PublicContactViewProps {
   copy: PublicContactCopy;
   locale: AppLocale;
+  /** Localized "Are you the owner of this vehicle?" — owned by the reclaim catalog. */
+  ownerEntryLink: string;
   publicToken: string;
 }
 
@@ -57,7 +59,12 @@ function mapError(error: unknown): ErrorCode {
   return "UNAVAILABLE";
 }
 
-export function PublicContactView({ copy, locale, publicToken }: PublicContactViewProps) {
+export function PublicContactView({
+  copy,
+  locale,
+  ownerEntryLink,
+  publicToken,
+}: PublicContactViewProps) {
   const [step, setStep] = useState<Step>("INSPECTING");
   const [error, setError] = useState<ErrorCode>(null);
   const [working, setWorking] = useState(false);
@@ -249,6 +256,13 @@ export function PublicContactView({ copy, locale, publicToken }: PublicContactVi
 
         <p className="public-contact-security">{copy.security}</p>
       </section>
+
+      {/* The owner whose phone changed lands here on their own sticker, because
+          this device has no owner session. This is the way back
+          (docs/design-canon/pwa/README.md §1). */}
+      <a className="public-contact-link" href={`/${locale}/q/${publicToken}/owner`}>
+        {ownerEntryLink}
+      </a>
     </div>
   );
 }

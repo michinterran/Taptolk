@@ -94,3 +94,33 @@
 README §2는 "마지막 완료 단계에서 이어진다"를 요구한다. 지금 화면은 상태를 메모리에만
 두므로 새로고침하면 A-1로 돌아간다. **신규** — 서버가 활성화 진행 상태를 돌려주면
 그 단계로 복귀한다.
+
+## [R] 재진입 (`/{locale}/q/{publicToken}/owner`)
+
+구현: `apps/web/components/owner-reclaim-view.tsx` · 정본: `pwa/README.md` §1
+
+폰을 바꾸거나 시크릿 모드로 연 차주는 세션이 없어서 **자기 스티커에서 [B] 화면을 본다.**
+그 화면 아래 `이 차량의 차주이신가요?` 링크가 이곳으로 온다.
+
+**등록을 다시 하는 것이 아니다.** 바인딩은 그대로 두고 이 기기에 차주 세션만 새로 연다.
+화면 첫 카드가 그 사실을 말한다 — 안 그러면 차를 두 번 등록하는 것으로 읽힌다.
+
+### 🔴 엔드포인트 2개가 없다. Codex가 만들어야 한다
+
+| 엔드포인트 | 받는 것 | 하는 일 |
+|---|---|---|
+| `POST /api/owner/session/reclaim/request-otp` | `publicToken` · `plate` · `phone` · `deviceHash` · `locale` | **차량번호와 전화번호가 둘 다 이 자산의 활성 바인딩과 일치**할 때만 OTP를 보낸다 |
+| `POST /api/owner/session/reclaim/verify` | `publicToken` · `challengeId` · `otp` · `deviceHash` · `locale` | 검증 후 `tt_owner_session` 쿠키 발급 + `owner_devices`에 이 기기 등록 |
+
+응답 필드: `challengeId`, `expiresInSeconds`.
+
+### 지켜야 할 것
+
+- **하나만 맞아서는 통과하지 못한다.** 스티커가 차량을 안다는 건 서버가 아는 사실이지
+  스캔한 사람이 차주라는 증명이 아니다(README §1)
+- **불일치는 어느 쪽이 틀렸는지 알려 주지 않는다.** 화면은 `INVALID`·`CONFLICT`·404를
+  전부 같은 문구로 보여준다. 서버도 사유를 구분해 내려주면 안 된다 — 하나씩 맞춰보는
+  것을 돕게 된다
+- **시도 횟수 제한이 필요하다.** 차량번호는 주차장에서 눈으로 읽을 수 있으므로,
+  전화번호를 반복 대입하는 것을 서버가 막아야 한다. 한도 초과는 `LIMITED`
+- 새 바인딩을 만들지 않는다. `qr_bindings`는 건드리지 않고 `owner_devices`에만 추가한다

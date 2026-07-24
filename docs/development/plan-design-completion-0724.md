@@ -60,8 +60,8 @@ Codex 인계 순서표다.
 | A-2 | 차량번호 | README §2 | **완료** |
 | A-3 | 전화번호 인증 | README §2 | **완료** |
 | A-4 | 활성화 완료 | README §2 | **완료** |
-| R-1 | 재진입 · 차량번호 | README §1 | |
-| R-2 | 재진입 · 전화번호 인증 | README §1 | |
+| R-1 | 재진입 · 차량번호 | README §1 | **완료** |
+| R-2 | 재진입 · 전화번호 인증 | README §1 | **완료** |
 | B-1 | 호출자 작성 | `01-caller-compose.png` | |
 | B-2 | 전달 완료·대기 | `02-caller-sent-waiting.png` | |
 | B-3 | 에스컬레이션 (180초) | README §6 | |
@@ -109,5 +109,6 @@ Codex 인계 순서표다.
 | 차주 세션이 이 자산의 것인지 판정하는 RPC | 없으면 남의 스티커에서 [C]가 뜬다 | 스캔 분기 |
 | `qr_batch_samples` SELECT security-definer RPC | 샘플 미리보기 404 (handoff §7-2) | 위자드 ④ |
 | 🔴 **`complete`에서 `activationCode` 제거** | **없으면 차주 활성화가 완료되지 않는다** | A 전체 |
+| 🔴 **재진입 엔드포인트 2개** (`/api/owner/session/reclaim/*`) | **없으면 폰 바꾼 차주가 자기 스티커를 못 연다** | R-1·R-2 |
 
 계약은 `docs/design-canon/CONTRACTS.md`에 화면별로 적는다.

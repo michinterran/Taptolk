@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { PublicContactView } from "../../../../../components/public-contact-view";
 import { ScanUnusableView } from "../../../../../components/scan-unusable-view";
+import { OWNER_RECLAIM_COPY } from "../../../../../content/owner-reclaim-copy";
 import { PUBLIC_CONTACT_COPY } from "../../../../../content/public-contact-copy";
 import { SCAN_ENTRY_COPY } from "../../../../../content/scan-entry-copy";
 import { isAppLocale } from "../../../../../i18n/locale";
@@ -43,6 +44,7 @@ export default async function PublicContactPage({
       <PublicContactView
         copy={PUBLIC_CONTACT_COPY[locale]}
         locale={locale}
+        ownerEntryLink={OWNER_RECLAIM_COPY[locale].entryLink}
         publicToken={publicToken}
       />
     </main>
