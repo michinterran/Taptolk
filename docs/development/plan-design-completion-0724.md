@@ -62,12 +62,12 @@ Codex 인계 순서표다.
 | A-4 | 활성화 완료 | README §2 | **완료** |
 | R-1 | 재진입 · 차량번호 | README §1 | **완료** |
 | R-2 | 재진입 · 전화번호 인증 | README §1 | **완료** |
-| B-1 | 호출자 작성 | `01-caller-compose.png` | |
-| B-2 | 전달 완료·대기 | `02-caller-sent-waiting.png` | |
-| B-3 | 에스컬레이션 (180초) | README §6 | |
-| B-4 | 응답 도착 | `04-caller-response-received.png` | |
-| B-5 | 멘트 더 보기 | README §8 | |
-| B-6 | 세션 만료·왕복 한도 | README §5 | |
+| B-1 | 호출자 작성 | `01-caller-compose.png` | **완료** |
+| B-2 | 전달 완료·대기 | `02-caller-sent-waiting.png` | **완료** |
+| B-3 | 에스컬레이션 (180초) | README §6 | **완료** (tel: 대기) |
+| B-4 | 응답 도착 | `04-caller-response-received.png` | **완료** |
+| B-5 | 멘트 더 보기 | README §8 | **완료** |
+| B-6 | 세션 만료·왕복 한도 | README §5 | **완료** (한도 대기) |
 | C-1 | MESSAGES · 빈 | README §3 | |
 | C-2 | MESSAGES · 응답 | `03-owner-reply.png` | |
 | C-3 | ALERT | README §3 | |
@@ -110,5 +110,6 @@ Codex 인계 순서표다.
 | `qr_batch_samples` SELECT security-definer RPC | 샘플 미리보기 404 (handoff §7-2) | 위자드 ④ |
 | 🔴 **`complete`에서 `activationCode` 제거** | **없으면 차주 활성화가 완료되지 않는다** | A 전체 |
 | 🔴 **재진입 엔드포인트 2개** (`/api/owner/session/reclaim/*`) | **없으면 폰 바꾼 차주가 자기 스티커를 못 연다** | R-1·R-2 |
+| 세션 응답에 `plateLast4`·`callerMessage`·`createdAt`·`elapsedSeconds`·남은 왕복 | 시안 02·04의 카드와 시각·경과·한도 표시가 비어 있다 | B-2·B-3·B-4·B-6 |
 
 계약은 `docs/design-canon/CONTRACTS.md`에 화면별로 적는다.

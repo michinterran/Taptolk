@@ -2,6 +2,25 @@ import type { ContactReasonCode } from "@taptolk/domain";
 import type { AppLocale } from "../i18n/config";
 
 export interface PublicContactCopy {
+  /** Canon 02 · the line under the plate while the owner has not answered. */
+  waitLead: string;
+  /** Canon 04 · the same line once a reply has arrived. */
+  repliedLead: string;
+  sentMessageLabel: string;
+  receivedMessageLabel: string;
+  statusLabel: string;
+  /** Measured, so it may be drawn. "{elapsed}" is a formatted duration. */
+  elapsed: string;
+  elapsedMinutes: string;
+  elapsedSeconds: string;
+  refresh: string;
+  historyLink: string;
+  requestTimeLabel: string;
+  replyTimeLabel: string;
+  /** Round trips left, when the server tells us the limit (README §5). */
+  turnsLeft: string;
+  expiredTitle: readonly [string, ...string[]];
+  expiredBody: string;
   /** Canon 01: the line under the plate on the compose screen. */
   composeLead: string;
   /** Names the figure above it: the caller only ever sees the last four. */
@@ -53,6 +72,21 @@ export interface PublicContactCopy {
 }
 
 const ko: PublicContactCopy = {
+  waitLead: "차주님께 메시지를 전달했습니다.",
+  repliedLead: "차주님이 응답했습니다.",
+  sentMessageLabel: "보낸 메시지",
+  receivedMessageLabel: "받은 메시지",
+  statusLabel: "현재 상태",
+  elapsed: "경과 {elapsed}",
+  elapsedMinutes: "{minutes}분 {seconds}초",
+  elapsedSeconds: "{seconds}초",
+  refresh: "응답 새로 고침",
+  historyLink: "호출 내역 보기",
+  requestTimeLabel: "호출 시간",
+  replyTimeLabel: "응답 시간",
+  turnsLeft: "남은 왕복 {count}회",
+  expiredTitle: ["요청이", "종료되었습니다"],
+  expiredBody: "이 요청은 더 이상 열려 있지 않습니다. 필요하면 스티커를 다시 스캔해 주세요.",
   composeLead: "차주님에게 비밀 메시지를 전달합니다.",
   plateLast4Label: "차량번호 뒷자리",
   composeTitle: ["상황을 선택하거나", "메시지를 보내세요"],
@@ -121,6 +155,21 @@ const ko: PublicContactCopy = {
 };
 
 const en: PublicContactCopy = {
+  waitLead: "Your message was delivered to the owner.",
+  repliedLead: "The owner has replied.",
+  sentMessageLabel: "Message sent",
+  receivedMessageLabel: "Message received",
+  statusLabel: "Current status",
+  elapsed: "{elapsed} elapsed",
+  elapsedMinutes: "{minutes}m {seconds}s",
+  elapsedSeconds: "{seconds}s",
+  refresh: "Check for a reply",
+  historyLink: "View this request",
+  requestTimeLabel: "Requested",
+  replyTimeLabel: "Replied",
+  turnsLeft: "{count} exchanges left",
+  expiredTitle: ["This request", "has ended"],
+  expiredBody: "This request is no longer open. Scan the sticker again if you still need help.",
   composeLead: "Your message reaches the owner without revealing either number.",
   plateLast4Label: "Last four of the plate",
   composeTitle: ["Pick a situation", "or write a message"],
