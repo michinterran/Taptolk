@@ -52,7 +52,7 @@ Codex 인계 순서표다.
 - [x] `docs/design-canon/CONTRACTS.md` 신설
 - [x] 이 문서
 
-### P1 · 모바일 19장 — 정본 `docs/design-canon/pwa/`
+### P1 · 모바일 19장 — 정본 `docs/design-canon/pwa/` — **완료 (2026-07-24)**
 
 | | 화면 | 정본 | 상태 |
 |---|---|---|---|
@@ -69,7 +69,7 @@ Codex 인계 순서표다.
 | B-5 | 멘트 더 보기 | README §8 | **완료** |
 | B-6 | 세션 만료·왕복 한도 | README §5 | **완료** (한도 대기) |
 | C-1 | MESSAGES · 빈 | README §3 | **완료** |
-| C-2 | MESSAGES · 응답 | `03-owner-reply.png` | 응답 화면 재작업 남음 |
+| C-2 | MESSAGES · 응답 | `03-owner-reply.png` | **완료** |
 | C-3 | ALERT | README §3 | **완료** |
 | C-4 | HISTORY | README §3 | **완료** |
 | C-5 | SETTINGS | README §3 | **완료** |

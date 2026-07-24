@@ -2,6 +2,13 @@ import type { AppLocale } from "../i18n/config";
 
 export interface OwnerResponseCopy {
   callerMessage: string;
+  /** Canon 03 · reveals the rest of the reply catalogue. */
+  moreReplies: string;
+  /** Canon 03 · placeholder in the free-text box. */
+  customPlaceholder: string;
+  successTitle: readonly [string, ...string[]];
+  errorTitle: readonly [string, ...string[]];
+  back: string;
   customLabel: string;
   description: string;
   error: string;
@@ -18,7 +25,12 @@ export interface OwnerResponseCopy {
 
 export const OWNER_RESPONSE_COPY: Record<AppLocale, OwnerResponseCopy> = {
   ko: {
-    callerMessage: "전달된 요청",
+    callerMessage: "받은 메시지",
+    moreReplies: "멘트 더 보기",
+    customPlaceholder: "직접 메시지를 입력할 수도 있어요",
+    successTitle: ["답장이", "전달되었습니다"],
+    errorTitle: ["열 수 없는", "링크입니다"],
+    back: "내 스티커 열기",
     customLabel: "직접 답장",
     description: "차량 정보 변경 권한 없이 이번 요청에만 답장합니다.",
     error: "링크가 만료되었거나 이미 사용되었습니다.",
@@ -40,7 +52,12 @@ export const OWNER_RESPONSE_COPY: Record<AppLocale, OwnerResponseCopy> = {
     vehicle: "등록 차량 끝자리",
   },
   en: {
-    callerMessage: "Request received",
+    callerMessage: "Message received",
+    moreReplies: "More replies",
+    customPlaceholder: "Or write your own reply",
+    successTitle: ["Your reply", "was delivered"],
+    errorTitle: ["This link", "cannot be opened"],
+    back: "Open my sticker",
     customLabel: "Custom reply",
     description: "This link can only reply to this request and cannot change vehicle details.",
     error: "This link has expired or was already used.",
