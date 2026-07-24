@@ -6,6 +6,7 @@ import type {
   OwnerActivationRepository,
   OwnerOtpRequestResult,
   OwnerOtpVerificationResult,
+  OwnerReclaimVerificationResult,
 } from "@taptolk/application";
 import { createLogger } from "@taptolk/observability";
 import type { createAdminServiceClient } from "../auth/service-client";
@@ -76,7 +77,6 @@ export function createSupabaseOwnerActivationRepository(
     async complete(input): Promise<OwnerActivationCompletion> {
       const result = await client.rpc("complete_owner_activation", {
         p_input: {
-          activation_code_hash: input.activationCodeHash,
           device_hash: input.deviceHash,
           plate_ciphertext: input.plate.ciphertext,
           plate_key_version: input.plate.keyVersion,
@@ -187,6 +187,54 @@ export function createSupabaseOwnerActivationRepository(
         challengeId: stringField(row, "challenge_id"),
         expiresAt: stringField(row, "expires_at"),
         resendAfter: stringField(row, "resend_after"),
+      };
+    },
+    async requestReclaimOtp(input): Promise<OwnerOtpRequestResult> {
+      const row = resultData(
+        await client.rpc("request_owner_session_reclaim_otp", {
+          p_input: {
+            attempt_limit: input.policy.attemptLimit,
+            daily_phone_limit: input.policy.dailyPhoneLimit,
+            device_hash: input.deviceHash,
+            hourly_phone_limit: input.policy.hourlyPhoneLimit,
+            network_hash: input.networkHash,
+            network_window_limit: input.policy.networkWindowLimit,
+            otp_hash: input.otpHash,
+            phone_ciphertext: input.phone.ciphertext,
+            phone_hash: input.phone.lookupHash,
+            phone_key_version: input.phone.keyVersion,
+            phone_last4: input.phone.last4,
+            plate_lookup_hash: input.plateLookupHash,
+            public_token_hash: input.publicTokenHash,
+            resend_seconds: input.policy.resendSeconds,
+            ttl_seconds: input.policy.ttlSeconds,
+          },
+        }),
+      );
+      return {
+        challengeId: stringField(row, "challenge_id"),
+        expiresAt: stringField(row, "expires_at"),
+        resendAfter: stringField(row, "resend_after"),
+      };
+    },
+    async verifyReclaimOtp(input): Promise<OwnerReclaimVerificationResult> {
+      const row = resultData(
+        await client.rpc("verify_owner_session_reclaim_otp", {
+          p_input: {
+            challenge_id: input.challengeId,
+            device_hash: input.deviceHash,
+            otp_hash: input.otpHash,
+            public_token_hash: input.publicTokenHash,
+            session_hash: input.sessionHash,
+            session_ttl_seconds: input.sessionTtlSeconds,
+          },
+        }),
+      );
+      if (row.reclaimed !== true) {
+        throw new OwnerActivationRepositoryError(row.status === "LOCKED" ? "LIMITED" : "INVALID");
+      }
+      return {
+        sessionExpiresAt: stringField(row, "session_expires_at"),
       };
     },
     async verifyOtp(input): Promise<OwnerOtpVerificationResult> {

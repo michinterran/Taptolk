@@ -41,9 +41,28 @@ const verifyOtpSchema = z
   })
   .strict();
 
+const reclaimRequestOtpSchema = z
+  .object({
+    deviceHash: sharedSchema.deviceHash,
+    locale: sharedSchema.locale,
+    phone: z.string().min(10).max(20),
+    plate: z.string().min(5).max(20),
+    publicToken: sharedSchema.publicToken,
+  })
+  .strict();
+
+const reclaimVerifySchema = z
+  .object({
+    challengeId: z.uuid(),
+    deviceHash: sharedSchema.deviceHash,
+    locale: sharedSchema.locale,
+    otp: z.string().min(6).max(12),
+    publicToken: sharedSchema.publicToken,
+  })
+  .strict();
+
 const completeSchema = z
   .object({
-    activationCode: z.string().min(8).max(24),
     consentAccepted: z.literal(true),
     deviceHash: sharedSchema.deviceHash,
     locale: sharedSchema.locale,
@@ -162,6 +181,65 @@ export async function verifyOwnerOtp(request: Request): Promise<NextResponse> {
     const input = verifyOtpSchema.parse(await readBody(request));
     const result = await serviceOrThrow().verifyOtp(input);
     return safeJson({ data: result });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+function networkFingerprint(request: Request): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unavailable-network"
+  );
+}
+
+function secondsUntil(value: string): number {
+  return Math.max(1, Math.floor((new Date(value).getTime() - Date.now()) / 1000));
+}
+
+export async function requestOwnerReclaimOtp(request: Request): Promise<NextResponse> {
+  try {
+    const input = reclaimRequestOtpSchema.parse(await readBody(request));
+    if (!isAppLocale(input.locale)) {
+      throw new OwnerActivationRouteError();
+    }
+    const result = await serviceOrThrow().requestReclaimOtp({
+      ...input,
+      networkFingerprint: networkFingerprint(request),
+    });
+    return safeJson({
+      data: {
+        challengeId: result.challengeId,
+        expiresInSeconds: secondsUntil(result.expiresAt),
+      },
+    });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function verifyOwnerReclaimOtp(request: Request): Promise<NextResponse> {
+  try {
+    const input = reclaimVerifySchema.parse(await readBody(request));
+    if (!isAppLocale(input.locale)) {
+      throw new OwnerActivationRouteError();
+    }
+    const result = await serviceOrThrow().verifyReclaimOtp(input);
+    const response = safeJson({ data: { sessionExpiresAt: result.sessionExpiresAt } });
+    response.cookies.set({
+      httpOnly: true,
+      maxAge: Math.max(
+        1,
+        Math.floor((new Date(result.sessionExpiresAt).getTime() - Date.now()) / 1000),
+      ),
+      name: OWNER_SESSION_COOKIE_NAME,
+      path: "/",
+      sameSite: "lax",
+      secure: new URL(request.url).protocol === "https:",
+      value: result.sessionToken,
+    });
+    return response;
   } catch (error) {
     return errorResponse(error);
   }

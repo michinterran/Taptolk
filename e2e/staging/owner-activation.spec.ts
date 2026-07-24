@@ -146,21 +146,6 @@ test.describe
       ).toBeVisible();
       const accessibility = await new AxeBuilder({ page }).analyze();
       expect(accessibility.violations).toEqual([]);
-      const activationCodeInput = page.getByLabel("활성화 코드");
-      await activationCodeInput.waitFor({ state: "visible" });
-      await page.evaluate(() => {
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-      });
-      for (let index = 0; index < 5; index += 1) {
-        await page.keyboard.press("Tab");
-        if (await activationCodeInput.evaluate((element) => element === document.activeElement)) {
-          break;
-        }
-      }
-      await expect(activationCodeInput).toBeFocused();
-      await activationCodeInput.fill(uiFixture.activationCode);
       await page.getByLabel("차량번호").fill("12가3456");
       await page.getByLabel("휴대전화 번호").fill("01012345678");
       const otpRequestPromise = page.waitForResponse((response) =>
@@ -243,7 +228,6 @@ test.describe
       expect(verifyResponse.status()).toBe(200);
       const verifyPayload = (await verifyResponse.json()) as { data: { proof: string } };
       const completion = {
-        activationCode: raceFixture.activationCode,
         consentAccepted: true,
         deviceHash,
         locale: "en",

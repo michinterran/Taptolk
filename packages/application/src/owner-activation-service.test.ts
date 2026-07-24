@@ -39,6 +39,14 @@ function createHarness() {
       expiresAt: "2026-07-20T00:03:00.000Z",
       resendAfter: "2026-07-20T00:01:00.000Z",
     })),
+    requestReclaimOtp: vi.fn(async () => ({
+      challengeId,
+      expiresAt: "2026-07-20T00:03:00.000Z",
+      resendAfter: "2026-07-20T00:01:00.000Z",
+    })),
+    verifyReclaimOtp: vi.fn(async () => ({
+      sessionExpiresAt: "2026-07-20T12:00:00.000Z",
+    })),
     verifyOtp: vi.fn(async () => ({
       expiresAt: "2026-07-20T00:05:00.000Z",
       verified: true as const,
@@ -120,7 +128,6 @@ describe("OwnerActivationService", () => {
     const { repository, service } = createHarness();
     await expect(
       service.complete({
-        activationCode: "ABCD-2345",
         consentAccepted: true,
         deviceHash: "d".repeat(64),
         plate: "12가 3456",
@@ -137,7 +144,52 @@ describe("OwnerActivationService", () => {
     );
     expect(repository.complete).toHaveBeenCalledWith(
       expect.objectContaining({
-        activationCodeHash: expect.any(String),
+        sessionHash: expect.any(String),
+      }),
+    );
+  });
+
+  it("requests reclaim OTP with hashed plate lookup and protected phone only", async () => {
+    const { provider, repository, service } = createHarness();
+    await service.requestReclaimOtp({
+      deviceHash: "d".repeat(64),
+      locale: "ko",
+      networkFingerprint: "1",
+      phone: "010-1234-5678",
+      plate: "12가 3456",
+      publicToken: "public_token_1234567890",
+    });
+
+    expect(repository.requestReclaimOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        otpHash: expect.any(String),
+        phone: expect.objectContaining({ lookupHash: "a".repeat(64) }),
+        plateLookupHash: "vehicle-plate".padEnd(64, "0").slice(0, 64),
+      }),
+    );
+    expect(provider.send).toHaveBeenCalledWith(
+      expect.objectContaining({ otp: "123456", phone: "01012345678" }),
+    );
+  });
+
+  it("creates a reclaim session through the repository without returning phone data", async () => {
+    const { repository, service } = createHarness();
+    await expect(
+      service.verifyReclaimOtp({
+        challengeId,
+        deviceHash: "d".repeat(64),
+        otp: "123456",
+        publicToken: "public_token_1234567890",
+      }),
+    ).resolves.toEqual({
+      sessionExpiresAt: "2026-07-20T12:00:00.000Z",
+      sessionToken: "session_12345678901234567890",
+    });
+    expect(repository.verifyReclaimOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        challengeId,
+        deviceHash: "d".repeat(64),
+        otpHash: expect.any(String),
         sessionHash: expect.any(String),
       }),
     );

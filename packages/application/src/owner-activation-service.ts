@@ -3,7 +3,6 @@ import {
   assertOwnerDeviceId,
   assertOwnerOtpPolicy,
   DEFAULT_OWNER_OTP_POLICY,
-  normalizeOwnerActivationCode,
   normalizeOwnerOtp,
   normalizeOwnerPhone,
   normalizeOwnerVehiclePlate,
@@ -60,7 +59,6 @@ export interface OwnerOtpProvider {
 
 export interface OwnerActivationRepository {
   complete(input: {
-    activationCodeHash: string;
     consent: {
       privacyVersion: string;
       termsVersion: string;
@@ -86,6 +84,23 @@ export interface OwnerActivationRepository {
     policy: OwnerOtpPolicy;
     publicTokenHash: string;
   }): Promise<OwnerOtpRequestResult>;
+  requestReclaimOtp(input: {
+    deviceHash: string;
+    networkHash: string;
+    otpHash: string;
+    phone: OwnerActivationProtectedValue;
+    plateLookupHash: string;
+    policy: OwnerOtpPolicy;
+    publicTokenHash: string;
+  }): Promise<OwnerOtpRequestResult>;
+  verifyReclaimOtp(input: {
+    challengeId: string;
+    deviceHash: string;
+    otpHash: string;
+    publicTokenHash: string;
+    sessionHash: string;
+    sessionTtlSeconds: number;
+  }): Promise<OwnerReclaimVerificationResult>;
   verifyOtp(input: {
     challengeId: string;
     otpHash: string;
@@ -104,6 +119,10 @@ export interface OwnerOtpRequestResult {
 export interface OwnerOtpVerificationResult {
   expiresAt: string;
   verified: true;
+}
+
+export interface OwnerReclaimVerificationResult {
+  sessionExpiresAt: string;
 }
 
 export interface OwnerActivationCompletion {
@@ -127,6 +146,10 @@ export interface OwnerActivationSessionCompletion extends OwnerActivationComplet
 
 export interface OwnerOtpVerification extends OwnerOtpVerificationResult {
   proof: string;
+}
+
+export interface OwnerReclaimSession extends OwnerReclaimVerificationResult {
+  sessionToken: string;
 }
 
 export class OwnerActivationService {
@@ -199,6 +222,48 @@ export class OwnerActivationService {
     }
   }
 
+  async requestReclaimOtp(input: {
+    deviceHash: string;
+    locale: "en" | "ko";
+    networkFingerprint: string;
+    phone: string;
+    plate: string;
+    publicToken: string;
+  }): Promise<OwnerOtpRequestResult> {
+    assertOwnerDeviceId(input.deviceHash);
+    const phone = normalizeOwnerPhone(input.phone);
+    const plate = normalizeOwnerVehiclePlate(input.plate);
+    const otp = normalizeOwnerOtp(this.secrets.createOtp());
+    const result = await this.repository.requestReclaimOtp({
+      deviceHash: input.deviceHash,
+      networkHash: await this.hashNetwork(input.networkFingerprint),
+      otpHash: await this.protector.hash(otp, "otp"),
+      phone: await this.protector.protect(phone, "phone"),
+      plateLookupHash: await this.protector.hash(plate, "vehicle-plate"),
+      policy: this.policy,
+      publicTokenHash: await this.hashRequired(input.publicToken, "public-token"),
+    });
+    try {
+      await this.otpProvider.send({
+        challengeId: result.challengeId,
+        locale: input.locale,
+        otp,
+        phone,
+      });
+      await this.repository.markOtpDelivery({
+        challengeId: result.challengeId,
+        status: "SENT",
+      });
+      return result;
+    } catch {
+      await this.repository.markOtpDelivery({
+        challengeId: result.challengeId,
+        status: "FAILED",
+      });
+      throw new OwnerActivationServiceError("OTP_DELIVERY_FAILED");
+    }
+  }
+
   async verifyOtp(input: {
     challengeId: string;
     otp: string;
@@ -217,7 +282,6 @@ export class OwnerActivationService {
   }
 
   async complete(input: {
-    activationCode: string;
     consentAccepted: boolean;
     deviceHash: string;
     plate: string;
@@ -234,10 +298,6 @@ export class OwnerActivationService {
     });
     const sessionToken = this.requireOpaqueSecret(this.secrets.createSession());
     const completion = await this.repository.complete({
-      activationCodeHash: await this.protector.hash(
-        normalizeOwnerActivationCode(input.activationCode),
-        "activation-code",
-      ),
       consent: {
         privacyVersion: input.privacyVersion,
         termsVersion: input.termsVersion,
@@ -250,6 +310,26 @@ export class OwnerActivationService {
       sessionTtlSeconds: this.policy.sessionTtlSeconds,
     });
     return { ...completion, sessionToken };
+  }
+
+  async verifyReclaimOtp(input: {
+    challengeId: string;
+    deviceHash: string;
+    otp: string;
+    publicToken: string;
+  }): Promise<OwnerReclaimSession> {
+    assertUuid(input.challengeId);
+    assertOwnerDeviceId(input.deviceHash);
+    const sessionToken = this.requireOpaqueSecret(this.secrets.createSession());
+    const result = await this.repository.verifyReclaimOtp({
+      challengeId: input.challengeId,
+      deviceHash: input.deviceHash,
+      otpHash: await this.protector.hash(normalizeOwnerOtp(input.otp), "otp"),
+      publicTokenHash: await this.hashRequired(input.publicToken, "public-token"),
+      sessionHash: await this.protector.hash(sessionToken, "session"),
+      sessionTtlSeconds: this.policy.sessionTtlSeconds,
+    });
+    return { ...result, sessionToken };
   }
 
   private async hashRequired(value: string, purpose: OwnerActivationHashPurpose): Promise<string> {

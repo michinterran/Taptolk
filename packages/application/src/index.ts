@@ -104,6 +104,7 @@ export {
   type OwnerOtpRequestResult,
   type OwnerOtpVerification,
   type OwnerOtpVerificationResult,
+  type OwnerReclaimVerificationResult,
   type OwnerVehicleItem,
 } from "./owner-activation-service.js";
 export {

@@ -1,6 +1,6 @@
 begin;
 
-select plan(43);
+select plan(53);
 
 select has_table('public', 'owners', 'Owner identity table exists');
 select has_table('public', 'owner_devices', 'Owner device table exists');
@@ -64,6 +64,18 @@ select has_function(
   array['text', 'text'],
   'Owner-scoped vehicle read model exists'
 );
+select has_function(
+  'public',
+  'request_owner_session_reclaim_otp',
+  array['jsonb'],
+  'Owner session reclaim OTP request command exists'
+);
+select has_function(
+  'public',
+  'verify_owner_session_reclaim_otp',
+  array['jsonb'],
+  'Owner session reclaim OTP verify command exists'
+);
 
 select is_definer('public', 'inspect_owner_activation', array['text'], 'inspect is server-only');
 select is_definer(
@@ -83,6 +95,18 @@ select is_definer(
   'complete_owner_activation',
   array['jsonb'],
   'activation completion is server-only'
+);
+select is_definer(
+  'public',
+  'request_owner_session_reclaim_otp',
+  array['jsonb'],
+  'reclaim OTP request is server-only'
+);
+select is_definer(
+  'public',
+  'verify_owner_session_reclaim_otp',
+  array['jsonb'],
+  'reclaim OTP verify is server-only'
 );
 
 select function_privs_are(
@@ -124,6 +148,38 @@ select function_privs_are(
   'service_role',
   array['EXECUTE'],
   'service application boundary can complete activation'
+);
+select function_privs_are(
+  'public',
+  'request_owner_session_reclaim_otp',
+  array['jsonb'],
+  'authenticated',
+  array[]::text[],
+  'authenticated browser cannot request reclaim OTP directly'
+);
+select function_privs_are(
+  'public',
+  'verify_owner_session_reclaim_otp',
+  array['jsonb'],
+  'authenticated',
+  array[]::text[],
+  'authenticated browser cannot verify reclaim OTP directly'
+);
+select function_privs_are(
+  'public',
+  'request_owner_session_reclaim_otp',
+  array['jsonb'],
+  'service_role',
+  array['EXECUTE'],
+  'service application boundary can request reclaim OTP'
+);
+select function_privs_are(
+  'public',
+  'verify_owner_session_reclaim_otp',
+  array['jsonb'],
+  'service_role',
+  array['EXECUTE'],
+  'service application boundary can verify reclaim OTP'
 );
 
 select table_privs_are(
@@ -192,9 +248,12 @@ select results_eq(
       and position('qr_activation_codes' in lower(pg_get_functiondef(
         'public.complete_owner_activation(jsonb)'::regprocedure
       ))) > 0
+      and position('activation_code_hash' in lower(pg_get_functiondef(
+        'public.complete_owner_activation(jsonb)'::regprocedure
+      ))) = 0
   $$,
   array[true],
-  'completion locks QR, code, and one-use proof inside one transaction'
+  'completion does not require activation code hash and still consumes issued code'
 );
 
 select results_eq(
@@ -240,6 +299,47 @@ select results_eq(
   $$,
   array[true],
   'activation writes redacted audit and QR status history in the same command'
+);
+
+select results_eq(
+  $$
+    select position('plate_lookup_hash' in lower(pg_get_functiondef(
+      'public.request_owner_session_reclaim_otp(jsonb)'::regprocedure
+    ))) > 0
+      and position('phone_hash' in lower(pg_get_functiondef(
+        'public.request_owner_session_reclaim_otp(jsonb)'::regprocedure
+      ))) > 0
+      and position('owner_row.status = ''active''' in lower(pg_get_functiondef(
+        'public.request_owner_session_reclaim_otp(jsonb)'::regprocedure
+      ))) > 0
+      and position('reclaim_unavailable' in lower(pg_get_functiondef(
+        'public.request_owner_session_reclaim_otp(jsonb)'::regprocedure
+      ))) > 0
+  $$,
+  array[true],
+  'reclaim OTP requires active sticker, matching plate, and matching phone'
+);
+
+select results_eq(
+  $$
+    select position('owner_devices' in lower(pg_get_functiondef(
+      'public.verify_owner_session_reclaim_otp(jsonb)'::regprocedure
+    ))) > 0
+      and position('owner_sessions' in lower(pg_get_functiondef(
+        'public.verify_owner_session_reclaim_otp(jsonb)'::regprocedure
+      ))) > 0
+      and position('owner_session_reclaimed' in lower(pg_get_functiondef(
+        'public.verify_owner_session_reclaim_otp(jsonb)'::regprocedure
+      ))) > 0
+      and position('insert into public.qr_bindings' in lower(pg_get_functiondef(
+        'public.verify_owner_session_reclaim_otp(jsonb)'::regprocedure
+      ))) = 0
+      and position('update public.qr_bindings' in lower(pg_get_functiondef(
+        'public.verify_owner_session_reclaim_otp(jsonb)'::regprocedure
+      ))) = 0
+  $$,
+  array[true],
+  'reclaim verify creates Owner session and device without changing bindings'
 );
 
 select has_function(
