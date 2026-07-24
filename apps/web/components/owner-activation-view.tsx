@@ -23,15 +23,18 @@ import { getOwnerDeviceHash } from "../owner/owner-device-client";
  * [A] Owner activation, built from docs/design-canon/pwa/README.md §2.
  *
  * One question per screen and no stepper: the canon asks where you are, which
- * vehicle, and which number, in that order. The activation code sits between
- * the site and the vehicle because the master specification requires it (§6.4)
- * even though the approved sticker has nowhere to print it — see
- * docs/design-canon/CONTRACTS.md.
+ * vehicle, and which number, in that order.
+ *
+ * There is no activation code step. The operator settled it on 2026-07-24:
+ * holding the sticker is the credential, and a wrongly registered sticker is
+ * undone by revoking and reissuing it. The server still requires the code, so
+ * completion fails until that is removed — see docs/design-canon/CONTRACTS.md
+ * and docs/development/workorder-drop-activation-code-0724.md.
  *
  * Nothing here is drawn from a mockup number. Values the server does not send
  * are left out rather than filled in (DESIGN_SYSTEM.md §4).
  */
-type Step = "CODE" | "DONE" | "LOADING" | "LOCATION" | "PHONE" | "PLATE" | "STOPPED";
+type Step = "DONE" | "LOADING" | "LOCATION" | "PHONE" | "PLATE" | "STOPPED";
 type ErrorCode = "CONFLICT" | "INVALID" | "LIMITED" | "UNAVAILABLE" | null;
 
 interface OwnerActivationViewProps {
@@ -48,7 +51,7 @@ interface SiteSummary {
   type: string | null;
 }
 
-const OTP_STEP_TOTAL = 4;
+const ACTIVATION_STEP_TOTAL = 3;
 
 async function postJson(path: string, body: Readonly<Record<string, unknown>>) {
   const response = await fetch(path, {
@@ -132,7 +135,6 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
   const [error, setError] = useState<ErrorCode>(null);
   const [working, setWorking] = useState(false);
   const [site, setSite] = useState<SiteSummary>({ address: null, name: null, type: null });
-  const [activationCode, setActivationCode] = useState("");
   const [plate, setPlate] = useState("");
   const [phone, setPhone] = useState("");
   const [challengeId, setChallengeId] = useState("");
@@ -241,7 +243,6 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
         throw new Error("UNAVAILABLE");
       }
       const completed = await postJson("/api/owner/activation/complete", {
-        activationCode,
         consentAccepted: true,
         deviceHash: await getOwnerDeviceHash(),
         locale,
@@ -252,7 +253,6 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
         termsVersion: "TERMS_V1",
       });
       setDonePlate(readString(completed.data, "vehiclePlateLast4") ?? "");
-      setActivationCode("");
       setPhone("");
       setPlate("");
       setOtp("");
@@ -308,7 +308,7 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
       <ActivationShell
         actions={
           <>
-            <MobilePrimary disabled={working} onClick={() => goTo("CODE")}>
+            <MobilePrimary disabled={working} onClick={() => goTo("PLATE")}>
               {copy.locationConfirm}
             </MobilePrimary>
             <MobileQuietButton onClick={() => goTo("STOPPED")}>
@@ -316,7 +316,7 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
             </MobileQuietButton>
           </>
         }
-        label={fill(copy.stepOf, { current: "1", total: String(OTP_STEP_TOTAL) })}
+        label={fill(copy.stepOf, { current: "1", total: String(ACTIVATION_STEP_TOTAL) })}
       >
         {notice}
         <MobileCard center>
@@ -329,52 +329,18 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
     );
   }
 
-  if (step === "CODE") {
-    return (
-      <ActivationShell
-        actions={
-          <MobileActions>
-            <MobileSecondary onClick={() => goTo("LOCATION")}>{copy.back}</MobileSecondary>
-            <MobilePrimary disabled={activationCode.length === 0} onClick={() => goTo("PLATE")}>
-              {copy.next}
-            </MobilePrimary>
-          </MobileActions>
-        }
-        label={fill(copy.stepOf, { current: "2", total: String(OTP_STEP_TOTAL) })}
-      >
-        {notice}
-        <MobileCard>
-          <MobileField
-            controlId="owner-activation-code"
-            hint={copy.activationCodeHint}
-            hintId="owner-activation-code-hint"
-            label={copy.activationCode}
-          >
-            <input
-              aria-describedby="owner-activation-code-hint"
-              autoComplete="one-time-code"
-              id="owner-activation-code"
-              onChange={(event) => setActivationCode(event.target.value)}
-              value={activationCode}
-            />
-          </MobileField>
-        </MobileCard>
-      </ActivationShell>
-    );
-  }
-
   if (step === "PLATE") {
     return (
       <ActivationShell
         actions={
           <MobileActions>
-            <MobileSecondary onClick={() => goTo("CODE")}>{copy.back}</MobileSecondary>
+            <MobileSecondary onClick={() => goTo("PLATE")}>{copy.back}</MobileSecondary>
             <MobilePrimary disabled={plate.length === 0} onClick={() => goTo("PHONE")}>
               {copy.next}
             </MobilePrimary>
           </MobileActions>
         }
-        label={fill(copy.stepOf, { current: "3", total: String(OTP_STEP_TOTAL) })}
+        label={fill(copy.stepOf, { current: "2", total: String(ACTIVATION_STEP_TOTAL) })}
       >
         {notice}
         <SemanticHeading as="h1" className="tt-m-heading" lines={copy.plateTitle} />
@@ -412,7 +378,7 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
           </MobilePrimary>
         </MobileActions>
       }
-      label={fill(copy.stepOf, { current: "4", total: String(OTP_STEP_TOTAL) })}
+      label={fill(copy.stepOf, { current: "3", total: String(ACTIVATION_STEP_TOTAL) })}
     >
       {notice}
       <SemanticHeading as="h1" className="tt-m-heading" lines={copy.phoneTitle} />

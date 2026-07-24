@@ -28,8 +28,6 @@ export interface OwnerActivationCopy {
   start: string;
   /** Step counter, e.g. "2 / 3". Announced, not drawn as a stepper. */
   stepOf: string;
-  activationCode: string;
-  activationCodeHint: string;
   back: string;
   consent: string;
   consentDescription: string;
@@ -86,8 +84,6 @@ const ko: OwnerActivationCopy = {
   doneChannel: "알림톡으로 연락을 받습니다.",
   start: "시작하기",
   stepOf: "{current} / {total} 단계",
-  activationCode: "활성화 코드",
-  activationCodeHint: "스티커와 함께 전달받은 코드를 입력해 주세요.",
   back: "이전 단계",
   consent: "이용약관과 개인정보 처리방침에 동의합니다.",
   consentDescription:
@@ -113,7 +109,7 @@ const ko: OwnerActivationCopy = {
   plate: "차량번호",
   plateHint: "공백 없이 입력해도 됩니다.",
   resend: "인증번호 다시 받기",
-  security: "전화번호·인증번호·활성화 코드는 화면과 로그에 남기지 않습니다.",
+  security: "전화번호와 인증번호는 화면과 로그에 남기지 않습니다.",
   submit: "동의하고 활성화 완료",
   successDescription:
     "차량과 QR 연결이 완료되었습니다. 이제 전화번호 공개 없이 연락받을 수 있습니다.",
@@ -146,8 +142,6 @@ const en: OwnerActivationCopy = {
   doneChannel: "You will be contacted through KakaoTalk notifications.",
   start: "Get started",
   stepOf: "Step {current} of {total}",
-  activationCode: "Activation code",
-  activationCodeHint: "Enter the code supplied with the sticker.",
   back: "Previous step",
   consent: "I agree to the Terms and Privacy Policy.",
   consentDescription:
@@ -173,7 +167,8 @@ const en: OwnerActivationCopy = {
   plate: "Vehicle plate",
   plateHint: "Spaces and hyphens are optional.",
   resend: "Send a new code",
-  security: "Phone, OTP, and activation codes are never retained in screen or application logs.",
+  security:
+    "Phone numbers and verification codes are never retained in screen or application logs.",
   submit: "Agree and complete activation",
   successDescription:
     "The vehicle and QR are connected. People can now contact you without seeing your phone number.",
