@@ -38,6 +38,7 @@ export type OwnerActivationHashPurpose =
   | "otp"
   | "phone"
   | "proof"
+  | "push-endpoint"
   | "public-token"
   | "session"
   | "vehicle-plate";
@@ -75,7 +76,30 @@ export interface OwnerActivationRepository {
     deviceHash: string;
     sessionHash: string;
   }): Promise<readonly OwnerVehicleItem[]>;
+  listMessages(input: {
+    deviceHash: string;
+    sessionHash: string;
+  }): Promise<readonly OwnerContactMessageItem[]>;
+  listHistory(input: {
+    deviceHash: string;
+    sessionHash: string;
+  }): Promise<readonly OwnerContactHistoryItem[]>;
   markOtpDelivery(input: { challengeId: string; status: "FAILED" | "SENT" }): Promise<void>;
+  pushState(input: {
+    deviceHash: string;
+    sessionHash: string;
+  }): Promise<OwnerPushSubscriptionState>;
+  savePushSubscription(input: {
+    deviceHash: string;
+    endpointHash: string;
+    sessionHash: string;
+    subscription: OwnerPushSubscriptionPayload;
+  }): Promise<OwnerPushSubscriptionState>;
+  revokePushSubscription(input: {
+    deviceHash: string;
+    endpointHash: string;
+    sessionHash: string;
+  }): Promise<OwnerPushSubscriptionState>;
   requestOtp(input: {
     deviceHash: string;
     networkHash: string;
@@ -136,8 +160,39 @@ export interface OwnerActivationCompletion {
 export interface OwnerVehicleItem {
   plateLast4: string;
   qrStatus: "ACTIVE" | "SUSPENDED";
+  siteDisplayName?: string;
   siteId: string;
   vehicleId: string;
+}
+
+export interface OwnerContactMessageItem {
+  callerMessage: string;
+  createdAt: string;
+  reasonCode: string;
+  sessionId: string;
+  status: string;
+  vehiclePlateLast4: string;
+}
+
+export interface OwnerContactHistoryItem {
+  createdAt: string;
+  reasonCode: string;
+  responseSeconds: number | null;
+  result: "ANSWERED" | "UNANSWERED";
+  sessionId: string;
+}
+
+export interface OwnerPushSubscriptionPayload {
+  endpoint: string;
+  expirationTime: number | null;
+  keys: {
+    auth: string;
+    p256dh: string;
+  };
+}
+
+export interface OwnerPushSubscriptionState {
+  subscribed: boolean;
 }
 
 export interface OwnerActivationSessionCompletion extends OwnerActivationCompletion {
@@ -179,6 +234,70 @@ export class OwnerActivationService {
     assertOwnerDeviceId(input.deviceHash);
     return this.repository.listVehicles({
       deviceHash: input.deviceHash,
+      sessionHash: await this.hashRequired(input.sessionToken, "session"),
+    });
+  }
+
+  async listMessages(input: {
+    deviceHash: string;
+    sessionToken: string;
+  }): Promise<readonly OwnerContactMessageItem[]> {
+    assertOwnerDeviceId(input.deviceHash);
+    return this.repository.listMessages({
+      deviceHash: input.deviceHash,
+      sessionHash: await this.hashRequired(input.sessionToken, "session"),
+    });
+  }
+
+  async listHistory(input: {
+    deviceHash: string;
+    sessionToken: string;
+  }): Promise<readonly OwnerContactHistoryItem[]> {
+    assertOwnerDeviceId(input.deviceHash);
+    return this.repository.listHistory({
+      deviceHash: input.deviceHash,
+      sessionHash: await this.hashRequired(input.sessionToken, "session"),
+    });
+  }
+
+  async pushState(input: {
+    deviceHash: string;
+    sessionToken: string;
+  }): Promise<OwnerPushSubscriptionState> {
+    assertOwnerDeviceId(input.deviceHash);
+    return this.repository.pushState({
+      deviceHash: input.deviceHash,
+      sessionHash: await this.hashRequired(input.sessionToken, "session"),
+    });
+  }
+
+  async savePushSubscription(input: {
+    deviceHash: string;
+    sessionToken: string;
+    subscription: OwnerPushSubscriptionPayload;
+  }): Promise<OwnerPushSubscriptionState> {
+    assertOwnerDeviceId(input.deviceHash);
+    this.assertPushSubscription(input.subscription);
+    return this.repository.savePushSubscription({
+      deviceHash: input.deviceHash,
+      endpointHash: await this.protector.hash(input.subscription.endpoint, "push-endpoint"),
+      sessionHash: await this.hashRequired(input.sessionToken, "session"),
+      subscription: input.subscription,
+    });
+  }
+
+  async revokePushSubscription(input: {
+    deviceHash: string;
+    endpoint: string;
+    sessionToken: string;
+  }): Promise<OwnerPushSubscriptionState> {
+    assertOwnerDeviceId(input.deviceHash);
+    if (input.endpoint.length < 16 || input.endpoint.length > 2000) {
+      throw new OwnerActivationServiceError("INVALID_SECRET");
+    }
+    return this.repository.revokePushSubscription({
+      deviceHash: input.deviceHash,
+      endpointHash: await this.protector.hash(input.endpoint, "push-endpoint"),
       sessionHash: await this.hashRequired(input.sessionToken, "session"),
     });
   }
@@ -348,6 +467,19 @@ export class OwnerActivationService {
       throw new OwnerActivationServiceError("INVALID_SECRET");
     }
     return value;
+  }
+
+  private assertPushSubscription(subscription: OwnerPushSubscriptionPayload): void {
+    if (
+      subscription.endpoint.length < 16 ||
+      subscription.endpoint.length > 2000 ||
+      subscription.keys.auth.length < 8 ||
+      subscription.keys.auth.length > 512 ||
+      subscription.keys.p256dh.length < 16 ||
+      subscription.keys.p256dh.length > 512
+    ) {
+      throw new OwnerActivationServiceError("INVALID_SECRET");
+    }
   }
 }
 

@@ -26,6 +26,21 @@ export interface NotificationDeliveryClaim {
   notification: OwnerContactNotification;
 }
 
+export interface WebPushDeliveryClaim {
+  deliveryId: string;
+  idempotencyKey: string;
+  leaseVersion: number;
+  notification: OwnerContactNotification;
+  subscription: {
+    endpoint: string;
+    expirationTime: number | null;
+    keys: {
+      auth: string;
+      p256dh: string;
+    };
+  };
+}
+
 export interface NotificationDeliveryRepository {
   claim(input: {
     leaseSeconds: number;
@@ -48,11 +63,41 @@ export interface NotificationDeliveryRepository {
   }): Promise<void>;
 }
 
+export interface WebPushDeliveryRepository {
+  claim(input: {
+    leaseSeconds: number;
+    limit: number;
+    workerId: string;
+  }): Promise<readonly WebPushDeliveryClaim[]>;
+  fail(input: {
+    deliveryId: string;
+    errorCode: NotificationProviderErrorCode;
+    final: boolean;
+    leaseVersion: number;
+    nextAttemptAt: string | null;
+    workerId: string;
+  }): Promise<void>;
+  sent(input: {
+    deliveryId: string;
+    leaseVersion: number;
+    providerMessageId: string;
+    workerId: string;
+  }): Promise<void>;
+}
+
 export interface OwnerNotificationProvider {
   send(input: {
     idempotencyKey: string;
     notification: OwnerContactNotification;
     toCiphertext: string;
+  }): Promise<{ providerMessageId: string }>;
+}
+
+export interface WebPushNotificationProvider {
+  send(input: {
+    idempotencyKey: string;
+    notification: OwnerContactNotification;
+    subscription: WebPushDeliveryClaim["subscription"];
   }): Promise<{ providerMessageId: string }>;
 }
 
@@ -106,6 +151,75 @@ export class NotificationDispatchService {
           idempotencyKey: claim.idempotencyKey,
           notification: claim.notification,
           toCiphertext: claim.destinationCiphertext,
+        });
+        await this.repository.sent({
+          deliveryId: claim.deliveryId,
+          leaseVersion: claim.leaseVersion,
+          providerMessageId: result.providerMessageId,
+          workerId: input.workerId,
+        });
+        sent += 1;
+      } catch (error) {
+        const code = error instanceof OwnerNotificationProviderError ? error.code : "UNKNOWN";
+        const retryable = isRetryableNotificationProviderError(code);
+        const attempt = claim.leaseVersion;
+        const nextAttemptAt = retryable
+          ? new Date(
+              this.now().getTime() + getNotificationRetryDelaySeconds(attempt) * 1_000,
+            ).toISOString()
+          : null;
+        await this.repository.fail({
+          deliveryId: claim.deliveryId,
+          errorCode: code,
+          final: !retryable,
+          leaseVersion: claim.leaseVersion,
+          nextAttemptAt,
+          workerId: input.workerId,
+        });
+        if (retryable) {
+          retryScheduled += 1;
+        } else {
+          failedFinal += 1;
+        }
+      }
+    }
+    return { claimed: claims.length, failedFinal, retryScheduled, sent };
+  }
+}
+
+export class WebPushNotificationDispatchService {
+  constructor(
+    private readonly repository: WebPushDeliveryRepository,
+    private readonly provider: WebPushNotificationProvider,
+    private readonly now: () => Date = () => new Date(),
+  ) {}
+
+  async run(input: {
+    leaseSeconds: number;
+    limit: number;
+    workerId: string;
+  }): Promise<{ claimed: number; failedFinal: number; retryScheduled: number; sent: number }> {
+    if (
+      !Number.isInteger(input.limit) ||
+      input.limit < 1 ||
+      input.limit > 100 ||
+      !Number.isInteger(input.leaseSeconds) ||
+      input.leaseSeconds < 5 ||
+      input.leaseSeconds > 300 ||
+      input.workerId.length < 8
+    ) {
+      throw new Error("INVALID_WEB_PUSH_DISPATCH_INPUT");
+    }
+    const claims = await this.repository.claim(input);
+    let sent = 0;
+    let retryScheduled = 0;
+    let failedFinal = 0;
+    for (const claim of claims) {
+      try {
+        const result = await this.provider.send({
+          idempotencyKey: claim.idempotencyKey,
+          notification: claim.notification,
+          subscription: claim.subscription,
         });
         await this.repository.sent({
           deliveryId: claim.deliveryId,

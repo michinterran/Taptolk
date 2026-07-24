@@ -1142,6 +1142,38 @@ export const ownerDevices = pgTable(
   ],
 );
 
+export const ownerPushSubscriptions = pgTable(
+  "owner_push_subscriptions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => owners.id, { onDelete: "restrict" }),
+    ownerDeviceId: uuid("owner_device_id")
+      .notNull()
+      .references(() => ownerDevices.id, { onDelete: "restrict" }),
+    endpointHash: text("endpoint_hash").notNull().unique(),
+    subscription: jsonb("subscription").notNull(),
+    status: text("status").default("ACTIVE").notNull(),
+    lastSeenAt: timestamp("last_seen_at", { mode: "date", withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_owner_push_owner_active")
+      .on(table.ownerId, table.lastSeenAt)
+      .where(sql`${table.status} = 'ACTIVE'`),
+    index("idx_owner_push_device_active")
+      .on(table.ownerDeviceId, table.lastSeenAt)
+      .where(sql`${table.status} = 'ACTIVE'`),
+    check("chk_owner_push_endpoint_hash", sql`${table.endpointHash} ~ '^[0-9a-f]{64}$'`),
+    check("chk_owner_push_status", sql`${table.status} in ('ACTIVE', 'REVOKED')`),
+  ],
+);
+
 export const qrActivationCodes = pgTable(
   "qr_activation_codes",
   {

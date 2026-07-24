@@ -81,6 +81,40 @@ const listVehiclesSchema = z
   })
   .strict();
 
+const ownerSessionSchema = z
+  .object({
+    deviceHash: sharedSchema.deviceHash,
+    locale: sharedSchema.locale,
+  })
+  .strict();
+
+const pushSubscriptionSchema = z
+  .object({
+    deviceHash: sharedSchema.deviceHash,
+    locale: sharedSchema.locale,
+    subscription: z
+      .object({
+        endpoint: z.url().max(2000),
+        expirationTime: z.number().int().nonnegative().nullable().optional(),
+        keys: z
+          .object({
+            auth: z.string().min(8).max(512),
+            p256dh: z.string().min(16).max(512),
+          })
+          .strict(),
+      })
+      .strict(),
+  })
+  .strict();
+
+const revokePushSubscriptionSchema = z
+  .object({
+    deviceHash: sharedSchema.deviceHash,
+    endpoint: z.url().max(2000),
+    locale: sharedSchema.locale,
+  })
+  .strict();
+
 function safeJson(data: Readonly<Record<string, unknown>>, status = 200): NextResponse {
   return NextResponse.json(data, {
     headers: {
@@ -288,6 +322,105 @@ export async function listOwnerVehicles(request: Request): Promise<NextResponse>
       sessionToken,
     });
     return safeJson({ data: { vehicles } });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+function readOwnerSessionOrUnauthorized(request: Request): string | NextResponse {
+  const sessionToken = readCookie(request, OWNER_SESSION_COOKIE_NAME);
+  if (!sessionToken) {
+    return safeJson({ error: { code: "UNAUTHORIZED" } }, 401);
+  }
+  return sessionToken;
+}
+
+export async function listOwnerMessages(request: Request): Promise<NextResponse> {
+  try {
+    const input = ownerSessionSchema.parse(await readBody(request));
+    const sessionToken = readOwnerSessionOrUnauthorized(request);
+    if (sessionToken instanceof NextResponse) {
+      return sessionToken;
+    }
+    const messages = await serviceOrThrow().listMessages({
+      deviceHash: input.deviceHash,
+      sessionToken,
+    });
+    return safeJson({ data: { messages } });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function listOwnerHistory(request: Request): Promise<NextResponse> {
+  try {
+    const input = ownerSessionSchema.parse(await readBody(request));
+    const sessionToken = readOwnerSessionOrUnauthorized(request);
+    if (sessionToken instanceof NextResponse) {
+      return sessionToken;
+    }
+    const history = await serviceOrThrow().listHistory({
+      deviceHash: input.deviceHash,
+      sessionToken,
+    });
+    return safeJson({ data: { history } });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function ownerPushState(request: Request): Promise<NextResponse> {
+  try {
+    const input = ownerSessionSchema.parse(await readBody(request));
+    const sessionToken = readOwnerSessionOrUnauthorized(request);
+    if (sessionToken instanceof NextResponse) {
+      return sessionToken;
+    }
+    const state = await serviceOrThrow().pushState({
+      deviceHash: input.deviceHash,
+      sessionToken,
+    });
+    return safeJson({ data: state });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function saveOwnerPushSubscription(request: Request): Promise<NextResponse> {
+  try {
+    const input = pushSubscriptionSchema.parse(await readBody(request));
+    const sessionToken = readOwnerSessionOrUnauthorized(request);
+    if (sessionToken instanceof NextResponse) {
+      return sessionToken;
+    }
+    const state = await serviceOrThrow().savePushSubscription({
+      deviceHash: input.deviceHash,
+      sessionToken,
+      subscription: {
+        endpoint: input.subscription.endpoint,
+        expirationTime: input.subscription.expirationTime ?? null,
+        keys: input.subscription.keys,
+      },
+    });
+    return safeJson({ data: state });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function revokeOwnerPushSubscription(request: Request): Promise<NextResponse> {
+  try {
+    const input = revokePushSubscriptionSchema.parse(await readBody(request));
+    const sessionToken = readOwnerSessionOrUnauthorized(request);
+    if (sessionToken instanceof NextResponse) {
+      return sessionToken;
+    }
+    const state = await serviceOrThrow().revokePushSubscription({
+      deviceHash: input.deviceHash,
+      endpoint: input.endpoint,
+      sessionToken,
+    });
+    return safeJson({ data: state });
   } catch (error) {
     return errorResponse(error);
   }

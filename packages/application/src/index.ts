@@ -76,6 +76,10 @@ export {
   type OwnerResponseInspection,
   type OwnerResponseRepository,
   OwnerResponseService,
+  type WebPushDeliveryClaim,
+  type WebPushDeliveryRepository,
+  WebPushNotificationDispatchService,
+  type WebPushNotificationProvider,
 } from "./notification-reply-service.js";
 export {
   type OperationsDailyPoint,
@@ -100,10 +104,14 @@ export {
   OwnerActivationService,
   OwnerActivationServiceError,
   type OwnerActivationSessionCompletion,
+  type OwnerContactHistoryItem,
+  type OwnerContactMessageItem,
   type OwnerOtpProvider,
   type OwnerOtpRequestResult,
   type OwnerOtpVerification,
   type OwnerOtpVerificationResult,
+  type OwnerPushSubscriptionPayload,
+  type OwnerPushSubscriptionState,
   type OwnerReclaimVerificationResult,
   type OwnerVehicleItem,
 } from "./owner-activation-service.js";

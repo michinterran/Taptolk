@@ -4,8 +4,11 @@ import type {
   OwnerActivationCompletion,
   OwnerActivationInspection,
   OwnerActivationRepository,
+  OwnerContactHistoryItem,
+  OwnerContactMessageItem,
   OwnerOtpRequestResult,
   OwnerOtpVerificationResult,
+  OwnerPushSubscriptionState,
   OwnerReclaimVerificationResult,
 } from "@taptolk/application";
 import { createLogger } from "@taptolk/observability";
@@ -55,6 +58,28 @@ function objectRow(value: unknown): Record<string, unknown> {
 function stringField(row: Record<string, unknown>, field: string): string {
   const value = row[field];
   if (typeof value !== "string") {
+    throw new OwnerActivationRepositoryError("UNAVAILABLE");
+  }
+  return value;
+}
+
+function optionalStringField(row: Record<string, unknown>, field: string): string | undefined {
+  const value = row[field];
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new OwnerActivationRepositoryError("UNAVAILABLE");
+  }
+  return value;
+}
+
+function nullableNumberField(row: Record<string, unknown>, field: string): number | null {
+  const value = row[field];
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "number") {
     throw new OwnerActivationRepositoryError("UNAVAILABLE");
   }
   return value;
@@ -145,11 +170,61 @@ export function createSupabaseOwnerActivationRepository(
         if (row.qr_status !== "ACTIVE" && row.qr_status !== "SUSPENDED") {
           throw new OwnerActivationRepositoryError("UNAVAILABLE");
         }
+        const siteDisplayName = optionalStringField(row, "site_display_name");
         return {
           plateLast4: stringField(row, "plate_last4"),
           qrStatus: row.qr_status,
+          ...(siteDisplayName ? { siteDisplayName } : {}),
           siteId: stringField(row, "site_id"),
           vehicleId: stringField(row, "vehicle_id"),
+        };
+      });
+    },
+    async listHistory(input): Promise<readonly OwnerContactHistoryItem[]> {
+      const result = await client.rpc("list_owner_contact_history", {
+        p_device_hash: input.deviceHash,
+        p_session_hash: input.sessionHash,
+      });
+      if (result.error) {
+        throw mapError(result.error);
+      }
+      if (!Array.isArray(result.data)) {
+        throw new OwnerActivationRepositoryError("UNAVAILABLE");
+      }
+      return result.data.map((value) => {
+        const row = objectRow(value);
+        if (row.result !== "ANSWERED" && row.result !== "UNANSWERED") {
+          throw new OwnerActivationRepositoryError("UNAVAILABLE");
+        }
+        return {
+          createdAt: stringField(row, "created_at"),
+          reasonCode: stringField(row, "reason_code"),
+          responseSeconds: nullableNumberField(row, "response_seconds"),
+          result: row.result,
+          sessionId: stringField(row, "session_id"),
+        };
+      });
+    },
+    async listMessages(input): Promise<readonly OwnerContactMessageItem[]> {
+      const result = await client.rpc("list_owner_contact_messages", {
+        p_device_hash: input.deviceHash,
+        p_session_hash: input.sessionHash,
+      });
+      if (result.error) {
+        throw mapError(result.error);
+      }
+      if (!Array.isArray(result.data)) {
+        throw new OwnerActivationRepositoryError("UNAVAILABLE");
+      }
+      return result.data.map((value) => {
+        const row = objectRow(value);
+        return {
+          callerMessage: stringField(row, "caller_message"),
+          createdAt: stringField(row, "created_at"),
+          reasonCode: stringField(row, "reason_code"),
+          sessionId: stringField(row, "session_id"),
+          status: stringField(row, "status"),
+          vehiclePlateLast4: stringField(row, "vehicle_plate_last4"),
         };
       });
     },
@@ -161,6 +236,45 @@ export function createSupabaseOwnerActivationRepository(
       if (result.error) {
         throw mapError(result.error);
       }
+    },
+    async pushState(input): Promise<OwnerPushSubscriptionState> {
+      const row = resultData(
+        await client.rpc("read_owner_push_subscription_state", {
+          p_device_hash: input.deviceHash,
+          p_session_hash: input.sessionHash,
+        }),
+      );
+      if (typeof row.subscribed !== "boolean") {
+        throw new OwnerActivationRepositoryError("UNAVAILABLE");
+      }
+      return { subscribed: row.subscribed };
+    },
+    async revokePushSubscription(input): Promise<OwnerPushSubscriptionState> {
+      const row = resultData(
+        await client.rpc("revoke_owner_push_subscription", {
+          p_device_hash: input.deviceHash,
+          p_endpoint_hash: input.endpointHash,
+          p_session_hash: input.sessionHash,
+        }),
+      );
+      if (typeof row.subscribed !== "boolean") {
+        throw new OwnerActivationRepositoryError("UNAVAILABLE");
+      }
+      return { subscribed: row.subscribed };
+    },
+    async savePushSubscription(input): Promise<OwnerPushSubscriptionState> {
+      const row = resultData(
+        await client.rpc("save_owner_push_subscription", {
+          p_device_hash: input.deviceHash,
+          p_endpoint_hash: input.endpointHash,
+          p_session_hash: input.sessionHash,
+          p_subscription: input.subscription,
+        }),
+      );
+      if (typeof row.subscribed !== "boolean") {
+        throw new OwnerActivationRepositoryError("UNAVAILABLE");
+      }
+      return { subscribed: row.subscribed };
     },
     async requestOtp(input): Promise<OwnerOtpRequestResult> {
       const row = resultData(

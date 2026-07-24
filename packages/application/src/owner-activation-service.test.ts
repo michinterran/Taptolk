@@ -29,11 +29,34 @@ function createHarness() {
       {
         plateLast4: "3456",
         qrStatus: "ACTIVE" as const,
+        siteDisplayName: "Test Site",
         siteId: "00000000-0000-4000-8000-000000000004",
         vehicleId: "00000000-0000-4000-8000-000000000003",
       },
     ]),
+    listHistory: vi.fn(async () => [
+      {
+        createdAt: "2026-07-20T00:00:00.000Z",
+        reasonCode: "MOVE_REQUEST",
+        responseSeconds: 75,
+        result: "ANSWERED" as const,
+        sessionId: "00000000-0000-4000-8000-000000000005",
+      },
+    ]),
+    listMessages: vi.fn(async () => [
+      {
+        callerMessage: "출차 부탁드립니다.",
+        createdAt: "2026-07-20T00:00:00.000Z",
+        reasonCode: "MOVE_REQUEST",
+        sessionId: "00000000-0000-4000-8000-000000000005",
+        status: "OWNER_NOTIFIED",
+        vehiclePlateLast4: "3456",
+      },
+    ]),
     markOtpDelivery: vi.fn(async () => undefined),
+    pushState: vi.fn(async () => ({ subscribed: false })),
+    revokePushSubscription: vi.fn(async () => ({ subscribed: false })),
+    savePushSubscription: vi.fn(async () => ({ subscribed: true })),
     requestOtp: vi.fn(async () => ({
       challengeId,
       expiresAt: "2026-07-20T00:03:00.000Z",
@@ -230,5 +253,62 @@ describe("OwnerActivationService", () => {
       deviceHash: "d".repeat(64),
       sessionHash: expect.any(String),
     });
+  });
+
+  it("hashes the HttpOnly session token before reading Owner messages and history", async () => {
+    const { repository, service } = createHarness();
+    await expect(
+      service.listMessages({
+        deviceHash: "d".repeat(64),
+        sessionToken: "session_12345678901234567890",
+      }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        callerMessage: "출차 부탁드립니다.",
+        vehiclePlateLast4: "3456",
+      }),
+    ]);
+    await expect(
+      service.listHistory({
+        deviceHash: "d".repeat(64),
+        sessionToken: "session_12345678901234567890",
+      }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        responseSeconds: 75,
+        result: "ANSWERED",
+      }),
+    ]);
+    expect(repository.listMessages).toHaveBeenCalledWith({
+      deviceHash: "d".repeat(64),
+      sessionHash: expect.any(String),
+    });
+    expect(repository.listHistory).toHaveBeenCalledWith({
+      deviceHash: "d".repeat(64),
+      sessionHash: expect.any(String),
+    });
+  });
+
+  it("stores only a hashed push endpoint lookup through the repository", async () => {
+    const { repository, service } = createHarness();
+    await expect(
+      service.savePushSubscription({
+        deviceHash: "d".repeat(64),
+        sessionToken: "session_12345678901234567890",
+        subscription: {
+          endpoint: "https://push.example.test/send/abcdef1234567890",
+          expirationTime: null,
+          keys: {
+            auth: "auth-secret",
+            p256dh: "p256dh-public-key-material",
+          },
+        },
+      }),
+    ).resolves.toEqual({ subscribed: true });
+    expect(repository.savePushSubscription).toHaveBeenCalledWith(
+      expect.objectContaining({
+        endpointHash: "push-endpoint".padEnd(64, "0").slice(0, 64),
+      }),
+    );
   });
 });

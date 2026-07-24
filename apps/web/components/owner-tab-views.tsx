@@ -13,8 +13,15 @@ import {
 } from "@taptolk/ui";
 import { useEffect, useState } from "react";
 import type { OwnerTabsCopy } from "../content/owner-tabs-copy";
+import { PUBLIC_CONTACT_COPY } from "../content/public-contact-copy";
 import type { AppLocale } from "../i18n/config";
-import { getOwnerDeviceHash } from "../owner/owner-device-client";
+import {
+  decodeVapidPublicKey,
+  getOwnerDeviceHash,
+  getOwnerPushConfig,
+  pushSupported,
+  registerOwnerServiceWorker,
+} from "../owner/owner-device-client";
 
 /**
  * The four owner tabs (docs/design-canon/pwa/README.md §3).
@@ -22,15 +29,33 @@ import { getOwnerDeviceHash } from "../owner/owner-device-client";
  * No phone number is drawn on any of them (operator, 2026-07-24). ALERT states
  * that the channel is connected; SETTINGS states that verification is done.
  *
- * MESSAGES and HISTORY have no endpoint yet, so they show what will fill them
- * rather than a sample. A channel state the server cannot tell us is left as
- * unknown — "connected" is never assumed (README §3).
+ * MESSAGES and HISTORY render only server-returned rows. A channel state the
+ * server cannot tell us is left as unknown — "connected" is never assumed
+ * (README §3).
  */
 interface OwnerVehicle {
   plateLast4: string;
   qrStatus: "ACTIVE" | "SUSPENDED";
+  siteDisplayName?: string;
   siteId: string;
   vehicleId: string;
+}
+
+interface OwnerMessage {
+  callerMessage: string;
+  createdAt: string;
+  reasonCode: keyof (typeof PUBLIC_CONTACT_COPY)["ko"]["reasonLabels"];
+  sessionId: string;
+  status: string;
+  vehiclePlateLast4: string;
+}
+
+interface OwnerHistory {
+  createdAt: string;
+  reasonCode: keyof (typeof PUBLIC_CONTACT_COPY)["ko"]["reasonLabels"];
+  responseSeconds: number | null;
+  result: "ANSWERED" | "UNANSWERED";
+  sessionId: string;
 }
 
 async function loadVehicles(locale: AppLocale): Promise<readonly OwnerVehicle[]> {
@@ -73,6 +98,88 @@ function useVehicles(locale: AppLocale) {
   return { failed, vehicles };
 }
 
+async function postOwnerSession<T>(path: string, locale: AppLocale): Promise<T> {
+  const response = await fetch(path, {
+    body: JSON.stringify({ deviceHash: await getOwnerDeviceHash(), locale }),
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("UNAVAILABLE");
+  }
+  const payload = (await response.json()) as { data: T };
+  return payload.data;
+}
+
+function useOwnerMessages(locale: AppLocale) {
+  const [messages, setMessages] = useState<readonly OwnerMessage[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void postOwnerSession<{ messages: OwnerMessage[] }>("/api/owner/messages", locale)
+      .then((payload) => {
+        if (active) {
+          setMessages(payload.messages);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFailed(true);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [locale]);
+
+  return { failed, messages };
+}
+
+function useOwnerHistory(locale: AppLocale) {
+  const [history, setHistory] = useState<readonly OwnerHistory[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void postOwnerSession<{ history: OwnerHistory[] }>("/api/owner/history", locale)
+      .then((payload) => {
+        if (active) {
+          setHistory(payload.history);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFailed(true);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [locale]);
+
+  return { failed, history };
+}
+
+function formatDateTime(value: string, locale: AppLocale): string {
+  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatDuration(seconds: number | null, locale: AppLocale): string | undefined {
+  if (seconds === null) {
+    return undefined;
+  }
+  const minutes = Math.max(1, Math.ceil(seconds / 60));
+  return locale === "ko" ? `${minutes}분` : `${minutes}m`;
+}
+
 function Unavailable({ copy }: { copy: OwnerTabsCopy }) {
   return (
     <>
@@ -83,22 +190,118 @@ function Unavailable({ copy }: { copy: OwnerTabsCopy }) {
 }
 
 /** [C-1] MESSAGES — the default tab. */
-export function OwnerMessagesView({ copy }: { copy: OwnerTabsCopy; locale: AppLocale }) {
+export function OwnerMessagesView({ copy, locale }: { copy: OwnerTabsCopy; locale: AppLocale }) {
+  const { failed, messages } = useOwnerMessages(locale);
+  const reasonLabels = PUBLIC_CONTACT_COPY[locale].reasonLabels;
   return (
     <>
       <SemanticHeading as="h1" className="tt-m-heading" lines={copy.messagesTitle} />
-      <MobileCard>
-        {/* Open requests arrive through the notification link, which opens the
-            reply screen. There is no endpoint that lists them yet — see
-            docs/design-canon/CONTRACTS.md. */}
-        <MobileEmptyState description={copy.messagesEmptyBody} title={copy.messagesEmptyTitle} />
-      </MobileCard>
+      {failed ? <Unavailable copy={copy} /> : null}
+      {messages === null && !failed ? (
+        <MobileCard center>
+          <p className="tt-m-card__note">{copy.loading}</p>
+        </MobileCard>
+      ) : null}
+      {messages !== null && !failed ? (
+        <MobileCard>
+          {messages && messages.length > 0 ? (
+            <MobileRows
+              rows={messages.map((message) => ({
+                label: `${formatDateTime(message.createdAt, locale)} · ${reasonLabels[message.reasonCode]}`,
+                value: message.callerMessage,
+              }))}
+            />
+          ) : (
+            <MobileEmptyState
+              description={copy.messagesEmptyBody}
+              title={copy.messagesEmptyTitle}
+            />
+          )}
+        </MobileCard>
+      ) : null}
     </>
   );
 }
 
 /** [C-3] ALERT — where the owner checks that they can still be reached. */
-export function OwnerAlertView({ copy }: { copy: OwnerTabsCopy; locale: AppLocale }) {
+export function OwnerAlertView({ copy, locale }: { copy: OwnerTabsCopy; locale: AppLocale }) {
+  const [pushReady, setPushReady] = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushFailed, setPushFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (!pushSupported()) {
+        return;
+      }
+      const config = await getOwnerPushConfig();
+      if (!active || !config.enabled) {
+        return;
+      }
+      const state = await postOwnerSession<{ subscribed: boolean }>(
+        "/api/owner/push/state",
+        locale,
+      );
+      if (active) {
+        setPushReady(true);
+        setPushSubscribed(state.subscribed);
+      }
+    }
+    void load().catch(() => {
+      if (active) {
+        setPushFailed(true);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [locale]);
+
+  async function enablePush() {
+    try {
+      setPushFailed(false);
+      const config = await getOwnerPushConfig();
+      if (!config.enabled || !pushSupported()) {
+        setPushFailed(true);
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setPushFailed(true);
+        return;
+      }
+      const registration = await registerOwnerServiceWorker();
+      let subscription = await registration?.pushManager.getSubscription();
+      subscription ??= await registration?.pushManager.subscribe({
+        applicationServerKey: decodeVapidPublicKey(config.publicKey),
+        userVisibleOnly: true,
+      });
+      if (!subscription) {
+        setPushFailed(true);
+        return;
+      }
+      const response = await fetch("/api/owner/push/subscribe", {
+        body: JSON.stringify({
+          deviceHash: await getOwnerDeviceHash(),
+          locale,
+          subscription: subscription.toJSON(),
+        }),
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("UNAVAILABLE");
+      }
+      const payload = (await response.json()) as { data: { subscribed: boolean } };
+      setPushSubscribed(payload.data.subscribed);
+    } catch {
+      setPushFailed(true);
+    }
+  }
+
   return (
     <>
       <SemanticHeading as="h1" className="tt-m-heading" lines={copy.alertTitle} />
@@ -116,30 +319,55 @@ export function OwnerAlertView({ copy }: { copy: OwnerTabsCopy; locale: AppLocal
           rows={[
             {
               action: (
-                <MobileQuietButton className="tt-m-quiet-link--strong" disabled>
+                <MobileQuietButton
+                  className="tt-m-quiet-link--strong"
+                  disabled={!pushReady || pushSubscribed}
+                  onClick={enablePush}
+                >
                   {copy.alertDeviceEnable}
                 </MobileQuietButton>
               ),
               label: copy.alertDevice,
-              value: null,
+              value: pushSubscribed ? copy.alertConnected : null,
             },
           ]}
         />
+        {pushFailed ? <MobileNotice tone="danger">{copy.unavailable}</MobileNotice> : null}
       </MobileCard>
     </>
   );
 }
 
 /** [C-4] HISTORY — one line per past request. */
-export function OwnerHistoryView({ copy }: { copy: OwnerTabsCopy; locale: AppLocale }) {
+export function OwnerHistoryView({ copy, locale }: { copy: OwnerTabsCopy; locale: AppLocale }) {
+  const { failed, history } = useOwnerHistory(locale);
+  const reasonLabels = PUBLIC_CONTACT_COPY[locale].reasonLabels;
   return (
     <>
       <SemanticHeading as="h1" className="tt-m-heading" lines={copy.historyTitle} />
-      <MobileCard>
-        {/* A result that never came is an em dash, never a zero (README §3).
-            The endpoint does not exist yet. */}
-        <MobileEmptyState description={copy.historyEmptyBody} title={copy.historyEmptyTitle} />
-      </MobileCard>
+      {failed ? <Unavailable copy={copy} /> : null}
+      {history === null && !failed ? (
+        <MobileCard center>
+          <p className="tt-m-card__note">{copy.loading}</p>
+        </MobileCard>
+      ) : null}
+      {history !== null && !failed ? (
+        <MobileCard>
+          {history && history.length > 0 ? (
+            <MobileRows
+              rows={history.map((item) => ({
+                label: `${formatDateTime(item.createdAt, locale)} · ${reasonLabels[item.reasonCode]}`,
+                value:
+                  item.result === "ANSWERED"
+                    ? `${copy.historyAnswered} ${formatDuration(item.responseSeconds, locale) ?? "—"}`
+                    : copy.historyUnanswered,
+              }))}
+            />
+          ) : (
+            <MobileEmptyState description={copy.historyEmptyBody} title={copy.historyEmptyTitle} />
+          )}
+        </MobileCard>
+      ) : null}
     </>
   );
 }
@@ -190,6 +418,7 @@ export function OwnerSettingsView({ copy, locale }: { copy: OwnerTabsCopy; local
               // The number itself is never sent to the browser; only the fact
               // that it was verified (operator, 2026-07-24).
               { label: copy.settingsContact, value: copy.settingsContactVerified },
+              { label: copy.settingsSite, value: vehicle?.siteDisplayName },
               { label: copy.settingsStickerState, value: vehicle?.qrStatus },
             ]}
           />

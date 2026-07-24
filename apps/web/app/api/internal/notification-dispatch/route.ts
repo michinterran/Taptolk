@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import {
   createNotificationDispatchService,
+  createWebPushNotificationDispatchService,
   readNotificationWorkerSecret,
 } from "../../../../notification-reply/notification-reply-runtime";
 import { readNotificationStagingInbox } from "../../../../notification-reply/notification-staging-provider";
@@ -32,11 +33,20 @@ export async function POST(request: Request) {
       limit: 10,
       workerId: `web-${requestId}`,
     });
+    const webPushService = createWebPushNotificationDispatchService();
+    const webPush = webPushService
+      ? await webPushService.run({
+          leaseSeconds: 30,
+          limit: 10,
+          workerId: `wp-${requestId}`,
+        })
+      : { skipped: true };
     return NextResponse.json(
       {
         data: {
           ...result,
           stagingInbox: readNotificationStagingInbox(),
+          webPush,
         },
         meta: { requestId },
       },

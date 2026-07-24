@@ -1,6 +1,10 @@
 import "server-only";
 
-import { NotificationDispatchService, OwnerResponseService } from "@taptolk/application";
+import {
+  NotificationDispatchService,
+  OwnerResponseService,
+  WebPushNotificationDispatchService,
+} from "@taptolk/application";
 import { parseServerEnvironment } from "@taptolk/config";
 import { createAdminServiceClient } from "../auth/service-client";
 import { NotificationReplyCrypto } from "./notification-reply-crypto";
@@ -11,7 +15,9 @@ import {
 import {
   createSupabaseNotificationDeliveryRepository,
   createSupabaseOwnerResponseRepository,
+  createSupabaseWebPushDeliveryRepository,
 } from "./supabase-notification-reply-repository";
+import { hasWebPushConfig, VapidWebPushNotificationProvider } from "./web-push-provider";
 
 function dependencies() {
   const environment = parseServerEnvironment();
@@ -50,6 +56,28 @@ export function createNotificationDispatchService(): NotificationDispatchService
     stagingMock
       ? new StagingOwnerNotificationProvider(value.crypto)
       : new UnavailableOwnerNotificationProvider(),
+  );
+}
+
+export function createWebPushNotificationDispatchService(): WebPushNotificationDispatchService | null {
+  const value = dependencies();
+  if (!value) {
+    return null;
+  }
+  const webPushConfig = {
+    privateKey: value.environment.OWNER_WEB_PUSH_VAPID_PRIVATE_KEY,
+    publicKey: value.environment.OWNER_WEB_PUSH_VAPID_PUBLIC_KEY,
+    subject: value.environment.OWNER_WEB_PUSH_VAPID_SUBJECT,
+  };
+  if (!hasWebPushConfig(webPushConfig)) {
+    return null;
+  }
+  return new WebPushNotificationDispatchService(
+    createSupabaseWebPushDeliveryRepository({
+      baseUrl: value.environment.OWNER_RESPONSE_BASE_URL as string,
+      client: value.client,
+    }),
+    new VapidWebPushNotificationProvider(webPushConfig),
   );
 }
 

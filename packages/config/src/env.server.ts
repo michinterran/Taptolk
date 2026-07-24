@@ -43,6 +43,15 @@ const serverEnvironmentSchema = z
         .optional(),
     ),
     OWNER_VERIFICATION_PROVIDER: z.enum(["mock", "unavailable"]).default("mock"),
+    OWNER_WEB_PUSH_VAPID_PRIVATE_KEY: optionalSecretSchema,
+    OWNER_WEB_PUSH_VAPID_PUBLIC_KEY: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(40).max(200).optional(),
+    ),
+    OWNER_WEB_PUSH_VAPID_SUBJECT: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(8).max(200).optional(),
+    ),
     PUBLIC_QR_BASE_URL: optionalUrlSchema,
     PRIVACY_CLEANUP_DURATION_BUDGET_MS: integerEnvironmentSchema(45_000, 1_000, 55_000),
     PRIVACY_CLEANUP_TENANT_LIMIT: integerEnvironmentSchema(25, 1, 100),

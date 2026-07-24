@@ -39,3 +39,39 @@ self.addEventListener("fetch", (event) => {
     }),
   );
 });
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {};
+  }
+  const title = typeof payload.title === "string" ? payload.title : "Taptolk";
+  const body = typeof payload.body === "string" ? payload.body : "";
+  const url = typeof payload.url === "string" ? payload.url : "/ko/owner";
+  const tag = typeof payload.tag === "string" ? payload.tag : "taptolk-owner-contact";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      data: { url },
+      icon: "/brand/taptolk-logo.png",
+      tag,
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/ko/owner";
+  event.waitUntil(
+    self.clients.matchAll({ includeUncontrolled: true, type: "window" }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client && client.url === url) {
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
+});

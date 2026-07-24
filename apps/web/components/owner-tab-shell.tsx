@@ -2,6 +2,7 @@ import { MobileShell, MobileTabBar } from "@taptolk/ui";
 import type { ReactNode } from "react";
 import type { OwnerTabsCopy } from "../content/owner-tabs-copy";
 import type { AppLocale } from "../i18n/config";
+import { OwnerPwaClient } from "./owner-pwa-client";
 
 /**
  * [C] shell — the four owner tabs (docs/design-canon/pwa/README.md §3).
@@ -93,6 +94,7 @@ export function OwnerTabShell({
         />
       }
     >
+      <OwnerPwaClient />
       {children}
     </MobileShell>
   );
