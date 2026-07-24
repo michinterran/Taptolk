@@ -124,6 +124,11 @@ so a WCJ pass never means a screen matches the design.
 
 - Do not log phone numbers, message bodies, OTPs, cookies, authorization headers,
   public QR tokens, activation codes, or response tokens.
+- **An owner's phone number never reaches the browser** (operator, 2026-07-24).
+  It is entered during activation and re-entry and nowhere else: no response
+  returns it, not even the last four digits, and no screen draws it — masked or
+  otherwise. `phone_last4` stays in the database. Changing the number means
+  entering and verifying a new one, never editing a value shown back.
 - Never expose secret-like variables through `NEXT_PUBLIC_`.
 - Tenant isolation is enforced in backend authorization and PostgreSQL RLS, not
   with frontend filtering.
