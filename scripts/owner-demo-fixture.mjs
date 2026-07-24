@@ -11,6 +11,7 @@ const defaultEnvPath = path.join(root, "apps/web/.env.local");
 const linkedProjectPath = path.join(root, "supabase/.temp/project-ref");
 const statePath = path.join(root, ".taptolk-demo/owner-activation-state.json");
 const qrSheetPath = path.join(root, ".taptolk-demo/owner-demo-qr-sheet.html");
+const notificationInboxPath = path.join(root, ".taptolk-demo/owner-demo-notification-inbox.html");
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
@@ -113,6 +114,7 @@ async function loadEnvironment(envFile) {
   return {
     envFile: path.relative(root, resolvedEnvPath),
     hasLocalMockOtp: Boolean(environment.OWNER_STAGING_MOCK_OTP),
+    queueWorkerSecret: environment.QUEUE_WORKER_SECRET,
     secretKey,
     supabaseUrl,
     tokenHmacKey,
@@ -373,6 +375,113 @@ async function renderQrSheet({ baseUrl, createdAt, items }) {
   await writeFile(qrSheetPath, html, "utf8");
 }
 
+async function renderNotificationInbox({ baseUrl, createdAt, items, locale }) {
+  const qrCode = await import("../packages/qr-engine/node_modules/qrcode/lib/server.js");
+  const cards = await Promise.all(
+    items.map(async (item, index) => {
+      const notificationUrl = `${baseUrl}/${locale}/respond/${encodeURIComponent(
+        item.responseToken,
+      )}`;
+      const imageDataUrl = await qrCode.toDataURL(notificationUrl, {
+        color: {
+          dark: "#111111",
+          light: "#ffffff",
+        },
+        errorCorrectionLevel: "H",
+        margin: 3,
+        scale: 8,
+      });
+      return `<article class="card">
+  <img alt="Owner notification ${index + 1} QR" src="${imageDataUrl}">
+  <h2>Owner Notification ${padDemoIndex(index + 1)}</h2>
+  <a href="${escapeHtml(notificationUrl)}" rel="noreferrer">Open owner response</a>
+</article>`;
+    }),
+  );
+  const html = `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Taptolk Owner Demo Notification Inbox</title>
+  <style>
+    :root {
+      color: #151515;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      background: #f5f5f1;
+    }
+    main {
+      box-sizing: border-box;
+      margin: 0 auto;
+      max-width: 960px;
+      padding: 32px;
+    }
+    header {
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .meta {
+      color: #66645f;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #dedbd2;
+      border-radius: 8px;
+      break-inside: avoid;
+      padding: 16px;
+    }
+    img {
+      aspect-ratio: 1;
+      display: block;
+      height: auto;
+      width: 100%;
+    }
+    h2 {
+      font-size: 15px;
+      margin: 12px 0 8px;
+    }
+    a {
+      color: #0f4d46;
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Taptolk Owner Demo Notification Inbox</h1>
+      <p class="meta">카카오 알림톡 대신 사용하는 데모용 알림함입니다. 링크에는 응답 토큰이 들어 있으므로 실서비스 자료로 배포하지 마세요.</p>
+      <p class="meta">Base URL: ${escapeHtml(baseUrl)} · Created: ${escapeHtml(createdAt)}</p>
+    </header>
+    <section class="grid">
+      ${cards.join("\n      ")}
+    </section>
+  </main>
+</body>
+</html>
+`;
+  await mkdir(path.dirname(notificationInboxPath), { recursive: true });
+  await writeFile(notificationInboxPath, html, "utf8");
+}
+
 async function readState() {
   return JSON.parse(await readFile(statePath, "utf8"));
 }
@@ -406,9 +515,25 @@ async function cleanupState(api, state) {
   }
   await Promise.allSettled((state.actorIds ?? []).map((userId) => api.deleteUser(userId)));
   await unlink(qrSheetPath).catch(() => undefined);
+  await unlink(notificationInboxPath).catch(() => undefined);
   if (cleanupError) {
     throw cleanupError;
   }
+}
+
+async function requestJson(url, options) {
+  const response = await fetch(url, options);
+  let body = {};
+  try {
+    body = await response.json();
+  } catch {
+    // Keep response details out of logs; caller only needs the status boundary.
+  }
+  if (!response.ok) {
+    const code = body?.error?.code ?? "UNKNOWN";
+    throw new Error(`Request failed with HTTP ${response.status} (${code}).`);
+  }
+  return body;
 }
 
 async function prepare(options) {
@@ -430,6 +555,7 @@ async function prepare(options) {
     createdAt: new Date().toISOString(),
     envFile: environment.envFile,
     linkedProjectRef: environment.linkedRef,
+    locale: options.locale,
     ownerFixtures: [],
     qrSheetPath: path.relative(root, qrSheetPath),
     schemaVersion: 2,
@@ -566,6 +692,52 @@ async function cleanup() {
   console.log("[owner-demo] demo fixture cleaned up.");
 }
 
+async function dispatch(options) {
+  const state = await readState();
+  const environment = await loadEnvironment(options.envFile ?? state.envFile ?? defaultEnvPath);
+  const baseUrl = normalizeBaseUrl(options.baseUrl || state.baseUrl);
+  const locale = state.locale ?? options.locale;
+  if (!["ko", "en"].includes(locale)) {
+    throw new Error("Demo fixture state has an unsupported locale.");
+  }
+  if (!environment.queueWorkerSecret || environment.queueWorkerSecret.length < 16) {
+    throw new Error("Owner demo dispatch requires QUEUE_WORKER_SECRET in the demo env file.");
+  }
+  const headers = {
+    Authorization: `Bearer ${environment.queueWorkerSecret}`,
+    "Content-Type": "application/json",
+  };
+  const dispatched = await requestJson(`${baseUrl}/api/internal/notification-dispatch`, {
+    headers,
+    method: "POST",
+  });
+  const inbox = await requestJson(`${baseUrl}/api/internal/notification-staging`, {
+    headers,
+    method: "GET",
+  });
+  const items = Array.isArray(inbox.data) ? inbox.data : [];
+  await renderNotificationInbox({
+    baseUrl,
+    createdAt: new Date().toISOString(),
+    items,
+    locale,
+  });
+  copyToClipboard(notificationInboxPath);
+  if (options.open) {
+    openUrl(notificationInboxPath);
+  }
+  console.log("[owner-demo] notification dispatch requested.");
+  console.log(
+    "[owner-demo] dispatched result keys:",
+    Object.keys(dispatched.data ?? {}).join(", "),
+  );
+  console.log("[owner-demo] inbox item count:", items.length);
+  console.log(
+    "[owner-demo] notification inbox contains response token material; do not commit or paste it into chat/logs.",
+  );
+  console.log("[owner-demo] inbox saved at .taptolk-demo/owner-demo-notification-inbox.html.");
+}
+
 async function main() {
   const { command, options } = parseArgs(process.argv.slice(2));
   if (command === "prepare") {
@@ -576,8 +748,12 @@ async function main() {
     await cleanup();
     return;
   }
+  if (command === "dispatch") {
+    await dispatch(options);
+    return;
+  }
   throw new Error(
-    "Usage: owner-demo-fixture.mjs prepare --base-url=https://... [--count=10] [--env-file=.taptolk-demo/vercel-preview.env] [--open] | cleanup",
+    "Usage: owner-demo-fixture.mjs prepare --base-url=https://... [--count=10] [--env-file=.taptolk-demo/vercel-preview.env] [--open] | dispatch [--open] | cleanup",
   );
 }
 

@@ -21,6 +21,7 @@
     "dev:local": "corepack pnpm db:start && corepack pnpm dev",
     "dev:web": "corepack pnpm build:packages && corepack pnpm --filter @taptolk/web dev",
     "demo:owner:cleanup": "node scripts/owner-demo-fixture.mjs cleanup",
+    "demo:owner:dispatch": "node scripts/owner-demo-fixture.mjs dispatch",
     "demo:owner:prepare": "node scripts/owner-demo-fixture.mjs prepare",
     "e2e:smoke": "playwright test",
     "e2e:staging": "playwright test --config=playwright.staging.config.ts",
