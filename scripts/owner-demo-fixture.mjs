@@ -495,6 +495,16 @@ async function writeState(state) {
 
 async function cleanupState(api, state) {
   let cleanupError = null;
+  for (const contract of state.contractFixtures ?? []) {
+    try {
+      await api.rpc("cleanup_public_contact_contract_staging_fixture", {
+        p_contract_id: contract.contractId,
+        p_tenant_id: contract.tenantId,
+      });
+    } catch (error) {
+      cleanupError ??= error;
+    }
+  }
   for (const fixture of state.ownerFixtures ?? []) {
     try {
       await api.rpc("cleanup_owner_activation_staging_fixture", {
@@ -556,6 +566,7 @@ async function prepare(options) {
     envFile: environment.envFile,
     linkedProjectRef: environment.linkedRef,
     locale: options.locale,
+    contractFixtures: [],
     ownerFixtures: [],
     qrSheetPath: path.relative(root, qrSheetPath),
     schemaVersion: 2,
@@ -583,6 +594,17 @@ async function prepare(options) {
         };
       }),
     );
+    for (const [index, siteId] of siteIds.entries()) {
+      const contractId = await api.rpc("provision_public_contact_contract_staging_fixture", {
+        p_fixture_label: `PC-${randomBytes(6).toString("hex").toUpperCase()}${padDemoIndex(
+          index + 1,
+        )}`,
+        p_management_company_id: companyId,
+        p_site_id: siteId,
+        p_tenant_id: tenantId,
+      });
+      state.contractFixtures.push({ contractId, tenantId });
+    }
 
     const superAdmin = await createActor(api, runToken, "SUPER_ADMIN");
     state.actorIds.push(superAdmin.id);
