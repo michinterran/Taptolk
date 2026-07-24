@@ -68,12 +68,12 @@ Codex 인계 순서표다.
 | B-4 | 응답 도착 | `04-caller-response-received.png` | **완료** |
 | B-5 | 멘트 더 보기 | README §8 | **완료** |
 | B-6 | 세션 만료·왕복 한도 | README §5 | **완료** (한도 대기) |
-| C-1 | MESSAGES · 빈 | README §3 | |
-| C-2 | MESSAGES · 응답 | `03-owner-reply.png` | |
-| C-3 | ALERT | README §3 | |
-| C-4 | HISTORY | README §3 | |
-| C-5 | SETTINGS | README §3 | |
-| C-6 | 중지·해지 확인 | README §3 | |
+| C-1 | MESSAGES · 빈 | README §3 | **완료** |
+| C-2 | MESSAGES · 응답 | `03-owner-reply.png` | 응답 화면 재작업 남음 |
+| C-3 | ALERT | README §3 | **완료** |
+| C-4 | HISTORY | README §3 | **완료** |
+| C-5 | SETTINGS | README §3 | **완료** |
+| C-6 | 중지·해지 확인 | README §3 | **완료** (실행 대기) |
 | E | 사용할 수 없는 스티커 | README §4 | **완료** (`dcdc2cd`) |
 
 ### P2 · 콘솔 척추 — 정본 `reference-1-admin-console.png` + `console-*.html`
@@ -111,5 +111,7 @@ Codex 인계 순서표다.
 | 🔴 **`complete`에서 `activationCode` 제거** | **없으면 차주 활성화가 완료되지 않는다** | A 전체 |
 | 🔴 **재진입 엔드포인트 2개** (`/api/owner/session/reclaim/*`) | **없으면 폰 바꾼 차주가 자기 스티커를 못 연다** | R-1·R-2 |
 | 세션 응답에 `plateLast4`·`callerMessage`·`createdAt`·`elapsedSeconds`·남은 왕복 | 시안 02·04의 카드와 시각·경과·한도 표시가 비어 있다 | B-2·B-3·B-4·B-6 |
+| 차주 호출 목록·지난 호출·채널 상태 엔드포인트 | MESSAGES·HISTORY·ALERT가 빈 상태로만 남는다 | C-1·C-3·C-4 |
+| 스티커 중지·등록 해지 실행 엔드포인트 | 확인 화면의 `확인`이 눌리지 않는다 | C-6 |
 
 계약은 `docs/design-canon/CONTRACTS.md`에 화면별로 적는다.

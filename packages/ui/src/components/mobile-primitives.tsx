@@ -320,8 +320,11 @@ export function StatusReadout({ className, label, meta, status, ...props }: Stat
 
 export type MobileFact = {
   label: ReactNode;
-  /** Absent renders as an em dash. A missing value is never drawn as zero. */
-  value?: ReactNode;
+  /**
+   * `undefined` renders as an em dash — a value we expected and did not get is
+   * never drawn as zero. `null` means the row has no value by design.
+   */
+  value?: ReactNode | null;
 };
 
 export type MobileFactsProps = HTMLAttributes<HTMLDListElement> & {
@@ -360,7 +363,9 @@ export function MobileRows({ className, rows, ...props }: MobileRowsProps) {
       {rows.map((row) => (
         <li key={String(row.label)}>
           <span className="tt-m-rows__label">{row.label}</span>
-          <span className="tt-m-rows__value">{row.value ?? "—"}</span>
+          {/* `null` means the row carries an action instead of a value; only
+              `undefined` is a value we expected and did not get. */}
+          {row.value === null ? null : <span className="tt-m-rows__value">{row.value ?? "—"}</span>}
           {row.action}
         </li>
       ))}

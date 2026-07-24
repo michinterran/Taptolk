@@ -7092,6 +7092,13 @@ body:has(.tt-m-shell)::before {
 
 /* Revealing the rest of the catalogue is an invitation, not a way out, so the
    canon draws it dark and bold (01-caller-compose.png). */
+/* Ending a registration cannot be undone, so it is the one link drawn as
+   danger. Pausing sits beside it as an ordinary secondary (README §3). */
+.tt-m-quiet-link--danger {
+  color: var(--tt-color-danger);
+  font-weight: var(--tt-font-weight-bold);
+}
+
 .tt-m-quiet-link--strong {
   color: var(--tt-color-text);
   font-weight: var(--tt-font-weight-bold);
