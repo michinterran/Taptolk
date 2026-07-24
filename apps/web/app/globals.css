@@ -6964,9 +6964,10 @@ body:has(.tt-m-shell)::before {
   resize: vertical;
 }
 
-/* The plate step already carries a heading that names the field, and the canon
-   draws no second label above the input — so the label stays for assistive
-   technology and leaves the layout alone. */
+/* Some fields are named by the heading above them and the canon draws no second
+   label — the plate step, and the caller's free-text box. The label stays for
+   assistive technology and leaves the layout alone. */
+.tt-m-hidden-label,
 .tt-m-field--plate > label {
   block-size: 1px;
   clip-path: inset(50%);
@@ -6974,6 +6975,21 @@ body:has(.tt-m-shell)::before {
   overflow: hidden;
   position: absolute;
   white-space: nowrap;
+}
+
+/* A card can hold a bare textarea, as the caller's compose screen does. It takes
+   the same shape as a field's textarea without needing a label above it. */
+.tt-m-card > textarea {
+  background: var(--tt-m-surface);
+  border: 1px solid var(--tt-m-hairline);
+  border-radius: var(--tt-m-field-radius);
+  color: var(--tt-color-text);
+  font-size: var(--tt-m-body-size);
+  min-height: var(--tt-m-textarea-min-height);
+  padding-block: var(--tt-space-3);
+  padding-inline: var(--tt-m-card-padding);
+  resize: vertical;
+  width: 100%;
 }
 
 /* The plate a driver types is shown at the size it is shown back to them. */
@@ -7072,6 +7088,13 @@ body:has(.tt-m-shell)::before {
 .tt-m-quiet-link {
   color: var(--tt-color-text-muted);
   font-weight: var(--tt-font-weight-medium);
+}
+
+/* Revealing the rest of the catalogue is an invitation, not a way out, so the
+   canon draws it dark and bold (01-caller-compose.png). */
+.tt-m-quiet-link--strong {
+  color: var(--tt-color-text);
+  font-weight: var(--tt-font-weight-bold);
 }
 
 /* Status and readouts -------------------------------------------------------- */

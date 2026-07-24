@@ -2,6 +2,15 @@ import type { ContactReasonCode } from "@taptolk/domain";
 import type { AppLocale } from "../i18n/config";
 
 export interface PublicContactCopy {
+  /** Canon 01: the line under the plate on the compose screen. */
+  composeLead: string;
+  /** Names the figure above it: the caller only ever sees the last four. */
+  plateLast4Label: string;
+  composeTitle: readonly [string, ...string[]];
+  /** Reveals the rest of the catalog. Canon 01, "멘트 더 보기". */
+  moreReasons: string;
+  freeMessagePlaceholder: string;
+  sendAction: string;
   back: string;
   confirmDescription: string;
   confirmTitle: string;
@@ -44,6 +53,12 @@ export interface PublicContactCopy {
 }
 
 const ko: PublicContactCopy = {
+  composeLead: "차주님에게 비밀 메시지를 전달합니다.",
+  plateLast4Label: "차량번호 뒷자리",
+  composeTitle: ["상황을 선택하거나", "메시지를 보내세요"],
+  moreReasons: "멘트 더 보기",
+  freeMessagePlaceholder: "직접 메시지를 입력할 수도 있어요",
+  sendAction: "메시지 보내기",
   back: "이전",
   confirmDescription: "아래 내용으로 요청을 접수하고 차주 알림을 준비합니다.",
   confirmTitle: "요청 내용을 확인해 주세요.",
@@ -106,6 +121,12 @@ const ko: PublicContactCopy = {
 };
 
 const en: PublicContactCopy = {
+  composeLead: "Your message reaches the owner without revealing either number.",
+  plateLast4Label: "Last four of the plate",
+  composeTitle: ["Pick a situation", "or write a message"],
+  moreReasons: "More messages",
+  freeMessagePlaceholder: "Or write your own message",
+  sendAction: "Send message",
   back: "Back",
   confirmDescription: "We will accept this request and prepare an owner notification.",
   confirmTitle: "Review your request.",

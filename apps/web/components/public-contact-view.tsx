@@ -1,13 +1,44 @@
 "use client";
 
-import { SemanticHeading } from "@taptolk/ui";
-import type { FormEvent } from "react";
+import { CONTACT_REASON_CODES, type ContactReasonCode } from "@taptolk/domain";
+import {
+  ChoiceList,
+  ChoiceRow,
+  MobileCard,
+  MobileLink,
+  MobileNotice,
+  MobilePrimary,
+  MobileQuietButton,
+  MobileShell,
+  Plate,
+  SemanticHeading,
+} from "@taptolk/ui";
 import { useEffect, useState } from "react";
 import type { PublicContactCopy } from "../content/public-contact-copy";
 import type { AppLocale } from "../i18n/config";
+import { reasonIcon } from "./contact-reason-icons";
 
-type Step = "CONFIRM" | "INSPECTING" | "REASON" | "REVIEW" | "VEHICLE";
+/**
+ * [B-1] Caller compose, from docs/design-canon/pwa/01-caller-compose.png.
+ *
+ * One screen: the plate at the top as context, the situations as icon rows, and
+ * one primary. The plate is shown, not asked — the server already knows which
+ * vehicle this sticker belongs to, so the old confirmation step was asking the
+ * caller to agree with something they had no way to check.
+ *
+ * The reasons come from the message catalogue in a fixed order, and only the
+ * first three show until the caller asks for more (README §8). The first is
+ * emphasised, but there is no star and no "most used" label: that is a claim
+ * about frequency and nothing has measured it yet (DESIGN_SYSTEM.md §4).
+ */
+type Step = "COMPOSE" | "LOADING";
 type ErrorCode = "CONFLICT" | "INVALID" | "LIMITED" | "UNAVAILABLE" | null;
+
+/** The canon shows three rows before the "more" link. */
+const VISIBLE_REASONS = 3;
+
+/** Reasons the caller picks from. `OTHER` is the free-text box, not a row. */
+const PICKABLE_REASONS = CONTACT_REASON_CODES.filter((code) => code !== "OTHER");
 
 interface PublicContactViewProps {
   copy: PublicContactCopy;
@@ -19,9 +50,7 @@ interface PublicContactViewProps {
 
 interface PublicQrData {
   siteDisplayName: string;
-  vehicle: {
-    plateLast4: string;
-  };
+  vehicle: { plateLast4: string };
 }
 
 async function postJson(path: string, body: Readonly<Record<string, unknown>>) {
@@ -32,7 +61,7 @@ async function postJson(path: string, body: Readonly<Record<string, unknown>>) {
     headers: { "Content-Type": "application/json" },
     method: "POST",
   });
-  const payload: unknown = await response.json();
+  const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const code =
       payload && typeof payload === "object" && "error" in payload
@@ -65,12 +94,13 @@ export function PublicContactView({
   ownerEntryLink,
   publicToken,
 }: PublicContactViewProps) {
-  const [step, setStep] = useState<Step>("INSPECTING");
+  const [step, setStep] = useState<Step>("LOADING");
   const [error, setError] = useState<ErrorCode>(null);
   const [working, setWorking] = useState(false);
   const [qr, setQr] = useState<PublicQrData | null>(null);
-  const [reasonCode, setReasonCode] = useState<keyof typeof copy.reasonLabels>("MOVE_REQUEST");
+  const [reasonCode, setReasonCode] = useState<ContactReasonCode | null>(null);
   const [freeMessage, setFreeMessage] = useState("");
+  const [showAllReasons, setShowAllReasons] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -89,15 +119,15 @@ export function PublicContactView({
             siteDisplayName,
             vehicle: { plateLast4: (vehicle as { plateLast4: string }).plateLast4 },
           });
-          setStep("VEHICLE");
-          return;
         }
-        throw new Error("UNAVAILABLE");
+        if (active) {
+          setStep("COMPOSE");
+        }
       })
       .catch((reason: unknown) => {
         if (active) {
           setError(mapError(reason));
-          setStep("VEHICLE");
+          setStep("COMPOSE");
         }
       });
     return () => {
@@ -105,7 +135,9 @@ export function PublicContactView({
     };
   }, [locale, publicToken]);
 
-  const message = reasonCode === "OTHER" ? freeMessage : copy.templateMessages[reasonCode];
+  const typed = freeMessage.trim();
+  // What the caller wrote is what they want to say, so it wins over a picked row.
+  const message = typed.length > 0 ? typed : reasonCode ? copy.templateMessages[reasonCode] : "";
   const errorMessage =
     error === "CONFLICT"
       ? copy.errorConflict
@@ -117,9 +149,8 @@ export function PublicContactView({
             ? copy.errorUnavailable
             : null;
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!qr) {
+  async function submit() {
+    if (!qr || message.length === 0) {
       return;
     }
     setWorking(true);
@@ -128,10 +159,10 @@ export function PublicContactView({
       await postJson("/api/public/contact-sessions", {
         locale,
         message,
-        messageMode: reasonCode === "OTHER" ? "FREE_TEXT" : "TEMPLATE",
+        messageMode: typed.length > 0 ? "FREE_TEXT" : "TEMPLATE",
         plateLast4: qr.vehicle.plateLast4,
         publicToken,
-        reasonCode,
+        reasonCode: typed.length > 0 ? "OTHER" : reasonCode,
       });
       window.location.assign(`/${locale}/c/current`);
     } catch (reason) {
@@ -141,128 +172,93 @@ export function PublicContactView({
     }
   }
 
+  const reasons = showAllReasons ? PICKABLE_REASONS : PICKABLE_REASONS.slice(0, VISIBLE_REASONS);
+
   return (
-    <div className="public-contact-shell">
-      <header className="public-contact-header">
-        {/* biome-ignore lint/performance/noImgElement: immutable logo must be byte-for-byte */}
-        <img className="public-contact-logo" src="/brand/taptolk-logo.png" alt="Taptolk" />
-        <span className="public-contact-locale">{locale.toUpperCase()}</span>
-      </header>
+    <MobileShell
+      actions={
+        step === "COMPOSE" ? (
+          <>
+            <MobilePrimary disabled={working || message.length === 0} onClick={() => void submit()}>
+              {working ? copy.preparing : copy.sendAction}
+            </MobilePrimary>
+            <MobileLink href={`/${locale}/q/${publicToken}/owner`} tone="quiet">
+              {ownerEntryLink}
+            </MobileLink>
+          </>
+        ) : null
+      }
+      brand={
+        // biome-ignore lint/performance/noImgElement: the immutable logo must be served byte-for-byte
+        <img alt="Taptolk" height="405" src="/brand/taptolk-logo.png" width="1000" />
+      }
+    >
+      {errorMessage ? <MobileNotice tone="danger">{errorMessage}</MobileNotice> : null}
 
-      <section className="public-contact-card" aria-live="polite">
-        <p className="eyebrow">{copy.inspectLabel}</p>
-        <SemanticHeading className="public-contact-title" lines={[copy.line1, copy.line2]} />
-        <p className="public-contact-description">{copy.description}</p>
-
-        {step === "INSPECTING" ? <p className="public-contact-notice">{copy.loading}</p> : null}
-        {errorMessage ? (
-          <div className="public-contact-error" role="alert">
-            <p>{errorMessage}</p>
-            <button type="button" onClick={() => window.location.reload()}>
-              {copy.retry}
-            </button>
-          </div>
+      <MobileCard center>
+        {qr ? (
+          <>
+            {/* The caller never receives the full plate — only its last four
+                (docs/design-canon/pwa/README.md §2). Labelling it stops a bare
+                four-digit figure from reading as a code. */}
+            <span className="tt-m-card__label">{copy.plateLast4Label}</span>
+            <Plate plate={qr.vehicle.plateLast4} />
+          </>
         ) : null}
+        <p className="tt-m-card__body">{copy.composeLead}</p>
+      </MobileCard>
 
-        {step === "VEHICLE" && qr ? (
-          <div className="public-contact-step">
-            <h2>{copy.vehicleTitle}</h2>
-            <p>{copy.vehicleDescription}</p>
-            <div className="public-contact-vehicle">
-              <strong>•••• {qr.vehicle.plateLast4}</strong>
-              <span>
-                {copy.siteLabel} · {qr.siteDisplayName}
-              </span>
-            </div>
-            <p className="public-contact-privacy">{copy.ownerPrivacy}</p>
-            <button
-              className="public-contact-primary"
-              type="button"
-              onClick={() => setStep("REASON")}
+      {step === "LOADING" ? (
+        <MobileCard center>
+          <p className="tt-m-card__note">{copy.loading}</p>
+        </MobileCard>
+      ) : (
+        <>
+          <SemanticHeading as="h1" className="tt-m-heading" lines={copy.composeTitle} />
+
+          <ChoiceList>
+            {reasons.map((code) => (
+              <ChoiceRow
+                icon={reasonIcon(code)}
+                key={code}
+                label={copy.reasonLabels[code]}
+                onClick={() => {
+                  setReasonCode(code);
+                  setFreeMessage("");
+                }}
+                selected={typed.length === 0 && reasonCode === code}
+              />
+            ))}
+          </ChoiceList>
+
+          {showAllReasons ? null : (
+            <MobileQuietButton
+              className="tt-m-quiet-link--strong"
+              onClick={() => setShowAllReasons(true)}
             >
-              {copy.vehicleConfirm}
-            </button>
-          </div>
-        ) : null}
+              {copy.moreReasons}
+            </MobileQuietButton>
+          )}
 
-        {step === "REASON" ? (
-          <div className="public-contact-step">
-            <h2>{copy.reasonTitle}</h2>
-            <p>{copy.reasonDescription}</p>
-            <div className="public-contact-reasons">
-              {Object.entries(copy.reasonLabels).map(([code, label]) => (
-                <button
-                  className={reasonCode === code ? "is-selected" : undefined}
-                  key={code}
-                  type="button"
-                  onClick={() => {
-                    setReasonCode(code as keyof typeof copy.reasonLabels);
-                    setStep(code === "OTHER" ? "CONFIRM" : "REVIEW");
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <button
-              className="public-contact-link"
-              type="button"
-              onClick={() => setStep("VEHICLE")}
-            >
-              {copy.back}
-            </button>
-          </div>
-        ) : null}
-
-        {step === "CONFIRM" ? (
-          <form
-            className="public-contact-step"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setStep("REVIEW");
-            }}
-          >
-            <label htmlFor="public-contact-message">{copy.freeMessage}</label>
+          <MobileCard>
+            <label className="tt-m-hidden-label" htmlFor="contact-free-message">
+              {copy.freeMessage}
+            </label>
             <textarea
-              id="public-contact-message"
-              maxLength={200}
-              required
-              value={freeMessage}
+              aria-describedby="contact-free-message-hint"
+              id="contact-free-message"
               onChange={(event) => setFreeMessage(event.target.value)}
+              placeholder={copy.freeMessagePlaceholder}
+              value={freeMessage}
             />
-            <small>{copy.freeMessageHint}</small>
-            <button className="public-contact-primary" type="submit">
-              {copy.confirmTitle}
-            </button>
-            <button className="public-contact-link" type="button" onClick={() => setStep("REASON")}>
-              {copy.back}
-            </button>
-          </form>
-        ) : null}
+            <p className="tt-m-card__note" id="contact-free-message-hint">
+              {copy.freeMessageHint}
+            </p>
+          </MobileCard>
 
-        {step === "REVIEW" ? (
-          <form className="public-contact-step" onSubmit={(event) => void submit(event)}>
-            <h2>{copy.confirmTitle}</h2>
-            <p>{copy.confirmDescription}</p>
-            <blockquote>{message}</blockquote>
-            <button className="public-contact-primary" disabled={working} type="submit">
-              {working ? copy.preparing : copy.send}
-            </button>
-            <button className="public-contact-link" type="button" onClick={() => setStep("REASON")}>
-              {copy.back}
-            </button>
-          </form>
-        ) : null}
-
-        <p className="public-contact-security">{copy.security}</p>
-      </section>
-
-      {/* The owner whose phone changed lands here on their own sticker, because
-          this device has no owner session. This is the way back
-          (docs/design-canon/pwa/README.md §1). */}
-      <a className="public-contact-link" href={`/${locale}/q/${publicToken}/owner`}>
-        {ownerEntryLink}
-      </a>
-    </div>
+          <MobileNotice>{copy.ownerPrivacy}</MobileNotice>
+        </>
+      )}
+    </MobileShell>
   );
 }
