@@ -204,6 +204,25 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
             ? copy.errorUnavailable
             : null;
 
+  async function completeWithProof(nextProof: string) {
+    const completed = await postJson("/api/owner/activation/complete", {
+      consentAccepted: true,
+      deviceHash: await getOwnerDeviceHash(),
+      locale,
+      plate,
+      privacyVersion: "PRIVACY_V1",
+      proof: nextProof,
+      publicToken,
+      termsVersion: "TERMS_V1",
+    });
+    setDonePlate(readString(completed.data, "vehiclePlateLast4") ?? "");
+    setPhone("");
+    setPlate("");
+    setOtp("");
+    setRemaining(0);
+    setStep("DONE");
+  }
+
   async function requestOtp() {
     setWorking(true);
     setError(null);
@@ -221,6 +240,10 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
       setChallengeId(nextChallengeId);
       const expiresIn = payload.data.expiresInSeconds;
       setRemaining(typeof expiresIn === "number" ? expiresIn : 0);
+      const autoProof = payload.data.proof;
+      if (typeof autoProof === "string") {
+        await completeWithProof(autoProof);
+      }
     } catch (reason) {
       setError(mapError(reason));
     } finally {
@@ -242,22 +265,7 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
       if (typeof nextProof !== "string") {
         throw new Error("UNAVAILABLE");
       }
-      const completed = await postJson("/api/owner/activation/complete", {
-        consentAccepted: true,
-        deviceHash: await getOwnerDeviceHash(),
-        locale,
-        plate,
-        privacyVersion: "PRIVACY_V1",
-        proof: nextProof,
-        publicToken,
-        termsVersion: "TERMS_V1",
-      });
-      setDonePlate(readString(completed.data, "vehiclePlateLast4") ?? "");
-      setPhone("");
-      setPlate("");
-      setOtp("");
-      setRemaining(0);
-      setStep("DONE");
+      await completeWithProof(nextProof);
     } catch (reason) {
       setError(mapError(reason));
     } finally {
