@@ -4,6 +4,7 @@ import {
   createNotificationDispatchService,
   readNotificationWorkerSecret,
 } from "../../../../notification-reply/notification-reply-runtime";
+import { readNotificationStagingInbox } from "../../../../notification-reply/notification-staging-provider";
 import { notificationWorkerAuthorized } from "../../../../notification-reply/owner-response-route";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,13 @@ export async function POST(request: Request) {
       workerId: `web-${requestId}`,
     });
     return NextResponse.json(
-      { data: result, meta: { requestId } },
+      {
+        data: {
+          ...result,
+          stagingInbox: readNotificationStagingInbox(),
+        },
+        meta: { requestId },
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch {

@@ -733,11 +733,12 @@ async function dispatch(options) {
     headers,
     method: "POST",
   });
-  const inbox = await requestJson(`${baseUrl}/api/internal/notification-staging`, {
-    headers,
-    method: "GET",
-  });
-  const items = Array.isArray(inbox.data) ? inbox.data : [];
+  const items = Array.isArray(dispatched.data?.stagingInbox)
+    ? dispatched.data.stagingInbox
+    : await requestJson(`${baseUrl}/api/internal/notification-staging`, {
+        headers,
+        method: "GET",
+      }).then((inbox) => (Array.isArray(inbox.data) ? inbox.data : []));
   await renderNotificationInbox({
     baseUrl,
     createdAt: new Date().toISOString(),
