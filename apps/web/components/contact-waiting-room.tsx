@@ -13,6 +13,7 @@ import {
   MobilePrimary,
   MobileSecondary,
   MobileShell,
+  Plate,
   SemanticHeading,
   StatusReadout,
 } from "@taptolk/ui";
@@ -49,6 +50,7 @@ interface SessionData {
   ownerMessages: Array<{ body: string; createdAt: string; replyCode: string | null }>;
   reasonCode?: ContactReasonCode;
   status: PublicContactStatus;
+  vehiclePlateLast4?: string;
 }
 
 interface EscalationData {
@@ -273,6 +275,7 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
 
   return (
     <MobileShell
+      className={replied ? "tt-m-shell--contact-result" : "tt-m-shell--contact-wait"}
       actions={
         <>
           {replied && !resolved ? (
@@ -303,6 +306,7 @@ export function ContactWaitingRoom({ copy, locale }: ContactWaitingRoomProps) {
       {error ? <MobileNotice tone="danger">{copy.errorUnavailable}</MobileNotice> : null}
 
       <MobileCard center>
+        {session?.vehiclePlateLast4 ? <Plate plate={session.vehiclePlateLast4} /> : null}
         <p className="tt-m-card__body">{replied ? copy.repliedLead : copy.waitLead}</p>
       </MobileCard>
 

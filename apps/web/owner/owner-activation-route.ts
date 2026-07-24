@@ -89,6 +89,19 @@ const ownerSessionSchema = z
   })
   .strict();
 
+const ownerMessageSchema = ownerSessionSchema
+  .extend({
+    sessionId: z.uuid(),
+  })
+  .strict();
+
+const ownerMessageReplySchema = ownerMessageSchema
+  .extend({
+    body: z.string().max(500).optional(),
+    code: z.string().min(3).max(64),
+  })
+  .strict();
+
 const pushSubscriptionSchema = z
   .object({
     deviceHash: sharedSchema.deviceHash,
@@ -377,6 +390,44 @@ export async function listOwnerMessages(request: Request): Promise<NextResponse>
       sessionToken,
     });
     return safeJson({ data: { messages } });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function readOwnerMessage(request: Request): Promise<NextResponse> {
+  try {
+    const input = ownerMessageSchema.parse(await readBody(request));
+    const sessionToken = readOwnerSessionOrUnauthorized(request);
+    if (sessionToken instanceof NextResponse) {
+      return sessionToken;
+    }
+    const message = await serviceOrThrow().readMessage({
+      deviceHash: input.deviceHash,
+      sessionId: input.sessionId,
+      sessionToken,
+    });
+    return safeJson({ data: { message } });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function replyToOwnerMessage(request: Request): Promise<NextResponse> {
+  try {
+    const input = ownerMessageReplySchema.parse(await readBody(request));
+    const sessionToken = readOwnerSessionOrUnauthorized(request);
+    if (sessionToken instanceof NextResponse) {
+      return sessionToken;
+    }
+    const result = await serviceOrThrow().replyToMessage({
+      ...(input.body === undefined ? {} : { body: input.body }),
+      code: input.code,
+      deviceHash: input.deviceHash,
+      sessionId: input.sessionId,
+      sessionToken,
+    });
+    return safeJson({ data: result });
   } catch (error) {
     return errorResponse(error);
   }

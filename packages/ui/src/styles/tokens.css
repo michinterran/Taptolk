@@ -180,9 +180,9 @@
      --------------------------------------------------------------------------- */
 
   /* The column stops growing past a phone; a 900px-wide card stack is not the canon. */
-  --tt-m-max-width: 30rem;
-  --tt-m-gutter: 1.25rem;
-  --tt-m-stack-gap: 1.25rem;
+  --tt-m-max-width: 27rem;
+  --tt-m-gutter: 1.5rem;
+  --tt-m-stack-gap: 1.5rem;
 
   /* The mockups sit on a near-white ground so the white cards separate without a border. */
   --tt-m-background: #f8f9fb;
@@ -197,44 +197,44 @@
   --tt-m-accent-surface: color-mix(in srgb, var(--tt-color-logo-purple) 12%, #ffffff);
   --tt-m-on-accent: #ffffff;
 
-  --tt-m-card-radius: 1rem;
-  --tt-m-card-padding: 1.25rem;
+  --tt-m-card-radius: 1.25rem;
+  --tt-m-card-padding: 1.5rem;
 
   /* Choice row: icon chip + one line. 64px keeps the 18.7% of card width the
      mockups hold and stays above the 44px touch minimum. */
-  --tt-m-choice-height: 4rem;
-  --tt-m-choice-gap: 0.625rem;
-  --tt-m-choice-padding-inline: 1.125rem;
-  --tt-m-choice-radius: 1rem;
-  --tt-m-chip-size: 2rem;
-  --tt-m-chip-radius: 0.625rem;
+  --tt-m-choice-height: 4.75rem;
+  --tt-m-choice-gap: 0.875rem;
+  --tt-m-choice-padding-inline: 1.25rem;
+  --tt-m-choice-radius: 1.125rem;
+  --tt-m-chip-size: 2.375rem;
+  --tt-m-chip-radius: 0.75rem;
 
   /* One primary per screen, full width. */
-  --tt-m-button-height: 2.875rem;
-  --tt-m-button-radius: 1rem;
-  --tt-m-button-font-size: 1rem;
+  --tt-m-button-height: 3.375rem;
+  --tt-m-button-radius: 1.125rem;
+  --tt-m-button-font-size: 1.125rem;
   --tt-m-button-mark-size: 1.25rem;
 
   /* Fields are taller than console fields because they are typed on a phone. */
   --tt-m-field-height: 3.25rem;
   --tt-m-field-radius: 0.875rem;
-  --tt-m-textarea-min-height: 6.5rem;
+  --tt-m-textarea-min-height: 7.5rem;
 
   /* The plate is the largest figure on any mobile screen and always brand-coloured. */
-  --tt-m-plate-size: 2rem;
+  --tt-m-plate-size: 2.5rem;
   --tt-m-plate-weight: 700;
   --tt-m-plate-letter-spacing: -0.01em;
 
-  --tt-m-heading-size: 1.3125rem;
-  --tt-m-title-size: 1rem;
-  --tt-m-body-size: 1rem;
-  --tt-m-label-size: 0.9375rem;
+  --tt-m-heading-size: 1.45rem;
+  --tt-m-title-size: 1.125rem;
+  --tt-m-body-size: 1.0625rem;
+  --tt-m-label-size: 1rem;
   --tt-m-meta-size: 0.8125rem;
 
-  --tt-m-brand-width: 8.75rem;
-  --tt-m-tabbar-height: 4.25rem;
-  --tt-m-tab-icon-size: 1.5rem;
-  --tt-m-tab-label-size: 0.75rem;
+  --tt-m-brand-width: 9.75rem;
+  --tt-m-tabbar-height: 5rem;
+  --tt-m-tab-icon-size: 1.75rem;
+  --tt-m-tab-label-size: 0.8125rem;
   --tt-m-tab-label-letter-spacing: 0.06em;
 
   /* State tint pairs for badges / pills / tiles — bg + accessible foreground (new) */

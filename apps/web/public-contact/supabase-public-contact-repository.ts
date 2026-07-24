@@ -71,6 +71,17 @@ function stringField(row: Record<string, unknown>, field: string): string {
   return value;
 }
 
+function optionalStringField(row: Record<string, unknown>, field: string): string | undefined {
+  const value = row[field];
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new PublicContactRepositoryError("UNAVAILABLE");
+  }
+  return value;
+}
+
 function resultData(result: {
   data: unknown;
   error: { code?: string; message?: string } | null;
@@ -109,12 +120,18 @@ function sessionReadModel(row: Record<string, unknown>): PublicContactSessionRea
       replyCode,
     };
   });
+  const callerMessage = optionalStringField(row, "caller_message");
+  const createdAt = optionalStringField(row, "created_at");
+  const vehiclePlateLast4 = optionalStringField(row, "vehicle_plate_last4");
   return {
+    ...(callerMessage === undefined ? {} : { callerMessage }),
     callerMessageCount,
+    ...(createdAt === undefined ? {} : { createdAt }),
     expiresAt: stringField(row, "expires_at"),
     ownerMessages,
     reasonCode: reasonCode as (typeof CONTACT_REASON_CODES)[number],
     status: status as PublicContactStatus,
+    ...(vehiclePlateLast4 === undefined ? {} : { vehiclePlateLast4 }),
     version,
   };
 }

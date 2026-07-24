@@ -22,11 +22,14 @@ export interface PublicQrContactInspection {
 }
 
 export interface PublicContactSessionReadModel {
+  callerMessage?: string;
   callerMessageCount: number;
+  createdAt?: string;
   expiresAt: string;
   ownerMessages: readonly PublicContactOwnerMessage[];
   reasonCode: ContactReasonCode;
   status: PublicContactStatus;
+  vehiclePlateLast4?: string;
   version: number;
 }
 

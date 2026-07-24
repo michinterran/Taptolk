@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  ChoiceList,
+  ChoiceRow,
   MobileCard,
   MobileEmptyState,
   MobileNotice,
@@ -8,10 +10,12 @@ import {
   MobileQuietButton,
   MobileRows,
   MobileSecondary,
+  Plate,
   SemanticHeading,
   StatusReadout,
 } from "@taptolk/ui";
 import { useEffect, useState } from "react";
+import { OWNER_RESPONSE_COPY } from "../content/owner-response-copy";
 import type { OwnerTabsCopy } from "../content/owner-tabs-copy";
 import { PUBLIC_CONTACT_COPY } from "../content/public-contact-copy";
 import type { AppLocale } from "../i18n/config";
@@ -22,6 +26,7 @@ import {
   pushSupported,
   registerOwnerServiceWorker,
 } from "../owner/owner-device-client";
+import { replyIcon } from "./owner-reply-icons";
 
 /**
  * The four owner tabs (docs/design-canon/pwa/README.md §3).
@@ -45,6 +50,7 @@ interface OwnerMessage {
   callerMessage: string;
   createdAt: string;
   reasonCode: keyof (typeof PUBLIC_CONTACT_COPY)["ko"]["reasonLabels"];
+  replyAvailable?: boolean;
   sessionId: string;
   status: string;
   vehiclePlateLast4: string;
@@ -203,14 +209,27 @@ export function OwnerMessagesView({ copy, locale }: { copy: OwnerTabsCopy; local
         </MobileCard>
       ) : null}
       {messages !== null && !failed ? (
-        <MobileCard>
+        <MobileCard className="tt-owner-message-list-card">
           {messages && messages.length > 0 ? (
-            <MobileRows
-              rows={messages.map((message) => ({
-                label: `${formatDateTime(message.createdAt, locale)} · ${reasonLabels[message.reasonCode]}`,
-                value: message.callerMessage,
-              }))}
-            />
+            <ul className="tt-owner-message-list">
+              {messages.map((message) => (
+                <li key={message.sessionId}>
+                  <a
+                    className="tt-owner-message-link"
+                    href={`/${locale}/owner/messages/${message.sessionId}`}
+                  >
+                    <span className="tt-owner-message-link__meta">
+                      {formatDateTime(message.createdAt, locale)} ·{" "}
+                      {reasonLabels[message.reasonCode]}
+                    </span>
+                    <strong>{message.callerMessage}</strong>
+                    {message.replyAvailable ? (
+                      <span className="tt-owner-message-link__action">{copy.messagesReply}</span>
+                    ) : null}
+                  </a>
+                </li>
+              ))}
+            </ul>
           ) : (
             <MobileEmptyState
               description={copy.messagesEmptyBody}
@@ -219,6 +238,143 @@ export function OwnerMessagesView({ copy, locale }: { copy: OwnerTabsCopy; local
           )}
         </MobileCard>
       ) : null}
+    </>
+  );
+}
+
+export function OwnerMessageReplyView({
+  locale,
+  sessionId,
+}: {
+  locale: AppLocale;
+  sessionId: string;
+}) {
+  const copy = OWNER_RESPONSE_COPY[locale];
+  const [message, setMessage] = useState<OwnerMessage | null>(null);
+  const [selected, setSelected] = useState<string | null>("MOVING_NOW");
+  const [custom, setCustom] = useState("");
+  const [showAllReplies, setShowAllReplies] = useState(false);
+  const [working, setWorking] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void postOwnerSession<{ message: OwnerMessage }>(`/api/owner/messages/${sessionId}`, locale)
+      .then((payload) => {
+        if (active) {
+          setMessage(payload.message);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFailed(true);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [locale, sessionId]);
+
+  const typed = custom.trim();
+  const canSend = !success && !failed && (typed.length > 0 || selected !== null);
+  const codes = Object.keys(copy.replies);
+  const replies = showAllReplies ? codes : codes.slice(0, 3);
+
+  async function submit() {
+    setWorking(true);
+    setFailed(false);
+    try {
+      const response = await fetch(`/api/owner/messages/${sessionId}/reply`, {
+        body: JSON.stringify({
+          ...(typed.length > 0 ? { body: typed } : {}),
+          code: typed.length > 0 ? "CUSTOM" : selected,
+          deviceHash: await getOwnerDeviceHash(),
+          locale,
+        }),
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("UNAVAILABLE");
+      }
+      setSuccess(true);
+    } catch {
+      setFailed(true);
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <>
+        <MobileCard center>
+          {message ? <Plate plate={message.vehiclePlateLast4} /> : null}
+          <SemanticHeading as="h1" className="tt-m-heading" lines={copy.successTitle} />
+          <p className="tt-m-card__note">{copy.success}</p>
+        </MobileCard>
+        <MobilePrimary onClick={() => window.location.assign(`/${locale}/owner`)}>
+          {copy.back}
+        </MobilePrimary>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {failed ? <MobileNotice tone="danger">{copy.error}</MobileNotice> : null}
+      {message ? (
+        <MobileCard label={copy.callerMessage}>
+          <p className="tt-m-card__body">{message.callerMessage}</p>
+        </MobileCard>
+      ) : (
+        <MobileCard center>
+          <p className="tt-m-card__note">{copy.loading}</p>
+        </MobileCard>
+      )}
+
+      <ChoiceList>
+        {replies.map((code) => (
+          <ChoiceRow
+            icon={replyIcon(code)}
+            key={code}
+            label={copy.replies[code]}
+            onClick={() => {
+              setSelected(code);
+              setCustom("");
+            }}
+            selected={typed.length === 0 && selected === code}
+          />
+        ))}
+      </ChoiceList>
+
+      {showAllReplies ? null : (
+        <MobileQuietButton
+          className="tt-m-quiet-link--strong"
+          onClick={() => setShowAllReplies(true)}
+        >
+          {copy.moreReplies}
+        </MobileQuietButton>
+      )}
+
+      <MobileCard>
+        <label className="tt-m-hidden-label" htmlFor="owner-pwa-reply-custom">
+          {copy.customLabel}
+        </label>
+        <textarea
+          id="owner-pwa-reply-custom"
+          onChange={(event) => setCustom(event.target.value)}
+          placeholder={copy.customPlaceholder}
+          value={custom}
+        />
+      </MobileCard>
+
+      <MobilePrimary disabled={working || !canSend} onClick={() => void submit()}>
+        {copy.submit}
+      </MobilePrimary>
     </>
   );
 }

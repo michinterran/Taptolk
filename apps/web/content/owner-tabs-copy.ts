@@ -27,6 +27,7 @@ export interface OwnerTabsCopy {
   messagesTitle: readonly [string, ...string[]];
   messagesEmptyTitle: string;
   messagesEmptyBody: string;
+  messagesReply: string;
 
   /** ALERT */
   alertTitle: readonly [string, ...string[]];
@@ -79,6 +80,7 @@ const ko: OwnerTabsCopy = {
   messagesTitle: ["받은 연락"],
   messagesEmptyTitle: "받은 연락이 없습니다",
   messagesEmptyBody: "누군가 스티커를 스캔하면 알림톡으로 알려드립니다.",
+  messagesReply: "답장하기",
 
   alertTitle: ["알림"],
   alertChannel: "카카오 알림톡",
@@ -127,6 +129,7 @@ const en: OwnerTabsCopy = {
   messagesTitle: ["Messages"],
   messagesEmptyTitle: "No messages yet",
   messagesEmptyBody: "When someone scans your sticker, you will be notified on KakaoTalk.",
+  messagesReply: "Reply",
 
   alertTitle: ["Notifications"],
   alertChannel: "KakaoTalk notifications",

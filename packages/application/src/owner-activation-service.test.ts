@@ -48,11 +48,22 @@ function createHarness() {
         callerMessage: "출차 부탁드립니다.",
         createdAt: "2026-07-20T00:00:00.000Z",
         reasonCode: "MOVE_REQUEST",
+        replyAvailable: true,
         sessionId: "00000000-0000-4000-8000-000000000005",
         status: "OWNER_NOTIFIED",
         vehiclePlateLast4: "3456",
       },
     ]),
+    readMessage: vi.fn(async () => ({
+      callerMessage: "출차 부탁드립니다.",
+      createdAt: "2026-07-20T00:00:00.000Z",
+      reasonCode: "MOVE_REQUEST",
+      replyAvailable: true,
+      sessionId: "00000000-0000-4000-8000-000000000005",
+      status: "OWNER_NOTIFIED",
+      vehiclePlateLast4: "3456",
+    })),
+    replyToMessage: vi.fn(async () => ({ status: "OWNER_REPLIED" as const })),
     markOtpDelivery: vi.fn(async () => undefined),
     pushState: vi.fn(async () => ({ subscribed: false })),
     revokePushSubscription: vi.fn(async () => ({ subscribed: false })),
@@ -286,6 +297,42 @@ describe("OwnerActivationService", () => {
     expect(repository.listHistory).toHaveBeenCalledWith({
       deviceHash: "d".repeat(64),
       sessionHash: expect.any(String),
+    });
+  });
+
+  it("reads and replies to an Owner message through the Owner session", async () => {
+    const { repository, service } = createHarness();
+    await expect(
+      service.readMessage({
+        deviceHash: "d".repeat(64),
+        sessionId: "00000000-0000-4000-8000-000000000005",
+        sessionToken: "session_12345678901234567890",
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        callerMessage: "출차 부탁드립니다.",
+        replyAvailable: true,
+      }),
+    );
+    await expect(
+      service.replyToMessage({
+        code: "MOVING_NOW",
+        deviceHash: "d".repeat(64),
+        sessionId: "00000000-0000-4000-8000-000000000005",
+        sessionToken: "session_12345678901234567890",
+      }),
+    ).resolves.toEqual({ status: "OWNER_REPLIED" });
+    expect(repository.readMessage).toHaveBeenCalledWith({
+      deviceHash: "d".repeat(64),
+      sessionHash: expect.any(String),
+      sessionId: "00000000-0000-4000-8000-000000000005",
+    });
+    expect(repository.replyToMessage).toHaveBeenCalledWith({
+      body: null,
+      deviceHash: "d".repeat(64),
+      replyCode: "MOVING_NOW",
+      sessionHash: expect.any(String),
+      sessionId: "00000000-0000-4000-8000-000000000005",
     });
   });
 

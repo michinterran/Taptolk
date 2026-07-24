@@ -5,8 +5,10 @@ import {
   DEFAULT_OWNER_OTP_POLICY,
   normalizeOwnerOtp,
   normalizeOwnerPhone,
+  normalizeOwnerReply,
   normalizeOwnerVehiclePlate,
   type OwnerOtpPolicy,
+  type OwnerReplyCode,
 } from "@taptolk/domain";
 
 export interface OwnerActivationInspection {
@@ -80,6 +82,18 @@ export interface OwnerActivationRepository {
     deviceHash: string;
     sessionHash: string;
   }): Promise<readonly OwnerContactMessageItem[]>;
+  readMessage(input: {
+    deviceHash: string;
+    sessionHash: string;
+    sessionId: string;
+  }): Promise<OwnerContactMessageItem>;
+  replyToMessage(input: {
+    body: string | null;
+    deviceHash: string;
+    replyCode: OwnerReplyCode;
+    sessionHash: string;
+    sessionId: string;
+  }): Promise<{ status: "OWNER_REPLIED" }>;
   listHistory(input: {
     deviceHash: string;
     sessionHash: string;
@@ -169,6 +183,7 @@ export interface OwnerContactMessageItem {
   callerMessage: string;
   createdAt: string;
   reasonCode: string;
+  replyAvailable?: boolean;
   sessionId: string;
   status: string;
   vehiclePlateLast4: string;
@@ -246,6 +261,42 @@ export class OwnerActivationService {
     return this.repository.listMessages({
       deviceHash: input.deviceHash,
       sessionHash: await this.hashRequired(input.sessionToken, "session"),
+    });
+  }
+
+  async readMessage(input: {
+    deviceHash: string;
+    sessionId: string;
+    sessionToken: string;
+  }): Promise<OwnerContactMessageItem> {
+    assertOwnerDeviceId(input.deviceHash);
+    assertUuid(input.sessionId);
+    return this.repository.readMessage({
+      deviceHash: input.deviceHash,
+      sessionHash: await this.hashRequired(input.sessionToken, "session"),
+      sessionId: input.sessionId,
+    });
+  }
+
+  async replyToMessage(input: {
+    body?: string;
+    code: string;
+    deviceHash: string;
+    sessionId: string;
+    sessionToken: string;
+  }): Promise<{ status: "OWNER_REPLIED" }> {
+    assertOwnerDeviceId(input.deviceHash);
+    assertUuid(input.sessionId);
+    const reply = normalizeOwnerReply({
+      ...(input.body === undefined ? {} : { body: input.body }),
+      code: input.code,
+    });
+    return this.repository.replyToMessage({
+      body: reply.body,
+      deviceHash: input.deviceHash,
+      replyCode: reply.code,
+      sessionHash: await this.hashRequired(input.sessionToken, "session"),
+      sessionId: input.sessionId,
     });
   }
 

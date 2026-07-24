@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import type {
   OwnerActivationCompletion,
   OwnerActivationInspection,
@@ -69,6 +70,17 @@ function optionalStringField(row: Record<string, unknown>, field: string): strin
     return undefined;
   }
   if (typeof value !== "string") {
+    throw new OwnerActivationRepositoryError("UNAVAILABLE");
+  }
+  return value;
+}
+
+function optionalBooleanField(row: Record<string, unknown>, field: string): boolean | undefined {
+  const value = row[field];
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "boolean") {
     throw new OwnerActivationRepositoryError("UNAVAILABLE");
   }
   return value;
@@ -218,15 +230,53 @@ export function createSupabaseOwnerActivationRepository(
       }
       return result.data.map((value) => {
         const row = objectRow(value);
+        const replyAvailable = optionalBooleanField(row, "reply_available");
         return {
           callerMessage: stringField(row, "caller_message"),
           createdAt: stringField(row, "created_at"),
           reasonCode: stringField(row, "reason_code"),
+          ...(replyAvailable === undefined ? {} : { replyAvailable }),
           sessionId: stringField(row, "session_id"),
           status: stringField(row, "status"),
           vehiclePlateLast4: stringField(row, "vehicle_plate_last4"),
         };
       });
+    },
+    async readMessage(input): Promise<OwnerContactMessageItem> {
+      const row = resultData(
+        await client.rpc("read_owner_contact_message", {
+          p_contact_session_id: input.sessionId,
+          p_device_hash: input.deviceHash,
+          p_session_hash: input.sessionHash,
+        }),
+      );
+      const replyAvailable = optionalBooleanField(row, "reply_available");
+      return {
+        callerMessage: stringField(row, "caller_message"),
+        createdAt: stringField(row, "created_at"),
+        reasonCode: stringField(row, "reason_code"),
+        ...(replyAvailable === undefined ? {} : { replyAvailable }),
+        sessionId: stringField(row, "session_id"),
+        status: stringField(row, "status"),
+        vehiclePlateLast4: stringField(row, "vehicle_plate_last4"),
+      };
+    },
+    async replyToMessage(input): Promise<{ status: "OWNER_REPLIED" }> {
+      const effectiveBody = input.body ?? input.replyCode;
+      const row = resultData(
+        await client.rpc("submit_owner_contact_message_reply", {
+          p_body: input.body,
+          p_body_hash: createHash("sha256").update(effectiveBody, "utf8").digest("hex"),
+          p_contact_session_id: input.sessionId,
+          p_device_hash: input.deviceHash,
+          p_reply_code: input.replyCode,
+          p_session_hash: input.sessionHash,
+        }),
+      );
+      if (row.status !== "OWNER_REPLIED") {
+        throw new OwnerActivationRepositoryError("UNAVAILABLE");
+      }
+      return { status: "OWNER_REPLIED" };
     },
     async markOtpDelivery(input): Promise<void> {
       const result = await client.rpc("mark_owner_otp_delivery", {

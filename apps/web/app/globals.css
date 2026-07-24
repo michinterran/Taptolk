@@ -6723,6 +6723,7 @@ body:has(.tt-m-shell)::before {
   max-width: var(--tt-m-max-width);
   min-height: 100dvh;
   padding-inline: var(--tt-m-gutter);
+  padding-top: env(safe-area-inset-top);
   width: 100%;
 }
 
@@ -6730,7 +6731,7 @@ body:has(.tt-m-shell)::before {
 .tt-m-shell__header {
   display: flex;
   justify-content: center;
-  padding-block: var(--tt-m-card-padding);
+  padding-block: calc(var(--tt-m-card-padding) * 1.65) calc(var(--tt-m-card-padding) * 1.25);
 }
 
 .tt-m-shell__header img {
@@ -6751,6 +6752,7 @@ body:has(.tt-m-shell)::before {
   display: flex;
   flex-direction: column;
   gap: var(--tt-m-choice-gap);
+  margin-top: auto;
   padding-block: var(--tt-m-stack-gap);
 }
 
@@ -6768,6 +6770,11 @@ body:has(.tt-m-shell)::before {
   margin-inline: calc(var(--tt-m-gutter) * -1);
   min-height: var(--tt-m-tabbar-height);
   padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -0.5rem 1.5rem color-mix(in srgb, var(--tt-color-text) 6%, transparent);
+}
+
+.tt-m-shell__actions + .tt-m-tabbar {
+  margin-top: 0;
 }
 
 .tt-m-tab {
@@ -6803,16 +6810,18 @@ body:has(.tt-m-shell)::before {
 
 .tt-m-card {
   background: var(--tt-m-surface);
+  border: 1px solid color-mix(in srgb, var(--tt-m-hairline) 72%, transparent);
   border-radius: var(--tt-m-card-radius);
+  box-shadow: 0 0.125rem 0.5rem color-mix(in srgb, var(--tt-color-text) 9%, transparent);
   display: flex;
   flex-direction: column;
-  gap: var(--tt-space-2);
+  gap: var(--tt-space-3);
   padding: var(--tt-m-card-padding);
 }
 
 /* The owner's own reply is the one card the canon outlines (04). */
 .tt-m-card--accent {
-  border: 1px solid var(--tt-m-accent);
+  border: 2px solid var(--tt-m-accent);
 }
 
 .tt-m-card--center {
@@ -6828,6 +6837,7 @@ body:has(.tt-m-shell)::before {
 .tt-m-card__body {
   font-size: var(--tt-m-title-size);
   font-weight: var(--tt-font-weight-bold);
+  line-height: var(--tt-line-snug);
   margin: 0;
 }
 
@@ -6850,7 +6860,8 @@ body:has(.tt-m-shell)::before {
 .tt-m-heading {
   font-size: var(--tt-m-heading-size);
   font-weight: var(--tt-font-weight-bold);
-  padding-block: var(--tt-space-4);
+  line-height: var(--tt-line-tight);
+  padding-block: var(--tt-space-3) var(--tt-space-2);
   text-align: center;
 }
 
@@ -6868,8 +6879,9 @@ body:has(.tt-m-shell)::before {
 .tt-m-choice {
   align-items: center;
   background: var(--tt-m-surface);
-  border: 1px solid var(--tt-m-hairline);
+  border: 2px solid var(--tt-m-hairline);
   border-radius: var(--tt-m-choice-radius);
+  box-shadow: 0 0.0625rem 0.25rem color-mix(in srgb, var(--tt-color-text) 5%, transparent);
   color: inherit;
   cursor: pointer;
   display: flex;
@@ -6887,6 +6899,7 @@ body:has(.tt-m-shell)::before {
 .tt-m-choice:has(input:checked) {
   background: var(--tt-m-accent-surface);
   border-color: var(--tt-m-accent);
+  box-shadow: 0 0.125rem 0.75rem color-mix(in srgb, var(--tt-m-accent) 18%, transparent);
 }
 
 .tt-m-choice:has(input:focus-visible) {
@@ -6981,7 +6994,7 @@ body:has(.tt-m-shell)::before {
    the same shape as a field's textarea without needing a label above it. */
 .tt-m-card > textarea {
   background: var(--tt-m-surface);
-  border: 1px solid var(--tt-m-hairline);
+  border: 2px solid var(--tt-m-hairline);
   border-radius: var(--tt-m-field-radius);
   color: var(--tt-color-text);
   font-size: var(--tt-m-body-size);
@@ -7035,6 +7048,7 @@ body:has(.tt-m-shell)::before {
 .tt-m-primary {
   background: var(--tt-m-accent);
   border: 1px solid var(--tt-m-accent);
+  box-shadow: 0 0.375rem 1rem color-mix(in srgb, var(--tt-m-accent) 28%, transparent);
   color: var(--tt-m-on-accent);
 }
 
@@ -7223,6 +7237,63 @@ body:has(.tt-m-shell)::before {
   color: var(--tt-color-danger-fg);
   font-size: var(--tt-m-label-size);
   padding: var(--tt-m-card-padding);
+}
+
+.tt-m-shell--contact-compose .tt-m-card--center,
+.tt-m-shell--contact-wait .tt-m-card--center,
+.tt-m-shell--contact-result .tt-m-card--center {
+  justify-content: center;
+  min-height: calc(var(--tt-m-choice-height) * 1.6);
+}
+
+.tt-m-shell--contact-wait .tt-m-status {
+  margin-block: var(--tt-space-5);
+}
+
+.tt-m-shell--contact-result .tt-m-card--accent {
+  min-height: calc(var(--tt-m-choice-height) * 1.35);
+}
+
+.tt-owner-message-list-card {
+  padding: 0;
+}
+
+.tt-owner-message-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tt-owner-message-list > li + li {
+  border-top: 1px solid var(--tt-m-hairline);
+}
+
+.tt-owner-message-link {
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-space-2);
+  min-height: calc(var(--tt-m-choice-height) * 1.15);
+  padding: var(--tt-m-card-padding);
+  text-decoration: none;
+}
+
+.tt-owner-message-link__meta {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-m-label-size);
+}
+
+.tt-owner-message-link > strong {
+  font-size: var(--tt-m-title-size);
+  line-height: var(--tt-line-snug);
+}
+
+.tt-owner-message-link__action {
+  color: var(--tt-m-accent);
+  font-size: var(--tt-m-meta-size);
+  font-weight: var(--tt-font-weight-bold);
 }
 
 /* ============================================================================

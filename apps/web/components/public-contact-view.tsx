@@ -98,7 +98,7 @@ export function PublicContactView({
   const [error, setError] = useState<ErrorCode>(null);
   const [working, setWorking] = useState(false);
   const [qr, setQr] = useState<PublicQrData | null>(null);
-  const [reasonCode, setReasonCode] = useState<ContactReasonCode | null>(null);
+  const [reasonCode, setReasonCode] = useState<ContactReasonCode | null>("MOVE_REQUEST");
   const [freeMessage, setFreeMessage] = useState("");
   const [showAllReasons, setShowAllReasons] = useState(false);
 
@@ -176,6 +176,7 @@ export function PublicContactView({
 
   return (
     <MobileShell
+      className="tt-m-shell--contact-compose"
       actions={
         step === "COMPOSE" ? (
           <>
