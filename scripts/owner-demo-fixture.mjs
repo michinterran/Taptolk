@@ -10,11 +10,13 @@ const root = process.cwd();
 const defaultEnvPath = path.join(root, "apps/web/.env.local");
 const linkedProjectPath = path.join(root, "supabase/.temp/project-ref");
 const statePath = path.join(root, ".taptolk-demo/owner-activation-state.json");
+const qrSheetPath = path.join(root, ".taptolk-demo/owner-demo-qr-sheet.html");
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
   const options = {
     baseUrl: process.env.TAPTOLK_DEMO_BASE_URL ?? "",
+    count: Number.parseInt(process.env.TAPTOLK_DEMO_COUNT ?? "10", 10),
     envFile: process.env.TAPTOLK_DEMO_ENV_FILE ?? defaultEnvPath,
     locale: process.env.TAPTOLK_DEMO_LOCALE ?? "ko",
     open: false,
@@ -25,6 +27,8 @@ function parseArgs(argv) {
     }
     if (argument.startsWith("--base-url=")) {
       options.baseUrl = argument.slice("--base-url=".length);
+    } else if (argument.startsWith("--count=")) {
+      options.count = Number.parseInt(argument.slice("--count=".length), 10);
     } else if (argument.startsWith("--env-file=")) {
       options.envFile = argument.slice("--env-file=".length);
     } else if (argument.startsWith("--locale=")) {
@@ -234,6 +238,141 @@ function openUrl(value) {
   spawnSync("open", [value], { stdio: "ignore" });
 }
 
+function assertDemoCount(value) {
+  if (!Number.isInteger(value) || value < 1 || value > 10) {
+    throw new Error("--count must be an integer from 1 to 10.");
+  }
+}
+
+function padDemoIndex(value) {
+  return String(value).padStart(2, "0");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+async function renderQrSheet({ baseUrl, createdAt, items }) {
+  const qrCode = await import("../packages/qr-engine/node_modules/qrcode/lib/server.js");
+  const cards = await Promise.all(
+    items.map(async (item) => {
+      const imageDataUrl = await qrCode.toDataURL(item.scanUrl, {
+        color: {
+          dark: "#111111",
+          light: "#ffffff",
+        },
+        errorCorrectionLevel: "H",
+        margin: 3,
+        scale: 8,
+      });
+      return `<article class="card">
+  <img alt="${escapeHtml(item.label)} QR" src="${imageDataUrl}">
+  <h2>${escapeHtml(item.label)}</h2>
+  <p>${escapeHtml(item.siteName)}</p>
+  <p>${escapeHtml(item.address)}</p>
+</article>`;
+    }),
+  );
+  const html = `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Taptolk Owner Demo QR Sheet</title>
+  <style>
+    :root {
+      color: #151515;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      background: #f5f5f1;
+    }
+    main {
+      box-sizing: border-box;
+      margin: 0 auto;
+      max-width: 1120px;
+      padding: 32px;
+    }
+    header {
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .meta {
+      color: #66645f;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #dedbd2;
+      border-radius: 8px;
+      break-inside: avoid;
+      padding: 16px;
+    }
+    img {
+      aspect-ratio: 1;
+      display: block;
+      height: auto;
+      width: 100%;
+    }
+    h2 {
+      font-size: 15px;
+      margin: 12px 0 6px;
+    }
+    p {
+      color: #55524c;
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 0 0 4px;
+    }
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      main {
+        max-width: none;
+        padding: 12mm;
+      }
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Taptolk Owner Demo QR Sheet</h1>
+      <p class="meta">데모용 fixture입니다. QR에는 토큰 정보가 들어 있으므로 실서비스 자료로 배포하지 마세요.</p>
+      <p class="meta">Base URL: ${escapeHtml(baseUrl)} · Created: ${escapeHtml(createdAt)}</p>
+    </header>
+    <section class="grid">
+      ${cards.join("\n      ")}
+    </section>
+  </main>
+</body>
+</html>
+`;
+  await mkdir(path.dirname(qrSheetPath), { recursive: true });
+  await writeFile(qrSheetPath, html, "utf8");
+}
+
 async function readState() {
   return JSON.parse(await readFile(statePath, "utf8"));
 }
@@ -266,6 +405,7 @@ async function cleanupState(api, state) {
     cleanupError ??= error;
   }
   await Promise.allSettled((state.actorIds ?? []).map((userId) => api.deleteUser(userId)));
+  await unlink(qrSheetPath).catch(() => undefined);
   if (cleanupError) {
     throw cleanupError;
   }
@@ -273,6 +413,7 @@ async function cleanupState(api, state) {
 
 async function prepare(options) {
   const baseUrl = normalizeBaseUrl(options.baseUrl);
+  assertDemoCount(options.count);
   if (!["ko", "en"].includes(options.locale)) {
     throw new Error("--locale must be ko or en.");
   }
@@ -282,7 +423,7 @@ async function prepare(options) {
   const runLabel = `Taptolk E2E ${runToken}`;
   const tenantId = randomUUID();
   const companyId = randomUUID();
-  const siteId = randomUUID();
+  const siteIds = Array.from({ length: options.count }, () => randomUUID());
   const state = {
     actorIds: [],
     baseUrl,
@@ -290,9 +431,11 @@ async function prepare(options) {
     envFile: environment.envFile,
     linkedProjectRef: environment.linkedRef,
     ownerFixtures: [],
-    schemaVersion: 1,
+    qrSheetPath: path.relative(root, qrSheetPath),
+    schemaVersion: 2,
     tenantIds: [tenantId],
   };
+  const qrSheetItems = [];
 
   try {
     await api.insert("tenants", [
@@ -301,15 +444,19 @@ async function prepare(options) {
     await api.insert("management_companies", [
       { id: companyId, name: `${runLabel} Company A`, tenant_id: tenantId },
     ]);
-    await api.insert("sites", [
-      {
-        address: `${runLabel} demo address`,
-        id: siteId,
-        management_company_id: companyId,
-        name: `${runLabel} Demo Site`,
-        tenant_id: tenantId,
-      },
-    ]);
+    await api.insert(
+      "sites",
+      siteIds.map((siteId, index) => {
+        const demoNumber = padDemoIndex(index + 1);
+        return {
+          address: `서울시 테스트구 탭톡로 ${100 + index}, 데모동 ${demoNumber}`,
+          id: siteId,
+          management_company_id: companyId,
+          name: `${runLabel} Demo Site ${demoNumber}`,
+          tenant_id: tenantId,
+        };
+      }),
+    );
 
     const superAdmin = await createActor(api, runToken, "SUPER_ADMIN");
     state.actorIds.push(superAdmin.id);
@@ -336,7 +483,7 @@ async function prepare(options) {
         tenant_id: null,
         user_id: superAdmin.id,
       },
-      {
+      ...siteIds.map((siteId) => ({
         accepted_at: new Date().toISOString(),
         id: randomUUID(),
         management_company_id: companyId,
@@ -346,37 +493,54 @@ async function prepare(options) {
         status: "ACTIVE",
         tenant_id: tenantId,
         user_id: siteAdmin.id,
-      },
+      })),
     ]);
 
-    const publicToken = randomBytes(32).toString("base64url");
-    const publicTokenHash = ownerHmac(environment.tokenHmacKey, publicToken, "public-token");
-    const activationCode = `ABCD${randomBytes(4).toString("hex").toUpperCase()}`;
-    await api.rpc("provision_owner_activation_staging_fixture", {
-      p_activation_code_hash: ownerHmac(
-        environment.tokenHmacKey,
-        activationCode,
-        "activation-code",
-      ),
-      p_approver_id: superAdmin.id,
-      p_fixture_label: `OA-${randomBytes(6).toString("hex").toUpperCase()}`,
-      p_management_company_id: companyId,
-      p_public_token_hash: publicTokenHash,
-      p_requester_id: siteAdmin.id,
-      p_site_id: siteId,
-      p_tenant_id: tenantId,
-    });
-    state.ownerFixtures.push({ publicTokenHash, tenantId });
-
-    await writeState(state);
-    const demoUrl = `${baseUrl}/${options.locale}/activate/${encodeURIComponent(publicToken)}`;
-    copyToClipboard(demoUrl);
-    if (options.open) {
-      openUrl(demoUrl);
+    for (const [index, siteId] of siteIds.entries()) {
+      const demoNumber = padDemoIndex(index + 1);
+      const publicToken = randomBytes(32).toString("base64url");
+      const publicTokenHash = ownerHmac(environment.tokenHmacKey, publicToken, "public-token");
+      const activationCode = `ABCD${randomBytes(4).toString("hex").toUpperCase()}`;
+      await api.rpc("provision_owner_activation_staging_fixture", {
+        p_activation_code_hash: ownerHmac(
+          environment.tokenHmacKey,
+          activationCode,
+          "activation-code",
+        ),
+        p_approver_id: superAdmin.id,
+        p_fixture_label: `OA-${randomBytes(6).toString("hex").toUpperCase()}`,
+        p_management_company_id: companyId,
+        p_public_token_hash: publicTokenHash,
+        p_requester_id: siteAdmin.id,
+        p_site_id: siteId,
+        p_tenant_id: tenantId,
+      });
+      state.ownerFixtures.push({
+        label: `Demo QR ${demoNumber}`,
+        publicTokenHash,
+        tenantId,
+      });
+      qrSheetItems.push({
+        address: `서울시 테스트구 탭톡로 ${100 + index}, 데모동 ${demoNumber}`,
+        label: `Demo QR ${demoNumber}`,
+        scanUrl: `${baseUrl}/${options.locale}/q/${encodeURIComponent(publicToken)}`,
+        siteName: `${runLabel} Demo Site ${demoNumber}`,
+      });
     }
 
-    console.log("[owner-demo] activation URL copied to clipboard.");
-    console.log("[owner-demo] the URL contains QR token material; do not paste it into chat/logs.");
+    await writeState(state);
+    await renderQrSheet({ baseUrl, createdAt: state.createdAt, items: qrSheetItems });
+    copyToClipboard(qrSheetPath);
+    if (options.open) {
+      openUrl(qrSheetPath);
+    }
+
+    console.log("[owner-demo] QR sheet path copied to clipboard.");
+    console.log(
+      "[owner-demo] QR sheet contains token material; do not commit or paste it into chat/logs.",
+    );
+    console.log("[owner-demo] QR count:", options.count);
+    console.log("[owner-demo] QR sheet saved at .taptolk-demo/owner-demo-qr-sheet.html.");
     console.log("[owner-demo] state saved at .taptolk-demo/owner-activation-state.json.");
     console.log(
       `[owner-demo] local OWNER_STAGING_MOCK_OTP ${environment.hasLocalMockOtp ? "is present" : "is missing"}; the target deployment must use the same mock OTP.`,
@@ -394,7 +558,7 @@ async function cleanup() {
   const state = await readState();
   const environment = await loadEnvironment(state.envFile ?? defaultEnvPath);
   const api = new StagingApi(environment.supabaseUrl, environment.secretKey);
-  if (state.schemaVersion !== 1) {
+  if (![1, 2].includes(state.schemaVersion)) {
     throw new Error("Unsupported owner demo fixture state.");
   }
   await cleanupState(api, state);
@@ -413,7 +577,7 @@ async function main() {
     return;
   }
   throw new Error(
-    "Usage: owner-demo-fixture.mjs prepare --base-url=https://... [--env-file=.taptolk-demo/vercel-preview.env] [--open] | cleanup",
+    "Usage: owner-demo-fixture.mjs prepare --base-url=https://... [--count=10] [--env-file=.taptolk-demo/vercel-preview.env] [--open] | cleanup",
   );
 }
 
