@@ -64,6 +64,7 @@
 | `console-pages.html` | 목록/관리 화면들 |
 | `console-detail.html` | 상세 화면 |
 | `console-site-operations.html` | **사이트 운영** — 입고·재고, 디자인 보관. 슈퍼어드민이 배송한 배치를 사이트가 입고 |
+| `console-states.md` | **콘솔·플랫폼 상태 정본** — 빈·로딩·오류·권한없음·한도·알수없음. 완료조건 5번 |
 | `sticker-previews/*.png` | 템플릿 선택 카드에 쓰는 실제 렌더 결과 |
 | `pwa/01-caller-compose.png` | **PWA** — 스캔 직후 호출자가 상황을 고르고 메시지를 보내는 화면 |
 | `pwa/02-caller-sent-waiting.png` | **PWA** — 전달 완료, 차주 확인 대기 |
