@@ -279,3 +279,128 @@ README §2는 "마지막 완료 단계에서 이어진다"를 요구한다. 지�
 - **입고 확인은 위자드가 아니라 이 화면에서만** 자산을 `IN_STOCK`으로 전이시킨다
 - 부분 입고(받은 수량이 다름)를 기록할 수 있어야 한다
 - 보관해도 과거 발주 이력은 남긴다
+
+---
+
+# 관리자 콘솔 · 플랫폼 화면
+
+정본: `reference-1-admin-console.png` + `console-pages.html`·`console-detail.html`.
+컬럼이 정본에 있는 화면은 그 컬럼을, 없는 화면은 `DESIGN_SYSTEM.md` §3 목록/상세 패턴을
+근거로 선언한다(완료조건 1: 시안이 없으면 패턴 조합 명시). **모든 지표는 값이 없으면 `0`이
+아니라 `—`**(§4). 목록은 **테넌트 격리·역할 범위를 서버가 적용**한 결과만 받는다
+(프론트 필터 금지, `AGENTS.md`).
+
+## 콘솔 대시보드 (`/admin/dashboard`)
+정본: `console-pages.html` "플랫폼 운영 현황". 스펙: `GET /api/v1/admin/dashboard`.
+
+| 필드 | 출처 | 없을 때 |
+|---|---|---|
+| 지표 스트립 (요청·응답률·미해결·알림비용 등) | `admin/dashboard` | 각 셀 `—`. 분모 0을 1로 바꾸지 않는다 |
+| 연락 요청 추이(기간별 시계열) | `admin/dashboard` → 시계열 | 그래프 영역 빈 상태 |
+| 조치가 필요한 항목(미응답·에스컬레이션·승인대기) | `admin/dashboard` → attention[] | 빈 상태("지금 조치할 항목이 없습니다") |
+
+## 사이트 목록 (`/admin/sites`)
+정본: `console-pages.html` "현장 목록". 스펙: `GET /api/v1/admin/sites`.
+
+| 컬럼 | 출처 | 없을 때 |
+|---|---|---|
+| 현장명 · 관리회사 · 주소 | `admin/sites` 행 | 주소 없으면 그 셀 `—` |
+| 계약 차량 · 활성 QR | `sites`/`qr_assets` 집계 | `—` |
+| 브랜드(로고 유무) · 운영 상태 | `sites`·`brand_assets` | 상태 배지, 로고 없으면 이니셜 |
+| 작업(상세·수정) | 라우팅 | — |
+
+- test 데이터 픽스처는 **플래그로 기본 숨김**(이름 필터 금지, §7-C 확정). 신규 플래그 컬럼.
+
+## 운영 모니터링 (`/admin/operations`)
+정본: `console-pages.html` "연락 세션과 알림 전달". 스펙: `GET /api/v1/admin/contact-sessions`.
+
+| 컬럼 | 출처 | 없을 때 |
+|---|---|---|
+| 세션 · 현장 · 사유 · 상태 · 경과 | `admin/contact-sessions` | 경과는 `elapsedSeconds`, 없으면 `—` |
+| 작업(상세·닫기·차단) | `.../{id}/close`·`/block-caller` | 권한 없으면 비활성 |
+| 알림 전달 상태(성공·실패·재시도) | `notification_deliveries` 집계 | `—` |
+
+- **차주 전화번호를 어떤 열에도 그리지 않는다.** 사유·상태·경과만.
+
+## 리포트 (`/admin/reports`)
+정본: `console-pages.html` "기간별 운영 지표". 스펙: `GET /api/v1/admin/analytics/summary`.
+
+| 컬럼 | 출처 | 없을 때 |
+|---|---|---|
+| 관리회사 · 현장 | 집계 그룹 | — |
+| 요청 · 응답률 · 해결률 · 미해결 | `analytics/summary` | 각 `—`. 미응답을 0%로 만들지 않는다 |
+| 추세(스파크라인) | 시계열 | 그리지 않는다 |
+| 내려받기(CSV) | 집계 export | 데이터 없으면 버튼 비활성 |
+
+## 매출·계약 (`/admin/platform/revenue`)
+정본: `console-pages.html` "계약과 매출 전망". 스펙: `GET /api/v1/admin/management-companies`.
+
+| 컬럼 | 출처 | 없을 때 |
+|---|---|---|
+| 관리회사 · 현장 수 · 상태 | `management_companies`·`contracts` | `—` |
+| 플랜 · 월 금액 · 갱신일 | **신규 — 과금 정책 미확정(스펙 §0.3)** | **`—`. 목업 금액을 굽지 않는다.** 정책 확정 전까지 자리만 |
+| 플랜 구성 | 신규 | 빈 상태 |
+
+> 🟡 과금 가격은 **운영자 확정 대기**. 확정 전까지 화면은 정직하게 비운다.
+
+## 계정 (`/admin/accounts`) · 권한 (`/admin/access`)
+정본: `console-pages.html` "관리자 디렉터리" + "역할별 권한".
+
+| 컬럼 | 출처 | 없을 때 |
+|---|---|---|
+| 관리자 · 역할 · 범위 · MFA · 상태 | `admin_profiles`·`admin_memberships` | MFA 미설정은 상태 배지, `—` 아님 |
+| 작업(초대·역할변경·비활성) | 관리 엔드포인트 | 권한 없으면 비활성 |
+| 역할별 권한 매트릭스(권한 × SA·MA·SO·…) | `roles`(정적 RBAC, 스펙 §9.5) | 정적값이라 항상 채워짐 |
+
+- **연락처·전화번호를 그리지 않는다.** 계정 식별은 이메일·이름까지.
+- 승인 워크플로(요청→승인 UI)는 **신설 금지**(스펙 §11 해제 전) — 지금은 슈퍼어드민 직접만.
+
+## 내 정보 (`/admin/profile`)
+정본: `console-detail.html` 상세 패턴.
+
+| 필드 | 출처 | 없을 때 |
+|---|---|---|
+| 이름 · 이메일 · 역할 · 소속 범위 | 세션 → `admin_profiles` | `—` |
+| MFA 상태 · 언어(KO/EN) | `admin_profiles`·로케일 | MFA는 상태만, 시크릿 노출 금지 |
+| 비밀번호·MFA 변경 진입 | 인증 플로우 | — |
+
+## 플랫폼 루트 (`/admin/platform`) · 테넌트 (`/admin/platform/tenants`)
+정본: §3 목록 패턴(전용 컬럼 시안 없음 — 패턴 조합 명시).
+
+| 컬럼 | 출처 | 없을 때 |
+|---|---|---|
+| 테넌트/관리회사 · 관리자 수 · 현장 수 · 계약 차량 · 상태 | 플랫폼 집계 | 각 `—` |
+| 작업(상세·등록) | `POST /admin/management-companies` | 등록은 슈퍼어드민 직접만 |
+
+- test 데이터 플래그 숨김 동일 적용. 사이트 등록도 **슈퍼어드민 직접만**(§4 확정).
+
+## 관리회사 상세 (`/admin/platform/management-companies/[companyId]`)
+정본: `console-detail.html` "관리회사 상세/관리". Daum 주소 입력 포함.
+
+| 필드 | 출처 | 없을 때 |
+|---|---|---|
+| 기본 정보(상호·주소·연락 담당) | `management_companies` | 각 `—` |
+| 소속 현장 목록 | `sites` (이 회사 범위) | 빈 상태 |
+| 계약·플랜(월 금액·갱신일) | **신규 — 과금 미확정** | `—` |
+| 관리자 멤버십 | `admin_memberships` | 빈 상태 |
+
+## 플랫폼 권한 (`/admin/platform/access`)
+정본: §3 목록 + "역할별 권한" 매트릭스.
+
+| 필드 | 출처 | 없을 때 |
+|---|---|---|
+| 관리자 × 역할 × 범위(테넌트/회사/현장) | `admin_memberships`·`roles` | `—` |
+| 역할 배정·회수 | 멤버십 엔드포인트 | 권한 없으면 비활성 |
+
+## QR 재고 · 라이프사이클 (`/admin/qr-inventory`)
+정본: `console-qr-wizard.html`(제작) + 재고 목록. 스펙: `GET /api/v1/admin/qr-assets`.
+위자드는 **슈퍼어드민 전용 6단계**(§4 확정) — 스코프/라우트 위치는 정본 대조 시 확인.
+
+| 필드 | 출처 | 없을 때 |
+|---|---|---|
+| 라이프사이클 카운트(13상태: 재고·배정·활성·예외 등) | `qr_assets` status 집계 | **`0`이 아니라 `—`** |
+| 자산 목록(코드·상태·현장·바인딩) | `admin/qr-assets` | 빈 상태 |
+| 자산 조치(배정·정지·분실·교체·폐기) | `.../{qrId}/assign`·`suspend`·`report-lost`·`replace`·`revoke` | 권한/상태 안 맞으면 비활성 |
+| 샘플 미리보기 | **신규 — `qr_batch_samples` SELECT security-definer RPC** | 미리보기 자리 빈 상태(현재 404) |
+
+> QR `1..100`/배치 계약 유지. 수량 초과 요청은 착수 전 운영자 확정(스펙 closeout §5).
