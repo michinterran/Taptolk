@@ -23,10 +23,10 @@
 |---|---|---|---|---|
 | 랜딩 | `/` | (공개 타입스케일 `--tt-pub-*`) | 🟡🟣 | 캡션·배지 크기 정규화(토큰 매핑 완료, globals.css 적용은 Codex), 반응형 재확인 |
 | 온보딩 | `/onboarding` | 공개 타입스케일 | 🟡🟣 | 위와 동일 |
-| 로그인 | `/admin/login` | 공개 스케일 + `admin-auth-*` | ◻️🟡 | **카드 상태(로딩·오류·비활성) 폴리시 미완**(Claude), 그 후 배선 |
-| 가입 | `/admin/signup` | `admin-auth-*` | ◻️🟡 | 상태 폴리시 미완(Claude) |
-| MFA 등록 | `/admin/mfa/enroll` | `admin-auth-*` | ◻️🟡 | 상태 폴리시 미완(Claude) |
-| MFA 확인 | `/admin/mfa/challenge` | `admin-auth-*` | ◻️🟡 | 상태 폴리시 미완(Claude) |
+| 로그인 | `/admin/login` | 공개 스케일 + `admin-auth-*` | 🟡 | **상태 폴리시 스펙 완료** → `workorder-codex-auth-states-0725.md`. Codex 적용 |
+| 가입 | `/admin/signup` | `admin-auth-*` | 🟡 | 위 워크오더 §2·§3 적용 |
+| MFA 등록 | `/admin/mfa/enroll` | `admin-auth-*` | 🟡 | 위 워크오더 적용 |
+| MFA 확인 | `/admin/mfa/challenge` | `admin-auth-*` | 🟡 | 위 워크오더 적용 |
 
 ---
 
@@ -116,7 +116,9 @@
 - 고도화(§5 🟣): 토큰 이관은 정본 변경 없이 가능 — baseline 감축 대상이 명확.
 
 ### 아직 Claude가 준비해야 함 (넘기기 전 선행)
-1. **로그인·가입·MFA 카드 상태 폴리시**(◻️) — 로딩·오류·비활성 스펙 마감. *(작업 중)*
+1. ~~**로그인·가입·MFA 카드 상태 폴리시**~~ — **완료(2026-07-25).** 인라인 오류·로딩(로그인
+   pending 포함)·비활성·포커스·간격 스펙을 `workorder-codex-auth-states-0725.md`로 발행,
+   `CONTRACTS.md` "관리자 인증 상태" 추가. 새 토큰 불필요(기존 danger/note/focus 토큰 사용).
 2. ~~**콘솔·플랫폼 화면별 계약(CONTRACTS.md 행)**~~ — **완료(2026-07-25).** 대시보드·사이트목록·
    운영모니터링·리포트·매출·계정/권한·내정보·플랫폼루트/테넌트·관리회사상세·플랫폼권한·QR재고를
    `CONTRACTS.md`에 선언. 정본 컬럼 있는 화면은 그 컬럼, 없는 화면은 §3 패턴 근거.

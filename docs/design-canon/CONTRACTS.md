@@ -404,3 +404,18 @@ README §2는 "마지막 완료 단계에서 이어진다"를 요구한다. 지�
 | 샘플 미리보기 | **신규 — `qr_batch_samples` SELECT security-definer RPC** | 미리보기 자리 빈 상태(현재 404) |
 
 > QR `1..100`/배치 계약 유지. 수량 초과 요청은 착수 전 운영자 확정(스펙 closeout §5).
+
+## 관리자 인증 상태 (`/admin/login`·`/admin/signup`·`/admin/mfa/*`)
+정본: `admin-auth-*` + 공개 스케일. 폴리시: `workorder-codex-auth-states-0725.md`.
+
+| 필드 | 출처 | 없을 때 |
+|---|---|---|
+| 로그인 오류 사유 (`invalidCredentials`·`session`·`configuration`·`unavailable`) | 로그인 서버 액션 결과 | 사유별 카피. **자격 오류는 어느 필드가 틀렸는지 알리지 않는다**(보안) |
+| MFA 오류 사유 (`invalidCode`·만료·시도초과) | `admin-mfa/*` 결과 | 지금은 `invalidCode`로 수렴. 서버가 구분하면 사유별 카피 |
+| 가입 검증 오류 (`invalidEmail`·`invalidPassword`·`passwordMismatch`) | signup 결과 | 필드별 인라인 오류 |
+| 제출 진행 상태(pending) | `useFormStatus`/`useTransition` | 없으면 즉시완료로 간주하지 않는다 — 버튼 `처리 중` |
+| 인증 서비스 연결 여부 | `CONFIGURATION_MISSING`·`LOAD_ERROR` | **"로그인 준비 중" 노티스 + 폼 비활성.** 사유 없는 비활성 금지 |
+
+- **오류 사유는 서버가 구분해 내려주고 화면은 사유별 카피로 그린다**(§0 상태 규칙:
+  사유를 구분한다). 단 자격 오류는 이메일/비밀번호 중 무엇이 틀렸는지 노출하지 않는다.
+- 인증 상태 화면 어디에도 시크릿(세션 토큰·MFA 시크릿·비밀번호)을 그리거나 로그하지 않는다.
