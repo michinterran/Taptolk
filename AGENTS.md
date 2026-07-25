@@ -10,10 +10,22 @@ Order of authority, highest first. Where two disagree, the higher wins.
 
 1. `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md` — product scope
 2. `AGENTS.md` — this engineering contract
-3. `DESIGN_SYSTEM.md` + `docs/design-canon/` — how a screen looks
-4. `docs/architecture/` — approved architecture
-5. `docs/development/` work orders and PRDs — what to build
-6. `docs/handoff-*.md` — session state only, never a design or scope source
+3. `docs/governance/OPERATING_MODEL.md` — who may touch what (multi-agent lanes)
+4. `DESIGN_SYSTEM.md` + `docs/design-canon/` — how a screen looks
+5. `docs/governance/DESIGN_CONSISTENCY_RULES.md` — how the design system is enforced
+6. `docs/architecture/` — approved architecture
+7. `docs/development/` work orders, PRDs, and `PROJECT_COMPLETION_PLAN.md` — what to build
+8. `docs/handoff-*.md` — session state only, never a design or scope source
+
+## Multi-agent operating model
+
+Three lanes, one rule: **only Codex writes application code to the mainline.**
+Claude produces design artifacts (tokens, canon, states, copy/data contracts,
+implementation-ready specs); Codex is the sole implementer; Antigravity reviews
+and proposes, never commits to the mainline. Each agent `git add`s only paths in
+its own lane — never `git add -A`/`.`. The binding ownership map, branch and
+commit discipline, and the design → implement → review pipeline live in
+`docs/governance/OPERATING_MODEL.md`.
 
 ## Modular implementation
 
