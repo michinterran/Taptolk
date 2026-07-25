@@ -304,6 +304,10 @@
   --tt-space-8: 4rem;
 
   /* Type scale (new) */
+  /* 2xs is the micro-label rank (sidebar group labels, table micro-captions).
+     Reference-1 uses ~0.62rem here; 0.6875rem is the single canonical value so
+     the 0.62–0.71 one-offs collapse to one token instead of a dozen literals. */
+  --tt-font-size-2xs: 0.6875rem;
   --tt-font-size-xs: 0.75rem;
   --tt-font-size-sm: 0.8125rem;
   --tt-font-size-base: 0.875rem;

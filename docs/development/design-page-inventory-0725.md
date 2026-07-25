@@ -113,7 +113,8 @@
 - PWA 전체(§2): 정본 README + 시안 + CONTRACTS.md 완비. 🔴/🟡 배선 목록이 계약에 명시됨.
 - 사이트 운영(§3): console-site-operations.html + 계약 + 워크오더 완비.
 - QR 위자드 6단계(§3): console-qr-wizard.html + 워크오더 완비.
-- 고도화(§5 🟣): 토큰 이관은 정본 변경 없이 가능 — baseline 감축 대상이 명확.
+- 고도화(§5 🟣): 토큰 이관 매핑표·순서 완료 → `workorder-codex-token-migration-0725.md`.
+  값→토큰 밴드표 + 스테일 43건 즉시 감축 + 새 토큰 `--tt-font-size-2xs` 추가됨. 정본 변경 없음.
 
 ### 아직 Claude가 준비해야 함 (넘기기 전 선행)
 1. ~~**로그인·가입·MFA 카드 상태 폴리시**~~ — **완료(2026-07-25).** 인라인 오류·로딩(로그인
