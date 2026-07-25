@@ -39,7 +39,7 @@
 | 스캔 진입 | `/q/[publicToken]` | 🟡 | **신규 RPC** — 이 세션이 이 자산의 것인지 판정(쿠키만으로 [C] 금지) |
 | [A] 활성화 A-1~A-4 | `/activate/[publicToken]` | 🔴 | **`complete`에서 `activationCode` 제거**(없으면 400). `sites.address`·`siteType`·`expiresInSeconds` 신규. 재진입 상태 복귀 |
 | [R] 재진입 | `/q/[publicToken]/owner` | 🔴 | **엔드포인트 2개**(`reclaim/request-otp`·`reclaim/verify`). 차량+전화 둘 다 일치 시에만, 시도 제한 |
-| [B] 작성 | `/q/[publicToken]` | 🟡 | 차량번호 last4·사이트명·멘트 목록. `연락 부탁드립니다` 코드 추가는 운영자 확정 |
+| [B] 작성 | `/q/[publicToken]` | 🟡 | 차량번호 last4·사이트명·멘트 목록. **`연락 부탁드립니다` 코드 추가 확정(2026-07-25)** → Codex: reason code + KO/EN 카피 |
 | [B] 대기·에스컬·응답 | `/c/[sessionToken]` | 🟡 | **세션 필드 신규**: `plateLast4`·`callerMessage`·`createdAt`·`elapsedSeconds`·`callerMessagesRemaining`. `tel:`은 사무소 대표번호만 href |
 | [C-1] MESSAGES | `/owner` | 🟡 | 진행 중 호출 목록 엔드포인트(신규). 없으면 빈 상태 |
 | 메시지 스레드 | `/owner/messages/[sessionId]` | 🟡 | C-1 목록과 동일 소스 |
