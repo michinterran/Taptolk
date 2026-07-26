@@ -56,7 +56,6 @@ describe("classifyPathname", () => {
     "/ko/admin/platform/tenants",
     "/ko/admin/platform/revenue",
     "/ko/admin/reports",
-    "/ko/admin/mfa/challenge",
     "/en/admin/qr-inventory",
   ];
 

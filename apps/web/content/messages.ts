@@ -86,9 +86,9 @@ export const ko = {
   "admin.dashboard.operationsAction": "운영 지표",
   "admin.dashboard.next.title": "현재 운영 환경",
   "admin.dashboard.role": "현재 역할",
-  "admin.dashboard.session": "인증 방식",
-  "admin.dashboard.session.aal1": "비밀번호 인증",
-  "admin.dashboard.session.aal2": "추가 인증 완료",
+  "admin.dashboard.session": "로그인 상태",
+  "admin.dashboard.session.aal1": "로그인됨",
+  "admin.dashboard.session.aal2": "로그인됨",
   "admin.login.backToOnboarding": "시작 안내로 돌아가기",
   "admin.login.description":
     "고객 관리자와 Taptolk 플랫폼 관리자는 하나의 승인된 업무 계정으로 로그인합니다. 로그인 후 서버가 승인 상태, 역할과 소속 범위를 확인해 알맞은 관리 화면으로 연결합니다.",
@@ -119,24 +119,6 @@ export const ko = {
   "admin.nav.sites": "사이트",
   "admin.nav.tenants": "계약 고객",
   "admin.nav.workspace": "Taptolk 운영 콘솔",
-  "admin.mfa.challenge.description":
-    "인증 앱에 표시된 최신 6자리 코드를 입력하면 관리자 세션의 보안 수준이 AAL2로 올라갑니다.",
-  "admin.mfa.challenge.eyebrow": "2단계 인증",
-  "admin.mfa.challenge.line1": "인증 앱의 보안 코드로",
-  "admin.mfa.challenge.line2": "관리자 접근을 완료합니다.",
-  "admin.mfa.code.label": "6자리 인증 코드",
-  "admin.mfa.code.placeholder": "000000",
-  "admin.mfa.enroll.begin": "인증 앱 연결 시작",
-  "admin.mfa.enroll.description":
-    "Google Authenticator, Microsoft Authenticator 등 TOTP 앱으로 QR 코드를 스캔한 뒤 생성된 코드를 확인해 주세요.",
-  "admin.mfa.enroll.eyebrow": "MFA 등록",
-  "admin.mfa.enroll.line1": "관리자 계정에 인증 앱을",
-  "admin.mfa.enroll.line2": "처음 한 번 연결합니다.",
-  "admin.mfa.enroll.qrAlt": "Taptolk 관리자 MFA 등록 QR 코드",
-  "admin.mfa.enroll.secretHelp":
-    "QR 스캔이 어려우면 아래 설정 키를 인증 앱에 직접 입력할 수 있습니다.",
-  "admin.mfa.enroll.secretLabel": "수동 설정 키",
-  "admin.mfa.verify": "인증하고 계속",
   "admin.platform.description":
     "전체 테넌트, 관리회사, 사이트와 QR 운영 상태를 한곳에서 관리하는 플랫폼 콘솔입니다.",
   "admin.platform.eyebrow": "플랫폼 운영 콘솔",
@@ -748,7 +730,7 @@ export const ko = {
   "portal.approval.eyebrow": "승인과 보안",
   "portal.approval.line1": "권한은 승인된 범위에서만",
   "portal.approval.line2": "열립니다.",
-  "portal.approval.mfa": "중요한 관리자 역할에는 추가 인증 단계를 요구합니다.",
+  "portal.approval.mfa": "관리자 기능은 승인된 계정과 소속 범위 안에서만 사용할 수 있습니다.",
   "portal.approval.pending":
     "계정을 만들면 바로 권한이 생기지 않고 승인 대기 상태가 됩니다. 승인 전에는 고객·차량·운영 데이터를 볼 수 없습니다.",
   "portal.approval.scope": "승인된 관리회사와 사이트 범위의 데이터만 조회하고 운영할 수 있습니다.",
@@ -909,9 +891,9 @@ export const en = {
   "admin.dashboard.operationsAction": "Operations metrics",
   "admin.dashboard.next.title": "Current operating context",
   "admin.dashboard.role": "Current role",
-  "admin.dashboard.session": "Authentication",
-  "admin.dashboard.session.aal1": "Password authenticated",
-  "admin.dashboard.session.aal2": "Additional verification complete",
+  "admin.dashboard.session": "Sign-in status",
+  "admin.dashboard.session.aal1": "Signed in",
+  "admin.dashboard.session.aal2": "Signed in",
   "admin.login.backToOnboarding": "Back to getting started",
   "admin.login.description":
     "Customer and Taptolk platform administrators use one approved work-account sign-in. The server then verifies approval status, role, and membership scope before routing to the appropriate admin area.",
@@ -942,24 +924,6 @@ export const en = {
   "admin.nav.sites": "Sites",
   "admin.nav.tenants": "Contract customers",
   "admin.nav.workspace": "Taptolk operations console",
-  "admin.mfa.challenge.description":
-    "Enter the latest six-digit code from your authenticator app to raise this admin session to AAL2.",
-  "admin.mfa.challenge.eyebrow": "Two-step verification",
-  "admin.mfa.challenge.line1": "Complete admin access with",
-  "admin.mfa.challenge.line2": "your authenticator code.",
-  "admin.mfa.code.label": "Six-digit verification code",
-  "admin.mfa.code.placeholder": "000000",
-  "admin.mfa.enroll.begin": "Connect authenticator app",
-  "admin.mfa.enroll.description":
-    "Scan the QR code with a TOTP app such as Google Authenticator or Microsoft Authenticator, then confirm the generated code.",
-  "admin.mfa.enroll.eyebrow": "MFA enrollment",
-  "admin.mfa.enroll.line1": "Connect an authenticator app",
-  "admin.mfa.enroll.line2": "to this admin account once.",
-  "admin.mfa.enroll.qrAlt": "QR code for Taptolk admin MFA enrollment",
-  "admin.mfa.enroll.secretHelp":
-    "If scanning is unavailable, enter the setup key below in your authenticator app.",
-  "admin.mfa.enroll.secretLabel": "Manual setup key",
-  "admin.mfa.verify": "Verify and continue",
   "admin.platform.description":
     "This is the platform console for managing every tenant, management company, site, and QR operation in one place.",
   "admin.platform.eyebrow": "Platform operations console",
@@ -1595,7 +1559,8 @@ export const en = {
   "portal.approval.eyebrow": "Approval and security",
   "portal.approval.line1": "Access opens only within",
   "portal.approval.line2": "an approved scope.",
-  "portal.approval.mfa": "Sensitive administrator roles require an additional verification step.",
+  "portal.approval.mfa":
+    "Administrator features are available only to approved accounts within their assigned scope.",
   "portal.approval.pending":
     "Creating an account does not grant access. It enters an approval queue, and no customer, vehicle, or operational data is visible until it is approved.",
   "portal.approval.scope":

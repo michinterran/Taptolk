@@ -1,5 +1,4 @@
 import type { AdminRole, AdminScopeType } from "@taptolk/domain";
-import type { AdminActionError } from "../auth/actions";
 import type { MessageDictionary, MessageKey } from "./messages";
 
 const ROLE_MESSAGE_KEYS: Readonly<Record<AdminRole, MessageKey>> = Object.freeze({
@@ -24,16 +23,4 @@ export function getAdminRoleLabel(copy: MessageDictionary, role: AdminRole): str
 
 export function getAdminScopeLabel(copy: MessageDictionary, scopeType: AdminScopeType): string {
   return copy[SCOPE_MESSAGE_KEYS[scopeType]];
-}
-
-export function getAdminActionErrorMessages(
-  copy: MessageDictionary,
-): Readonly<Record<AdminActionError, string>> {
-  return Object.freeze({
-    CONFIGURATION: copy["admin.auth.error.configuration"],
-    INVALID_CODE: copy["admin.auth.error.invalidCode"],
-    INVALID_CREDENTIALS: copy["admin.auth.error.invalidCredentials"],
-    SESSION: copy["admin.auth.error.session"],
-    UNAVAILABLE: copy["admin.auth.error.unavailable"],
-  });
 }

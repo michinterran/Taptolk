@@ -1,5 +1,5 @@
 import type { AdminRole, AdminScopeType } from "@taptolk/domain";
-import { isAdminRoleScopeValid, roleRequiresMfa } from "@taptolk/domain";
+import { isAdminRoleScopeValid } from "@taptolk/domain";
 
 export type AdminProfileStatus = "INVITED" | "ACTIVE" | "SUSPENDED" | "CLOSED";
 export type AdminMembershipStatus = "INVITED" | "ACTIVE" | "SUSPENDED" | "REVOKED";
@@ -33,16 +33,6 @@ export type AdminAccessDecision =
       profile: AdminProfile | null;
       reason: "PROFILE_INACTIVE" | "MEMBERSHIP_INACTIVE";
       state: "ACCESS_DENIED";
-    }
-  | {
-      membership: AdminMembership;
-      profile: AdminProfile;
-      state: "MFA_ENROLL_REQUIRED";
-    }
-  | {
-      membership: AdminMembership;
-      profile: AdminProfile;
-      state: "MFA_CHALLENGE_REQUIRED";
     }
   | {
       membership: AdminMembership;
@@ -108,15 +98,6 @@ export function resolveAdminAccess(
       reason: "MEMBERSHIP_INACTIVE",
       state: "ACCESS_DENIED",
     };
-  }
-
-  if (roleRequiresMfa(membership.role)) {
-    if (!authentication.hasVerifiedTotp) {
-      return { membership, profile, state: "MFA_ENROLL_REQUIRED" };
-    }
-    if (authentication.mfaLevel !== "aal2") {
-      return { membership, profile, state: "MFA_CHALLENGE_REQUIRED" };
-    }
   }
 
   return { membership, profile, state: "READY" };

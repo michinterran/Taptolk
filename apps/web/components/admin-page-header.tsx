@@ -247,11 +247,7 @@ export async function AdminPageHeader({
             </div>
             <div>
               <dt>{copy["admin.dashboard.session"]}</dt>
-              <dd>
-                {context.mfaLevel === "aal2"
-                  ? copy["admin.dashboard.session.aal2"]
-                  : copy["admin.dashboard.session.aal1"]}
-              </dd>
+              <dd>{copy["admin.dashboard.session.aal1"]}</dd>
             </div>
           </dl>
         </aside>

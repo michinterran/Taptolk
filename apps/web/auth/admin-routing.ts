@@ -27,11 +27,9 @@ export function getAdminDecisionPath(locale: AppLocale, decision: AdminAccessDec
       return getAdminLoginPath(locale);
     case "ACCESS_DENIED":
       return getLocalizedAdminPath(locale, "/access");
-    case "MFA_ENROLL_REQUIRED":
-      return getLocalizedAdminPath(locale, "/mfa/enroll");
-    case "MFA_CHALLENGE_REQUIRED":
-      return getLocalizedAdminPath(locale, "/mfa/challenge");
     case "READY":
       return getReadyAdminPath(locale, decision);
   }
+  const exhaustive: never = decision;
+  return exhaustive;
 }

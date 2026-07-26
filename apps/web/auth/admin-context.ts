@@ -45,7 +45,6 @@ export type AdminContextLoadResult =
       mfaLevel: "aal1" | "aal2" | null;
       status: "AVAILABLE";
       userId: string | null;
-      verifiedTotpFactorId: string | null;
     };
 
 interface AvailableAdminContext {
@@ -53,7 +52,6 @@ interface AvailableAdminContext {
   email: string | null;
   mfaLevel: "aal1" | "aal2" | null;
   userId: string;
-  verifiedTotpFactorId?: string | null;
 }
 
 function isAdminRole(value: unknown): value is AdminRole {
@@ -145,7 +143,6 @@ function availableAdminContext({
   email,
   mfaLevel,
   userId,
-  verifiedTotpFactorId = null,
 }: AvailableAdminContext): AdminContextLoadResult {
   return {
     decision,
@@ -153,7 +150,6 @@ function availableAdminContext({
     mfaLevel,
     status: "AVAILABLE",
     userId,
-    verifiedTotpFactorId,
   };
 }
 
@@ -173,7 +169,6 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
       mfaLevel: null,
       status: "AVAILABLE",
       userId: null,
-      verifiedTotpFactorId: null,
     };
   }
   const emailClaim = claims?.email;
@@ -230,42 +225,10 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
         .map((membership) => mapMembership(membership))
         .filter((membership): membership is AdminMembership => membership !== null)
     : [];
-  const preMfaDecision = resolveAdminAccess(
-    {
-      authenticated: true,
-      hasVerifiedTotp: false,
-      mfaLevel,
-    },
-    profile,
-    memberships,
-  );
-  if (preMfaDecision.state !== "MFA_ENROLL_REQUIRED") {
-    return availableAdminContext({
-      decision: preMfaDecision,
-      email,
-      mfaLevel,
-      userId: subject,
-    });
-  }
-
-  const factorsResult = await client.auth.mfa.listFactors();
-  if (factorsResult.error) {
-    logger.error("admin.context.load_failed", {
-      factorsErrorCode: getErrorCode(factorsResult.error),
-      stage: "factors",
-    });
-    return { status: "LOAD_ERROR" };
-  }
-
-  const verifiedTotpFactor =
-    [...factorsResult.data.totp].sort(
-      (left, right) =>
-        left.created_at.localeCompare(right.created_at) || left.id.localeCompare(right.id),
-    )[0] ?? null;
   const decision = resolveAdminAccess(
     {
       authenticated: true,
-      hasVerifiedTotp: verifiedTotpFactor !== null,
+      hasVerifiedTotp: false,
       mfaLevel,
     },
     profile,
@@ -276,6 +239,5 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
     email,
     mfaLevel,
     userId: subject,
-    verifiedTotpFactorId: verifiedTotpFactor?.id ?? null,
   });
 }
