@@ -40,7 +40,7 @@ export function OperationsDashboardView({
   const responseSeconds =
     model.medianOwnerResponseMs === null
       ? "-"
-      : `${decimal.format(model.medianOwnerResponseMs / 1_000)}s`;
+      : `${decimal.format(model.medianOwnerResponseMs / 1_000)}${copy.secondsUnit}`;
   const reportHref = `/${locale}/admin/reports${scopeQuery(companyId, siteId, model.windowDays)}`;
   const maximum = Math.max(
     1,

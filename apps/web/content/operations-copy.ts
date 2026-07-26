@@ -32,6 +32,7 @@ export interface OperationsCopy {
   siteComparisonDescription: string;
   scope: string;
   scopeAll: string;
+  secondsUnit: string;
   trend: string;
   trendDescription: string;
   todayGroup: string;
@@ -74,6 +75,7 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
       "Prioritize locations by unresolved contacts, then open their authorized workspace.",
     scope: "Current data scope",
     scopeAll: "All authorized locations",
+    secondsUnit: "s",
     trend: "Contact and delivery trend",
     trendDescription: "Daily request, unresolved, sent, and failed counts for the selected period.",
     todayGroup: "Last 24 hours",
@@ -114,6 +116,7 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
       "미해결 연락이 많은 현장을 우선 확인하고 승인된 현장 화면으로 이동합니다.",
     scope: "현재 데이터 범위",
     scopeAll: "승인된 전체 관리 현장",
+    secondsUnit: "초",
     trend: "연락·알림 추이",
     trendDescription: "선택한 기간의 일별 요청, 미해결, 전송, 실패 건수를 비교합니다.",
     todayGroup: "최근 24시간",
