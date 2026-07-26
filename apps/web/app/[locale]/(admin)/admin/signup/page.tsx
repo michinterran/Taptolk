@@ -1,12 +1,11 @@
 import { ADMIN_REGISTRATION_PASSWORD_MIN_LENGTH } from "@taptolk/auth";
 import { SemanticHeading } from "@taptolk/ui";
 import { notFound, redirect } from "next/navigation";
-import { signUpAdmin } from "../../../../../auth/actions";
 import { loadAdminContext } from "../../../../../auth/admin-context";
 import { getAdminDecisionPath, getLocalizedAdminPath } from "../../../../../auth/admin-routing";
-import { AdminAuthAlternatives } from "../../../../../components/admin-auth-alternatives";
 import { AdminAuthNotice } from "../../../../../components/admin-auth-notice";
 import { AdminPageHeader } from "../../../../../components/admin-page-header";
+import { AdminSignupControls } from "../../../../../components/admin-signup-controls";
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
 
@@ -101,73 +100,26 @@ export default async function AdminSignupPage({ params, searchParams }: AdminSig
             </p>
           ) : null}
 
-          <form action={signUpAdmin} className="admin-form">
-            <input
-              aria-label={copy["locale.switcher.label"]}
-              name="locale"
-              type="hidden"
-              value={locale}
-            />
-            <label className="admin-field" htmlFor="admin-signup-email">
-              <span>{copy["admin.signup.email.label"]}</span>
-              <input
-                autoComplete="email"
-                disabled={controlsDisabled}
-                id="admin-signup-email"
-                name="email"
-                placeholder={copy["admin.login.email.placeholder"]}
-                required
-                type="email"
-              />
-            </label>
-            <label className="admin-field" htmlFor="admin-signup-password">
-              <span>{copy["admin.signup.password.label"]}</span>
-              <input
-                aria-describedby="admin-signup-password-help"
-                autoComplete="new-password"
-                disabled={controlsDisabled}
-                id="admin-signup-password"
-                maxLength={128}
-                minLength={ADMIN_REGISTRATION_PASSWORD_MIN_LENGTH}
-                name="password"
-                required
-                type="password"
-              />
-              <small id="admin-signup-password-help">
-                {copy["admin.signup.password.help"].replace(
-                  "{minimum}",
-                  String(ADMIN_REGISTRATION_PASSWORD_MIN_LENGTH),
-                )}
-              </small>
-            </label>
-            <label className="admin-field" htmlFor="admin-signup-password-confirmation">
-              <span>{copy["admin.signup.passwordConfirmation.label"]}</span>
-              <input
-                autoComplete="new-password"
-                disabled={controlsDisabled}
-                id="admin-signup-password-confirmation"
-                maxLength={128}
-                minLength={ADMIN_REGISTRATION_PASSWORD_MIN_LENGTH}
-                name="passwordConfirmation"
-                required
-                type="password"
-              />
-            </label>
-            <button className="tt-button admin-submit" disabled={controlsDisabled} type="submit">
-              {copy["admin.signup.submit"]}
-            </button>
-          </form>
-
-          <AdminAuthAlternatives
-            disabled={controlsDisabled}
+          <AdminSignupControls
+            controlsDisabled={controlsDisabled}
             dividerLabel={copy["admin.auth.divider"]}
-            flow="signup"
+            emailLabel={copy["admin.signup.email.label"]}
+            emailPlaceholder={copy["admin.login.email.placeholder"]}
             googleLabel={copy["admin.signup.google"]}
             locale={locale}
             localeTitle={copy["locale.switcher.label"]}
+            passwordConfirmationLabel={copy["admin.signup.passwordConfirmation.label"]}
+            passwordHelp={copy["admin.signup.password.help"].replace(
+              "{minimum}",
+              String(ADMIN_REGISTRATION_PASSWORD_MIN_LENGTH),
+            )}
+            passwordLabel={copy["admin.signup.password.label"]}
+            passwordMinLength={ADMIN_REGISTRATION_PASSWORD_MIN_LENGTH}
             secondaryAction={copy["admin.signup.loginAction"]}
             secondaryHref={getLocalizedAdminPath(locale, "/login")}
             secondaryPrompt={copy["admin.signup.loginPrompt"]}
+            submitLabel={copy["admin.signup.submit"]}
+            workingLabel={copy["admin.shared.working"]}
           />
         </section>
       </section>

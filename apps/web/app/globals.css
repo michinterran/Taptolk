@@ -1265,6 +1265,11 @@ h3,
   opacity: 0.55;
 }
 
+.tt-button[aria-busy="true"],
+.admin-form[aria-busy="true"] .tt-button {
+  min-width: max-content;
+}
+
 .tt-admin-shell {
   background:
     radial-gradient(
@@ -1953,7 +1958,13 @@ h3,
   border-color: var(--tt-color-brand);
 }
 
-.admin-field input:disabled {
+.admin-auth-card :is(input, button, a):focus-visible {
+  box-shadow: var(--tt-focus-ring);
+}
+
+.admin-field input:disabled,
+.admin-field select:disabled,
+.admin-field textarea:disabled {
   cursor: not-allowed;
   opacity: 0.65;
 }
@@ -2020,11 +2031,11 @@ h3,
 }
 
 .admin-form-error {
-  background: color-mix(in srgb, var(--tt-color-danger) 9%, var(--tt-color-surface));
-  border-left: 4px solid var(--tt-color-danger);
-  color: var(--tt-color-danger);
+  background: var(--tt-color-danger-surface);
+  border-radius: var(--tt-note-radius);
+  color: var(--tt-color-danger-fg);
   margin: 0;
-  padding: var(--tt-space-3) var(--tt-space-4);
+  padding: var(--tt-note-padding-block) var(--tt-note-padding-inline);
 }
 
 .admin-notice {

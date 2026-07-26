@@ -1,3 +1,5 @@
+"use client";
+
 import { signInWithGoogle } from "../auth/actions";
 import type { AdminRegistrationFlow } from "../auth/registration-routing";
 import type { AppLocale } from "../i18n/config";
@@ -9,6 +11,7 @@ interface AdminAuthAlternativesProps {
   googleLabel: string;
   locale: AppLocale;
   localeTitle: string;
+  onSubmitStart?: () => void;
   secondaryAction: string;
   secondaryHref: string;
   secondaryPrompt: string;
@@ -21,6 +24,7 @@ export function AdminAuthAlternatives({
   googleLabel,
   locale,
   localeTitle,
+  onSubmitStart,
   secondaryAction,
   secondaryHref,
   secondaryPrompt,
@@ -30,7 +34,7 @@ export function AdminAuthAlternatives({
       <div className="admin-auth-divider">
         <span>{dividerLabel}</span>
       </div>
-      <form action={signInWithGoogle}>
+      <form action={signInWithGoogle} onSubmit={onSubmitStart}>
         <input aria-label={googleLabel} name="flow" type="hidden" value={flow} />
         <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
         <button className="tt-button tt-button--secondary" disabled={disabled} type="submit">

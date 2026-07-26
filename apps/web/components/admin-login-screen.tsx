@@ -1,13 +1,12 @@
 import { AuthCard, SemanticHeading } from "@taptolk/ui";
 import { redirect } from "next/navigation";
-import { signInAdmin } from "../auth/actions";
 import { loadAdminContext } from "../auth/admin-context";
 import { getAdminDecisionPath } from "../auth/admin-routing";
 import { getAdminRegistrationPath } from "../auth/registration-routing";
 import { getMessages } from "../content/messages";
 import type { AppLocale } from "../i18n/config";
-import { AdminAuthAlternatives } from "./admin-auth-alternatives";
 import { AdminAuthNotice } from "./admin-auth-notice";
+import { AdminLoginControls } from "./admin-login-controls";
 import { AdminPageHeader } from "./admin-page-header";
 
 interface AdminLoginScreenProps {
@@ -93,55 +92,20 @@ export async function AdminLoginScreen({ locale, queryError }: AdminLoginScreenP
             </p>
           ) : null}
 
-          <form action={signInAdmin} className="admin-form">
-            <input
-              aria-label={copy["locale.switcher.label"]}
-              name="locale"
-              type="hidden"
-              value={locale}
-            />
-            <label className="admin-field" htmlFor="admin-email">
-              <span>{copy["admin.login.email.label"]}</span>
-              <input
-                autoComplete="username"
-                disabled={configurationMissing || serviceUnavailable}
-                id="admin-email"
-                name="email"
-                placeholder={copy["admin.login.email.placeholder"]}
-                required
-                type="email"
-              />
-            </label>
-            <label className="admin-field" htmlFor="admin-password">
-              <span>{copy["admin.login.password.label"]}</span>
-              <input
-                autoComplete="current-password"
-                disabled={configurationMissing || serviceUnavailable}
-                id="admin-password"
-                minLength={8}
-                name="password"
-                required
-                type="password"
-              />
-            </label>
-            <button
-              className="tt-button admin-submit"
-              disabled={configurationMissing || serviceUnavailable}
-              type="submit"
-            >
-              {intro.submit}
-            </button>
-          </form>
-          <AdminAuthAlternatives
-            disabled={configurationMissing || serviceUnavailable}
+          <AdminLoginControls
+            controlsDisabled={configurationMissing || serviceUnavailable}
             dividerLabel={copy["admin.auth.divider"]}
-            flow="login"
+            emailLabel={copy["admin.login.email.label"]}
+            emailPlaceholder={copy["admin.login.email.placeholder"]}
             googleLabel={copy["admin.login.google"]}
             locale={locale}
             localeTitle={copy["locale.switcher.label"]}
+            passwordLabel={copy["admin.login.password.label"]}
             secondaryAction={copy["admin.login.signupAction"]}
             secondaryHref={getAdminRegistrationPath(locale)}
             secondaryPrompt={copy["admin.login.signupPrompt"]}
+            submitLabel={intro.submit}
+            workingLabel={copy["admin.shared.working"]}
           />
         </AuthCard>
       </section>
