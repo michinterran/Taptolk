@@ -12,6 +12,7 @@ import {
 describe("public contact policy", () => {
   it("accepts approved reasons and normalizes bounded text", () => {
     expect(normalizeContactReason("MOVE_REQUEST")).toBe("MOVE_REQUEST");
+    expect(normalizeContactReason("CONTACT_REQUEST")).toBe("CONTACT_REQUEST");
     expect(normalizeContactMessage({ mode: "FREE_TEXT", value: "  이동을  부탁드립니다.  " })).toBe(
       "이동을 부탁드립니다.",
     );

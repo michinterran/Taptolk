@@ -116,6 +116,7 @@ const ko: PublicContactCopy = {
   reasonDescription: "가장 가까운 상황 하나를 선택해 주세요.",
   reasonLabels: {
     ACCIDENT_CONTACT: "접촉사고 확인",
+    CONTACT_REQUEST: "연락 부탁드립니다",
     DOUBLE_PARKED: "이중주차",
     EXIT_BLOCKED: "출입구 차단",
     LIGHT_ON: "라이트 켜짐",
@@ -132,6 +133,7 @@ const ko: PublicContactCopy = {
   siteLabel: "관리 장소",
   templateMessages: {
     ACCIDENT_CONTACT: "접촉사고 관련 확인이 필요합니다.",
+    CONTACT_REQUEST: "연락 부탁드립니다.",
     DOUBLE_PARKED: "이중주차 차량이 움직이지 않습니다.",
     EXIT_BLOCKED: "출입구를 막고 있어 이동을 부탁드립니다.",
     LIGHT_ON: "차량 라이트가 켜져 있습니다.",
@@ -199,6 +201,7 @@ const en: PublicContactCopy = {
   reasonDescription: "Choose the one option closest to the situation.",
   reasonLabels: {
     ACCIDENT_CONTACT: "Accident follow-up",
+    CONTACT_REQUEST: "Please reply",
     DOUBLE_PARKED: "Double parked",
     EXIT_BLOCKED: "Exit blocked",
     LIGHT_ON: "Lights left on",
@@ -215,6 +218,7 @@ const en: PublicContactCopy = {
   siteLabel: "Managed location",
   templateMessages: {
     ACCIDENT_CONTACT: "Please check a matter related to a vehicle contact incident.",
+    CONTACT_REQUEST: "Please reply through Taptolk.",
     DOUBLE_PARKED: "The double-parked vehicle is not moving.",
     EXIT_BLOCKED: "The vehicle is blocking an exit. Please move it.",
     LIGHT_ON: "The vehicle lights are still on.",

@@ -41,6 +41,12 @@ const MESSAGE = (
   </Glyph>
 );
 
+const PHONE = (
+  <Glyph>
+    <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.8a16 16 0 0 0 6.1 6.1l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z" />
+  </Glyph>
+);
+
 const HEADLIGHT = (
   <Glyph>
     <circle cx="9" cy="12" r="4" />
@@ -82,6 +88,7 @@ const DOTS = (
  */
 const MARKS: Readonly<Partial<Record<ContactReasonCode, ReactNode>>> = {
   ACCIDENT_CONTACT: IMPACT,
+  CONTACT_REQUEST: PHONE,
   DOUBLE_PARKED: CAR,
   EXIT_BLOCKED: CAR,
   LIGHT_ON: HEADLIGHT,
