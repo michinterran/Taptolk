@@ -26,6 +26,7 @@ import {
   pushSupported,
   registerOwnerServiceWorker,
 } from "../owner/owner-device-client";
+import { formatHistoryResponseDuration } from "./owner-history-format";
 import { replyIcon } from "./owner-reply-icons";
 
 /**
@@ -176,14 +177,6 @@ function formatDateTime(value: string, locale: AppLocale): string {
     minute: "2-digit",
     month: "2-digit",
   }).format(new Date(value));
-}
-
-function formatDuration(seconds: number | null, locale: AppLocale): string | undefined {
-  if (seconds === null) {
-    return undefined;
-  }
-  const minutes = Math.max(1, Math.ceil(seconds / 60));
-  return locale === "ko" ? `${minutes}분` : `${minutes}m`;
 }
 
 function Unavailable({ copy }: { copy: OwnerTabsCopy }) {
@@ -515,7 +508,7 @@ export function OwnerHistoryView({ copy, locale }: { copy: OwnerTabsCopy; locale
                 label: `${formatDateTime(item.createdAt, locale)} · ${reasonLabels[item.reasonCode]}`,
                 value:
                   item.result === "ANSWERED"
-                    ? `${copy.historyAnswered} ${formatDuration(item.responseSeconds, locale) ?? "—"}`
+                    ? `${copy.historyAnswered} ${formatHistoryResponseDuration(item.responseSeconds, locale) ?? "—"}`
                     : copy.historyUnanswered,
               }))}
             />
