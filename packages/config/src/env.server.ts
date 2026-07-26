@@ -26,13 +26,6 @@ const serverEnvironmentSchema = z
     IP_QR_LIMIT_PER_10_MINUTES: integerEnvironmentSchema(3),
     MESSAGE_RETENTION_HOURS: integerEnvironmentSchema(72),
     OWNER_RESPONSE_BASE_URL: optionalUrlSchema,
-    OWNER_DEMO_AUTO_VERIFY_OTP: z.preprocess(
-      (value) => (value === "" || value === undefined ? undefined : value),
-      z
-        .enum(["0", "1", "false", "true"])
-        .default("false")
-        .transform((value) => value === "1" || value === "true"),
-    ),
     OWNER_OTP_ATTEMPT_LIMIT: integerEnvironmentSchema(5, 1, 10),
     OWNER_OTP_DAILY_PHONE_LIMIT: integerEnvironmentSchema(10, 1, 100),
     OWNER_OTP_HOURLY_PHONE_LIMIT: integerEnvironmentSchema(5, 1, 50),
@@ -180,13 +173,6 @@ const serverEnvironmentSchema = z
         code: "custom",
         message: "Production cannot use a staging mock OTP.",
         path: ["OWNER_STAGING_MOCK_OTP"],
-      });
-    }
-    if (environment.OWNER_DEMO_AUTO_VERIFY_OTP) {
-      context.addIssue({
-        code: "custom",
-        message: "Production cannot auto-verify owner OTP.",
-        path: ["OWNER_DEMO_AUTO_VERIFY_OTP"],
       });
     }
   });

@@ -1,7 +1,6 @@
 import "server-only";
 
 import { OwnerActivationServiceError } from "@taptolk/application";
-import { parseServerEnvironment } from "@taptolk/config";
 import { OwnerActivationPolicyError } from "@taptolk/domain";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -183,19 +182,6 @@ function serviceOrThrow() {
   return service;
 }
 
-function demoAutoVerifyOtp(): string | null {
-  const environment = parseServerEnvironment();
-  if (
-    environment.APP_ENV === "production" ||
-    !environment.OWNER_DEMO_AUTO_VERIFY_OTP ||
-    environment.OWNER_VERIFICATION_PROVIDER !== "mock" ||
-    !environment.OWNER_STAGING_MOCK_OTP
-  ) {
-    return null;
-  }
-  return environment.OWNER_STAGING_MOCK_OTP;
-}
-
 function readCookie(request: Request, name: string): string | null {
   const cookies = request.headers.get("cookie")?.split(";") ?? [];
   for (const cookie of cookies) {
@@ -232,21 +218,6 @@ export async function requestOwnerOtp(request: Request): Promise<NextResponse> {
       ...input,
       networkFingerprint,
     });
-    const autoOtp = demoAutoVerifyOtp();
-    if (autoOtp) {
-      const verified = await service.verifyOtp({
-        challengeId: result.challengeId,
-        otp: autoOtp,
-        publicToken: input.publicToken,
-      });
-      return safeJson({
-        data: {
-          ...result,
-          autoVerified: true,
-          proof: verified.proof,
-        },
-      });
-    }
     return safeJson({ data: result });
   } catch (error) {
     return errorResponse(error);
