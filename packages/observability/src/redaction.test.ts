@@ -21,4 +21,18 @@ describe("structured-log redaction", () => {
       token: "[REDACTED]",
     });
   });
+
+  it("redacts phone-like values even when a provider echoes them under a safe key", () => {
+    expect(
+      redactSensitiveData({
+        errorCode: "INVALID_RECIPIENT",
+        providerEcho: "recipient 010-1234-5678 was rejected",
+        retryable: false,
+      }),
+    ).toEqual({
+      errorCode: "INVALID_RECIPIENT",
+      providerEcho: "[REDACTED]",
+      retryable: false,
+    });
+  });
 });

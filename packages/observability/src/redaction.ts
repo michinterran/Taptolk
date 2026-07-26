@@ -1,6 +1,8 @@
 const SENSITIVE_KEY_PATTERN =
   /authorization|cookie|phone|message|otp|token|activation|secret|password|api.?key/i;
 
+const SENSITIVE_VALUE_PATTERNS = [/(?:\+?82[-\s]?)?0?1[016789](?:[-\s]?[0-9]){7,8}/u] as const;
+
 const REDACTED_VALUE = "[REDACTED]";
 
 export function redactSensitiveData(value: unknown, depth = 0): unknown {
@@ -19,6 +21,13 @@ export function redactSensitiveData(value: unknown, depth = 0): unknown {
         SENSITIVE_KEY_PATTERN.test(key) ? REDACTED_VALUE : redactSensitiveData(item, depth + 1),
       ]),
     );
+  }
+
+  if (
+    typeof value === "string" &&
+    SENSITIVE_VALUE_PATTERNS.some((pattern) => pattern.test(value))
+  ) {
+    return REDACTED_VALUE;
   }
 
   return value;
