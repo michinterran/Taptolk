@@ -5,7 +5,6 @@ import {
   createWebPushNotificationDispatchService,
   readNotificationWorkerSecret,
 } from "../../../../notification-reply/notification-reply-runtime";
-import { readNotificationStagingInbox } from "../../../../notification-reply/notification-staging-provider";
 import { notificationWorkerAuthorized } from "../../../../notification-reply/owner-response-route";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +44,6 @@ export async function POST(request: Request) {
       {
         data: {
           ...result,
-          stagingInbox: readNotificationStagingInbox(),
           webPush,
         },
         meta: { requestId },

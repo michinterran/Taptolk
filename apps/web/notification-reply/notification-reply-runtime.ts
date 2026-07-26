@@ -6,6 +6,7 @@ import {
   WebPushNotificationDispatchService,
 } from "@taptolk/application";
 import { parseServerEnvironment } from "@taptolk/config";
+import { requireDevelopmentTestStage } from "@taptolk/config/stage/server";
 import { createAdminServiceClient } from "../auth/service-client";
 import { NotificationReplyCrypto } from "./notification-reply-crypto";
 import {
@@ -43,9 +44,10 @@ export function createNotificationDispatchService(): NotificationDispatchService
   if (!value) {
     return null;
   }
-  const stagingMock =
-    value.environment.APP_ENV !== "production" &&
-    value.environment.OWNER_NOTIFICATION_PROVIDER === "mock";
+  const stagingMock = value.environment.OWNER_NOTIFICATION_PROVIDER === "mock";
+  const provider = stagingMock
+    ? createStagingProvider(value.crypto)
+    : new UnavailableOwnerNotificationProvider();
   return new NotificationDispatchService(
     createSupabaseNotificationDeliveryRepository({
       baseUrl: value.environment.OWNER_RESPONSE_BASE_URL as string,
@@ -53,10 +55,17 @@ export function createNotificationDispatchService(): NotificationDispatchService
       hasher: value.crypto,
       secrets: value.crypto,
     }),
-    stagingMock
-      ? new StagingOwnerNotificationProvider(value.crypto)
-      : new UnavailableOwnerNotificationProvider(),
+    provider,
   );
+}
+
+function createStagingProvider(crypto: NotificationReplyCrypto) {
+  try {
+    requireDevelopmentTestStage();
+    return new StagingOwnerNotificationProvider(crypto);
+  } catch {
+    return new UnavailableOwnerNotificationProvider();
+  }
 }
 
 export function createWebPushNotificationDispatchService(): WebPushNotificationDispatchService | null {

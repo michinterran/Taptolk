@@ -6,8 +6,12 @@ import {
   type OwnerNotificationProvider,
   OwnerNotificationProviderError,
 } from "@taptolk/application";
+import { requireDevelopmentTestStage } from "@taptolk/config/stage/server";
 import type { NotificationProviderErrorCode } from "@taptolk/domain";
 import type { NotificationReplyCrypto } from "./notification-reply-crypto";
+
+// @taptolk-test-only: staging AlimTalk simulator; SERVICE must use the live
+// provider or fail closed.
 
 export interface StagingInboxItem {
   idempotencyKey: string;
@@ -54,7 +58,9 @@ export function clearNotificationStagingInbox(): void {
 }
 
 export class StagingOwnerNotificationProvider implements OwnerNotificationProvider {
-  constructor(private readonly crypto: NotificationReplyCrypto) {}
+  constructor(private readonly crypto: NotificationReplyCrypto) {
+    requireDevelopmentTestStage();
+  }
 
   async send(input: {
     idempotencyKey: string;

@@ -1,4 +1,5 @@
 import { parseServerEnvironment } from "@taptolk/config";
+import { requireDevelopmentTestStage } from "@taptolk/config/stage/server";
 import {
   NOTIFICATION_PROVIDER_ERROR_CODES,
   type NotificationProviderErrorCode,
@@ -11,18 +12,22 @@ import {
 } from "../../../../notification-reply/notification-staging-provider";
 import { notificationWorkerAuthorized } from "../../../../notification-reply/owner-response-route";
 
+// @taptolk-test-only: staging notification inbox controls for acceptance tests.
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 function authorized(request: Request): boolean {
-  const environment = parseServerEnvironment();
-  return (
-    environment.APP_ENV !== "production" &&
-    Boolean(
+  try {
+    requireDevelopmentTestStage();
+    const environment = parseServerEnvironment();
+    return Boolean(
       environment.QUEUE_WORKER_SECRET &&
         notificationWorkerAuthorized(request, environment.QUEUE_WORKER_SECRET),
-    )
-  );
+    );
+  } catch {
+    return false;
+  }
 }
 
 export async function GET(request: Request) {
