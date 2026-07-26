@@ -122,7 +122,11 @@ function assertDataImage(value: string): void {
 }
 
 export async function decodeQrFromImage(image: Uint8Array): Promise<string | null> {
-  const raster = await sharp(image).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const raster = await sharp(image)
+    .flatten({ background: "#FFFFFF" })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
   const jsQR = jsQrModule as unknown as typeof import("jsqr").default;
   const decoded = jsQR(new Uint8ClampedArray(raster.data), raster.info.width, raster.info.height, {
     inversionAttempts: "dontInvert",
