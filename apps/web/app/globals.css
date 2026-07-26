@@ -782,7 +782,7 @@ h3,
   border: 1px solid var(--tt-color-border);
   border-radius: 999px;
   color: var(--tt-color-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--tt-pub-caption-size);
   font-weight: 750;
   padding: 0.6rem 0.85rem;
   white-space: nowrap;
@@ -835,7 +835,7 @@ h3,
 
 .landing-signal-card > p {
   color: color-mix(in srgb, var(--tt-color-surface) 64%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--tt-pub-eyebrow-size);
   font-weight: 800;
   letter-spacing: 0.14em;
   margin: 0 0 var(--tt-space-2);
@@ -848,7 +848,7 @@ h3,
 
 .landing-signal-card > span {
   color: color-mix(in srgb, var(--tt-color-surface) 68%, transparent);
-  font-size: 0.88rem;
+  font-size: var(--tt-pub-caption-size);
   line-height: var(--tt-line-body);
   margin-top: var(--tt-space-3);
 }
@@ -928,13 +928,13 @@ h3,
 
 .landing-route__meta span {
   color: var(--tt-color-brand-strong);
-  font-size: 0.8rem;
+  font-size: var(--tt-pub-caption-size);
   font-weight: 850;
 }
 
 .landing-route__meta small {
   color: var(--tt-color-text-muted);
-  font-size: 0.72rem;
+  font-size: var(--tt-pub-eyebrow-size);
   font-weight: 850;
   letter-spacing: 0.12em;
 }
@@ -972,7 +972,7 @@ h3,
 
 .landing-audience-card > span {
   color: var(--tt-color-brand-strong);
-  font-size: 0.76rem;
+  font-size: var(--tt-pub-eyebrow-size);
   font-weight: 850;
   letter-spacing: 0.08em;
 }
@@ -1027,7 +1027,7 @@ h3,
   border-top: 1px solid var(--tt-color-border);
   color: var(--tt-color-text-muted);
   display: flex;
-  font-size: 0.85rem;
+  font-size: var(--tt-pub-caption-size);
   gap: var(--tt-space-5);
   justify-content: space-between;
   margin-top: var(--tt-space-8);
@@ -1049,7 +1049,7 @@ h3,
 .admin-entry-back {
   color: var(--tt-color-text-muted);
   display: inline-flex;
-  font-size: 0.82rem;
+  font-size: var(--tt-pub-caption-size);
   font-weight: 800;
   margin-bottom: var(--tt-space-6);
   text-underline-offset: 0.3rem;
@@ -1105,7 +1105,7 @@ h3,
 
 .onboarding-path > div:first-child span,
 .onboarding-path > div:first-child strong {
-  font-size: 0.76rem;
+  font-size: var(--tt-pub-eyebrow-size);
   font-weight: 850;
   letter-spacing: 0.06em;
 }
@@ -1166,7 +1166,7 @@ h3,
 
 .onboarding-path__instruction span {
   color: var(--tt-color-brand-strong);
-  font-size: 0.75rem;
+  font-size: var(--tt-pub-caption-size);
 }
 
 .onboarding-token-note {
@@ -1978,7 +1978,7 @@ h3,
   align-items: center;
   color: var(--tt-color-text-muted);
   display: flex;
-  font-size: 0.8rem;
+  font-size: var(--tt-pub-caption-size);
   gap: var(--tt-space-3);
 }
 
@@ -6197,7 +6197,7 @@ h3,
 .admin-portal-brand span {
   border-left: 1px solid var(--tt-color-border);
   color: var(--tt-color-text-muted);
-  font-size: 0.82rem;
+  font-size: var(--tt-pub-caption-size);
   font-weight: 800;
   padding-left: var(--tt-space-3);
 }
@@ -6216,7 +6216,7 @@ h3,
 
 .admin-portal-nav a {
   color: var(--tt-color-text-muted);
-  font-size: 0.82rem;
+  font-size: var(--tt-pub-caption-size);
   font-weight: 800;
   text-decoration: none;
   white-space: nowrap;
@@ -6241,7 +6241,7 @@ h3,
   border: 1px solid var(--tt-color-border);
   border-radius: var(--tt-radius-sm);
   color: var(--tt-color-text);
-  font-size: 0.86rem;
+  font-size: var(--tt-pub-caption-size);
   font-weight: 800;
   padding: 0.7rem 1rem;
   text-decoration: none;
@@ -6264,7 +6264,7 @@ h3,
 
 .admin-portal-description {
   color: var(--tt-color-text-muted);
-  font-size: 1.05rem;
+  font-size: var(--tt-pub-lead-size);
   margin: var(--tt-space-5) 0 var(--tt-space-6);
   max-width: 52ch;
 }
@@ -6278,7 +6278,7 @@ h3,
 
 .admin-portal-signup-note {
   color: var(--tt-color-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--tt-pub-caption-size);
   margin-top: var(--tt-space-4);
   max-width: 56ch;
 }
@@ -6316,7 +6316,7 @@ h3,
 .admin-portal-steps li > span {
   color: var(--tt-color-brand-strong);
   display: block;
-  font-size: 0.78rem;
+  font-size: var(--tt-pub-eyebrow-size);
   font-weight: 800;
   letter-spacing: 0.12em;
   margin-bottom: var(--tt-space-2);
@@ -6329,7 +6329,7 @@ h3,
 
 .admin-portal-steps p {
   color: var(--tt-color-text-muted);
-  font-size: 0.92rem;
+  font-size: var(--tt-pub-caption-size);
   margin: 0;
 }
 
@@ -6355,7 +6355,7 @@ h3,
 .admin-portal-footer {
   border-top: 1px solid var(--tt-color-border);
   color: var(--tt-color-text-muted);
-  font-size: 0.88rem;
+  font-size: var(--tt-pub-caption-size);
   margin-top: var(--tt-space-6);
   padding-block: var(--tt-space-6);
 }
@@ -6464,7 +6464,7 @@ h3,
   border-radius: var(--tt-radius-pill);
   color: var(--tt-color-brand-strong);
   display: inline-flex;
-  font-size: 0.78rem;
+  font-size: var(--tt-pub-caption-size);
   font-weight: 850;
   gap: var(--tt-space-2);
   min-height: 2rem;
