@@ -55,13 +55,19 @@ export interface OwnerTabsCopy {
   settingsSite: string;
   settingsStickerState: string;
   settingsChange: string;
+  settingsEmptyTitle: string;
+  settingsEmptyBody: string;
   suspend: string;
   suspendTitle: readonly [string, ...string[]];
   suspendBody: string;
+  resume: string;
+  resumeTitle: readonly [string, ...string[]];
+  resumeBody: string;
   release: string;
   releaseTitle: readonly [string, ...string[]];
   releaseBody: string;
   releaseAuditNote: string;
+  settingsSaved: string;
   confirm: string;
   cancel: string;
 }
@@ -104,13 +110,19 @@ const ko: OwnerTabsCopy = {
   settingsSite: "관리 현장",
   settingsStickerState: "스티커 상태",
   settingsChange: "변경",
+  settingsEmptyTitle: "등록된 차량이 없습니다",
+  settingsEmptyBody: "차량 스티커를 등록하면 이곳에서 관리할 수 있습니다.",
   suspend: "스티커 사용 중지",
   suspendTitle: ["스티커를", "중지할까요?"],
   suspendBody: "중지하는 동안에는 연락을 받지 않습니다. 언제든 다시 켤 수 있습니다.",
+  resume: "스티커 다시 사용",
+  resumeTitle: ["스티커를", "다시 사용할까요?"],
+  resumeBody: "다시 켜면 스티커를 스캔한 사람이 차주에게 연락을 보낼 수 있습니다.",
   release: "등록 해지",
   releaseTitle: ["등록을", "해지할까요?"],
   releaseBody: "차량과 스티커의 연결이 끊어집니다. 다시 쓰려면 처음부터 등록해야 합니다.",
   releaseAuditNote: "해지해도 지난 호출 기록은 감사 목적으로 남습니다.",
+  settingsSaved: "설정이 반영되었습니다.",
   confirm: "확인",
   cancel: "취소",
 };
@@ -153,15 +165,21 @@ const en: OwnerTabsCopy = {
   settingsSite: "Site",
   settingsStickerState: "Sticker",
   settingsChange: "Change",
+  settingsEmptyTitle: "No registered vehicles",
+  settingsEmptyBody: "After registering a vehicle sticker, you can manage it here.",
   suspend: "Pause this sticker",
   suspendTitle: ["Pause", "this sticker?"],
   suspendBody:
     "While it is paused you will not receive messages. You can turn it back on at any time.",
+  resume: "Use this sticker again",
+  resumeTitle: ["Use", "this sticker again?"],
+  resumeBody: "Once it is back on, people who scan the sticker can contact the owner again.",
   release: "End registration",
   releaseTitle: ["End", "this registration?"],
   releaseBody:
     "The vehicle and the sticker will be disconnected. Using it again means registering from the start.",
   releaseAuditNote: "Past requests are kept for audit even after the registration ends.",
+  settingsSaved: "Your settings have been saved.",
   confirm: "Confirm",
   cancel: "Cancel",
 };

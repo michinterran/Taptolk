@@ -78,6 +78,12 @@ export interface OwnerActivationRepository {
     deviceHash: string;
     sessionHash: string;
   }): Promise<readonly OwnerVehicleItem[]>;
+  updateStickerState(input: {
+    action: OwnerStickerAction;
+    deviceHash: string;
+    sessionHash: string;
+    vehicleId: string;
+  }): Promise<OwnerStickerStateUpdate>;
   listMessages(input: {
     deviceHash: string;
     sessionHash: string;
@@ -179,6 +185,13 @@ export interface OwnerVehicleItem {
   vehicleId: string;
 }
 
+export type OwnerStickerAction = "RELEASE" | "RESUME" | "SUSPEND";
+
+export interface OwnerStickerStateUpdate {
+  qrStatus: "ACTIVATION_PENDING" | "ACTIVE" | "SUSPENDED";
+  vehicleId: string;
+}
+
 export interface OwnerContactMessageItem {
   callerMessage: string;
   createdAt: string;
@@ -250,6 +263,25 @@ export class OwnerActivationService {
     return this.repository.listVehicles({
       deviceHash: input.deviceHash,
       sessionHash: await this.hashRequired(input.sessionToken, "session"),
+    });
+  }
+
+  async updateStickerState(input: {
+    action: OwnerStickerAction;
+    deviceHash: string;
+    sessionToken: string;
+    vehicleId: string;
+  }): Promise<OwnerStickerStateUpdate> {
+    assertOwnerDeviceId(input.deviceHash);
+    assertUuid(input.vehicleId);
+    if (input.action !== "RELEASE" && input.action !== "RESUME" && input.action !== "SUSPEND") {
+      throw new OwnerActivationServiceError("INVALID_ID");
+    }
+    return this.repository.updateStickerState({
+      action: input.action,
+      deviceHash: input.deviceHash,
+      sessionHash: await this.hashRequired(input.sessionToken, "session"),
+      vehicleId: input.vehicleId,
     });
   }
 

@@ -34,6 +34,10 @@ function createHarness() {
         vehicleId: "00000000-0000-4000-8000-000000000003",
       },
     ]),
+    updateStickerState: vi.fn(async () => ({
+      qrStatus: "SUSPENDED" as const,
+      vehicleId: "00000000-0000-4000-8000-000000000003",
+    })),
     listHistory: vi.fn(async () => [
       {
         createdAt: "2026-07-20T00:00:00.000Z",
@@ -263,6 +267,27 @@ describe("OwnerActivationService", () => {
     expect(repository.listVehicles).toHaveBeenCalledWith({
       deviceHash: "d".repeat(64),
       sessionHash: expect.any(String),
+    });
+  });
+
+  it("hashes the HttpOnly session token before changing sticker state", async () => {
+    const { repository, service } = createHarness();
+    await expect(
+      service.updateStickerState({
+        action: "SUSPEND",
+        deviceHash: "d".repeat(64),
+        sessionToken: "session_12345678901234567890",
+        vehicleId: "00000000-0000-4000-8000-000000000003",
+      }),
+    ).resolves.toEqual({
+      qrStatus: "SUSPENDED",
+      vehicleId: "00000000-0000-4000-8000-000000000003",
+    });
+    expect(repository.updateStickerState).toHaveBeenCalledWith({
+      action: "SUSPEND",
+      deviceHash: "d".repeat(64),
+      sessionHash: expect.any(String),
+      vehicleId: "00000000-0000-4000-8000-000000000003",
     });
   });
 

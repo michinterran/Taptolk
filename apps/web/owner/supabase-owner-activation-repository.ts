@@ -11,6 +11,7 @@ import type {
   OwnerOtpVerificationResult,
   OwnerPushSubscriptionState,
   OwnerReclaimVerificationResult,
+  OwnerStickerStateUpdate,
 } from "@taptolk/application";
 import { createLogger } from "@taptolk/observability";
 import type { createAdminServiceClient } from "../auth/service-client";
@@ -191,6 +192,29 @@ export function createSupabaseOwnerActivationRepository(
           vehicleId: stringField(row, "vehicle_id"),
         };
       });
+    },
+    async updateStickerState(input): Promise<OwnerStickerStateUpdate> {
+      const row = resultData(
+        await client.rpc("update_owner_sticker_state", {
+          p_input: {
+            action: input.action,
+            device_hash: input.deviceHash,
+            session_hash: input.sessionHash,
+            vehicle_id: input.vehicleId,
+          },
+        }),
+      );
+      if (
+        row.qr_status !== "ACTIVATION_PENDING" &&
+        row.qr_status !== "ACTIVE" &&
+        row.qr_status !== "SUSPENDED"
+      ) {
+        throw new OwnerActivationRepositoryError("UNAVAILABLE");
+      }
+      return {
+        qrStatus: row.qr_status,
+        vehicleId: stringField(row, "vehicle_id"),
+      };
     },
     async listHistory(input): Promise<readonly OwnerContactHistoryItem[]> {
       const result = await client.rpc("list_owner_contact_history", {

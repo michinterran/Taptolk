@@ -102,7 +102,7 @@ function useVehicles(locale: AppLocale) {
     };
   }, [locale]);
 
-  return { failed, vehicles };
+  return { failed, setFailed, setVehicles, vehicles };
 }
 
 async function postOwnerSession<T>(path: string, locale: AppLocale): Promise<T> {
@@ -521,31 +521,104 @@ export function OwnerHistoryView({ copy, locale }: { copy: OwnerTabsCopy; locale
   );
 }
 
-type Confirming = "RELEASE" | "SUSPEND" | null;
+type Confirming = "RELEASE" | "RESUME" | "SUSPEND" | null;
+
+async function updateOwnerStickerState(input: {
+  action: Confirming;
+  locale: AppLocale;
+  vehicleId: string;
+}): Promise<{ qrStatus: "ACTIVATION_PENDING" | "ACTIVE" | "SUSPENDED"; vehicleId: string }> {
+  if (!input.action) {
+    throw new Error("UNAVAILABLE");
+  }
+  const response = await fetch("/api/owner/settings/sticker", {
+    body: JSON.stringify({
+      action: input.action,
+      deviceHash: await getOwnerDeviceHash(),
+      locale: input.locale,
+      vehicleId: input.vehicleId,
+    }),
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("UNAVAILABLE");
+  }
+  const payload = (await response.json()) as {
+    data: { qrStatus: "ACTIVATION_PENDING" | "ACTIVE" | "SUSPENDED"; vehicleId: string };
+  };
+  return payload.data;
+}
 
 /** [C-5] SETTINGS and [C-6] the two confirmations. */
 export function OwnerSettingsView({ copy, locale }: { copy: OwnerTabsCopy; locale: AppLocale }) {
-  const { failed, vehicles } = useVehicles(locale);
+  const { failed, setFailed, setVehicles, vehicles } = useVehicles(locale);
   const [confirming, setConfirming] = useState<Confirming>(null);
+  const [working, setWorking] = useState(false);
+  const [saved, setSaved] = useState(false);
   const vehicle = vehicles?.[0];
+  const reversibleAction: Confirming = vehicle?.qrStatus === "SUSPENDED" ? "RESUME" : "SUSPEND";
+
+  async function confirmAction() {
+    if (!confirming || !vehicle) {
+      return;
+    }
+    setWorking(true);
+    setFailed(false);
+    setSaved(false);
+    try {
+      const next = await updateOwnerStickerState({
+        action: confirming,
+        locale,
+        vehicleId: vehicle.vehicleId,
+      });
+      setVehicles((current) => {
+        const rows = current ?? [];
+        if (confirming === "RELEASE") {
+          return rows.filter((row) => row.vehicleId !== next.vehicleId);
+        }
+        return rows.map((row) =>
+          row.vehicleId === next.vehicleId
+            ? { ...row, qrStatus: next.qrStatus === "SUSPENDED" ? "SUSPENDED" : "ACTIVE" }
+            : row,
+        );
+      });
+      setConfirming(null);
+      setSaved(true);
+    } catch {
+      setFailed(true);
+    } finally {
+      setWorking(false);
+    }
+  }
 
   if (confirming) {
     const release = confirming === "RELEASE";
+    const resume = confirming === "RESUME";
     return (
       <>
         <MobileCard center>
           <SemanticHeading
             as="h1"
             className="tt-m-heading"
-            lines={release ? copy.releaseTitle : copy.suspendTitle}
+            lines={release ? copy.releaseTitle : resume ? copy.resumeTitle : copy.suspendTitle}
           />
-          <p className="tt-m-card__note">{release ? copy.releaseBody : copy.suspendBody}</p>
+          <p className="tt-m-card__note">
+            {release ? copy.releaseBody : resume ? copy.resumeBody : copy.suspendBody}
+          </p>
         </MobileCard>
         {/* Ending a registration keeps the record. The confirmation says so
             rather than letting the owner find out afterwards (README §3). */}
         {release ? <MobileNotice center>{copy.releaseAuditNote}</MobileNotice> : null}
-        <MobilePrimary disabled>{copy.confirm}</MobilePrimary>
-        <MobileQuietButton onClick={() => setConfirming(null)}>{copy.cancel}</MobileQuietButton>
+        {failed ? <MobileNotice tone="danger">{copy.unavailable}</MobileNotice> : null}
+        <MobilePrimary disabled={working || !vehicle} onClick={() => void confirmAction()}>
+          {copy.confirm}
+        </MobilePrimary>
+        <MobileQuietButton disabled={working} onClick={() => setConfirming(null)}>
+          {copy.cancel}
+        </MobileQuietButton>
       </>
     );
   }
@@ -559,16 +632,22 @@ export function OwnerSettingsView({ copy, locale }: { copy: OwnerTabsCopy; local
           <p className="tt-m-card__note">{copy.loading}</p>
         </MobileCard>
       ) : null}
-      {vehicles ? (
+      {saved ? <MobileNotice center>{copy.settingsSaved}</MobileNotice> : null}
+      {vehicles !== null && !failed && !vehicle ? (
+        <MobileCard>
+          <MobileEmptyState description={copy.settingsEmptyBody} title={copy.settingsEmptyTitle} />
+        </MobileCard>
+      ) : null}
+      {vehicle ? (
         <MobileCard>
           <MobileRows
             rows={[
-              { label: copy.settingsPlate, value: vehicle?.plateLast4 },
+              { label: copy.settingsPlate, value: vehicle.plateLast4 },
               // The number itself is never sent to the browser; only the fact
               // that it was verified (operator, 2026-07-24).
               { label: copy.settingsContact, value: copy.settingsContactVerified },
-              { label: copy.settingsSite, value: vehicle?.siteDisplayName },
-              { label: copy.settingsStickerState, value: vehicle?.qrStatus },
+              { label: copy.settingsSite, value: vehicle.siteDisplayName },
+              { label: copy.settingsStickerState, value: vehicle.qrStatus },
             ]}
           />
         </MobileCard>
@@ -577,9 +656,11 @@ export function OwnerSettingsView({ copy, locale }: { copy: OwnerTabsCopy; local
           same weight — only the second one is danger (README §3). Neither is
           offered while the sticker's state is unknown: acting on something we
           could not load is worse than making the owner retry. */}
-      {vehicles ? (
+      {vehicle ? (
         <>
-          <MobileSecondary onClick={() => setConfirming("SUSPEND")}>{copy.suspend}</MobileSecondary>
+          <MobileSecondary onClick={() => setConfirming(reversibleAction)}>
+            {reversibleAction === "RESUME" ? copy.resume : copy.suspend}
+          </MobileSecondary>
           <MobileQuietButton
             className="tt-m-quiet-link--danger"
             onClick={() => setConfirming("RELEASE")}

@@ -113,6 +113,8 @@ export {
   type OwnerPushSubscriptionPayload,
   type OwnerPushSubscriptionState,
   type OwnerReclaimVerificationResult,
+  type OwnerStickerAction,
+  type OwnerStickerStateUpdate,
   type OwnerVehicleItem,
 } from "./owner-activation-service.js";
 export {

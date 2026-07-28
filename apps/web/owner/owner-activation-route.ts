@@ -81,6 +81,15 @@ const listVehiclesSchema = z
   })
   .strict();
 
+const updateStickerStateSchema = z
+  .object({
+    action: z.enum(["RELEASE", "RESUME", "SUSPEND"]),
+    deviceHash: sharedSchema.deviceHash,
+    locale: sharedSchema.locale,
+    vehicleId: z.uuid(),
+  })
+  .strict();
+
 const ownerSessionSchema = z
   .object({
     deviceHash: sharedSchema.deviceHash,
@@ -336,6 +345,25 @@ export async function listOwnerVehicles(request: Request): Promise<NextResponse>
       sessionToken,
     });
     return safeJson({ data: { vehicles } });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function updateOwnerStickerState(request: Request): Promise<NextResponse> {
+  try {
+    const input = updateStickerStateSchema.parse(await readBody(request));
+    const sessionToken = readOwnerSessionOrUnauthorized(request);
+    if (sessionToken instanceof NextResponse) {
+      return sessionToken;
+    }
+    const state = await serviceOrThrow().updateStickerState({
+      action: input.action,
+      deviceHash: input.deviceHash,
+      sessionToken,
+      vehicleId: input.vehicleId,
+    });
+    return safeJson({ data: state });
   } catch (error) {
     return errorResponse(error);
   }

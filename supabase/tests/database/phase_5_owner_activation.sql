@@ -1,6 +1,6 @@
 begin;
 
-select plan(53);
+select plan(59);
 
 select has_table('public', 'owners', 'Owner identity table exists');
 select has_table('public', 'owner_devices', 'Owner device table exists');
@@ -66,6 +66,12 @@ select has_function(
 );
 select has_function(
   'public',
+  'update_owner_sticker_state',
+  array['jsonb'],
+  'Owner Settings sticker state command exists'
+);
+select has_function(
+  'public',
   'request_owner_session_reclaim_otp',
   array['jsonb'],
   'Owner session reclaim OTP request command exists'
@@ -95,6 +101,12 @@ select is_definer(
   'complete_owner_activation',
   array['jsonb'],
   'activation completion is server-only'
+);
+select is_definer(
+  'public',
+  'update_owner_sticker_state',
+  array['jsonb'],
+  'Owner Settings sticker command is server-only'
 );
 select is_definer(
   'public',
@@ -148,6 +160,22 @@ select function_privs_are(
   'service_role',
   array['EXECUTE'],
   'service application boundary can complete activation'
+);
+select function_privs_are(
+  'public',
+  'update_owner_sticker_state',
+  array['jsonb'],
+  'authenticated',
+  array[]::text[],
+  'authenticated browser cannot mutate Owner sticker state directly'
+);
+select function_privs_are(
+  'public',
+  'update_owner_sticker_state',
+  array['jsonb'],
+  'service_role',
+  array['EXECUTE'],
+  'service application boundary can mutate Owner sticker state'
 );
 select function_privs_are(
   'public',
@@ -340,6 +368,44 @@ select results_eq(
   $$,
   array[true],
   'reclaim verify creates Owner session and device without changing bindings'
+);
+
+select results_eq(
+  $$
+    select position('owner_session_context' in lower(pg_get_functiondef(
+      'public.update_owner_sticker_state(jsonb)'::regprocedure
+    ))) > 0
+      and position('owner_sticker_suspended' in lower(pg_get_functiondef(
+        'public.update_owner_sticker_state(jsonb)'::regprocedure
+      ))) > 0
+      and position('owner_sticker_resumed' in lower(pg_get_functiondef(
+        'public.update_owner_sticker_state(jsonb)'::regprocedure
+      ))) > 0
+      and position('owner_sticker_released' in lower(pg_get_functiondef(
+        'public.update_owner_sticker_state(jsonb)'::regprocedure
+      ))) > 0
+  $$,
+  array[true],
+  'Owner Settings sticker command is session-scoped and records all action reasons'
+);
+
+select results_eq(
+  $$
+    select position('update public.qr_bindings' in lower(pg_get_functiondef(
+      'public.update_owner_sticker_state(jsonb)'::regprocedure
+    ))) > 0
+      and position('update public.vehicle_owners' in lower(pg_get_functiondef(
+        'public.update_owner_sticker_state(jsonb)'::regprocedure
+      ))) > 0
+      and position('qr_asset_status_logs' in lower(pg_get_functiondef(
+        'public.update_owner_sticker_state(jsonb)'::regprocedure
+      ))) > 0
+      and position('audit_logs' in lower(pg_get_functiondef(
+        'public.update_owner_sticker_state(jsonb)'::regprocedure
+      ))) > 0
+  $$,
+  array[true],
+  'Owner Settings release ends active relationships and writes audit plus status history'
 );
 
 select has_function(
