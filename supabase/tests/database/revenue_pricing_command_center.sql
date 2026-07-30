@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select plan(9);
 
 select has_table('public', 'revenue_pricing_policies', 'versioned revenue pricing table exists');
 select col_is_pk('public', 'revenue_pricing_policies', 'id', 'pricing policies use immutable ids');
@@ -33,6 +33,14 @@ select function_privs_are(
   'authenticated',
   array['EXECUTE'],
   'authenticated role reaches the command which performs server authorization'
+);
+select ok(
+  position(
+    'company.is_test_fixture = false' in pg_get_functiondef(
+      'public.read_revenue_command_center()'::regprocedure
+    )
+  ) > 0,
+  'revenue read model excludes fixture companies before aggregation'
 );
 
 select * from finish();
