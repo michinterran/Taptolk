@@ -14,6 +14,12 @@
 
 화면을 만들거나 고치기 전에 **반드시** 이 순서를 따른다.
 
+> 2026-07-30 운영자 결정: 랜딩·로그인·가입은 기존 공개/인증 표면으로 유지하고,
+> 슈퍼어드민·관리회사·사이트 어드민의 **전체 백오피스 콘솔**은
+> `docs/design-canon/CONSOLE_DESIGN_SYSTEM_V2.md`를 새 기준으로 삼는다. YouTube Studio식
+> 다크 운영 콘솔을 기본으로 하고 같은 시맨틱 토큰으로 라이트 모드를 지원한다. QR 운영은
+> 기능 상태를 검증하는 첫 정본이며 기존 QR UI/UX를 계승하지 않는다.
+
 1. **정본을 띄운다.** `docs/design-canon/`을 정적 서버로 열고 대상 화면의 시안을 화면에 띄운다.
    ```bash
    cd docs/design-canon && python3 -m http.server 8907
@@ -58,6 +64,7 @@
 
 | 파일 | 무엇의 정본인가 |
 |---|---|
+| `CONSOLE_DESIGN_SYSTEM_V2.md` | **슈퍼어드민·관리회사·사이트 어드민 전체 운영 콘솔 v2.** YouTube Studio식 다크 운영 UX를 기본으로 이식하고 라이트 모드와 Taptolk 보라색 액션을 지원 |
 | `reference-1-admin-console.png` | **관리자 콘솔 전체의 시각 언어.** 셸·목록 화면·우측 레일·테이블·지표 스트립 |
 | `console-qr-wizard.html` | QR 제작 위자드 (스테퍼 + 패널 + 미리보기 레일) |
 | `console-shell.html` | 셸·사이드바·상단바 |
@@ -166,18 +173,18 @@ h1과 같은 줄 오른쪽에 주 액션 하나. 그 이상은 두지 않는다.
 
 | 항목 | 토큰 | 값 |
 |---|---|---|
-| 행 최소 높이 | `--tt-table-row-min-height` | `3rem` (48px) |
-| 헤더 밴드 높이 | `--tt-table-header-min-height` | `2.375rem` (38px) |
-| 셀 padding | `--tt-table-cell-padding-block/-inline` | `0.7rem` / `1rem` |
-| 본문 크기 | `--tt-table-font-size` | `0.8125rem` |
-| 헤더 크기 | `--tt-table-header-font-size` | `0.8125rem` — **본문과 같다** |
-| 헤더 굵기 | `--tt-table-header-font-weight` | `600` |
+| 행 최소 높이 | `--tt-table-row-min-height` | `4rem` (64px) |
+| 헤더 밴드 높이 | `--tt-table-header-min-height` | `2.75rem` (44px) |
+| 셀 padding | `--tt-table-cell-padding-block/-inline` | `0.75rem` / `1rem` |
+| 본문 크기 | `--tt-table-font-size` | `0.875rem` |
+| 헤더 크기 | `--tt-table-header-font-size` | `0.75rem` |
+| 헤더 굵기 | `--tt-table-header-font-weight` | `500` |
 | 헤더 변환 | `--tt-table-header-transform` | `none` — **대문자 없음** |
 | 헤더 배경 | `--tt-table-header-surface` | `#f7f8fa` |
 | 행 구분선 | `--tt-table-divider-color` | `#f0f1f4` — **카드 테두리보다 옅다** |
-| 셀 보조줄 | `--tt-table-meta-font-size` | `0.6875rem` |
+| 셀 보조줄 | `--tt-table-meta-font-size` | `0.75rem` |
 
-**헤더는 축소된 대문자 캡션이 아니다.** 본문 크기·muted·semibold이고 옅은 밴드 위에 놓인다.
+**헤더는 대문자 캡션이 아니다.** muted·medium이고 옅은 밴드 위에 놓인다.
 한국어는 대문자가 없으므로 `text-transform: uppercase`와 넓은 `letter-spacing`은 자간만 망가뜨린다.
 
 셀 안에서 쓰는 것: 상태 알약, 가로 미터 바(값 + 바), 2줄 셀(제목 + 보조줄), 배지, 고스트 버튼.
@@ -240,9 +247,9 @@ h1과 같은 줄 오른쪽에 주 액션 하나. 그 이상은 두지 않는다.
 
 | 토큰 | 값 | 쓰임 |
 |---|---|---|
-| `--tt-heading-1-size` | `1.625rem` | 페이지 제목 |
-| `--tt-heading-2-size` | `1.0625rem` | 카드·레일 제목 |
-| `--tt-heading-3-size` | `0.9375rem` | 패널 안 소제목 |
+| `--tt-heading-1-size` | `1.5rem` | 페이지 제목 |
+| `--tt-heading-2-size` | `1.125rem` | 카드·레일 제목 |
+| `--tt-heading-3-size` | `1rem` | 패널 안 소제목 |
 | `--tt-body-size` | `0.875rem` | 본문 |
 | `--tt-label-size` | `0.75rem` | 라벨·eyebrow·보조 |
 | `--tt-stat-value-size` | `2.125rem` | 지표 값 |

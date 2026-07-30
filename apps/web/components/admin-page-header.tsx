@@ -11,17 +11,17 @@ import {
   SignOutIcon,
   UserCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { AdminScopeNavigationService } from "@taptolk/application";
 import { getAdminLandingArea } from "@taptolk/auth";
-import { ScopeSwitcher } from "@taptolk/ui";
+import type { Route } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
-import { createSupabaseAdminScopeNavigationRepository } from "../admin/supabase-admin-scope-navigation-repository";
 import { signOutAdmin } from "../auth/actions";
 import { loadAdminContext } from "../auth/admin-context";
-import { createAdminServerClient } from "../auth/server-client";
 import { getAdminRoleLabel, getAdminScopeLabel } from "../content/admin-copy";
 import { getMessages } from "../content/messages";
 import type { AppLocale } from "../i18n/config";
+import { ConsoleSearch, type ConsoleSearchItem } from "./console-search";
+import { ConsoleThemeControl } from "./console-theme-control";
 import { LocaleSwitcher } from "./locale-switcher";
 
 interface AdminPageHeaderProps {
@@ -33,7 +33,7 @@ interface AdminPageHeaderProps {
 }
 
 interface AdminNavigationItem {
-  href: string;
+  href: Route;
   icon: ReactNode;
   label: string;
 }
@@ -56,14 +56,14 @@ export async function AdminPageHeader({
     const copy = getMessages(locale);
     const { membership } = context.decision;
     const isPlatform = getAdminLandingArea(membership.role) === "platform";
-    const workspaceHref = `/${locale}/admin/${isPlatform ? "platform" : "dashboard"}`;
+    const workspaceHref = `/${locale}/admin/${isPlatform ? "platform" : "dashboard"}` as Route;
     const navigationSections: readonly AdminNavigationSection[] = isPlatform
       ? [
           {
             label: copy["admin.nav.group.overview"],
             items: [
               {
-                href: `/${locale}/admin/platform`,
+                href: `/${locale}/admin/platform` as Route,
                 icon: <HouseIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.overview"],
               },
@@ -73,7 +73,7 @@ export async function AdminPageHeader({
             label: copy["admin.nav.group.customers"],
             items: [
               {
-                href: `/${locale}/admin/platform/management-companies`,
+                href: `/${locale}/admin/platform/management-companies` as Route,
                 icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.managementCompanies"],
               },
@@ -83,22 +83,22 @@ export async function AdminPageHeader({
             label: copy["admin.nav.group.service"],
             items: [
               {
-                href: `/${locale}/admin/qr-inventory`,
+                href: `/${locale}/admin/qr-inventory` as Route,
                 icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.qr"],
               },
               {
-                href: `/${locale}/admin/operations`,
+                href: `/${locale}/admin/operations` as Route,
                 icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.operations"],
               },
               {
-                href: `/${locale}/admin/reports`,
+                href: `/${locale}/admin/reports` as Route,
                 icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.reports"],
               },
               {
-                href: `/${locale}/admin/platform/revenue`,
+                href: `/${locale}/admin/platform/revenue` as Route,
                 icon: <CirclesFourIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.revenue"],
               },
@@ -110,7 +110,7 @@ export async function AdminPageHeader({
                   label: copy["admin.nav.group.administration"],
                   items: [
                     {
-                      href: `/${locale}/admin/accounts`,
+                      href: `/${locale}/admin/accounts` as Route,
                       icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
                       label: copy["admin.nav.access"],
                     },
@@ -124,7 +124,7 @@ export async function AdminPageHeader({
             label: copy["admin.nav.group.overview"],
             items: [
               {
-                href: `/${locale}/admin/dashboard`,
+                href: `/${locale}/admin/dashboard` as Route,
                 icon: <HouseIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.overview"],
               },
@@ -134,7 +134,7 @@ export async function AdminPageHeader({
             label: copy["admin.nav.group.customers"],
             items: [
               {
-                href: `/${locale}/admin/sites`,
+                href: `/${locale}/admin/sites` as Route,
                 icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.sites"],
               },
@@ -144,17 +144,17 @@ export async function AdminPageHeader({
             label: copy["admin.nav.group.service"],
             items: [
               {
-                href: `/${locale}/admin/qr-inventory`,
+                href: `/${locale}/admin/qr-inventory` as Route,
                 icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.qr"],
               },
               {
-                href: `/${locale}/admin/operations`,
+                href: `/${locale}/admin/operations` as Route,
                 icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.operations"],
               },
               {
-                href: `/${locale}/admin/reports`,
+                href: `/${locale}/admin/reports` as Route,
                 icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.reports"],
               },
@@ -166,7 +166,7 @@ export async function AdminPageHeader({
                   label: copy["admin.nav.group.administration"],
                   items: [
                     {
-                      href: `/${locale}/admin/accounts`,
+                      href: `/${locale}/admin/accounts` as Route,
                       icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
                       label: copy["admin.nav.access"],
                     },
@@ -176,7 +176,14 @@ export async function AdminPageHeader({
             : []),
         ];
     const navigation = navigationSections.flatMap((section) => section.items);
-    const profileHref = `/${locale}/admin/profile`;
+    const searchItems: readonly ConsoleSearchItem[] = navigationSections.flatMap((section) =>
+      section.items.map((item) => ({
+        group: section.label,
+        href: item.href,
+        label: item.label,
+      })),
+    );
+    const profileHref = `/${locale}/admin/profile` as Route;
     const isProfile = pathname === profileHref;
     const currentItem =
       navigation.find((item) => pathname === item.href) ??
@@ -184,23 +191,14 @@ export async function AdminPageHeader({
         (item) => item.href !== workspaceHref && pathname.startsWith(`${item.href}/`),
       ) ??
       (isProfile ? undefined : navigation[0]);
-    const scopeSwitcher =
-      isPlatform && membership.role === "SUPER_ADMIN"
-        ? await loadSuperAdminScopeSwitcher({
-            copy,
-            locale,
-            mfaVerified: context.mfaLevel === "aal2",
-            pathname,
-          })
-        : null;
-
     return (
       <>
         <aside aria-label={copy["admin.nav.sidebar"]} className="admin-console-sidebar">
-          <a className="admin-console-brand" href={workspaceHref}>
+          <Link className="admin-console-brand" href={workspaceHref}>
             {/* biome-ignore lint/performance/noImgElement: approved logo must bypass image transformation */}
             <img alt={logoAlt} height="405" src="/brand/taptolk-logo.png" width="1000" />
-          </a>
+            <span>{copy["admin.nav.consoleLabel"]}</span>
+          </Link>
 
           <div className="admin-console-identity">
             <span>{copy["admin.nav.workspace"]}</span>
@@ -216,7 +214,7 @@ export async function AdminPageHeader({
                 {section.items.map((item) => {
                   const isCurrent = currentItem?.href === item.href;
                   return (
-                    <a
+                    <Link
                       aria-current={isCurrent ? "page" : undefined}
                       className="admin-console-nav__item"
                       href={item.href}
@@ -224,21 +222,21 @@ export async function AdminPageHeader({
                     >
                       {item.icon}
                       {item.label}
-                    </a>
+                    </Link>
                   );
                 })}
               </section>
             ))}
           </nav>
 
-          <a
+          <Link
             aria-current={isProfile ? "page" : undefined}
             className="admin-console-profile-link"
             href={profileHref}
           >
             <IdentificationCardIcon aria-hidden="true" weight="duotone" />
             {copy["admin.shared.account"]}
-          </a>
+          </Link>
 
           <dl className="admin-console-session">
             <div>
@@ -254,16 +252,19 @@ export async function AdminPageHeader({
 
         <header className="admin-console-topbar">
           <div className="admin-console-topbar__leading">
-            {scopeSwitcher ?? (
-              <a className="admin-console-scope" href={workspaceHref}>
-                {isPlatform ? (
-                  <CirclesFourIcon aria-hidden="true" weight="duotone" />
-                ) : (
-                  <MapPinAreaIcon aria-hidden="true" weight="duotone" />
-                )}
-                <span>{getAdminScopeLabel(copy, membership.scopeType)}</span>
-              </a>
-            )}
+            <Link
+              aria-label={copy["admin.nav.scopeHome"]}
+              className="admin-console-scope"
+              href={workspaceHref}
+              title={copy["admin.nav.scopeHome"]}
+            >
+              {isPlatform ? (
+                <CirclesFourIcon aria-hidden="true" weight="duotone" />
+              ) : (
+                <MapPinAreaIcon aria-hidden="true" weight="duotone" />
+              )}
+              <span>{getAdminScopeLabel(copy, membership.scopeType)}</span>
+            </Link>
             <div className="admin-console-location">
               <span>{copy["admin.nav.current"]}</span>
               <strong>
@@ -273,7 +274,17 @@ export async function AdminPageHeader({
               </strong>
             </div>
           </div>
+          <ConsoleSearch
+            emptyLabel={copy["admin.search.empty"]}
+            items={searchItems}
+            label={copy["admin.search.label"]}
+            placeholder={copy["admin.search.placeholder"]}
+          />
           <div className="admin-console-account-actions">
+            <ConsoleThemeControl
+              darkLabel={copy["admin.theme.dark"]}
+              lightLabel={copy["admin.theme.light"]}
+            />
             <LocaleSwitcher
               currentLocale={locale}
               labels={localeLabels}
@@ -289,10 +300,10 @@ export async function AdminPageHeader({
                 </span>
               </summary>
               <div>
-                <a href={`/${locale}/admin/profile`}>
+                <Link href={`/${locale}/admin/profile` as Route}>
                   <IdentificationCardIcon aria-hidden="true" weight="duotone" />
                   {copy["admin.shared.account"]}
-                </a>
+                </Link>
                 <form action={signOutAdmin}>
                   <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
                   <button type="submit">
@@ -327,77 +338,5 @@ export async function AdminPageHeader({
         title={localeTitle}
       />
     </header>
-  );
-}
-
-async function loadSuperAdminScopeSwitcher({
-  copy,
-  locale,
-  mfaVerified,
-  pathname,
-}: {
-  copy: ReturnType<typeof getMessages>;
-  locale: AppLocale;
-  mfaVerified: boolean;
-  pathname: string;
-}) {
-  const client = await createAdminServerClient();
-  if (!client) {
-    return null;
-  }
-
-  const model = await new AdminScopeNavigationService(
-    createSupabaseAdminScopeNavigationRepository(client),
-  ).list({
-    actor: {
-      mfaVerified,
-      role: "SUPER_ADMIN",
-      scope: { type: "PLATFORM" },
-    },
-  });
-
-  if (!model.canSwitch) {
-    return null;
-  }
-
-  const platformHref = `/${locale}/admin/platform`;
-  const companyBaseHref = `/${locale}/admin/platform/management-companies`;
-  const siteBaseHref = `/${locale}/admin/sites`;
-
-  return (
-    <ScopeSwitcher
-      icon={<CirclesFourIcon aria-hidden="true" weight="duotone" />}
-      label={copy["admin.platform.eyebrow"]}
-      groups={[
-        {
-          items: [
-            {
-              href: platformHref,
-              label: copy["admin.platform.eyebrow"],
-              selected: pathname === platformHref,
-            },
-          ],
-          label: copy["admin.dashboard.context"],
-        },
-        {
-          items: model.managementCompanies.map((company) => ({
-            description: company.tenantName,
-            href: `${companyBaseHref}/${company.id}`,
-            label: company.name,
-            selected: pathname.startsWith(`${companyBaseHref}/${company.id}`),
-          })),
-          label: copy["admin.nav.managementCompanies"],
-        },
-        {
-          items: model.sites.map((site) => ({
-            description: site.managementCompanyName,
-            href: `${siteBaseHref}/${site.id}`,
-            label: site.name,
-            selected: pathname.startsWith(`${siteBaseHref}/${site.id}`),
-          })),
-          label: copy["admin.nav.sites"],
-        },
-      ]}
-    />
   );
 }

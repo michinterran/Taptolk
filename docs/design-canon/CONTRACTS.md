@@ -293,6 +293,13 @@ README §2는 "마지막 완료 단계에서 이어진다"를 요구한다. 지�
 아니라 `—`**(§4). 목록은 **테넌트 격리·역할 범위를 서버가 적용**한 결과만 받는다
 (프론트 필터 금지, `AGENTS.md`).
 
+### 운영 목록 공통 데이터 경계
+
+- 관리회사·사이트·지표 read model은 `is_test_fixture = false`를 서버에서 적용한다.
+- fixture 제외 전후의 목록과 지표 분모가 달라지지 않도록 같은 행 집합에서 집계한다.
+- 화면은 이름 패턴으로 fixture를 추측하지 않는다.
+- 주 표시값은 등록된 관리회사명·사이트명이다. 내부 ID나 관리코드는 별도 보조 필드로만 쓴다.
+
 ## 콘솔 대시보드 (`/admin/dashboard`)
 정본: `console-pages.html` "플랫폼 운영 현황". 스펙: `GET /api/v1/admin/dashboard`.
 
@@ -355,7 +362,7 @@ README §2는 "마지막 완료 단계에서 이어진다"를 요구한다. 지�
 
 | 컬럼 | 출처 | 없을 때 |
 |---|---|---|
-| 관리자 · 역할 · 범위 · MFA · 상태 | `admin_profiles`·`admin_memberships` | MFA 미설정은 상태 배지, `—` 아님 |
+| 관리자 · 역할 · 범위 · 상태 | `admin_profiles`·`admin_memberships` | — |
 | 작업(초대·역할변경·비활성) | 관리 엔드포인트 | 권한 없으면 비활성 |
 | 역할별 권한 매트릭스(권한 × SA·MA·SO·…) | `roles`(정적 RBAC, 스펙 §9.5) | 정적값이라 항상 채워짐 |
 
@@ -368,8 +375,8 @@ README §2는 "마지막 완료 단계에서 이어진다"를 요구한다. 지�
 | 필드 | 출처 | 없을 때 |
 |---|---|---|
 | 이름 · 이메일 · 역할 · 소속 범위 | 세션 → `admin_profiles` | `—` |
-| MFA 상태 · 언어(KO/EN) | `admin_profiles`·로케일 | MFA는 상태만, 시크릿 노출 금지 |
-| 비밀번호·MFA 변경 진입 | 인증 플로우 | — |
+| 언어(KO/EN) | `admin_profiles`·로케일 | — |
+| 비밀번호 변경 진입 | 인증 플로우 | — |
 
 ## 플랫폼 루트 (`/admin/platform`) · 테넌트 (`/admin/platform/tenants`)
 정본: §3 목록 패턴(전용 컬럼 시안 없음 — 패턴 조합 명시).
@@ -400,29 +407,37 @@ README §2는 "마지막 완료 단계에서 이어진다"를 요구한다. 지�
 | 역할 배정·회수 | 멤버십 엔드포인트 | 권한 없으면 비활성 |
 
 ## QR 재고 · 라이프사이클 (`/admin/qr-inventory`)
-정본: `console-qr-wizard.html`(제작) + 재고 목록. 스펙: `GET /api/v1/admin/qr-assets`.
-위자드는 **슈퍼어드민 전용 6단계**(§4 확정) — 스코프/라우트 위치는 정본 대조 시 확인.
+정본: `CONSOLE_DESIGN_SYSTEM_V2.md` §6. 현재 카드형 위자드 UI는 계승하지 않는다.
+기능·권한·read model·다운로드 API는 유지하고, 화면은 YouTube Studio식 다크 기본·라이트
+지원 운영 콘솔로 재구성한다. 스펙: `GET /api/v1/admin/qr-assets`.
 
 | 필드 | 출처 | 없을 때 |
 |---|---|---|
-| 라이프사이클 카운트(13상태: 재고·배정·활성·예외 등) | `qr_assets` status 집계 | **`0`이 아니라 `—`** |
-| 자산 목록(코드·상태·현장·바인딩) | `admin/qr-assets` | 빈 상태 |
-| 자산 조치(배정·정지·분실·교체·폐기) | `.../{qrId}/assign`·`suspend`·`report-lost`·`replace`·`revoke` | 권한/상태 안 맞으면 비활성 |
-| 샘플 미리보기 | **신규 — `qr_batch_samples` SELECT security-definer RPC** | 미리보기 자리 빈 상태(현재 404) |
+| 운영 지표(회사·사이트·발행 묶음·생성 QR·활성화 대기·활성 QR) | QR operations read model | 값이 없으면 `—` |
+| 관리회사·사이트 선택 목록 | QR operations read model | 빈 상태 |
+| 확정한 범위(관리회사·사이트·주소) | QR operations read model | 주소는 `주소 미등록` |
+| 직접 생성 수량 | 화면 입력 → direct generation service | `1`로 보정, 허용 범위 `1..10,000` |
+| 서버 분할 계획 | direct generation policy | `100개 단위 묶음` 설명. 배치 크기는 서버 정책을 따른다 |
+| 생성 진행률(generated·rendered·quality passed·failed) | QR operations read model + request tracking | 추적 요청이 없으면 진행률 없음 상태 |
+| SVG 다운로드 상태 | QR SVG bundle API | 준비 전은 `준비 중`, 완료 후 다운로드 버튼 |
+| 발행 묶음 테이블(batch code·회사·사이트·수량·진행·출력·상태·다운로드) | QR operations read model | 빈 상태 |
 
-> QR `1..100`/배치 계약 유지. 수량 초과 요청은 착수 전 운영자 확정(스펙 closeout §5).
+> 운영자 결정(2026-07-29): 어드민 직접 생성 수량 UI는 `1..10,000`을 지원한다. 서버는 큰 요청을
+> 100개 단위 묶음으로 분할해 중복 없는 QR 생성 경로를 유지한다.
 
-## 관리자 인증 상태 (`/admin/login`·`/admin/signup`·`/admin/mfa/*`)
+## 관리자 인증 상태 (`/admin/login`·`/admin/signup`)
 정본: `admin-auth-*` + 공개 스케일. 폴리시: `workorder-codex-auth-states-0725.md`.
+
+> MFA 화면과 MFA 등록/확인 여정은 MVP/파일럿 개발 범위에서 제외한다. 내부 `mfaLevel`
+> 호환 필드는 사용자 화면 계약이 아니다.
 
 | 필드 | 출처 | 없을 때 |
 |---|---|---|
 | 로그인 오류 사유 (`invalidCredentials`·`session`·`configuration`·`unavailable`) | 로그인 서버 액션 결과 | 사유별 카피. **자격 오류는 어느 필드가 틀렸는지 알리지 않는다**(보안) |
-| MFA 오류 사유 (`invalidCode`·만료·시도초과) | `admin-mfa/*` 결과 | 지금은 `invalidCode`로 수렴. 서버가 구분하면 사유별 카피 |
 | 가입 검증 오류 (`invalidEmail`·`invalidPassword`·`passwordMismatch`) | signup 결과 | 필드별 인라인 오류 |
 | 제출 진행 상태(pending) | `useFormStatus`/`useTransition` | 없으면 즉시완료로 간주하지 않는다 — 버튼 `처리 중` |
 | 인증 서비스 연결 여부 | `CONFIGURATION_MISSING`·`LOAD_ERROR` | **"로그인 준비 중" 노티스 + 폼 비활성.** 사유 없는 비활성 금지 |
 
 - **오류 사유는 서버가 구분해 내려주고 화면은 사유별 카피로 그린다**(§0 상태 규칙:
   사유를 구분한다). 단 자격 오류는 이메일/비밀번호 중 무엇이 틀렸는지 노출하지 않는다.
-- 인증 상태 화면 어디에도 시크릿(세션 토큰·MFA 시크릿·비밀번호)을 그리거나 로그하지 않는다.
+- 인증 상태 화면 어디에도 시크릿(세션 토큰·비밀번호)을 그리거나 로그하지 않는다.

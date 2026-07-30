@@ -60,14 +60,14 @@
      The reference header is not a shrunken uppercase caption: it is body size, muted,
      semibold, on a light band. Korean has no uppercase, so the transform only broke
      the letter rhythm. */
-  --tt-table-font-size: 0.8125rem;
-  --tt-table-meta-font-size: 0.6875rem;
-  --tt-table-row-min-height: 3rem;
-  --tt-table-cell-padding-block: 0.7rem;
+  --tt-table-font-size: 0.875rem;
+  --tt-table-meta-font-size: 0.75rem;
+  --tt-table-row-min-height: 4rem;
+  --tt-table-cell-padding-block: 0.75rem;
   --tt-table-cell-padding-inline: 1rem;
-  --tt-table-header-min-height: 2.375rem;
-  --tt-table-header-font-size: 0.8125rem;
-  --tt-table-header-font-weight: 600;
+  --tt-table-header-min-height: 2.75rem;
+  --tt-table-header-font-size: 0.75rem;
+  --tt-table-header-font-weight: 500;
   --tt-table-header-letter-spacing: 0;
   --tt-table-header-transform: none;
   --tt-table-header-surface: #f7f8fa;
@@ -79,17 +79,17 @@
 
   /* Console type scale, measured from the reference. Screens had been setting their
      own heading and label sizes, so the same rank read differently per page. */
-  --tt-heading-1-size: 1.625rem;
+  --tt-heading-1-size: 1.5rem;
   --tt-heading-1-weight: 700;
-  --tt-heading-2-size: 1.0625rem;
-  --tt-heading-2-weight: 700;
-  --tt-heading-3-size: 0.9375rem;
-  --tt-heading-3-weight: 700;
-  --tt-heading-line-height: 1.35;
+  --tt-heading-2-size: 1.125rem;
+  --tt-heading-2-weight: 600;
+  --tt-heading-3-size: 1rem;
+  --tt-heading-3-weight: 600;
+  --tt-heading-line-height: 1.333;
   --tt-body-size: 0.875rem;
   --tt-label-size: 0.75rem;
-  --tt-label-weight: 600;
-  --tt-label-letter-spacing: 0.02em;
+  --tt-label-weight: 500;
+  --tt-label-letter-spacing: 0;
   --tt-label-transform: none;
   /* Figures line up in columns and stop jittering as they count. */
   --tt-numeric-font-variant: tabular-nums;
@@ -174,13 +174,13 @@
   --tt-note-padding-inline: 0.85rem;
   --tt-note-radius: var(--tt-radius-sm);
 
-  /* Sidebar metrics, measured from the reference (206px rail, 50px item pitch). */
-  --tt-sidebar-width: 12.875rem;
+  /* Console rail measured from the operator-approved YouTube Studio reference. */
+  --tt-sidebar-width: 12.5rem;
   --tt-sidebar-padding-block: 1.15rem;
   --tt-sidebar-padding-inline: 0.625rem;
   --tt-sidebar-item-height: 2.5rem;
   --tt-sidebar-item-gap: 0.625rem;
-  --tt-sidebar-item-radius: 0.625rem;
+  --tt-sidebar-item-radius: 0.5rem;
   --tt-sidebar-item-padding-inline: 0.7rem;
   --tt-sidebar-item-font-size: 0.8125rem;
   --tt-sidebar-item-font-weight: 600;
@@ -188,6 +188,101 @@
   --tt-sidebar-item-hover-surface: #f7f8fa;
   --tt-sidebar-item-active-surface: color-mix(in srgb, var(--tt-color-brand) 8%, #ffffff);
   --tt-sidebar-item-active-color: var(--tt-color-brand-strong);
+
+  /* Console v2, approved 2026-07-30. The console is dark by default and maps the
+     same semantic roles to a light palette when the operator changes theme.
+     Public, auth and owner surfaces do not consume this palette. */
+  --tt-console-dark-canvas: #0f0f0f;
+  --tt-console-dark-sidebar: #0f0f0f;
+  --tt-console-dark-topbar: #111111;
+  --tt-console-dark-surface: #181818;
+  --tt-console-dark-surface-raised: #212121;
+  --tt-console-dark-surface-muted: #272727;
+  --tt-console-dark-border: #3f3f3f;
+  --tt-console-dark-border-strong: #555555;
+  --tt-console-dark-divider: #303030;
+  --tt-console-dark-text: #f1f1f1;
+  --tt-console-dark-text-muted: #aaaaaa;
+  --tt-console-dark-text-subtle: #717171;
+  --tt-console-dark-brand: #8a6eff;
+  --tt-console-dark-brand-strong: #a892ff;
+  --tt-console-dark-brand-surface: #2c2548;
+  --tt-console-dark-focus: #b7a8ff;
+  --tt-console-dark-on-brand: #ffffff;
+  --tt-console-dark-success: #49c58b;
+  --tt-console-dark-success-surface: #16372b;
+  --tt-console-dark-success-fg: #76dcae;
+  --tt-console-dark-warning: #e9a93f;
+  --tt-console-dark-warning-surface: #3d2c12;
+  --tt-console-dark-warning-fg: #f8bd62;
+  --tt-console-dark-danger: #ef6376;
+  --tt-console-dark-danger-surface: #411b24;
+  --tt-console-dark-danger-fg: #ff95a3;
+  --tt-console-dark-info: #7da2ff;
+  --tt-console-dark-info-surface: #1c2b4d;
+  --tt-console-dark-info-fg: #9db8ff;
+  --tt-console-dark-neutral-surface: #2a2a2a;
+  --tt-console-dark-neutral-fg: #d0d0d0;
+
+  --tt-console-light-canvas: #f6f7f9;
+  --tt-console-light-sidebar: #ffffff;
+  --tt-console-light-topbar: #ffffff;
+  --tt-console-light-surface: #ffffff;
+  --tt-console-light-surface-raised: #f7f7f8;
+  --tt-console-light-surface-muted: #eeeeef;
+  --tt-console-light-border: #d7d9df;
+  --tt-console-light-border-strong: #b8bcc6;
+  --tt-console-light-divider: #e6e7eb;
+  --tt-console-light-text: #15171c;
+  --tt-console-light-text-muted: #60656f;
+  --tt-console-light-text-subtle: #8a909b;
+  --tt-console-light-brand: #7257ea;
+  --tt-console-light-brand-strong: #5c42da;
+  --tt-console-light-brand-surface: #eeeaff;
+  --tt-console-light-focus: #654cf0;
+  --tt-console-light-on-brand: #ffffff;
+  --tt-console-light-success: #16845b;
+  --tt-console-light-success-surface: #e4f5ed;
+  --tt-console-light-success-fg: #0f7049;
+  --tt-console-light-warning: #bd7600;
+  --tt-console-light-warning-surface: #fdf0d9;
+  --tt-console-light-warning-fg: #805200;
+  --tt-console-light-danger: #c83b4c;
+  --tt-console-light-danger-surface: #fce4e7;
+  --tt-console-light-danger-fg: #a92536;
+  --tt-console-light-info: #2f64dc;
+  --tt-console-light-info-surface: #e6edff;
+  --tt-console-light-info-fg: #2449be;
+  --tt-console-light-neutral-surface: #eef0f3;
+  --tt-console-light-neutral-fg: #4d5563;
+
+  --tt-console-v2-sidebar-width: 12.5rem;
+  --tt-console-v2-topbar-height: 3.5rem;
+  --tt-console-v2-content-max-width: none;
+  --tt-console-v2-content-gutter: 2rem;
+  --tt-console-v2-page-gap: 1.5rem;
+  --tt-console-v2-workbench-gap: 1.5rem;
+  --tt-console-v2-panel-radius: 0.5rem;
+  --tt-console-v2-panel-padding: 1.5rem;
+  --tt-console-v2-panel-padding-compact: 1rem;
+  --tt-console-v2-toolbar-height: 3rem;
+  --tt-console-v2-control-height: 2.25rem;
+  --tt-console-v2-icon-button-size: 2.25rem;
+  --tt-console-v2-tab-height: 3rem;
+  --tt-console-v2-tab-underline: 0.125rem;
+  --tt-console-v2-chip-height: 2rem;
+  --tt-console-v2-chip-padding-inline: 0.75rem;
+  --tt-console-v2-rail-width: 17.5rem;
+  --tt-console-v2-row-min-height: 4rem;
+  --tt-console-v2-row-gap: 1rem;
+  --tt-console-v2-progress-height: 0.375rem;
+  --tt-console-v2-search-width: 25rem;
+  --tt-console-v2-dialog-width: 60rem;
+  --tt-console-v2-dialog-rail-width: 13.75rem;
+  --tt-console-v2-background: var(--tt-console-dark-canvas);
+  --tt-console-v2-muted-band: var(--tt-console-dark-surface-raised);
+  --tt-console-v2-rail-surface: var(--tt-console-dark-surface);
+  --tt-console-v2-active-band: var(--tt-console-dark-surface-muted);
 
   /* ---------------------------------------------------------------------------
      Mobile metrics (owner + caller), measured from docs/design-canon/pwa/*.png.

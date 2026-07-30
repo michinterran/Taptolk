@@ -13,6 +13,8 @@ export {
 export {
   CellEntity,
   ConsolePanel,
+  type ConsoleTab,
+  ConsoleTabs,
   type ConsoleTone,
   FormActions,
   FormGrid,

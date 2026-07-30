@@ -12,8 +12,38 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 export type ConsoleTone = "brand" | "success" | "warning" | "danger" | "info";
 
+export type ConsoleTab = {
+  count?: ReactNode;
+  current?: boolean;
+  href: string;
+  id: string;
+  label: ReactNode;
+};
+
 function classNames(...values: (string | false | undefined)[]): string {
   return values.filter(Boolean).join(" ");
+}
+
+/** Primary view tabs: text and an underline, never a pill container. */
+export function ConsoleTabs({
+  ariaLabel,
+  className,
+  items,
+}: {
+  ariaLabel: string;
+  className?: string;
+  items: readonly ConsoleTab[];
+}) {
+  return (
+    <nav aria-label={ariaLabel} className={classNames("tt-console-tabs", className)}>
+      {items.map((item) => (
+        <a aria-current={item.current ? "page" : undefined} href={item.href} key={item.id}>
+          <span>{item.label}</span>
+          {item.count !== undefined ? <small>{item.count}</small> : null}
+        </a>
+      ))}
+    </nav>
+  );
 }
 
 /** Main column beside a fixed rail. Without a rail, render the children directly. */
