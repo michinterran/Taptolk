@@ -75,7 +75,7 @@ export function AdminPortalIntro({ copy, locale, notice }: AdminPortalIntroProps
   const approvalPoints = [
     copy["portal.approval.pending"],
     copy["portal.approval.scope"],
-    copy["portal.approval.mfa"],
+    copy["portal.approval.accountScope"],
     copy["portal.approval.separation"],
     copy["portal.approval.audit"],
   ] as const;
