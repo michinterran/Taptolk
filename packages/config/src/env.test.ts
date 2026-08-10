@@ -46,7 +46,7 @@ describe("environment contracts", () => {
   it("keeps SOLAPI SMS credentials server-only and parses a digits-only sender", () => {
     const environment = parseServerEnvironment({
       OWNER_NOTIFICATION_PROVIDER: "solapi-sms",
-      SOLAPI_API_KEY: `solapi-api-key-${"a".repeat(24)}`,
+      SOLAPI_API_KEY: "NCSAYU7YDBXYORXC",
       SOLAPI_API_SECRET: `solapi-api-secret-${"b".repeat(24)}`,
       SOLAPI_SMS_FROM: "0212345678",
     });

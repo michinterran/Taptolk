@@ -12,6 +12,11 @@ export const optionalSecretSchema = z.preprocess(
   z.string().min(24).optional(),
 );
 
+export const optionalApiKeySchema = z.preprocess(
+  emptyStringToUndefined,
+  z.string().min(16).optional(),
+);
+
 export function integerEnvironmentSchema(defaultValue: number, minimum = 1, maximum?: number) {
   const numberSchema = z.coerce.number().int().min(minimum);
   return z.preprocess(
