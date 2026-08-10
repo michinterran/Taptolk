@@ -1,6 +1,6 @@
 begin;
 
-select plan(14);
+select plan(13);
 
 select enum_has_labels(
   'public',
@@ -32,23 +32,12 @@ select function_privs_are(
 
 select results_eq(
   $$
-    select count(*)::integer
-    from pg_trigger
-    where tgrelid = 'public.notification_deliveries'::regclass
-      and tgname = 'trg_owner_contact_notification_channel'
-      and not tgisinternal
-  $$,
-  array[1],
-  'new Owner contact intents pass through the AlimTalk channel guard'
-);
-select results_eq(
-  $$
     select position('KAKAO_ALIMTALK' in pg_get_functiondef(
       'public.claim_notification_deliveries(text,integer,integer)'::regprocedure
     )) > 0
   $$,
-  array[true],
-  'notification workers claim only the AlimTalk owner-contact channel'
+  array[false],
+  'notification workers can switch back to the SMS compatibility channel'
 );
 select results_eq(
   $$

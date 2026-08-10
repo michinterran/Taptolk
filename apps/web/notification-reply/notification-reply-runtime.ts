@@ -13,6 +13,7 @@ import {
   StagingOwnerNotificationProvider,
   UnavailableOwnerNotificationProvider,
 } from "./notification-staging-provider";
+import { hasSolapiSmsConfig, SolapiSmsNotificationProvider } from "./solapi-sms-provider";
 import {
   createSupabaseNotificationDeliveryRepository,
   createSupabaseOwnerResponseRepository,
@@ -44,10 +45,18 @@ export function createNotificationDispatchService(): NotificationDispatchService
   if (!value) {
     return null;
   }
-  const stagingMock = value.environment.OWNER_NOTIFICATION_PROVIDER === "mock";
-  const provider = stagingMock
-    ? createStagingProvider(value.crypto)
-    : new UnavailableOwnerNotificationProvider();
+  const solapiConfig = {
+    apiKey: value.environment.SOLAPI_API_KEY,
+    apiSecret: value.environment.SOLAPI_API_SECRET,
+    from: value.environment.SOLAPI_SMS_FROM,
+  };
+  const provider =
+    value.environment.OWNER_NOTIFICATION_PROVIDER === "mock"
+      ? createStagingProvider(value.crypto)
+      : value.environment.OWNER_NOTIFICATION_PROVIDER === "solapi-sms" &&
+          hasSolapiSmsConfig(solapiConfig)
+        ? new SolapiSmsNotificationProvider(solapiConfig, value.crypto)
+        : new UnavailableOwnerNotificationProvider();
   return new NotificationDispatchService(
     createSupabaseNotificationDeliveryRepository({
       baseUrl: value.environment.OWNER_RESPONSE_BASE_URL as string,

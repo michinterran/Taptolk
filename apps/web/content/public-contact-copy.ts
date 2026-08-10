@@ -49,6 +49,9 @@ export interface PublicContactCopy {
   officeAlert: string;
   officeAlertSent: string;
   ownerPrivacy: string;
+  ownerNotificationTitle: string;
+  ownerNotificationFallback: string;
+  ownerNotificationLinkLabel: string;
   preparing: string;
   reasonDescription: string;
   reasonLabels: Readonly<Record<ContactReasonCode, string>>;
@@ -112,6 +115,9 @@ const ko: PublicContactCopy = {
   officeAlert: "관리사무소에 알리기",
   officeAlertSent: "관리사무소 알림을 접수했습니다.",
   ownerPrivacy: "차주의 이름과 전화번호는 표시되지 않습니다.",
+  ownerNotificationTitle: "Taptolk 차량 연락 요청",
+  ownerNotificationFallback: "차량 확인이 필요합니다.",
+  ownerNotificationLinkLabel: "응답하기",
   preparing: "요청을 접수하는 중",
   reasonDescription: "가장 가까운 상황 하나를 선택해 주세요.",
   reasonLabels: {
@@ -197,6 +203,9 @@ const en: PublicContactCopy = {
   officeAlert: "Notify the site office",
   officeAlertSent: "The site office notification was accepted.",
   ownerPrivacy: "The owner's name and phone number are never shown.",
+  ownerNotificationTitle: "Taptolk vehicle contact request",
+  ownerNotificationFallback: "Please check the vehicle.",
+  ownerNotificationLinkLabel: "Respond",
   preparing: "Accepting your request",
   reasonDescription: "Choose the one option closest to the situation.",
   reasonLabels: {

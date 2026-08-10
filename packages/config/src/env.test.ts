@@ -43,6 +43,30 @@ describe("environment contracts", () => {
     ]);
   });
 
+  it("keeps SOLAPI SMS credentials server-only and parses a digits-only sender", () => {
+    const environment = parseServerEnvironment({
+      OWNER_NOTIFICATION_PROVIDER: "solapi-sms",
+      SOLAPI_API_KEY: `solapi-api-key-${"a".repeat(24)}`,
+      SOLAPI_API_SECRET: `solapi-api-secret-${"b".repeat(24)}`,
+      SOLAPI_SMS_FROM: "0212345678",
+    });
+
+    expect(environment).toMatchObject({
+      OWNER_NOTIFICATION_PROVIDER: "solapi-sms",
+      SOLAPI_SMS_FROM: "0212345678",
+    });
+    expect(Object.keys(environment)).not.toContain("NEXT_PUBLIC_SOLAPI_API_SECRET");
+  });
+
+  it("rejects a sender with formatting characters", () => {
+    expect(() =>
+      parseServerEnvironment({
+        OWNER_NOTIFICATION_PROVIDER: "solapi-sms",
+        SOLAPI_SMS_FROM: "010-1234-5678",
+      }),
+    ).toThrow();
+  });
+
   it("rejects legacy or malformed hosted API keys", () => {
     expect(() =>
       parseClientEnvironment({

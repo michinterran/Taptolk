@@ -33,7 +33,16 @@ const serverEnvironmentSchema = z
     OWNER_OTP_PROOF_TTL_SECONDS: integerEnvironmentSchema(300, 60, 900),
     OWNER_OTP_RESEND_SECONDS: integerEnvironmentSchema(60, 30, 300),
     OWNER_OTP_TTL_SECONDS: integerEnvironmentSchema(180, 60, 600),
-    OWNER_NOTIFICATION_PROVIDER: z.enum(["mock", "kakao-alimtalk"]).default("mock"),
+    OWNER_NOTIFICATION_PROVIDER: z.enum(["mock", "solapi-sms", "kakao-alimtalk"]).default("mock"),
+    SOLAPI_API_KEY: optionalSecretSchema,
+    SOLAPI_API_SECRET: optionalSecretSchema,
+    SOLAPI_SMS_FROM: z.preprocess(
+      emptyStringToUndefined,
+      z
+        .string()
+        .regex(/^[0-9]{8,14}$/u)
+        .optional(),
+    ),
     OWNER_SESSION_TTL_SECONDS: integerEnvironmentSchema(43_200, 300, 86_400),
     OWNER_STAGING_MOCK_OTP: z.preprocess(
       emptyStringToUndefined,
@@ -160,6 +169,17 @@ const serverEnvironmentSchema = z
         message: "Production requires an approved owner notification provider.",
         path: ["OWNER_NOTIFICATION_PROVIDER"],
       });
+    }
+    if (environment.OWNER_NOTIFICATION_PROVIDER === "solapi-sms") {
+      for (const key of ["SOLAPI_API_KEY", "SOLAPI_API_SECRET", "SOLAPI_SMS_FROM"] as const) {
+        if (!environment[key]) {
+          context.addIssue({
+            code: "custom",
+            message: `${key} is required when SOLAPI SMS is enabled in production.`,
+            path: [key],
+          });
+        }
+      }
     }
     if (environment.OWNER_VERIFICATION_PROVIDER === "mock") {
       context.addIssue({
