@@ -13,7 +13,7 @@ describe("SOLAPI owner OTP provider", () => {
     expect(hasSolapiOwnerOtpConfig({ apiKey: "key", apiSecret: "secret" })).toBe(false);
     expect(
       hasSolapiOwnerOtpConfig({
-        apiKey: "a".repeat(24),
+        apiKey: "NCSAYU7YDBXYORXC",
         apiSecret: "b".repeat(32),
         from: "01012345678",
       }),
@@ -34,7 +34,7 @@ describe("SOLAPI owner OTP provider", () => {
     });
     const provider = new SolapiOwnerOtpProvider(
       {
-        apiKey: "a".repeat(24),
+        apiKey: "NCSAYU7YDBXYORXC",
         apiSecret: "b".repeat(32),
         from: "01098765432",
       },
@@ -60,7 +60,7 @@ describe("SOLAPI owner OTP provider", () => {
     const sendOne = vi.fn();
     const provider = new SolapiOwnerOtpProvider(
       {
-        apiKey: "a".repeat(24),
+        apiKey: "NCSAYU7YDBXYORXC",
         apiSecret: "b".repeat(32),
         from: "01098765432",
       },

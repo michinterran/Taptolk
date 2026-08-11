@@ -34,7 +34,7 @@ const serverEnvironmentSchema = z
     OWNER_OTP_PROOF_TTL_SECONDS: integerEnvironmentSchema(300, 60, 900),
     OWNER_OTP_RESEND_SECONDS: integerEnvironmentSchema(60, 30, 300),
     OWNER_OTP_TTL_SECONDS: integerEnvironmentSchema(180, 60, 600),
-    OWNER_NOTIFICATION_PROVIDER: z.enum(["mock", "solapi-sms", "kakao-alimtalk"]).default("mock"),
+    OWNER_NOTIFICATION_PROVIDER: z.enum(["mock", "solapi-sms"]).default("mock"),
     SOLAPI_API_KEY: optionalApiKeySchema,
     SOLAPI_API_SECRET: optionalSecretSchema,
     SOLAPI_SMS_FROM: z.preprocess(

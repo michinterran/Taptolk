@@ -85,11 +85,11 @@ const ko: OwnerTabsCopy = {
 
   messagesTitle: ["받은 연락"],
   messagesEmptyTitle: "받은 연락이 없습니다",
-  messagesEmptyBody: "누군가 스티커를 스캔하면 알림톡으로 알려드립니다.",
+  messagesEmptyBody: "누군가 스티커를 스캔하면 안전한 Taptolk 알림을 보내드립니다.",
   messagesReply: "답장하기",
 
   alertTitle: ["알림"],
-  alertChannel: "카카오 알림톡",
+  alertChannel: "Taptolk 알림",
   alertConnected: "연결됨",
   alertUnknown: "상태 확인 불가",
   alertVerifiedNumber: "인증하신 번호로 연락을 받습니다.",
@@ -140,11 +140,11 @@ const en: OwnerTabsCopy = {
 
   messagesTitle: ["Messages"],
   messagesEmptyTitle: "No messages yet",
-  messagesEmptyBody: "When someone scans your sticker, you will be notified on KakaoTalk.",
+  messagesEmptyBody: "When someone scans your sticker, Taptolk sends a secure notification.",
   messagesReply: "Reply",
 
   alertTitle: ["Notifications"],
-  alertChannel: "KakaoTalk notifications",
+  alertChannel: "Taptolk notifications",
   alertConnected: "Connected",
   alertUnknown: "Status unknown",
   alertVerifiedNumber: "You are contacted on the number you verified.",

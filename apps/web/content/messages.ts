@@ -753,8 +753,7 @@ export const ko = {
   "landing.owner.step2.description":
     "스티커의 QR을 스캔하고 본인 확인을 마치면 내 차량에 연결됩니다.",
   "landing.owner.step2.title": "내 차량에 활성화",
-  "landing.owner.step3.description":
-    "차량에 연락 요청이 오면 카카오 알림톡으로 Taptolk 링크를 받습니다.",
+  "landing.owner.step3.description": "차량에 연락 요청이 오면 안전한 Taptolk 링크를 받습니다.",
   "landing.owner.step3.title": "알림 확인",
   "landing.owner.step4.description":
     "Taptolk 화면에서 준비된 답변 중 하나를 선택해 바로 회신합니다.",
@@ -1664,7 +1663,7 @@ export const en = {
     "Scan the QR on the sticker and confirm your identity to link it to your vehicle.",
   "landing.owner.step2.title": "Activate it for your vehicle",
   "landing.owner.step3.description":
-    "When someone needs to reach your vehicle, you receive a Taptolk link through Kakao AlimTalk.",
+    "When someone needs to reach your vehicle, you receive a secure Taptolk link.",
   "landing.owner.step3.title": "Get the notification",
   "landing.owner.step4.description":
     "Open the Taptolk screen and choose one of the prepared replies to respond immediately.",

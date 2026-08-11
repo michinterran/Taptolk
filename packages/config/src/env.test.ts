@@ -61,12 +61,20 @@ describe("environment contracts", () => {
   it("accepts SOLAPI as the owner OTP verification provider", () => {
     const environment = parseServerEnvironment({
       OWNER_VERIFICATION_PROVIDER: "solapi-sms",
-      SOLAPI_API_KEY: "a".repeat(24),
+      SOLAPI_API_KEY: "NCSAYU7YDBXYORXC",
       SOLAPI_API_SECRET: "b".repeat(32),
       SOLAPI_SMS_FROM: "01012345678",
     });
 
     expect(environment.OWNER_VERIFICATION_PROVIDER).toBe("solapi-sms");
+  });
+
+  it("rejects the unimplemented AlimTalk provider until business approval", () => {
+    expect(() =>
+      parseServerEnvironment({
+        OWNER_NOTIFICATION_PROVIDER: "kakao-alimtalk",
+      }),
+    ).toThrow();
   });
 
   it("rejects a sender with formatting characters", () => {
