@@ -1,4 +1,9 @@
-import { type AdminAuthorizationContext, authorizeAdminAction } from "@taptolk/domain";
+import {
+  type AdminAuthorizationContext,
+  authorizeAdminAction,
+  getOperationsManagerCompleteness,
+  hasManagementCompanyContactChannel,
+} from "@taptolk/domain";
 import { AdminAuthorizationError, assertAdminAuthorized } from "./authorization-error.js";
 import type { OrganizationStatus } from "./management-company-catalog-service.js";
 
@@ -246,17 +251,24 @@ export class ManagementCompanyManagementService {
     if (!contactName) {
       throw new ManagementCompanyManagementError("INVALID_CONTACT_NAME");
     }
-    if (!contactPhoneEncrypted && !contactEmail) {
+    if (
+      !hasManagementCompanyContactChannel({
+        email: contactEmail,
+        phone: contactPhoneEncrypted,
+      })
+    ) {
       throw new ManagementCompanyManagementError("INVALID_CONTACT_CHANNEL");
     }
 
-    const hasOperationsManagerInput = Boolean(
-      operationsManagerName || operationsManagerPhoneEncrypted || operationsManagerEmail,
-    );
-    if (hasOperationsManagerInput && !operationsManagerName) {
+    const operationsManagerCompleteness = getOperationsManagerCompleteness({
+      email: operationsManagerEmail,
+      name: operationsManagerName,
+      phone: operationsManagerPhoneEncrypted,
+    });
+    if (operationsManagerCompleteness === "MISSING_NAME") {
       throw new ManagementCompanyManagementError("INVALID_OPERATIONS_MANAGER_NAME");
     }
-    if (hasOperationsManagerInput && !operationsManagerPhoneEncrypted && !operationsManagerEmail) {
+    if (operationsManagerCompleteness === "MISSING_CHANNEL") {
       throw new ManagementCompanyManagementError("INVALID_OPERATIONS_MANAGER_CHANNEL");
     }
 

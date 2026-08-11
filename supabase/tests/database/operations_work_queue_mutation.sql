@@ -14,11 +14,23 @@ values (
   'operations-command-test-tenant'
 );
 
-insert into public.management_companies (id, tenant_id, name)
+insert into public.management_companies (
+  id,
+  tenant_id,
+  name,
+  address,
+  business_number,
+  contact_name,
+  contact_email
+)
 values (
   'f1000000-0000-4000-8000-000000000020',
   'f1000000-0000-4000-8000-000000000010',
-  'Operations command test company'
+  'Operations command test company',
+  'Test address',
+  '0000000001',
+  'Test contact',
+  'operations@example.test'
 );
 
 insert into public.sites (id, tenant_id, management_company_id, name)

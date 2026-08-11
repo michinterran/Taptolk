@@ -549,11 +549,23 @@ values (
   'task0-quantity-contract'
 );
 
-insert into public.management_companies (id, tenant_id, name)
+insert into public.management_companies (
+  id,
+  tenant_id,
+  name,
+  address,
+  business_number,
+  contact_name,
+  contact_email
+)
 values (
   'f0000000-0000-4000-8000-000000000020',
   'f0000000-0000-4000-8000-000000000010',
-  'Task 0 management'
+  'Task 0 management',
+  'Test address',
+  '0000000002',
+  'Test contact',
+  'qr-inventory@example.test'
 );
 
 insert into public.sites (id, tenant_id, management_company_id, name)

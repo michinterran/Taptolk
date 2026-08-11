@@ -2429,6 +2429,11 @@ h3,
   margin: calc(var(--tt-space-3) * -1) 0 0;
 }
 
+.admin-company-form__channel-heading {
+  border-top: 1px solid var(--tt-color-border);
+  padding-top: var(--tt-space-4);
+}
+
 .admin-company-form__grid {
   align-items: start;
   display: grid;

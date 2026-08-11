@@ -304,7 +304,7 @@ export const ko = {
   "admin.companies.error.unavailable":
     "관리회사 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.companies.error.validation":
-    "관리회사 이름, 주소, 연락처, 이메일, 사업자번호와 등록 근거를 확인해 주세요.",
+    "관리회사 이름, 사업자등록번호, 주소, 담당자 이름, 연락 방법과 등록 근거를 확인해 주세요.",
   "admin.companies.eyebrow": "플랫폼 관리회사 운영",
   "admin.companies.line1": "계약된 관리회사의",
   "admin.companies.line2": "소속과 운영 상태를 관리합니다.",
@@ -312,8 +312,11 @@ export const ko = {
   "admin.companies.managementCode.help": "서버가 자동 부여하며 등록 후 읽기 전용으로 표시됩니다.",
   "admin.companies.name": "관리회사",
   "admin.companies.field.optional": "선택",
+  "admin.companies.field.oneRequired": "둘 중 하나 필수",
   "admin.companies.field.required": "필수",
-  "admin.companies.contactChannel.help": "담당자 이름과 연락번호 또는 이메일 중 하나는 필수입니다.",
+  "admin.companies.contactChannel": "연락 방법",
+  "admin.companies.contactChannel.help":
+    "담당자 이름을 입력하고 연락번호 또는 이메일 중 하나를 등록해 주세요.",
   "admin.companies.operationsManagerEmail": "운영 책임자 이메일",
   "admin.companies.operationsManager.help":
     "선택 입력입니다. 입력을 시작하면 책임자 이름과 연락번호 또는 이메일 중 하나가 필요합니다.",
@@ -332,7 +335,7 @@ export const ko = {
   "admin.companies.reason.placeholder":
     "계약서, 운영 위임, 내부 승인 등 등록 근거를 입력해 주세요.",
   "admin.companies.required.help":
-    "필수 표시 항목을 입력해 주세요. 운영 책임자 정보는 나중에 추가할 수 있습니다.",
+    "관리회사 이름, 사업자등록번호, 주소, 담당자 이름, 연락 방법, 등록 근거는 필수입니다. 대표 연락번호, 상세주소와 운영 책임자 정보는 나중에 추가할 수 있습니다.",
   "admin.companies.representativePhone": "대표 연락번호",
   "admin.companies.save": "정보 저장",
   "admin.companies.securityNote": "고객 범위 격리 · 승인 권한 확인 · 변경 기록 보존",
@@ -349,8 +352,9 @@ export const ko = {
   "admin.companies.submitting": "등록 중…",
   "admin.companies.tenant": "소속 고객사",
   "admin.companies.contactEmail": "담당자 이메일",
-  "admin.companies.contactName": "연락 가능 담당자",
+  "admin.companies.contactName": "담당자 이름",
   "admin.companies.contactPhone": "담당자 연락번호",
+  "admin.companies.contactSectionTitle": "연락 가능 담당자",
   "admin.companies.cancel": "취소",
   "admin.companies.platformDirect": "직영",
   "admin.companies.total": "총 {count}개 관리회사",
@@ -1211,7 +1215,7 @@ export const en = {
   "admin.companies.error.unavailable":
     "The management company service is unavailable. Please try again shortly.",
   "admin.companies.error.validation":
-    "Check the company name, address, contacts, email, business number, and registration basis.",
+    "Check the company name, business registration number, address, contact name, contact method, and registration basis.",
   "admin.companies.eyebrow": "Platform operator directory",
   "admin.companies.line1": "Manage tenant assignment",
   "admin.companies.line2": "and operating status for contracted companies.",
@@ -1220,9 +1224,11 @@ export const en = {
     "Assigned by the server and shown read-only after registration.",
   "admin.companies.name": "Management company",
   "admin.companies.field.optional": "Optional",
+  "admin.companies.field.oneRequired": "One required",
   "admin.companies.field.required": "Required",
+  "admin.companies.contactChannel": "Contact method",
   "admin.companies.contactChannel.help":
-    "A contact name and at least one phone or email are required.",
+    "Enter the contact name and register at least one phone number or email address.",
   "admin.companies.operationsManagerEmail": "Operations manager email",
   "admin.companies.operationsManager.help":
     "Optional. If started, enter the manager name and at least one phone or email.",
@@ -1241,7 +1247,7 @@ export const en = {
   "admin.companies.reason.placeholder":
     "Enter the contract, operating delegation, or internal approval basis.",
   "admin.companies.required.help":
-    "Complete the required fields. Operations manager details can be added later.",
+    "Company name, business registration number, address, contact name, contact method, and registration basis are required. Representative phone, address detail, and operations manager details can be added later.",
   "admin.companies.representativePhone": "Representative phone",
   "admin.companies.save": "Save identity",
   "admin.companies.securityNote":
@@ -1259,8 +1265,9 @@ export const en = {
   "admin.companies.submitting": "Registering…",
   "admin.companies.tenant": "Tenant",
   "admin.companies.contactEmail": "Contact email",
-  "admin.companies.contactName": "Available contact",
+  "admin.companies.contactName": "Contact person name",
   "admin.companies.contactPhone": "Contact phone",
+  "admin.companies.contactSectionTitle": "Primary contact",
   "admin.companies.cancel": "Cancel",
   "admin.companies.platformDirect": "Direct",
   "admin.companies.total": "{count} management companies",

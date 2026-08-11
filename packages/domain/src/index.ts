@@ -19,6 +19,11 @@ export {
   type ResourceScope,
 } from "./admin-rbac.js";
 export {
+  getOperationsManagerCompleteness,
+  hasManagementCompanyContactChannel,
+  type OperationsManagerCompleteness,
+} from "./management-company-registration-policy.js";
+export {
   assertResponseTokenTtl,
   DEFAULT_NOTIFICATION_RETRY_DELAYS_SECONDS,
   DEFAULT_RESPONSE_TOKEN_TTL_SECONDS,

@@ -58,7 +58,7 @@ export default async function NewManagementCompanyPage({
         <div className="console-settings-layout">
           <nav aria-label={copy["admin.companies.create"]} className="console-settings-nav">
             <a href="#company-create-basic">{copy["admin.companies.name"]}</a>
-            <a href="#company-create-contact">{copy["admin.companies.contactName"]}</a>
+            <a href="#company-create-contact">{copy["admin.companies.contactSectionTitle"]}</a>
             <a href="#company-create-operations">{copy["admin.companies.operationsManagerName"]}</a>
             <a href="#company-create-reason">{copy["admin.companies.reason"]}</a>
           </nav>
@@ -82,10 +82,12 @@ export default async function NewManagementCompanyPage({
               businessNumber: copy["admin.companies.businessNumber"],
               businessNumberHelp: copy["admin.companies.businessNumber.help"],
               cancel: copy["admin.companies.cancel"],
+              contactChannel: copy["admin.companies.contactChannel"],
               contactChannelHelp: copy["admin.companies.contactChannel.help"],
               contactEmail: copy["admin.companies.contactEmail"],
               contactName: copy["admin.companies.contactName"],
               contactPhone: copy["admin.companies.contactPhone"],
+              contactSectionTitle: copy["admin.companies.contactSectionTitle"],
               create: copy["admin.companies.create"],
               error: {
                 blocked: copy["admin.companies.error.blocked"],
@@ -105,6 +107,7 @@ export default async function NewManagementCompanyPage({
               operationsManagerHelp: copy["admin.companies.operationsManager.help"],
               operationsManagerName: copy["admin.companies.operationsManagerName"],
               operationsManagerPhone: copy["admin.companies.operationsManagerPhone"],
+              oneRequired: copy["admin.companies.field.oneRequired"],
               optional: copy["admin.companies.field.optional"],
               reason: copy["admin.companies.reason"],
               reasonPlaceholder: copy["admin.companies.reason.placeholder"],

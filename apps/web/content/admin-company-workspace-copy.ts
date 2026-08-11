@@ -99,7 +99,7 @@ export const ADMIN_COMPANY_WORKSPACE_COPY: Readonly<Record<AppLocale, AdminCompa
       contactInformation: "Company contact information",
       contactInformationDescription:
         "Contact registration status for this management company. Phone values are not returned to the browser.",
-      contactName: "Available contact",
+      contactName: "Contact person name",
       contactPhone: "Contact phone",
       contactPhoneRegistered: "Contact phone on file",
       close: "Close operations",
@@ -178,7 +178,7 @@ export const ADMIN_COMPANY_WORKSPACE_COPY: Readonly<Record<AppLocale, AdminCompa
       contactInformation: "관리회사 연락 정보",
       contactInformationDescription:
         "이 관리회사의 대표번호와 담당자 등록 상태입니다. 연락번호는 브라우저로 다시 표시하지 않습니다.",
-      contactName: "연락 가능 담당자",
+      contactName: "담당자 이름",
       contactPhone: "담당자 연락번호",
       contactPhoneRegistered: "담당자 연락번호 등록 여부",
       close: "운영 종료",

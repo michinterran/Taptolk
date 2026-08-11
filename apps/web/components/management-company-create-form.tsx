@@ -1,11 +1,16 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  getOperationsManagerCompleteness,
+  hasManagementCompanyContactChannel,
+} from "@taptolk/domain";
+import { type FormEvent, useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   createManagementCompany,
   type ManagementCompanyCreateActionState,
   type ManagementCompanyCreateField,
+  type ManagementCompanyCreateFieldError,
 } from "../admin/management-company-actions";
 import { ManagementCompanyAddressSearchField } from "./management-company-address-search-field";
 
@@ -26,10 +31,12 @@ interface ManagementCompanyCreateFormCopy {
   businessNumber: string;
   businessNumberHelp: string;
   cancel: string;
+  contactChannel: string;
   contactChannelHelp: string;
   contactEmail: string;
   contactName: string;
   contactPhone: string;
+  contactSectionTitle: string;
   create: string;
   error: {
     blocked: string;
@@ -48,6 +55,7 @@ interface ManagementCompanyCreateFormCopy {
   operationsManagerHelp: string;
   operationsManagerName: string;
   operationsManagerPhone: string;
+  oneRequired: string;
   optional: string;
   reason: string;
   reasonPlaceholder: string;
@@ -65,6 +73,10 @@ interface ManagementCompanyCreateFormProps {
 }
 
 const INITIAL_STATE: ManagementCompanyCreateActionState = { fieldErrors: {} };
+
+type ClientFieldErrors = Partial<
+  Record<ManagementCompanyCreateField, ManagementCompanyCreateFieldError>
+>;
 
 type TextInputName =
   | "businessNumber"
@@ -95,16 +107,21 @@ const INITIAL_VALUES: TextInputValues = {
 
 function Requirement({
   copy,
-  required,
+  kind,
 }: {
   copy: ManagementCompanyCreateFormCopy;
-  required: boolean;
+  kind: "oneRequired" | "optional" | "required";
 }) {
+  const isRequired = kind !== "optional";
   return (
     <span
-      className={`admin-field-requirement ${required ? "admin-field-requirement--required" : ""}`}
+      className={`admin-field-requirement ${isRequired ? "admin-field-requirement--required" : ""}`}
     >
-      {required ? copy.required : copy.optional}
+      {kind === "required"
+        ? copy.required
+        : kind === "oneRequired"
+          ? copy.oneRequired
+          : copy.optional}
     </span>
   );
 }
@@ -156,8 +173,13 @@ export function ManagementCompanyCreateForm({
 }: ManagementCompanyCreateFormProps) {
   const [state, formAction] = useActionState(createManagementCompany, INITIAL_STATE);
   const [values, setValues] = useState<TextInputValues>(INITIAL_VALUES);
+  const [clientFieldErrors, setClientFieldErrors] = useState<ClientFieldErrors>({});
   const errorSummaryRef = useRef<HTMLDivElement | null>(null);
-  const hasFieldErrors = Object.keys(state.fieldErrors).length > 0;
+  const displayState: ManagementCompanyCreateActionState = {
+    ...state,
+    fieldErrors: { ...state.fieldErrors, ...clientFieldErrors },
+  };
+  const hasFieldErrors = Object.keys(displayState.fieldErrors).length > 0;
   const hasErrors = hasFieldErrors || Boolean(state.formError);
 
   useEffect(() => {
@@ -167,7 +189,60 @@ export function ManagementCompanyCreateForm({
   }, [hasErrors]);
 
   function updateValue(name: TextInputName, value: string) {
-    setValues((current) => ({ ...current, [name]: value }));
+    const nextValues = { ...values, [name]: value };
+    setValues(nextValues);
+    setClientFieldErrors((current) => {
+      const next = { ...current };
+      delete next[name];
+      if (
+        (name === "contactPhone" || name === "contactEmail") &&
+        hasManagementCompanyContactChannel({
+          email: nextValues.contactEmail,
+          phone: nextValues.contactPhone,
+        })
+      ) {
+        delete next.contactChannel;
+      }
+      if (
+        name === "operationsManagerName" ||
+        name === "operationsManagerPhone" ||
+        name === "operationsManagerEmail"
+      ) {
+        delete next.operationsManagerChannel;
+        delete next.operationsManagerName;
+      }
+      return next;
+    });
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const errors: ClientFieldErrors = {};
+    if (
+      !hasManagementCompanyContactChannel({
+        email: values.contactEmail,
+        phone: values.contactPhone,
+      })
+    ) {
+      errors.contactChannel = "channelRequired";
+    }
+
+    const operationsManagerCompleteness = getOperationsManagerCompleteness({
+      email: values.operationsManagerEmail,
+      name: values.operationsManagerName,
+      phone: values.operationsManagerPhone,
+    });
+    if (operationsManagerCompleteness === "MISSING_NAME") {
+      errors.operationsManagerName = "required";
+    }
+    if (operationsManagerCompleteness === "MISSING_CHANNEL") {
+      errors.operationsManagerChannel = "operationsManagerChannelRequired";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      event.preventDefault();
+      setClientFieldErrors(errors);
+      requestAnimationFrame(() => errorSummaryRef.current?.focus());
+    }
   }
 
   function describedBy(...ids: Array<string | false | undefined>): string | undefined {
@@ -178,11 +253,15 @@ export function ManagementCompanyCreateForm({
   const formErrorMessage = state.formError ? copy.error[state.formError] : null;
   const addressDescribedBy = describedBy(
     "company-create-address-help",
-    state.fieldErrors.address && "company-create-address-error",
+    displayState.fieldErrors.address && "company-create-address-error",
   );
 
   return (
-    <form action={formAction} className="admin-tenant-form admin-company-form">
+    <form
+      action={formAction}
+      className="admin-tenant-form admin-company-form"
+      onSubmit={handleSubmit}
+    >
       <input aria-label={copy.localeLabel} name="locale" type="hidden" value={locale} />
 
       <div className="admin-company-form__guidance">
@@ -206,11 +285,13 @@ export function ManagementCompanyCreateForm({
           <label className="admin-field" htmlFor="company-create-name">
             <span className="admin-field-label">
               {copy.name}
-              <Requirement copy={copy} required />
+              <Requirement copy={copy} kind="required" />
             </span>
             <input
-              aria-describedby={describedBy(state.fieldErrors.name && "company-create-name-error")}
-              aria-invalid={Boolean(state.fieldErrors.name)}
+              aria-describedby={describedBy(
+                displayState.fieldErrors.name && "company-create-name-error",
+              )}
+              aria-invalid={Boolean(displayState.fieldErrors.name)}
               id="company-create-name"
               maxLength={200}
               name="name"
@@ -218,19 +299,24 @@ export function ManagementCompanyCreateForm({
               required
               value={values.name}
             />
-            <FieldError copy={copy} field="name" id="company-create-name-error" state={state} />
+            <FieldError
+              copy={copy}
+              field="name"
+              id="company-create-name-error"
+              state={displayState}
+            />
           </label>
           <label className="admin-field" htmlFor="company-create-business-number">
             <span className="admin-field-label">
               {copy.businessNumber}
-              <Requirement copy={copy} required />
+              <Requirement copy={copy} kind="required" />
             </span>
             <input
               aria-describedby={describedBy(
                 "company-create-business-number-help",
-                state.fieldErrors.businessNumber && "company-create-business-number-error",
+                displayState.fieldErrors.businessNumber && "company-create-business-number-error",
               )}
-              aria-invalid={Boolean(state.fieldErrors.businessNumber)}
+              aria-invalid={Boolean(displayState.fieldErrors.businessNumber)}
               id="company-create-business-number"
               inputMode="numeric"
               name="businessNumber"
@@ -244,17 +330,17 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="businessNumber"
               id="company-create-business-number-error"
-              state={state}
+              state={displayState}
             />
           </label>
           <div className="admin-field admin-company-form__wide-field">
             <span className="admin-field-label">
               {copy.address}
-              <Requirement copy={copy} required />
+              <Requirement copy={copy} kind="required" />
             </span>
             <ManagementCompanyAddressSearchField
               {...(addressDescribedBy ? { ariaDescribedBy: addressDescribedBy } : {})}
-              ariaInvalid={Boolean(state.fieldErrors.address)}
+              ariaInvalid={Boolean(displayState.fieldErrors.address)}
               detailLabel={copy.addressDetail}
               detailPlaceholder={copy.addressDetailPlaceholder}
               labels={copy.addressSearch}
@@ -266,14 +352,14 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="address"
               id="company-create-address-error"
-              state={state}
+              state={displayState}
             />
           </div>
         </div>
       </div>
 
       <div className="admin-company-form__section" id="company-create-contact">
-        <h2>{copy.contactName}</h2>
+        <h2>{copy.contactSectionTitle}</h2>
         <p className="admin-company-form__section-help" id="company-create-contact-channel-help">
           {copy.contactChannelHelp}
         </p>
@@ -281,14 +367,14 @@ export function ManagementCompanyCreateForm({
           <label className="admin-field" htmlFor="company-create-representative-phone">
             <span className="admin-field-label">
               {copy.representativePhone}
-              <Requirement copy={copy} required={false} />
+              <Requirement copy={copy} kind="optional" />
             </span>
             <input
               aria-describedby={describedBy(
-                state.fieldErrors.representativePhone &&
+                displayState.fieldErrors.representativePhone &&
                   "company-create-representative-phone-error",
               )}
-              aria-invalid={Boolean(state.fieldErrors.representativePhone)}
+              aria-invalid={Boolean(displayState.fieldErrors.representativePhone)}
               autoComplete="tel"
               id="company-create-representative-phone"
               inputMode="tel"
@@ -301,19 +387,19 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="representativePhone"
               id="company-create-representative-phone-error"
-              state={state}
+              state={displayState}
             />
           </label>
           <label className="admin-field" htmlFor="company-create-contact-name">
             <span className="admin-field-label">
               {copy.contactName}
-              <Requirement copy={copy} required />
+              <Requirement copy={copy} kind="required" />
             </span>
             <input
               aria-describedby={describedBy(
-                state.fieldErrors.contactName && "company-create-contact-name-error",
+                displayState.fieldErrors.contactName && "company-create-contact-name-error",
               )}
-              aria-invalid={Boolean(state.fieldErrors.contactName)}
+              aria-invalid={Boolean(displayState.fieldErrors.contactName)}
               id="company-create-contact-name"
               maxLength={100}
               name="contactName"
@@ -325,22 +411,25 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="contactName"
               id="company-create-contact-name-error"
-              state={state}
+              state={displayState}
             />
           </label>
-          <label className="admin-field" htmlFor="company-create-contact-phone">
+          <div className="admin-company-form__channel-heading admin-company-form__wide-field">
             <span className="admin-field-label">
-              {copy.contactPhone}
-              <Requirement copy={copy} required={false} />
+              {copy.contactChannel}
+              <Requirement copy={copy} kind="oneRequired" />
             </span>
+          </div>
+          <label className="admin-field" htmlFor="company-create-contact-phone">
+            <span>{copy.contactPhone}</span>
             <input
               aria-describedby={describedBy(
                 "company-create-contact-channel-help",
-                state.fieldErrors.contactChannel && "company-create-contact-channel-error",
-                state.fieldErrors.contactPhone && "company-create-contact-phone-error",
+                displayState.fieldErrors.contactChannel && "company-create-contact-channel-error",
+                displayState.fieldErrors.contactPhone && "company-create-contact-phone-error",
               )}
               aria-invalid={Boolean(
-                state.fieldErrors.contactChannel || state.fieldErrors.contactPhone,
+                displayState.fieldErrors.contactChannel || displayState.fieldErrors.contactPhone,
               )}
               autoComplete="tel"
               id="company-create-contact-phone"
@@ -354,22 +443,19 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="contactPhone"
               id="company-create-contact-phone-error"
-              state={state}
+              state={displayState}
             />
           </label>
           <label className="admin-field" htmlFor="company-create-contact-email">
-            <span className="admin-field-label">
-              {copy.contactEmail}
-              <Requirement copy={copy} required={false} />
-            </span>
+            <span>{copy.contactEmail}</span>
             <input
               aria-describedby={describedBy(
                 "company-create-contact-channel-help",
-                state.fieldErrors.contactChannel && "company-create-contact-channel-error",
-                state.fieldErrors.contactEmail && "company-create-contact-email-error",
+                displayState.fieldErrors.contactChannel && "company-create-contact-channel-error",
+                displayState.fieldErrors.contactEmail && "company-create-contact-email-error",
               )}
               aria-invalid={Boolean(
-                state.fieldErrors.contactChannel || state.fieldErrors.contactEmail,
+                displayState.fieldErrors.contactChannel || displayState.fieldErrors.contactEmail,
               )}
               autoComplete="email"
               id="company-create-contact-email"
@@ -383,7 +469,7 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="contactEmail"
               id="company-create-contact-email-error"
-              state={state}
+              state={displayState}
             />
           </label>
           <div className="admin-company-form__wide-field">
@@ -391,7 +477,7 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="contactChannel"
               id="company-create-contact-channel-error"
-              state={state}
+              state={displayState}
             />
           </div>
         </div>
@@ -400,7 +486,7 @@ export function ManagementCompanyCreateForm({
       <div className="admin-company-form__section" id="company-create-operations">
         <div className="admin-company-form__section-heading">
           <h2>{copy.operationsManagerName}</h2>
-          <Requirement copy={copy} required={false} />
+          <Requirement copy={copy} kind="optional" />
         </div>
         <p className="admin-company-form__section-help" id="company-create-operations-manager-help">
           {copy.operationsManagerHelp}
@@ -411,10 +497,10 @@ export function ManagementCompanyCreateForm({
             <input
               aria-describedby={describedBy(
                 "company-create-operations-manager-help",
-                state.fieldErrors.operationsManagerName &&
+                displayState.fieldErrors.operationsManagerName &&
                   "company-create-operations-manager-name-error",
               )}
-              aria-invalid={Boolean(state.fieldErrors.operationsManagerName)}
+              aria-invalid={Boolean(displayState.fieldErrors.operationsManagerName)}
               id="company-create-operations-manager-name"
               maxLength={100}
               name="operationsManagerName"
@@ -425,7 +511,7 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="operationsManagerName"
               id="company-create-operations-manager-name-error"
-              state={state}
+              state={displayState}
             />
           </label>
           <label className="admin-field" htmlFor="company-create-operations-manager-phone">
@@ -433,14 +519,14 @@ export function ManagementCompanyCreateForm({
             <input
               aria-describedby={describedBy(
                 "company-create-operations-manager-help",
-                state.fieldErrors.operationsManagerChannel &&
+                displayState.fieldErrors.operationsManagerChannel &&
                   "company-create-operations-manager-channel-error",
-                state.fieldErrors.operationsManagerPhone &&
+                displayState.fieldErrors.operationsManagerPhone &&
                   "company-create-operations-manager-phone-error",
               )}
               aria-invalid={Boolean(
-                state.fieldErrors.operationsManagerChannel ||
-                  state.fieldErrors.operationsManagerPhone,
+                displayState.fieldErrors.operationsManagerChannel ||
+                  displayState.fieldErrors.operationsManagerPhone,
               )}
               autoComplete="tel"
               id="company-create-operations-manager-phone"
@@ -454,7 +540,7 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="operationsManagerPhone"
               id="company-create-operations-manager-phone-error"
-              state={state}
+              state={displayState}
             />
           </label>
           <label
@@ -465,14 +551,14 @@ export function ManagementCompanyCreateForm({
             <input
               aria-describedby={describedBy(
                 "company-create-operations-manager-help",
-                state.fieldErrors.operationsManagerChannel &&
+                displayState.fieldErrors.operationsManagerChannel &&
                   "company-create-operations-manager-channel-error",
-                state.fieldErrors.operationsManagerEmail &&
+                displayState.fieldErrors.operationsManagerEmail &&
                   "company-create-operations-manager-email-error",
               )}
               aria-invalid={Boolean(
-                state.fieldErrors.operationsManagerChannel ||
-                  state.fieldErrors.operationsManagerEmail,
+                displayState.fieldErrors.operationsManagerChannel ||
+                  displayState.fieldErrors.operationsManagerEmail,
               )}
               autoComplete="email"
               id="company-create-operations-manager-email"
@@ -486,7 +572,7 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="operationsManagerEmail"
               id="company-create-operations-manager-email-error"
-              state={state}
+              state={displayState}
             />
           </label>
           <div className="admin-company-form__wide-field">
@@ -494,7 +580,7 @@ export function ManagementCompanyCreateForm({
               copy={copy}
               field="operationsManagerChannel"
               id="company-create-operations-manager-channel-error"
-              state={state}
+              state={displayState}
             />
           </div>
         </div>
@@ -505,13 +591,13 @@ export function ManagementCompanyCreateForm({
         <label className="admin-field" htmlFor="company-create-reason-input">
           <span className="admin-field-label">
             {copy.reason}
-            <Requirement copy={copy} required />
+            <Requirement copy={copy} kind="required" />
           </span>
           <textarea
             aria-describedby={describedBy(
-              state.fieldErrors.reason && "company-create-reason-error",
+              displayState.fieldErrors.reason && "company-create-reason-error",
             )}
-            aria-invalid={Boolean(state.fieldErrors.reason)}
+            aria-invalid={Boolean(displayState.fieldErrors.reason)}
             id="company-create-reason-input"
             maxLength={500}
             minLength={3}
@@ -521,7 +607,12 @@ export function ManagementCompanyCreateForm({
             required
             value={values.reason}
           />
-          <FieldError copy={copy} field="reason" id="company-create-reason-error" state={state} />
+          <FieldError
+            copy={copy}
+            field="reason"
+            id="company-create-reason-error"
+            state={displayState}
+          />
         </label>
       </div>
 
