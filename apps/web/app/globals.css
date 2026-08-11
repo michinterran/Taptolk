@@ -2370,6 +2370,65 @@ h3,
   grid-template-columns: 1fr;
 }
 
+.admin-company-form__guidance {
+  background: color-mix(in srgb, var(--tt-color-brand) 7%, var(--tt-color-surface));
+  border-left: 4px solid var(--tt-color-brand);
+  color: var(--tt-color-text-muted);
+  line-height: var(--tt-line-body);
+  padding: var(--tt-space-4) var(--tt-space-5);
+}
+
+.admin-company-form__guidance strong {
+  color: var(--tt-color-text);
+}
+
+.admin-company-form__error-summary {
+  margin: 0;
+}
+
+.admin-field-label,
+.admin-company-form__section-heading {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tt-space-2);
+}
+
+.admin-field-requirement {
+  background: var(--tt-color-surface-muted);
+  border-radius: var(--tt-radius-pill);
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-xs);
+  font-weight: 800;
+  line-height: 1;
+  padding: var(--tt-space-1) var(--tt-space-2);
+}
+
+.admin-field-requirement--required {
+  background: color-mix(in srgb, var(--tt-color-brand) 14%, var(--tt-color-surface));
+  color: var(--tt-color-brand-strong);
+}
+
+.admin-field-error {
+  color: var(--tt-color-danger-fg) !important;
+  font-weight: 700;
+}
+
+.admin-company-form :is(input, textarea)[aria-invalid="true"],
+.admin-company-address-search__selected[aria-invalid="true"] {
+  border-color: var(--tt-color-danger);
+}
+
+.admin-company-form__section-heading {
+  justify-content: space-between;
+}
+
+.admin-company-form__section-help {
+  color: var(--tt-color-text-muted);
+  line-height: var(--tt-line-body);
+  margin: calc(var(--tt-space-3) * -1) 0 0;
+}
+
 .admin-company-form__grid {
   align-items: start;
   display: grid;

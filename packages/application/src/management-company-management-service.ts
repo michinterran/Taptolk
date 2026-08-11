@@ -58,11 +58,13 @@ export class ManagementCompanyManagementError extends Error {
     | "INVALID_BUSINESS_NUMBER"
     | "INVALID_COMPANY_ID"
     | "INVALID_ADDRESS"
+    | "INVALID_CONTACT_CHANNEL"
     | "INVALID_CONTACT_EMAIL"
     | "INVALID_CONTACT_NAME"
     | "INVALID_NAME"
     | "INVALID_MANAGEMENT_CODE"
     | "INVALID_OPERATIONS_MANAGER_EMAIL"
+    | "INVALID_OPERATIONS_MANAGER_CHANNEL"
     | "INVALID_OPERATIONS_MANAGER_NAME"
     | "INVALID_PROTECTED_PHONE"
     | "INVALID_REASON"
@@ -218,24 +220,56 @@ export class ManagementCompanyManagementService {
   }): Promise<ManagementCompanyCommandResult> {
     authorizeActor(input.actor, "management-company:create", "platform-management-company-create");
     assertUuid(input.requestId, "INVALID_REQUEST_ID");
+    const address = normalizeOptionalText(input.address, "INVALID_ADDRESS", 2, 300);
+    const businessNumber = normalizeBusinessNumber(input.businessNumber);
+    const contactEmail = normalizeOptionalEmail(input.contactEmail, "INVALID_CONTACT_EMAIL");
+    const contactName = normalizeOptionalName(input.contactName, "INVALID_CONTACT_NAME");
+    const contactPhoneEncrypted = normalizeProtectedPhone(input.contactPhoneEncrypted);
+    const operationsManagerEmail = normalizeOptionalEmail(
+      input.operationsManagerEmail,
+      "INVALID_OPERATIONS_MANAGER_EMAIL",
+    );
+    const operationsManagerName = normalizeOptionalName(
+      input.operationsManagerName,
+      "INVALID_OPERATIONS_MANAGER_NAME",
+    );
+    const operationsManagerPhoneEncrypted = normalizeProtectedPhone(
+      input.operationsManagerPhoneEncrypted,
+    );
+
+    if (!address) {
+      throw new ManagementCompanyManagementError("INVALID_ADDRESS");
+    }
+    if (!businessNumber) {
+      throw new ManagementCompanyManagementError("INVALID_BUSINESS_NUMBER");
+    }
+    if (!contactName) {
+      throw new ManagementCompanyManagementError("INVALID_CONTACT_NAME");
+    }
+    if (!contactPhoneEncrypted && !contactEmail) {
+      throw new ManagementCompanyManagementError("INVALID_CONTACT_CHANNEL");
+    }
+
+    const hasOperationsManagerInput = Boolean(
+      operationsManagerName || operationsManagerPhoneEncrypted || operationsManagerEmail,
+    );
+    if (hasOperationsManagerInput && !operationsManagerName) {
+      throw new ManagementCompanyManagementError("INVALID_OPERATIONS_MANAGER_NAME");
+    }
+    if (hasOperationsManagerInput && !operationsManagerPhoneEncrypted && !operationsManagerEmail) {
+      throw new ManagementCompanyManagementError("INVALID_OPERATIONS_MANAGER_CHANNEL");
+    }
+
     return this.repository.create({
-      address: normalizeOptionalText(input.address, "INVALID_ADDRESS", 2, 300),
-      businessNumber: normalizeBusinessNumber(input.businessNumber),
-      contactEmail: normalizeOptionalEmail(input.contactEmail, "INVALID_CONTACT_EMAIL"),
-      contactName: normalizeOptionalName(input.contactName, "INVALID_CONTACT_NAME"),
-      contactPhoneEncrypted: normalizeProtectedPhone(input.contactPhoneEncrypted),
+      address,
+      businessNumber,
+      contactEmail,
+      contactName,
+      contactPhoneEncrypted,
       name: normalizeName(input.name),
-      operationsManagerEmail: normalizeOptionalEmail(
-        input.operationsManagerEmail,
-        "INVALID_OPERATIONS_MANAGER_EMAIL",
-      ),
-      operationsManagerName: normalizeOptionalName(
-        input.operationsManagerName,
-        "INVALID_OPERATIONS_MANAGER_NAME",
-      ),
-      operationsManagerPhoneEncrypted: normalizeProtectedPhone(
-        input.operationsManagerPhoneEncrypted,
-      ),
+      operationsManagerEmail,
+      operationsManagerName,
+      operationsManagerPhoneEncrypted,
       representativePhoneEncrypted: normalizeProtectedPhone(input.representativePhoneEncrypted),
       reason: normalizeReason(input.reason),
       requestId: input.requestId,

@@ -23,6 +23,41 @@ import {
 type CompanyActionError = "blocked" | "conflict" | "forbidden" | "unavailable" | "validation";
 type CompanyActionStatus = "created" | "statusChanged" | "updated";
 
+export type ManagementCompanyCreateField =
+  | "address"
+  | "businessNumber"
+  | "contactChannel"
+  | "contactEmail"
+  | "contactName"
+  | "contactPhone"
+  | "name"
+  | "operationsManagerChannel"
+  | "operationsManagerEmail"
+  | "operationsManagerName"
+  | "operationsManagerPhone"
+  | "reason"
+  | "representativePhone";
+
+export type ManagementCompanyCreateFieldError =
+  | "channelRequired"
+  | "invalid"
+  | "operationsManagerChannelRequired"
+  | "required";
+
+export interface ManagementCompanyCreateActionState {
+  fieldErrors: Partial<
+    Readonly<Record<ManagementCompanyCreateField, ManagementCompanyCreateFieldError>>
+  >;
+  formError?: Exclude<CompanyActionError, "validation">;
+}
+
+class ManagementCompanyPhoneInputError extends Error {
+  constructor(readonly field: "contactPhone" | "operationsManagerPhone" | "representativePhone") {
+    super("Management company phone input is invalid");
+    this.name = "ManagementCompanyPhoneInputError";
+  }
+}
+
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
@@ -108,10 +143,72 @@ function readProtectedPhone(formData: FormData, key: string): string {
   if (!environment.APP_ENCRYPTION_KEY_V1) {
     throw new Error("MANAGEMENT_COMPANY_CONTACT_PROTECTION_CONFIG_INVALID");
   }
-  return protectManagementCompanyPhone(value, {
-    encryptionSecret: environment.APP_ENCRYPTION_KEY_V1,
-    keyVersion: environment.APP_ENCRYPTION_KEY_VERSION,
-  });
+  try {
+    return protectManagementCompanyPhone(value, {
+      encryptionSecret: environment.APP_ENCRYPTION_KEY_V1,
+      keyVersion: environment.APP_ENCRYPTION_KEY_VERSION,
+    });
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "MANAGEMENT_COMPANY_CONTACT_PHONE_INVALID" &&
+      (key === "contactPhone" || key === "operationsManagerPhone" || key === "representativePhone")
+    ) {
+      throw new ManagementCompanyPhoneInputError(key);
+    }
+    throw error;
+  }
+}
+
+function fieldError(
+  field: ManagementCompanyCreateField,
+  error: ManagementCompanyCreateFieldError,
+): ManagementCompanyCreateActionState {
+  return { fieldErrors: { [field]: error } };
+}
+
+function requiredOrInvalid(formData: FormData, key: string): ManagementCompanyCreateFieldError {
+  return readString(formData, key).trim() ? "invalid" : "required";
+}
+
+function mapCreateError(error: unknown, formData: FormData): ManagementCompanyCreateActionState {
+  if (error instanceof ManagementCompanyPhoneInputError) {
+    return fieldError(error.field, "invalid");
+  }
+  if (error instanceof ManagementCompanyManagementError) {
+    switch (error.code) {
+      case "INVALID_ADDRESS":
+        return fieldError("address", requiredOrInvalid(formData, "address"));
+      case "INVALID_BUSINESS_NUMBER":
+        return fieldError("businessNumber", requiredOrInvalid(formData, "businessNumber"));
+      case "INVALID_CONTACT_CHANNEL":
+        return fieldError("contactChannel", "channelRequired");
+      case "INVALID_CONTACT_EMAIL":
+        return fieldError("contactEmail", "invalid");
+      case "INVALID_CONTACT_NAME":
+        return fieldError("contactName", requiredOrInvalid(formData, "contactName"));
+      case "INVALID_NAME":
+        return fieldError("name", requiredOrInvalid(formData, "name"));
+      case "INVALID_OPERATIONS_MANAGER_CHANNEL":
+        return fieldError("operationsManagerChannel", "operationsManagerChannelRequired");
+      case "INVALID_OPERATIONS_MANAGER_EMAIL":
+        return fieldError("operationsManagerEmail", "invalid");
+      case "INVALID_OPERATIONS_MANAGER_NAME":
+        return fieldError(
+          "operationsManagerName",
+          requiredOrInvalid(formData, "operationsManagerName"),
+        );
+      case "INVALID_REASON":
+        return fieldError("reason", requiredOrInvalid(formData, "reason"));
+      default:
+        return { fieldErrors: {}, formError: "unavailable" };
+    }
+  }
+  const mappedError = mapError(error);
+  return {
+    fieldErrors: {},
+    formError: mappedError === "validation" ? "unavailable" : mappedError,
+  };
 }
 
 async function createService(locale: AppLocale) {
@@ -136,7 +233,10 @@ async function createService(locale: AppLocale) {
   };
 }
 
-export async function createManagementCompany(formData: FormData): Promise<never> {
+export async function createManagementCompany(
+  _previousState: ManagementCompanyCreateActionState,
+  formData: FormData,
+): Promise<ManagementCompanyCreateActionState> {
   const locale = readLocale(formData);
   let companyId = "";
   try {
@@ -158,7 +258,7 @@ export async function createManagementCompany(formData: FormData): Promise<never
     });
     companyId = result.id;
   } catch (error) {
-    redirect(catalogPath(locale, "error", mapError(error)));
+    return mapCreateError(error, formData);
   }
   redirect(appendActionState(companyPath(locale, companyId), "status", "created"));
 }

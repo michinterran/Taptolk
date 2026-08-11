@@ -4,6 +4,8 @@ import { AddressField, type AddressFieldLabels, type AddressValue } from "@tapto
 import { useMemo, useRef, useState } from "react";
 
 interface ManagementCompanyAddressSearchFieldProps {
+  ariaDescribedBy?: string;
+  ariaInvalid?: boolean;
   detailLabel: string;
   detailPlaceholder: string;
   idPrefix?: string;
@@ -14,6 +16,8 @@ interface ManagementCompanyAddressSearchFieldProps {
 }
 
 export function ManagementCompanyAddressSearchField({
+  ariaDescribedBy,
+  ariaInvalid = false,
   detailLabel,
   detailPlaceholder,
   idPrefix = "company-create-address",
@@ -56,6 +60,8 @@ export function ManagementCompanyAddressSearchField({
         />
       </div>
       <input
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
         aria-label={labels.roadAddress}
         className="admin-company-address-search__selected"
         placeholder={labels.roadAddress}

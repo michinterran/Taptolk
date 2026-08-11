@@ -276,7 +276,7 @@ export const ko = {
   "admin.companies.address.search.zonecode": "우편번호",
   "admin.companies.back": "플랫폼 콘솔로 돌아가기",
   "admin.companies.businessNumber": "사업자등록번호",
-  "admin.companies.businessNumber.help": "선택 입력 · 숫자 10자리",
+  "admin.companies.businessNumber.help": "숫자 10자리 · 하이픈 입력 가능",
   "admin.companies.close": "운영 종료",
   "admin.companies.create": "관리회사 등록",
   "admin.companies.create.description":
@@ -294,7 +294,13 @@ export const ko = {
     "활성 사업장이 있거나 상위 고객사가 비활성 상태라 변경할 수 없습니다.",
   "admin.companies.error.conflict":
     "다른 관리자가 먼저 변경했거나 같은 사업자번호가 이미 사용 중입니다.",
+  "admin.companies.error.contactChannel": "담당자 연락번호 또는 이메일 중 하나를 입력해 주세요.",
+  "admin.companies.error.fieldInvalid": "입력 형식을 확인해 주세요.",
+  "admin.companies.error.fieldRequired": "필수 항목입니다.",
   "admin.companies.error.forbidden": "이 작업에는 슈퍼어드민 권한이 필요합니다.",
+  "admin.companies.error.formSummary": "등록하지 못했습니다. 표시된 입력 항목을 확인해 주세요.",
+  "admin.companies.error.operationsManagerChannel":
+    "운영 책임자를 입력했다면 연락번호 또는 이메일 중 하나를 입력해 주세요.",
   "admin.companies.error.unavailable":
     "관리회사 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.companies.error.validation":
@@ -305,7 +311,12 @@ export const ko = {
   "admin.companies.managementCode": "관리번호",
   "admin.companies.managementCode.help": "서버가 자동 부여하며 등록 후 읽기 전용으로 표시됩니다.",
   "admin.companies.name": "관리회사",
+  "admin.companies.field.optional": "선택",
+  "admin.companies.field.required": "필수",
+  "admin.companies.contactChannel.help": "담당자 이름과 연락번호 또는 이메일 중 하나는 필수입니다.",
   "admin.companies.operationsManagerEmail": "운영 책임자 이메일",
+  "admin.companies.operationsManager.help":
+    "선택 입력입니다. 입력을 시작하면 책임자 이름과 연락번호 또는 이메일 중 하나가 필요합니다.",
   "admin.companies.operationsManagerName": "운영 책임자",
   "admin.companies.operationsManagerPhone": "운영 책임자 연락번호",
   "admin.companies.next": "다음",
@@ -320,6 +331,8 @@ export const ko = {
   "admin.companies.reason": "등록 근거",
   "admin.companies.reason.placeholder":
     "계약서, 운영 위임, 내부 승인 등 등록 근거를 입력해 주세요.",
+  "admin.companies.required.help":
+    "필수 표시 항목을 입력해 주세요. 운영 책임자 정보는 나중에 추가할 수 있습니다.",
   "admin.companies.representativePhone": "대표 연락번호",
   "admin.companies.save": "정보 저장",
   "admin.companies.securityNote": "고객 범위 격리 · 승인 권한 확인 · 변경 기록 보존",
@@ -333,6 +346,7 @@ export const ko = {
   "admin.companies.status.suspended": "일시 중지",
   "admin.companies.status.updated": "관리회사 기본 정보가 저장되었습니다.",
   "admin.companies.suspend": "일시 중지",
+  "admin.companies.submitting": "등록 중…",
   "admin.companies.tenant": "소속 고객사",
   "admin.companies.contactEmail": "담당자 이메일",
   "admin.companies.contactName": "연락 가능 담당자",
@@ -1168,7 +1182,7 @@ export const en = {
   "admin.companies.address.search.zonecode": "Postal code",
   "admin.companies.back": "Back to platform console",
   "admin.companies.businessNumber": "Business registration number",
-  "admin.companies.businessNumber.help": "Optional · 10 digits",
+  "admin.companies.businessNumber.help": "10 digits · Hyphens are allowed",
   "admin.companies.close": "Close operations",
   "admin.companies.create": "Register company",
   "admin.companies.create.description":
@@ -1187,7 +1201,13 @@ export const en = {
     "This change is blocked by an active site or an inactive parent tenant.",
   "admin.companies.error.conflict":
     "Another admin changed this company first, or the business number is already in use.",
+  "admin.companies.error.contactChannel": "Enter a contact phone or email.",
+  "admin.companies.error.fieldInvalid": "Check the input format.",
+  "admin.companies.error.fieldRequired": "This field is required.",
   "admin.companies.error.forbidden": "This action requires Super Admin permission.",
+  "admin.companies.error.formSummary": "The company was not registered. Check the marked fields.",
+  "admin.companies.error.operationsManagerChannel":
+    "When an operations manager is entered, add a phone or email.",
   "admin.companies.error.unavailable":
     "The management company service is unavailable. Please try again shortly.",
   "admin.companies.error.validation":
@@ -1199,7 +1219,13 @@ export const en = {
   "admin.companies.managementCode.help":
     "Assigned by the server and shown read-only after registration.",
   "admin.companies.name": "Management company",
+  "admin.companies.field.optional": "Optional",
+  "admin.companies.field.required": "Required",
+  "admin.companies.contactChannel.help":
+    "A contact name and at least one phone or email are required.",
   "admin.companies.operationsManagerEmail": "Operations manager email",
+  "admin.companies.operationsManager.help":
+    "Optional. If started, enter the manager name and at least one phone or email.",
   "admin.companies.operationsManagerName": "Operations manager",
   "admin.companies.operationsManagerPhone": "Operations manager phone",
   "admin.companies.next": "Next",
@@ -1214,6 +1240,8 @@ export const en = {
   "admin.companies.reason": "Registration basis",
   "admin.companies.reason.placeholder":
     "Enter the contract, operating delegation, or internal approval basis.",
+  "admin.companies.required.help":
+    "Complete the required fields. Operations manager details can be added later.",
   "admin.companies.representativePhone": "Representative phone",
   "admin.companies.save": "Save identity",
   "admin.companies.securityNote":
@@ -1228,6 +1256,7 @@ export const en = {
   "admin.companies.status.suspended": "Suspended",
   "admin.companies.status.updated": "The company identity was saved.",
   "admin.companies.suspend": "Suspend",
+  "admin.companies.submitting": "Registering…",
   "admin.companies.tenant": "Tenant",
   "admin.companies.contactEmail": "Contact email",
   "admin.companies.contactName": "Available contact",

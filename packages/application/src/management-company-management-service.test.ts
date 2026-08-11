@@ -79,6 +79,73 @@ describe("Management Company management service", () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["address", { address: "" }, "INVALID_ADDRESS"],
+    ["business number", { businessNumber: "" }, "INVALID_BUSINESS_NUMBER"],
+    ["primary contact name", { contactName: "" }, "INVALID_CONTACT_NAME"],
+  ] as const)("requires the registration %s", async (_label, overrides, code) => {
+    const repository = createRepository();
+    await expect(
+      new ManagementCompanyManagementService(repository).create(createInput(overrides)),
+    ).rejects.toEqual(new ManagementCompanyManagementError(code));
+    expect(repository.create).not.toHaveBeenCalled();
+  });
+
+  it("requires at least one primary contact channel", async () => {
+    const repository = createRepository();
+    await expect(
+      new ManagementCompanyManagementService(repository).create(
+        createInput({ contactEmail: "", contactPhoneEncrypted: "" }),
+      ),
+    ).rejects.toEqual(new ManagementCompanyManagementError("INVALID_CONTACT_CHANNEL"));
+    expect(repository.create).not.toHaveBeenCalled();
+  });
+
+  it("requires a complete operations manager group when the optional group is started", async () => {
+    const repository = createRepository();
+    const service = new ManagementCompanyManagementService(repository);
+
+    await expect(
+      service.create(
+        createInput({
+          operationsManagerEmail: "manager@example.com",
+          operationsManagerName: "",
+          operationsManagerPhoneEncrypted: "",
+        }),
+      ),
+    ).rejects.toEqual(new ManagementCompanyManagementError("INVALID_OPERATIONS_MANAGER_NAME"));
+
+    await expect(
+      service.create(
+        createInput({
+          operationsManagerEmail: "",
+          operationsManagerName: "책임자",
+          operationsManagerPhoneEncrypted: "",
+        }),
+      ),
+    ).rejects.toEqual(new ManagementCompanyManagementError("INVALID_OPERATIONS_MANAGER_CHANNEL"));
+    expect(repository.create).not.toHaveBeenCalled();
+  });
+
+  it("accepts registration without the optional operations manager group", async () => {
+    const repository = createRepository();
+    await new ManagementCompanyManagementService(repository).create(
+      createInput({
+        operationsManagerEmail: "",
+        operationsManagerName: "",
+        operationsManagerPhoneEncrypted: "",
+      }),
+    );
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operationsManagerEmail: null,
+        operationsManagerName: null,
+        operationsManagerPhoneEncrypted: null,
+      }),
+    );
+  });
+
   it("does not silently discard non-numeric business number input", async () => {
     const repository = createRepository();
     await expect(
