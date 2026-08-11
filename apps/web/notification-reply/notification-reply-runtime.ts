@@ -117,3 +117,12 @@ export function readNotificationWorkerSecret(): string | null {
     return null;
   }
 }
+
+export function readScheduledNotificationDispatchConfiguration(): { cronSecret: string } | null {
+  try {
+    const cronSecret = parseServerEnvironment().CRON_SECRET;
+    return cronSecret ? { cronSecret } : null;
+  } catch {
+    return null;
+  }
+}

@@ -6,7 +6,11 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const activeManifestPath = path.join(root, "apps/web/vercel.json");
 const templateManifestPath = path.join(root, "apps/web/vercel.production-cron.template.json");
-const routePath = path.join(root, "apps/web/app/api/internal/privacy-cleanup/route.ts");
+const privacyRoutePath = path.join(root, "apps/web/app/api/internal/privacy-cleanup/route.ts");
+const dispatchRoutePath = path.join(
+  root,
+  "apps/web/app/api/internal/notification-dispatch/route.ts",
+);
 const requiredState = process.argv[2] ?? "either";
 
 function fail(message) {
@@ -18,11 +22,13 @@ if (!["either", "--require-active", "--require-deferred"].includes(requiredState
   fail("usage: verify-production-cron.mjs [--require-active|--require-deferred]");
 }
 
-const [activeManifestText, templateManifestText, routeSource] = await Promise.all([
-  readFile(activeManifestPath, "utf8"),
-  readFile(templateManifestPath, "utf8"),
-  readFile(routePath, "utf8"),
-]);
+const [activeManifestText, templateManifestText, privacyRouteSource, dispatchRouteSource] =
+  await Promise.all([
+    readFile(activeManifestPath, "utf8"),
+    readFile(templateManifestPath, "utf8"),
+    readFile(privacyRoutePath, "utf8"),
+    readFile(dispatchRoutePath, "utf8"),
+  ]);
 
 function parseManifest(text, label) {
   try {
@@ -33,12 +39,20 @@ function parseManifest(text, label) {
   }
 }
 
-function matchingJobs(manifest) {
-  return Array.isArray(manifest?.crons)
-    ? manifest.crons.filter(
-        (job) => job?.path === "/api/internal/privacy-cleanup" && job?.schedule === "0 * * * *",
-      )
-    : [];
+const approvedJobs = [
+  { path: "/api/internal/notification-dispatch", schedule: "* * * * *" },
+  { path: "/api/internal/privacy-cleanup", schedule: "0 * * * *" },
+];
+
+function hasExactlyApprovedJobs(manifest) {
+  if (!Array.isArray(manifest?.crons) || manifest.crons.length !== approvedJobs.length) {
+    return false;
+  }
+  return approvedJobs.every((approved) =>
+    manifest.crons.some(
+      (job) => job?.path === approved.path && job?.schedule === approved.schedule,
+    ),
+  );
 }
 
 const activeManifest = parseManifest(activeManifestText, "apps/web/vercel.json");
@@ -47,39 +61,42 @@ const templateManifest = parseManifest(
   "apps/web/vercel.production-cron.template.json",
 );
 const activeJobs = Array.isArray(activeManifest?.crons) ? activeManifest.crons : [];
-const templateJobs = Array.isArray(templateManifest?.crons) ? templateManifest.crons : [];
-const activeMatchingJobs = matchingJobs(activeManifest);
-const templateMatchingJobs = matchingJobs(templateManifest);
 
 let activeState;
 try {
   activeState =
     activeJobs.length === 0
       ? "deferred"
-      : activeJobs.length === 1 && activeMatchingJobs.length === 1
+      : hasExactlyApprovedJobs(activeManifest)
         ? "active"
         : "invalid";
 } catch {
   activeState = "invalid";
 }
 
-if (templateJobs.length !== 1 || templateMatchingJobs.length !== 1) {
-  fail("the Production template must contain exactly one hourly privacy cleanup Cron job.");
+if (!hasExactlyApprovedJobs(templateManifest)) {
+  fail("the Production template must contain only the approved cleanup and dispatch Cron jobs.");
 }
 if (activeState === "invalid") {
-  fail("the active manifest must be deferred or contain exactly one approved hourly Cron job.");
+  fail("the active manifest must be deferred or contain exactly the approved Cron jobs.");
 }
 if (requiredState === "--require-active" && activeState !== "active") {
-  fail("the active manifest must enable the approved hourly Cron job for Production release.");
+  fail("the active manifest must enable the approved Cron jobs for Production release.");
 }
 if (requiredState === "--require-deferred" && activeState !== "deferred") {
   fail("the active manifest must keep Cron registration deferred for the current Hobby release.");
 }
-if (!routeSource.includes("export async function GET(request: Request)")) {
+if (!privacyRouteSource.includes("export async function GET(request: Request)")) {
   fail("the scheduled privacy cleanup route must export GET.");
 }
-if (!routeSource.includes("export const maxDuration = 60")) {
+if (!privacyRouteSource.includes("export const maxDuration = 60")) {
   fail("the scheduled privacy cleanup route must keep its bounded maxDuration.");
+}
+if (!dispatchRouteSource.includes("export async function GET(request: Request)")) {
+  fail("the scheduled notification dispatch route must export GET.");
+}
+if (!dispatchRouteSource.includes("export const maxDuration = 60")) {
+  fail("the scheduled notification dispatch route must keep its bounded maxDuration.");
 }
 if (/authorization|bearer|cron_secret|secret/i.test(activeManifestText + templateManifestText)) {
   fail("Cron manifests must not embed credentials or authorization values.");
@@ -87,6 +104,6 @@ if (/authorization|bearer|cron_secret|secret/i.test(activeManifestText + templat
 
 if (!process.exitCode) {
   console.log(
-    `[production-cron] ${activeState} active manifest and credential-free hourly Production template verified`,
+    `[production-cron] ${activeState} active manifest and credential-free Production template verified`,
   );
 }

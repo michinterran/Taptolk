@@ -6,6 +6,7 @@ import { PublicContactPolicyError } from "@taptolk/domain";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAppLocale } from "../i18n/locale";
+import { scheduleNotificationDispatchNudge } from "../notification-reply/notification-dispatch-nudge";
 import { createPublicContactAnonymousToken } from "./public-contact-crypto";
 import { createPublicContactService } from "./public-contact-runtime";
 import { PublicContactRepositoryError } from "./supabase-public-contact-repository";
@@ -165,6 +166,7 @@ export async function createPublicContact(request: Request): Promise<NextRespons
       secure,
       value: result.sessionToken,
     });
+    scheduleNotificationDispatchNudge("CONTACT_CREATED");
     return response;
   } catch (error) {
     return errorResponse(error);
@@ -245,7 +247,9 @@ export async function requestPublicContactOfficeAlert(request: Request): Promise
     if (!tokens) {
       return safeJson({ error: { code: "UNAUTHORIZED" } }, 401);
     }
-    return safeJson({ data: await serviceOrThrow().officeAlert(tokens) });
+    const result = await serviceOrThrow().officeAlert(tokens);
+    scheduleNotificationDispatchNudge("OFFICE_ALERT_QUEUED");
+    return safeJson({ data: result });
   } catch (error) {
     return errorResponse(error);
   }
