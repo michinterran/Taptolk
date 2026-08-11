@@ -1217,7 +1217,9 @@ h3,
    rather than restating metrics locally. */
 .tt-button {
   align-items: center;
-  background: var(--tt-color-brand);
+  /* Small white button labels need the approved strong brand tone to meet
+     WCAG AA; the base brand remains available for non-text brand accents. */
+  background: var(--tt-color-brand-strong);
   border: 0;
   border-radius: var(--tt-button-radius);
   box-shadow: var(--tt-shadow-sm);
@@ -1234,7 +1236,7 @@ h3,
 }
 
 .tt-button:hover {
-  background: var(--tt-color-brand-strong);
+  background: color-mix(in srgb, var(--tt-color-brand-strong) 84%, var(--tt-color-text));
 }
 
 .tt-button--secondary:hover {
