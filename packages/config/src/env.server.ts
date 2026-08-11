@@ -52,7 +52,7 @@ const serverEnvironmentSchema = z
         .regex(/^[0-9]{6}$/u)
         .optional(),
     ),
-    OWNER_VERIFICATION_PROVIDER: z.enum(["mock", "unavailable"]).default("mock"),
+    OWNER_VERIFICATION_PROVIDER: z.enum(["mock", "solapi-sms", "unavailable"]).default("mock"),
     OWNER_WEB_PUSH_VAPID_PRIVATE_KEY: optionalSecretSchema,
     OWNER_WEB_PUSH_VAPID_PUBLIC_KEY: z.preprocess(
       emptyStringToUndefined,
@@ -188,6 +188,17 @@ const serverEnvironmentSchema = z
         message: "Production requires an approved owner verification provider.",
         path: ["OWNER_VERIFICATION_PROVIDER"],
       });
+    }
+    if (environment.OWNER_VERIFICATION_PROVIDER === "solapi-sms") {
+      for (const key of ["SOLAPI_API_KEY", "SOLAPI_API_SECRET", "SOLAPI_SMS_FROM"] as const) {
+        if (!environment[key]) {
+          context.addIssue({
+            code: "custom",
+            message: `${key} is required when SOLAPI owner OTP is enabled in production.`,
+            path: ["OWNER_VERIFICATION_PROVIDER"],
+          });
+        }
+      }
     }
     if (environment.OWNER_STAGING_MOCK_OTP) {
       context.addIssue({

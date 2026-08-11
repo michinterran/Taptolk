@@ -27,8 +27,10 @@ export interface OperationsSitePerformance {
 
 export interface OperationsDashboardScope {
   days?: number;
+  endDate?: string;
   managementCompanyId?: string;
   siteId?: string;
+  startDate?: string;
 }
 
 export interface OperationsDashboardModel {
@@ -70,11 +72,19 @@ export class OperationsDashboardService {
       throw new Error("INVALID_ID");
     }
     const requested = input.scope ?? {};
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/u;
+    const hasDateRange = requested.startDate !== undefined || requested.endDate !== undefined;
     if (
       (requested.managementCompanyId && !UUID_PATTERN.test(requested.managementCompanyId)) ||
       (requested.siteId && !UUID_PATTERN.test(requested.siteId)) ||
       (requested.days !== undefined &&
-        (!Number.isInteger(requested.days) || requested.days < 7 || requested.days > 90))
+        (!Number.isInteger(requested.days) || requested.days < 7 || requested.days > 90)) ||
+      (hasDateRange &&
+        (!requested.startDate ||
+          !requested.endDate ||
+          !datePattern.test(requested.startDate) ||
+          !datePattern.test(requested.endDate) ||
+          requested.startDate > requested.endDate))
     ) {
       throw new Error("INVALID_OPERATIONS_SCOPE");
     }

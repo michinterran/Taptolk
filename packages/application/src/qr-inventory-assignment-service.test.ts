@@ -38,6 +38,7 @@ function setup() {
     commitImport: vi.fn(async () => result),
     list: vi.fn(async () => ({ assets: [], batches: [], imports: [] })),
     receiveBatch: vi.fn(async () => result),
+    receiveBatchQuantity: vi.fn(async () => result),
     replace: vi.fn(async () => result),
     revoke: vi.fn(async () => result),
     saveValidatedImport: vi.fn(async () => result),
@@ -116,6 +117,41 @@ describe("QR inventory assignment service", () => {
         qrAssetId: id("11"),
       }),
     );
+  });
+
+  it("validates a partial receipt before calling the repository", async () => {
+    const { repository, service } = setup();
+    await service.receiveBatchQuantity({
+      actor,
+      auditRequestId: id("14"),
+      batchId: id("15"),
+      expectedBatchVersion: 2,
+      receivedQuantity: 3,
+      reason: "three stickers received",
+      ...scope,
+    });
+    expect(repository.receiveBatchQuantity).toHaveBeenCalledWith({
+      auditRequestId: id("14"),
+      batchId: id("15"),
+      expectedBatchVersion: 2,
+      receivedQuantity: 3,
+      reason: "three stickers received",
+    });
+  });
+
+  it("rejects a non-positive partial receipt", async () => {
+    const { service } = setup();
+    await expect(
+      service.receiveBatchQuantity({
+        actor,
+        auditRequestId: id("16"),
+        batchId: id("17"),
+        expectedBatchVersion: 2,
+        receivedQuantity: 0,
+        reason: "invalid receipt",
+        ...scope,
+      }),
+    ).rejects.toThrowError(new QrInventoryAssignmentError("INVALID_QUANTITY"));
   });
 
   it("rejects a CSV with no valid rows", async () => {

@@ -28,6 +28,8 @@ describe("admin RBAC", () => {
   it("keeps read-only memberships free of mutation permissions", () => {
     expect(roleHasPermission("READ_ONLY", "site:read")).toBe(true);
     expect(roleHasPermission("READ_ONLY", "site:update-operational")).toBe(false);
+    expect(roleHasPermission("READ_ONLY", "operations:manage")).toBe(false);
+    expect(roleHasPermission("SITE_OPERATOR", "operations:manage")).toBe(true);
   });
 
   it("rejects a Site admin outside the exact Site scope", () => {

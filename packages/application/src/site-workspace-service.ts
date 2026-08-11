@@ -8,7 +8,27 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 export interface SiteWorkspaceBatch {
   id: string;
   quantity: number;
+  receivedQuantity: number;
+  remainingQuantity: number;
+  receipts: readonly SiteWorkspaceBatchReceipt[];
   status: string;
+  version: number;
+}
+
+export interface SiteWorkspaceBatchReceipt {
+  createdAt: string;
+  quantity: number;
+}
+
+export interface SiteEscalationQueueItem {
+  createdAt: string;
+  escalatedAt: string;
+  reasonCode: string;
+  sessionId: string;
+  siteAddress: string | null;
+  siteContactLocation: string | null;
+  status: "ESCALATED";
+  vehiclePlateLast4: string;
 }
 
 export interface SiteWorkspace {
@@ -23,10 +43,13 @@ export interface SiteWorkspace {
   managementCompanyName: string;
   name: string;
   openContactCount: number;
+  siteEscalations: readonly SiteEscalationQueueItem[];
   status: OrganizationStatus;
   tenantId: string;
   totalQrCount: number;
   type: SiteType;
+  timezone: string;
+  version: number;
 }
 
 export interface SiteWorkspaceRepository {

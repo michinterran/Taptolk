@@ -7,9 +7,11 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 
 export interface ManagementCompanyWorkspaceSite {
   activeQrCount: number;
+  address: string | null;
   batchCount: number;
   contractVehicleLimit: number;
   id: string;
+  managementCode: string | null;
   name: string;
   status: OrganizationStatus;
   totalQrCount: number;
@@ -19,16 +21,26 @@ export interface ManagementCompanyWorkspaceSite {
 export interface ManagementCompanyWorkspace {
   activeContractCount: number;
   activeQrCount: number;
+  address: string | null;
   adminCount: number;
   businessNumber: string | null;
+  contactEmail: string | null;
+  contactName: string | null;
+  contactPhoneRegistered: boolean;
   contractVehicleLimit: number;
   id: string;
+  managementCode: string | null;
   name: string;
+  operationsManagerEmail: string | null;
+  operationsManagerName: string | null;
+  operationsManagerPhoneRegistered: boolean;
+  representativePhoneRegistered: boolean;
   sites: readonly ManagementCompanyWorkspaceSite[];
   status: OrganizationStatus;
   tenantId: string;
   tenantName: string;
   totalQrCount: number;
+  version: number;
 }
 
 export interface ManagementCompanyWorkspaceRepository {

@@ -19,11 +19,13 @@ export {
 } from "./issuance.js";
 export {
   buildPrintExportBundle,
+  buildSvgExportBundle,
   inspectPrintPdf,
   type PrintExportArtifact,
   type PrintExportBundle,
   type PrintExportItem,
   type PrintPdfInspection,
+  type SvgExportItem,
 } from "./print-export.js";
 export {
   decodeQrFromImage,

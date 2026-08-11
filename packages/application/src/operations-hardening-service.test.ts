@@ -54,6 +54,62 @@ describe("OperationsDashboardService", () => {
     });
     expect(repository.read).toHaveBeenCalledWith({});
   });
+
+  it("accepts a bounded explicit trend range", async () => {
+    const repository: OperationsDashboardRepository = {
+      read: vi.fn(async () => ({
+        activeBlockCount: 0,
+        activeQrCount: 0,
+        completedBatchCount: 0,
+        contactCount: 0,
+        escalatedCount: 0,
+        freshAt: "2026-07-31T00:00:00.000Z",
+        latestSnapshotAt: null,
+        medianOwnerResponseMs: null,
+        notificationFailedCount: 0,
+        notificationMissingCostCount: 0,
+        notificationRecordedCost: 0,
+        notificationRetryCount: 0,
+        notificationSentCount: 0,
+        openReportCount: 0,
+        siteCount: 0,
+        unresolvedCount: 0,
+        dailySeries: [],
+        scopeManagementCompanyName: null,
+        scopeSiteName: null,
+        sitePerformance: [],
+        windowDays: 14,
+      })),
+    };
+    const scope = { endDate: "2026-07-31", startDate: "2026-07-18" };
+
+    await new OperationsDashboardService(repository).read({
+      actor: {
+        authorization,
+        userId: "33333333-3333-4333-8333-333333333333",
+      },
+      scope,
+    });
+
+    expect(repository.read).toHaveBeenCalledWith(scope);
+  });
+
+  it("rejects an incomplete explicit trend range", async () => {
+    const repository: OperationsDashboardRepository = {
+      read: vi.fn(),
+    };
+
+    await expect(
+      new OperationsDashboardService(repository).read({
+        actor: {
+          authorization,
+          userId: "33333333-3333-4333-8333-333333333333",
+        },
+        scope: { startDate: "2026-07-18" },
+      }),
+    ).rejects.toThrow("INVALID_OPERATIONS_SCOPE");
+    expect(repository.read).not.toHaveBeenCalled();
+  });
 });
 
 describe("PrivacyCleanupService", () => {

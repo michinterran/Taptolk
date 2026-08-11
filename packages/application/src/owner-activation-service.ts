@@ -72,6 +72,7 @@ export interface OwnerActivationRepository {
     publicTokenHash: string;
     sessionHash: string;
     sessionTtlSeconds: number;
+    siteContactLocation: string;
   }): Promise<OwnerActivationCompletion>;
   inspect(input: { publicTokenHash: string }): Promise<OwnerActivationInspection>;
   listVehicles(input: {
@@ -490,6 +491,7 @@ export class OwnerActivationService {
     privacyVersion: string;
     proof: string;
     publicToken: string;
+    siteContactLocation: string;
     termsVersion: string;
   }): Promise<OwnerActivationSessionCompletion> {
     assertOwnerDeviceId(input.deviceHash);
@@ -510,6 +512,7 @@ export class OwnerActivationService {
       publicTokenHash: await this.hashRequired(input.publicToken, "public-token"),
       sessionHash: await this.protector.hash(sessionToken, "session"),
       sessionTtlSeconds: this.policy.sessionTtlSeconds,
+      siteContactLocation: normalizeSiteContactLocation(input.siteContactLocation),
     });
     return { ...completion, sessionToken };
   }
@@ -574,9 +577,24 @@ export class OwnerActivationServiceError extends Error {
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+const PHONE_LIKE_PATTERN = /^0[0-9]{8,10}$/u;
+const EMAIL_LIKE_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/iu;
 
 function assertUuid(value: string): void {
   if (!UUID_PATTERN.test(value)) {
     throw new OwnerActivationServiceError("INVALID_ID");
   }
+}
+
+function normalizeSiteContactLocation(value: string): string {
+  const normalized = value.normalize("NFKC").trim().replace(/\s+/gu, " ");
+  if (
+    normalized.length < 2 ||
+    normalized.length > 160 ||
+    PHONE_LIKE_PATTERN.test(normalized.replace(/[^0-9]/gu, "")) ||
+    EMAIL_LIKE_PATTERN.test(normalized)
+  ) {
+    throw new OwnerActivationServiceError("INVALID_SECRET");
+  }
+  return normalized;
 }

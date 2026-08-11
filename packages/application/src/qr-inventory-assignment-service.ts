@@ -51,7 +51,7 @@ export interface QrInventoryAssignmentBatchItem {
   requestedQuantity: number;
   siteId: string;
   siteName: string;
-  status: "DELIVERED" | "DISTRIBUTING" | "COMPLETED";
+  status: "DELIVERED" | "PARTIALLY_RECEIVED" | "DISTRIBUTING" | "COMPLETED";
   tenantId: string;
   version: number;
 }
@@ -118,6 +118,13 @@ export interface QrInventoryAssignmentRepository {
     expectedBatchVersion: number;
     reason: string;
   }): Promise<QrInventoryAssignmentCommandResult>;
+  receiveBatchQuantity(input: {
+    auditRequestId: string;
+    batchId: string;
+    expectedBatchVersion: number;
+    receivedQuantity: number;
+    reason: string;
+  }): Promise<QrInventoryAssignmentCommandResult>;
   replace(input: {
     auditRequestId: string;
     expectedReplacementVersion: number;
@@ -148,6 +155,7 @@ export class QrInventoryAssignmentError extends Error {
       | "EMPTY_CSV"
       | "INVALID_CSV_HEADER"
       | "INVALID_ID"
+      | "INVALID_QUANTITY"
       | "INVALID_REASON"
       | "INVALID_VERSION"
       | "NO_VALID_ROWS"
@@ -167,6 +175,12 @@ function assertUuid(value: string): void {
 function assertVersion(value: number): void {
   if (!Number.isInteger(value) || value < 1) {
     throw new QrInventoryAssignmentError("INVALID_VERSION");
+  }
+}
+
+function assertQuantity(value: number): void {
+  if (!Number.isInteger(value) || value < 1 || value > 100) {
+    throw new QrInventoryAssignmentError("INVALID_QUANTITY");
   }
 }
 
@@ -354,6 +368,31 @@ export class QrInventoryAssignmentService {
       auditRequestId: input.auditRequestId,
       batchId: input.batchId,
       expectedBatchVersion: input.expectedBatchVersion,
+      reason: normalizeReason(input.reason),
+    });
+  }
+
+  async receiveBatchQuantity(input: {
+    actor: QrInventoryAssignmentActor;
+    auditRequestId: string;
+    batchId: string;
+    expectedBatchVersion: number;
+    managementCompanyId: string;
+    receivedQuantity: number;
+    reason: string;
+    siteId: string;
+    tenantId: string;
+  }): Promise<QrInventoryAssignmentCommandResult> {
+    authorize(input.actor, "qr-asset:assign", input);
+    assertUuid(input.auditRequestId);
+    assertUuid(input.batchId);
+    assertVersion(input.expectedBatchVersion);
+    assertQuantity(input.receivedQuantity);
+    return this.repository.receiveBatchQuantity({
+      auditRequestId: input.auditRequestId,
+      batchId: input.batchId,
+      expectedBatchVersion: input.expectedBatchVersion,
+      receivedQuantity: input.receivedQuantity,
       reason: normalizeReason(input.reason),
     });
   }

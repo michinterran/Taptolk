@@ -10,6 +10,12 @@ import { assertAdminAuthorized } from "./authorization-error.js";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 export type AdminDirectoryMembershipStatus = "ACTIVE" | "INVITED" | "REVOKED" | "SUSPENDED";
+export type AdminDirectoryChangeAction =
+  | "ADMIN_ACCOUNT_APPROVED"
+  | "ADMIN_ACCOUNT_INVITATION_ACCEPTED"
+  | "ADMIN_ACCOUNT_INVITED"
+  | "ADMIN_ACCOUNT_REJECTED"
+  | "ADMIN_MEMBERSHIP_ASSIGNMENT_UPDATED";
 
 export interface AdminDirectoryActor {
   authorization: AdminAuthorizationContext;
@@ -20,6 +26,9 @@ export interface AdminDirectoryItem {
   createdAt: string;
   displayName: string;
   email: string | null;
+  lastChangedAction: AdminDirectoryChangeAction | null;
+  lastChangedAt: string | null;
+  lastChangedByDisplayName: string | null;
   managementCompanyName: string | null;
   membershipId: string;
   profileStatus: "ACTIVE" | "CLOSED" | "INVITED" | "SUSPENDED";

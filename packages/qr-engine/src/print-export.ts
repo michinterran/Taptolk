@@ -24,6 +24,13 @@ export interface PrintExportBundle {
   zip: PrintExportArtifact;
 }
 
+export interface SvgExportItem {
+  humanCode: string;
+  ordinal: number;
+  printSvg: string;
+  renderChecksumSha256: string;
+}
+
 export interface PrintPdfInspection {
   pageCount: number;
   pages: readonly { height: number; width: number }[];
@@ -64,6 +71,30 @@ function assertItems(items: readonly PrintExportItem[]): void {
     }
     if (ordinals.has(item.ordinal) || humanCodes.has(item.humanCode)) {
       throw new Error("DUPLICATE_EXPORT_ITEM");
+    }
+    ordinals.add(item.ordinal);
+    humanCodes.add(item.humanCode);
+  }
+}
+
+function assertSvgItems(items: readonly SvgExportItem[]): void {
+  if (items.length < 1 || items.length > 10_000) {
+    throw new Error("INVALID_SVG_EXPORT_ITEM_COUNT");
+  }
+  const ordinals = new Set<number>();
+  const humanCodes = new Set<string>();
+  for (const item of items) {
+    if (
+      !Number.isInteger(item.ordinal) ||
+      item.ordinal < 1 ||
+      !/^[0-9A-HJKMNP-TV-Z]{10}$/u.test(item.humanCode) ||
+      !/^[0-9a-f]{64}$/u.test(item.renderChecksumSha256) ||
+      !item.printSvg.startsWith("<svg")
+    ) {
+      throw new Error("INVALID_SVG_EXPORT_ITEM");
+    }
+    if (ordinals.has(item.ordinal) || humanCodes.has(item.humanCode)) {
+      throw new Error("DUPLICATE_SVG_EXPORT_ITEM");
     }
     ordinals.add(item.ordinal);
     humanCodes.add(item.humanCode);
@@ -157,4 +188,47 @@ export async function buildPrintExportBundle(
     zipSync(zipEntries, { level: 6 }),
   );
   return { csv, manifest, pdf, zip };
+}
+
+export function buildSvgExportBundle(
+  batchCode: string,
+  inputItems: readonly SvgExportItem[],
+): PrintExportArtifact {
+  if (!/^[A-Z0-9][A-Z0-9_-]{2,63}$/u.test(batchCode)) {
+    throw new Error("INVALID_BATCH_CODE");
+  }
+  assertSvgItems(inputItems);
+  const items = [...inputItems].sort((left, right) => left.ordinal - right.ordinal);
+  const manifestRows = items.map((item) => {
+    const ordinal = item.ordinal.toString().padStart(5, "0");
+    return {
+      humanCode: item.humanCode,
+      ordinal: item.ordinal,
+      printFile: `svg/${ordinal}.svg`,
+      renderChecksumSha256: item.renderChecksumSha256,
+    };
+  });
+  const zipEntries: Record<string, Uint8Array> = {
+    [`${batchCode}-svg-checksums.json`]: strToU8(
+      JSON.stringify(
+        {
+          batchCode,
+          files: manifestRows,
+          itemCount: items.length,
+          schemaVersion: 1,
+        },
+        null,
+        2,
+      ),
+    ),
+  };
+  for (const item of items) {
+    const ordinal = item.ordinal.toString().padStart(5, "0");
+    zipEntries[`svg/${ordinal}.svg`] = strToU8(item.printSvg);
+  }
+  return artifact(
+    `${batchCode}-svg-bundle.zip`,
+    "application/zip",
+    zipSync(zipEntries, { level: 6 }),
+  );
 }

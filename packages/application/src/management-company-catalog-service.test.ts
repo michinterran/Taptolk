@@ -7,7 +7,15 @@ import {
 
 function createRepository(): ManagementCompanyCatalogRepository {
   return {
-    list: vi.fn(async () => ({ items: [], total: 0 })),
+    list: vi.fn(async () => ({
+      activeContractCount: 0,
+      expiredContractCount: 0,
+      expiringContractCount: 0,
+      items: [],
+      lowRiskCount: 0,
+      siteTotal: 0,
+      total: 0,
+    })),
     listActiveTenants: vi.fn(async () => []),
   };
 }
@@ -29,8 +37,9 @@ describe("Management company catalog service", () => {
     });
 
     expect(repository.list).toHaveBeenCalledWith({
-      limit: 20,
-      offset: 20,
+      includeTestFixtures: false,
+      limit: 10,
+      offset: 10,
       search: "Acme",
       status: "SUSPENDED",
     });

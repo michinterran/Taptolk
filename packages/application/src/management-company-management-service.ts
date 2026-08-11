@@ -9,6 +9,7 @@ export interface ManagementCompanyActor {
 
 export interface ManagementCompanyCommandResult {
   id: string;
+  tenantId?: string;
   version: number;
 }
 
@@ -21,17 +22,32 @@ export interface ManagementCompanyManagementRepository {
     requestId: string;
   }): Promise<ManagementCompanyCommandResult>;
   create(input: {
+    address: string | null;
     businessNumber: string | null;
+    contactEmail: string | null;
+    contactName: string | null;
+    contactPhoneEncrypted: string | null;
     name: string;
+    operationsManagerEmail: string | null;
+    operationsManagerName: string | null;
+    operationsManagerPhoneEncrypted: string | null;
+    representativePhoneEncrypted: string | null;
     reason: string;
     requestId: string;
-    tenantId: string;
   }): Promise<ManagementCompanyCommandResult>;
   update(input: {
+    address: string | null;
     businessNumber: string | null;
     companyId: string;
+    contactEmail: string | null;
+    contactName: string | null;
+    contactPhoneEncrypted: string | null;
     expectedVersion: number;
     name: string;
+    operationsManagerEmail: string | null;
+    operationsManagerName: string | null;
+    operationsManagerPhoneEncrypted: string | null;
+    representativePhoneEncrypted: string | null;
     reason: string;
     requestId: string;
   }): Promise<ManagementCompanyCommandResult>;
@@ -41,7 +57,14 @@ export class ManagementCompanyManagementError extends Error {
   readonly code:
     | "INVALID_BUSINESS_NUMBER"
     | "INVALID_COMPANY_ID"
+    | "INVALID_ADDRESS"
+    | "INVALID_CONTACT_EMAIL"
+    | "INVALID_CONTACT_NAME"
     | "INVALID_NAME"
+    | "INVALID_MANAGEMENT_CODE"
+    | "INVALID_OPERATIONS_MANAGER_EMAIL"
+    | "INVALID_OPERATIONS_MANAGER_NAME"
+    | "INVALID_PROTECTED_PHONE"
     | "INVALID_REASON"
     | "INVALID_REQUEST_ID"
     | "INVALID_STATUS_TRANSITION"
@@ -90,6 +113,61 @@ function normalizeBusinessNumber(value: string): string | null {
   return normalized;
 }
 
+function normalizeOptionalText(
+  value: string,
+  code: "INVALID_ADDRESS" | "INVALID_MANAGEMENT_CODE",
+  min: number,
+  max: number,
+): string | null {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return null;
+  }
+  if (normalized.length < min || normalized.length > max) {
+    throw new ManagementCompanyManagementError(code);
+  }
+  return normalized;
+}
+
+function normalizeOptionalName(
+  value: string,
+  code: "INVALID_CONTACT_NAME" | "INVALID_OPERATIONS_MANAGER_NAME",
+): string | null {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return null;
+  }
+  if (normalized.length > 100) {
+    throw new ManagementCompanyManagementError(code);
+  }
+  return normalized;
+}
+
+function normalizeOptionalEmail(
+  value: string,
+  code: "INVALID_CONTACT_EMAIL" | "INVALID_OPERATIONS_MANAGER_EMAIL",
+): string | null {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length === 0) {
+    return null;
+  }
+  if (normalized.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/u.test(normalized)) {
+    throw new ManagementCompanyManagementError(code);
+  }
+  return normalized;
+}
+
+function normalizeProtectedPhone(value: string): string | null {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return null;
+  }
+  if (normalized.length < 10 || normalized.length > 1000) {
+    throw new ManagementCompanyManagementError("INVALID_PROTECTED_PHONE");
+  }
+  return normalized;
+}
+
 function normalizeReason(value: string): string {
   const reason = value.trim();
   if (reason.length < 3 || reason.length > 500) {
@@ -124,31 +202,60 @@ export class ManagementCompanyManagementService {
   constructor(private readonly repository: ManagementCompanyManagementRepository) {}
 
   async create(input: {
+    address: string;
     actor: ManagementCompanyActor;
     businessNumber: string;
+    contactEmail: string;
+    contactName: string;
+    contactPhoneEncrypted: string;
     name: string;
+    operationsManagerEmail: string;
+    operationsManagerName: string;
+    operationsManagerPhoneEncrypted: string;
+    representativePhoneEncrypted: string;
     reason: string;
     requestId: string;
-    tenantId: string;
   }): Promise<ManagementCompanyCommandResult> {
-    assertUuid(input.tenantId, "INVALID_TENANT_ID");
-    authorizeActor(input.actor, "management-company:create", input.tenantId);
+    authorizeActor(input.actor, "management-company:create", "platform-management-company-create");
     assertUuid(input.requestId, "INVALID_REQUEST_ID");
     return this.repository.create({
+      address: normalizeOptionalText(input.address, "INVALID_ADDRESS", 2, 300),
       businessNumber: normalizeBusinessNumber(input.businessNumber),
+      contactEmail: normalizeOptionalEmail(input.contactEmail, "INVALID_CONTACT_EMAIL"),
+      contactName: normalizeOptionalName(input.contactName, "INVALID_CONTACT_NAME"),
+      contactPhoneEncrypted: normalizeProtectedPhone(input.contactPhoneEncrypted),
       name: normalizeName(input.name),
+      operationsManagerEmail: normalizeOptionalEmail(
+        input.operationsManagerEmail,
+        "INVALID_OPERATIONS_MANAGER_EMAIL",
+      ),
+      operationsManagerName: normalizeOptionalName(
+        input.operationsManagerName,
+        "INVALID_OPERATIONS_MANAGER_NAME",
+      ),
+      operationsManagerPhoneEncrypted: normalizeProtectedPhone(
+        input.operationsManagerPhoneEncrypted,
+      ),
+      representativePhoneEncrypted: normalizeProtectedPhone(input.representativePhoneEncrypted),
       reason: normalizeReason(input.reason),
       requestId: input.requestId,
-      tenantId: input.tenantId,
     });
   }
 
   async update(input: {
+    address: string;
     actor: ManagementCompanyActor;
     businessNumber: string;
     companyId: string;
+    contactEmail: string;
+    contactName: string;
+    contactPhoneEncrypted: string;
     expectedVersion: number;
     name: string;
+    operationsManagerEmail: string;
+    operationsManagerName: string;
+    operationsManagerPhoneEncrypted: string;
+    representativePhoneEncrypted: string;
     reason: string;
     requestId: string;
     tenantId: string;
@@ -159,10 +266,26 @@ export class ManagementCompanyManagementService {
     assertUuid(input.requestId, "INVALID_REQUEST_ID");
     assertVersion(input.expectedVersion);
     return this.repository.update({
+      address: normalizeOptionalText(input.address, "INVALID_ADDRESS", 2, 300),
       businessNumber: normalizeBusinessNumber(input.businessNumber),
       companyId: input.companyId,
+      contactEmail: normalizeOptionalEmail(input.contactEmail, "INVALID_CONTACT_EMAIL"),
+      contactName: normalizeOptionalName(input.contactName, "INVALID_CONTACT_NAME"),
+      contactPhoneEncrypted: normalizeProtectedPhone(input.contactPhoneEncrypted),
       expectedVersion: input.expectedVersion,
       name: normalizeName(input.name),
+      operationsManagerEmail: normalizeOptionalEmail(
+        input.operationsManagerEmail,
+        "INVALID_OPERATIONS_MANAGER_EMAIL",
+      ),
+      operationsManagerName: normalizeOptionalName(
+        input.operationsManagerName,
+        "INVALID_OPERATIONS_MANAGER_NAME",
+      ),
+      operationsManagerPhoneEncrypted: normalizeProtectedPhone(
+        input.operationsManagerPhoneEncrypted,
+      ),
+      representativePhoneEncrypted: normalizeProtectedPhone(input.representativePhoneEncrypted),
       reason: normalizeReason(input.reason),
       requestId: input.requestId,
     });

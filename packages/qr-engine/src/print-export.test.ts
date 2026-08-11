@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { unzipSync } from "fflate";
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
-import { buildPrintExportBundle } from "./print-export.js";
+import { buildPrintExportBundle, buildSvgExportBundle } from "./print-export.js";
 import { renderSticker } from "./render.js";
 
 describe("print export bundle", () => {
@@ -47,4 +47,25 @@ describe("print export bundle", () => {
       ),
     ).toBe(true);
   }, 20_000);
+
+  it("builds an SVG-only bundle without activation or token fields", () => {
+    const bundle = buildSvgExportBundle("BATCH_SVG_001", [
+      {
+        humanCode: "0123456789",
+        ordinal: 1,
+        printSvg: '<svg viewBox="0 0 10 10"><rect width="10" height="10"/></svg>',
+        renderChecksumSha256: "a".repeat(64),
+      },
+    ]);
+    const entries = unzipSync(bundle.bytes);
+    expect(bundle.filename).toBe("BATCH_SVG_001-svg-bundle.zip");
+    expect(Object.keys(entries).sort()).toEqual([
+      "BATCH_SVG_001-svg-checksums.json",
+      "svg/00001.svg",
+    ]);
+    const manifest = new TextDecoder().decode(entries["BATCH_SVG_001-svg-checksums.json"]);
+    expect(manifest).toContain("svg/00001.svg");
+    expect(manifest).not.toMatch(/activation|ciphertext|publicToken/iu);
+    expect(new TextDecoder().decode(entries["svg/00001.svg"])).toContain("<svg");
+  });
 });

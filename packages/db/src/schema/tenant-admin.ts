@@ -279,6 +279,7 @@ export const tenants = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     status: tenantStatus("status").default("ACTIVE").notNull(),
+    isTestFixture: boolean("is_test_fixture").default(false).notNull(),
     settings: jsonb("settings").default(sql`'{}'::jsonb`).notNull(),
     ...commonColumns(),
     deletedAt: timestamp("deleted_at", { mode: "date", withTimezone: true }),
@@ -300,13 +301,21 @@ export const managementCompanies = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     tenantId: uuid("tenant_id").notNull(),
     name: text("name").notNull(),
+    managementCode: text("management_code"),
+    address: text("address"),
     businessNumber: text("business_number"),
     status: organizationStatus("status").default("ACTIVE").notNull(),
+    representativePhoneEncrypted: text("representative_phone_encrypted"),
     contactName: text("contact_name"),
     contactPhoneEncrypted: text("contact_phone_encrypted"),
+    contactEmail: text("contact_email"),
     billingEmail: text("billing_email"),
+    operationsManagerName: text("operations_manager_name"),
+    operationsManagerPhoneEncrypted: text("operations_manager_phone_encrypted"),
+    operationsManagerEmail: text("operations_manager_email"),
     /** Taptolk operates this company's sites directly. Never infer this from the name. */
     isPlatformDirect: boolean("is_platform_direct").default(false).notNull(),
+    isTestFixture: boolean("is_test_fixture").default(false).notNull(),
     ...commonColumns(),
     deletedAt: timestamp("deleted_at", { mode: "date", withTimezone: true }),
   },
@@ -318,10 +327,24 @@ export const managementCompanies = pgTable(
     }).onDelete("restrict"),
     unique("uq_management_companies_tenant_id").on(table.tenantId, table.id),
     index("idx_management_companies_tenant_status").on(table.tenantId, table.status),
+    uniqueIndex("uq_management_companies_active_management_code")
+      .on(table.tenantId, sql`lower(${table.managementCode})`)
+      .where(sql`${table.managementCode} is not null and ${table.deletedAt} is null`),
     uniqueIndex("uq_management_companies_active_business_number")
       .on(table.tenantId, table.businessNumber)
       .where(sql`${table.businessNumber} is not null and ${table.deletedAt} is null`),
+    index("idx_management_companies_fixture_status")
+      .on(table.isTestFixture, table.status, table.createdAt)
+      .where(sql`${table.deletedAt} is null`),
     check("chk_management_companies_name", sql`length(trim(${table.name})) between 1 and 200`),
+    check(
+      "chk_management_companies_management_code",
+      sql`${table.managementCode} is null or length(trim(${table.managementCode})) between 2 and 64`,
+    ),
+    check(
+      "chk_management_companies_address",
+      sql`${table.address} is null or length(trim(${table.address})) between 2 and 300`,
+    ),
     check(
       "chk_management_companies_business_number",
       sql`${table.businessNumber} is null or ${table.businessNumber} ~ '^[0-9]{10}$'`,
@@ -336,12 +359,14 @@ export const sites = pgTable(
     tenantId: uuid("tenant_id").notNull(),
     managementCompanyId: uuid("management_company_id").notNull(),
     name: text("name").notNull(),
+    managementCode: text("management_code"),
     type: siteType("site_type").default("APARTMENT").notNull(),
     address: text("address"),
     timezone: text("timezone").default("Asia/Seoul").notNull(),
     contractVehicleLimit: integer("contract_vehicle_limit").default(0).notNull(),
     status: organizationStatus("status").default("ACTIVE").notNull(),
     escalationPhoneEncrypted: text("escalation_phone_encrypted"),
+    isTestFixture: boolean("is_test_fixture").default(false).notNull(),
     settings: jsonb("settings").default(sql`'{}'::jsonb`).notNull(),
     ...commonColumns(),
     deletedAt: timestamp("deleted_at", { mode: "date", withTimezone: true }),
@@ -357,9 +382,19 @@ export const sites = pgTable(
     uniqueIndex("uq_sites_active_management_name")
       .on(table.managementCompanyId, sql`lower(${table.name})`)
       .where(sql`${table.deletedAt} is null`),
+    uniqueIndex("uq_sites_active_management_code")
+      .on(table.managementCompanyId, sql`lower(${table.managementCode})`)
+      .where(sql`${table.managementCode} is not null and ${table.deletedAt} is null`),
     index("idx_sites_tenant_status").on(table.tenantId, table.status),
     index("idx_sites_management_status").on(table.managementCompanyId, table.status),
+    index("idx_sites_fixture_management_status")
+      .on(table.isTestFixture, table.managementCompanyId, table.status)
+      .where(sql`${table.deletedAt} is null`),
     check("chk_sites_name", sql`length(trim(${table.name})) between 1 and 200`),
+    check(
+      "chk_sites_management_code",
+      sql`${table.managementCode} is null or length(trim(${table.managementCode})) between 2 and 64`,
+    ),
     check("chk_sites_vehicle_limit", sql`${table.contractVehicleLimit} >= 0`),
     check("chk_sites_settings_object", sql`jsonb_typeof(${table.settings}) = 'object'`),
   ],
@@ -437,6 +472,7 @@ export const adminMemberships = pgTable(
     status: adminMembershipStatus("status").default("INVITED").notNull(),
     invitedBy: uuid("invited_by").references(() => authUsers.id, { onDelete: "set null" }),
     acceptedAt: timestamp("accepted_at", { mode: "date", withTimezone: true }),
+    invitationExpiresAt: timestamp("invitation_expires_at", { mode: "date", withTimezone: true }),
     ...commonColumns(),
   },
   (table) => [
@@ -778,6 +814,7 @@ export const qrBatches = pgTable(
     cancelledBy: uuid("cancelled_by").references(() => authUsers.id, { onDelete: "restrict" }),
     cancelledAt: timestamp("cancelled_at", { mode: "date", withTimezone: true }),
     idempotencyKey: uuid("idempotency_key").notNull().unique(),
+    requestMode: text("request_mode").default("STANDARD").notNull(),
     ...commonColumns(),
   },
   (table) => [
@@ -812,6 +849,74 @@ export const qrBatches = pgTable(
     index("idx_qr_batches_site_status_created").on(table.siteId, table.status, table.createdAt),
     check("chk_qr_batches_requested_quantity", sql`${table.requestedQuantity} between 1 and 100`),
     check("chk_qr_batches_purpose", sql`length(trim(${table.purpose})) between 3 and 200`),
+    check("chk_qr_batches_request_mode", sql`${table.requestMode} in ('STANDARD', 'ADMIN_DIRECT')`),
+  ],
+);
+
+export const qrBatchReceipts = pgTable(
+  "qr_batch_receipts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    batchId: uuid("batch_id").notNull(),
+    receivedQuantity: integer("received_quantity").notNull(),
+    reason: text("reason").notNull(),
+    requestId: uuid("request_id").notNull(),
+    receivedBy: uuid("received_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId, table.batchId],
+      foreignColumns: [
+        qrBatches.tenantId,
+        qrBatches.managementCompanyId,
+        qrBatches.siteId,
+        qrBatches.id,
+      ],
+      name: "fk_qr_batch_receipts_batch",
+    }).onDelete("restrict"),
+    unique("uq_qr_batch_receipts_request").on(table.tenantId, table.requestId),
+    index("idx_qr_batch_receipts_batch_created").on(
+      table.tenantId,
+      table.siteId,
+      table.batchId,
+      table.createdAt,
+    ),
+    check("chk_qr_batch_receipts_quantity", sql`${table.receivedQuantity} > 0`),
+    check("chk_qr_batch_receipts_reason", sql`length(trim(${table.reason})) between 3 and 500`),
+  ],
+);
+
+export const qrDirectGenerationRequests = pgTable(
+  "qr_direct_generation_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    managementCompanyId: uuid("management_company_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    idempotencyKey: uuid("idempotency_key").notNull().unique(),
+    requestedQuantity: integer("requested_quantity").notNull(),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "restrict" }),
+    result: jsonb("result").notNull(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.managementCompanyId, table.siteId],
+      foreignColumns: [sites.tenantId, sites.managementCompanyId, sites.id],
+      name: "fk_qr_direct_generation_requests_site",
+    }).onDelete("restrict"),
+    check(
+      "chk_qr_direct_generation_requests_quantity",
+      sql`${table.requestedQuantity} between 1 and 10000`,
+    ),
   ],
 );
 
@@ -1419,6 +1524,37 @@ export const vehicleOwners = pgTable(
     index("idx_vehicle_owners_owner_active")
       .on(table.ownerId, table.startedAt)
       .where(sql`${table.endedAt} is null`),
+  ],
+);
+
+export const vehicleSiteContactLocations = pgTable(
+  "vehicle_site_contact_locations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    siteId: uuid("site_id").notNull(),
+    vehicleId: uuid("vehicle_id").notNull(),
+    locationLabel: text("location_label").notNull(),
+    ...commonColumns(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.siteId, table.vehicleId],
+      foreignColumns: [vehicles.tenantId, vehicles.siteId, vehicles.id],
+      name: "fk_vehicle_site_contact_locations_vehicle",
+    }).onDelete("restrict"),
+    unique("uq_vehicle_site_contact_locations_vehicle").on(table.tenantId, table.vehicleId),
+    index("idx_vehicle_site_contact_locations_site_vehicle").on(
+      table.tenantId,
+      table.siteId,
+      table.vehicleId,
+    ),
+    check(
+      "chk_vehicle_site_contact_locations_label",
+      sql`length(trim(${table.locationLabel})) between 2 and 160
+        and ${table.locationLabel} !~* '[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}'
+        and regexp_replace(${table.locationLabel}, '[^0-9]', '', 'g') !~ '^0[0-9]{8,10}$'`,
+    ),
   ],
 );
 

@@ -6,12 +6,19 @@ export {
   AdminAccountApprovalService,
   type AdminApprovalQueue,
   type AdminApprovalScopeCatalog,
+  type AdminApprovalSort,
   type AdminIdentityProvider,
   type AdminScopeOption,
   type PendingAdminAccount,
 } from "./admin-account-approval-service.js";
 export {
+  AdminAccountInvitationError,
+  type AdminAccountInvitationRepository,
+  AdminAccountInvitationService,
+} from "./admin-account-invitation-service.js";
+export {
   type AdminDirectoryActor,
+  type AdminDirectoryChangeAction,
   type AdminDirectoryItem,
   type AdminDirectoryMembershipStatus,
   type AdminDirectoryRepository,
@@ -94,6 +101,25 @@ export {
   PrivacyCleanupService,
 } from "./operations-hardening-service.js";
 export {
+  assertOperationsWorkQueueMutation,
+  type OperationsWorkItem,
+  type OperationsWorkItemAction,
+  type OperationsWorkItemKind,
+  type OperationsWorkQueueActor,
+  type OperationsWorkQueueAssignmentMutation,
+  type OperationsWorkQueueModel,
+  type OperationsWorkQueueMutation,
+  type OperationsWorkQueueMutationRequest,
+  type OperationsWorkQueuePriority,
+  type OperationsWorkQueueReadRequest,
+  type OperationsWorkQueueRepository,
+  type OperationsWorkQueueScope,
+  OperationsWorkQueueService,
+  type OperationsWorkQueueSource,
+  type OperationsWorkQueueState,
+  type OperationsWorkQueueStateMutation,
+} from "./operations-work-queue-contract.js";
+export {
   type OwnerActivationCompletion,
   type OwnerActivationHashPurpose,
   type OwnerActivationInspection,
@@ -139,6 +165,16 @@ export {
   type QrBatchProgressRepository,
   QrBatchProgressService,
 } from "./qr-batch-progress-service.js";
+export {
+  QR_DIRECT_GENERATION_QUANTITY_MAX,
+  QR_DIRECT_GENERATION_QUANTITY_MIN,
+  type QrDirectGenerationActor,
+  type QrDirectGenerationBatchResult,
+  QrDirectGenerationError,
+  type QrDirectGenerationRepository,
+  type QrDirectGenerationResult,
+  QrDirectGenerationService,
+} from "./qr-direct-generation-service.js";
 export {
   QR_GENERATION_JOB_STATUSES,
   QR_GENERATION_MAX_EXECUTION_ATTEMPTS,
@@ -239,11 +275,28 @@ export {
   type StickerTemplateCode,
 } from "./qr-inventory-sample-service.js";
 export {
+  type QrOperationsActor,
+  type QrOperationsBatch,
+  type QrOperationsCompany,
+  type QrOperationsReadModel,
+  type QrOperationsReadModelRepository,
+  QrOperationsReadModelService,
+  type QrOperationsSite,
+  type QrOperationsTotals,
+} from "./qr-operations-read-model-service.js";
+export {
   type QrSampleArtifact,
   type QrSampleArtifactActor,
   type QrSampleArtifactRepository,
   QrSampleArtifactService,
 } from "./qr-sample-artifact-service.js";
+export {
+  type QrSvgBundleActor,
+  type QrSvgBundleArtifact,
+  QrSvgBundleError,
+  type QrSvgBundleRepository,
+  QrSvgBundleService,
+} from "./qr-svg-bundle-service.js";
 export {
   type RevenueActor,
   type RevenueCommandCenterModel,
@@ -292,6 +345,7 @@ export {
   type SiteType,
 } from "./site-service.js";
 export {
+  type SiteEscalationQueueItem,
   type SiteWorkspace,
   type SiteWorkspaceBatch,
   type SiteWorkspaceRepository,

@@ -140,6 +140,26 @@ describe("OwnerActivationService", () => {
     });
   });
 
+  it("marks provider delivery unavailable without returning contact data", async () => {
+    const { provider, repository, service } = createHarness();
+    vi.mocked(provider.send).mockRejectedValueOnce(new Error("provider unavailable"));
+
+    await expect(
+      service.requestOtp({
+        deviceHash: "d".repeat(64),
+        locale: "ko",
+        networkFingerprint: "1",
+        phone: "010-1234-5678",
+        publicToken: "public_token_1234567890",
+      }),
+    ).rejects.toMatchObject({ code: "OTP_DELIVERY_FAILED" });
+
+    expect(repository.markOtpDelivery).toHaveBeenCalledWith({
+      challengeId,
+      status: "FAILED",
+    });
+  });
+
   it("returns a raw proof only after the repository verifies the hashed OTP", async () => {
     const { repository, service } = createHarness();
     await expect(
@@ -172,6 +192,7 @@ describe("OwnerActivationService", () => {
         privacyVersion: "PRIVACY_V1",
         proof: "proof_12345678901234567890",
         publicToken: "public_token_1234567890",
+        siteContactLocation: "101동 1001호",
         termsVersion: "TERMS_V1",
       }),
     ).resolves.toEqual(
@@ -183,8 +204,25 @@ describe("OwnerActivationService", () => {
     expect(repository.complete).toHaveBeenCalledWith(
       expect.objectContaining({
         sessionHash: expect.any(String),
+        siteContactLocation: "101동 1001호",
       }),
     );
+  });
+
+  it("rejects site contact locations that look like direct personal contact data", async () => {
+    const { service } = createHarness();
+    await expect(
+      service.complete({
+        consentAccepted: true,
+        deviceHash: "d".repeat(64),
+        plate: "12가 3456",
+        privacyVersion: "PRIVACY_V1",
+        proof: "proof_12345678901234567890",
+        publicToken: "public_token_1234567890",
+        siteContactLocation: "010-1234-5678",
+        termsVersion: "TERMS_V1",
+      }),
+    ).rejects.toEqual(new OwnerActivationServiceError("INVALID_SECRET"));
   });
 
   it("requests reclaim OTP with hashed plate lookup and protected phone only", async () => {
