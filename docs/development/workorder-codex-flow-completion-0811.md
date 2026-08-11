@@ -3,7 +3,8 @@
 > 작성: Claude (리뷰 레인) · 2026-08-11
 > 수신: Codex (구현 레인)
 > 기준 커밋: `989e59f` (fix: accept SOLAPI API key format) · 브랜치 `codex/phase-1-foundation`
-> 상태: **갭 A 즉시 착수 가능 / 갭 B 정본 결정 대기 / 갭 C 즉시 착수 가능**
+> 상태: **갭 A 즉시 착수 가능 / 갭 B 정본 결정 대기 / 갭 C 즉시 착수 가능(인증 의존 값만 나중)**
+> 개정: 2026-08-11 — 운영자 확정에 따라 §3을 **SMS·알림톡 이중 채널 동시 구현**으로 전면 교체
 > 선행 문서: `AGENTS.md` · `docs/design-canon/CONTRACTS.md` · `docs/design-canon/CONSOLE_DESIGN_SYSTEM_V2.md`
 > · `docs/development/workorder-kakao-alimtalk-live-provider.md` · `docs/handoff-0728-1414.md`
 
@@ -138,61 +139,132 @@
 
 ---
 
-## 3. 갭 C (P1) — 카카오 알림톡: "준비만" 상태를 안전하게 고정한다
+## 3. 갭 C (P1) — SMS · 카카오 알림톡 **이중 채널을 지금 둘 다 구현한다**
 
 ### 3.1 사업 상황 (운영자 확정, 2026-08-11)
 
-**카카오 비즈니스 인증을 현재 받을 수 없다. 준비만 해두고 서비스 오픈 후 인증을 진행한다.**
-→ 지금 필요한 것은 카카오 **구현**이 아니라, 인증 전까지 **오배선으로 서비스가 죽지 않게
-고정**하는 일이다.
+- 카카오 비즈니스 인증은 **지금 받을 수 없고, 서비스 오픈 후 진행**한다.
+- 그러나 **두 채널을 지금 모두 개발해 둔다.** 오픈 후 실제 운영 데이터를 보고
+  **①둘 다 쓸지 ②알림톡만 쓸지**를 결정한다.
+- 따라서 목표는 "카카오 보류"가 아니라 **채널 전환이 코드 배포 없이 설정으로 가능한 상태**다.
 
-### 3.2 확인된 위험
+### 3.2 지금 구현 가능한 근거 (확인 완료)
 
-- `packages/config/src/env.server.ts:37`의 `OWNER_NOTIFICATION_PROVIDER` enum은
-  `["mock", "solapi-sms", "kakao-alimtalk"]`을 허용한다.
-- 그러나 `kakao-alimtalk` **구현체는 존재하지 않는다**
-  (`OwnerNotificationProvider` 구현체는 Solapi · Staging · Unavailable 3개뿐).
-- production 검증은 `mock`만 차단하고 **`kakao-alimtalk`은 통과시키며, 필수 env도
-  요구하지 않는다.**
-- 결과: 누군가 프로덕션에서 `kakao-alimtalk`으로 설정하면 **배포·기동은 성공하고
-  모든 차주 알림이 `AUTH_ERROR`로 조용히 전멸한다.** 인증 대기 기간이 길수록 위험하다.
+- 이미 설치된 **`solapi@5.5.1` SDK가 알림톡을 지원**한다.
+  `sendOne`의 `kakaoOptions`에 `pfId` · `templateId` · `variables` · `disableSms` · `buttons`.
+- **SMS와 알림톡의 수탁자가 SOLAPI로 동일**하다 → 수탁자가 늘지 않는다.
+  (기존 카카오 워크오더 §3.4가 우려한 "SMS 사업자 추가" 문제는 해당 벤더 구성에서는 발생하지 않는다.
+  다만 **처리방침에 알림톡 발송을 명시**하는 일은 그대로 필요하다.)
+- `kakaoOptions.disableSms`가 **알림톡 실패 시 SMS 대체발송 스위치**다.
+  → "둘 다 쓸지 / 알림톡만 쓸지"를 **런타임 설정으로 바꿀 수 있다.**
+- DB 준비 완료: `notification_channel` enum에 `KAKAO_ALIMTALK` 존재
+  (`20260721040000_kakao_alimtalk_notification_channel.sql`).
+- **인증에 묶여 지금 채울 수 없는 값은 `pfId`(발신프로필 키)와 `templateId`(승인 템플릿 ID) 둘뿐이다.**
+  이 둘은 서버 전용 env로 주입하고, **없으면 알림톡 경로가 fail-closed** 되게 만든다.
+  → 값 없이도 **어댑터·정책·테스트·마이그레이션을 전부 지금 완성할 수 있다.**
 
-### 3.3 구현 범위
+### 3.3 현재 상태와 위험
 
-**C-1. 미구현 provider의 프로덕션 선택을 fail-closed로 차단 (필수)**
+- `packages/config/src/env.server.ts:37`의 `OWNER_NOTIFICATION_PROVIDER`는
+  `["mock", "solapi-sms", "kakao-alimtalk"]`을 허용하지만 **`kakao-alimtalk` 구현체가 없다**
+  (`OwnerNotificationProvider` 구현체는 Solapi(SMS) · Staging · Unavailable 3개뿐).
+- production 검증은 `mock`만 차단하고 `kakao-alimtalk`은 **필수 env 없이 통과시킨다.**
+  → 지금 프로덕션에서 `kakao-alimtalk`을 고르면 기동은 성공하고
+  **모든 차주 알림이 `AUTH_ERROR`로 조용히 전멸한다.** C-4가 이것을 막는다.
+- `claim_notification_deliveries`는 **단일 채널만 claim** 한다.
+  현재 `delivery.channel = 'SMS'`(`20260810120000`이 되돌려 놓은 상태).
+  → **두 채널을 동시에 운영하려면 claim이 두 채널을 모두 집어야 한다**(C-3).
 
-- `packages/config/src/env.server.ts`의 production superRefine에
-  `kakao-alimtalk` 분기를 추가한다.
-- 구현체와 필수 설정이 갖춰지기 전에는 **프로덕션에서 선택 불가**로 명시 실패시킨다.
-- **없는 값을 만들어 넣지 않는다.** 딜러 키·템플릿 ID·발신프로필 키를 추측하지 않는다.
-- 실패 메시지에 secret을 담지 않는다.
+### 3.4 구현 범위
 
-**C-2. 카피와 현실 정합 (결정 요청 포함)**
+**C-1. 카카오 알림톡 어댑터 구현 (지금 착수)**
+
+- `apps/web/notification-reply/`에 **별도 클래스**로 추가한다.
+  `StagingOwnerNotificationProvider`나 `SolapiSmsNotificationProvider`를 개조하지 않는다.
+- `OwnerNotificationProvider` **Port를 바꾸지 않는다.**
+  `OwnerContactNotification.variables`는 `reasonCode`·`responseUrl` **2개로 유지**한다
+  (이 타입 제약이 자유입력 본문·차량번호·토큰의 유출을 구조적으로 막는다.
+  기존 카카오 워크오더 §1.1과 동일 — **넓히지 말 것**).
+- `solapi` SDK의 `sendOne({ to, from, kakaoOptions: { pfId, templateId, variables, disableSms } })`
+  를 사용한다. SMS 어댑터와 **같은 벤더·같은 SDK**이므로 인증·오류 분류 코드를 재사용한다.
+- 템플릿 변수 매핑은 **타입 있는 설정 모듈**에 둔다. 라우트·컴포넌트 하드코딩 금지.
+- locale(`ko`/`en`)별 승인 템플릿을 선택하고, **매핑이 없는 locale은 fail-closed**.
+- `pfId`·`templateId`가 **없으면 알림톡 provider가 선택되지 않고 fail-closed** 되게 한다.
+  **값을 추측하거나 임시값을 넣지 않는다.**
+
+**C-2. 채널 선택 정책 모듈 (오픈 후 판단을 설정으로 흡수)**
+
+- **오픈 후 결정을 코드 배포 없이 바꿀 수 있어야 한다.** 다음 3가지 운영 모드를
+  타입 있는 정책으로 정의한다.
+
+  | 모드 | 동작 | 용도 |
+  |---|---|---|
+  | `SMS_ONLY` | SMS만 발송 | 인증 완료 전 현재 상태 |
+  | `ALIMTALK_WITH_SMS_FALLBACK` | 알림톡 발송, 실패 시 SMS 대체 | 오픈 직후 안전 운영 |
+  | `ALIMTALK_ONLY` | 알림톡만 발송 | 비용·도달률 판단 후 최종 |
+
+- 대체발송은 **가능하면 `kakaoOptions.disableSms`로 SOLAPI에 위임**한다
+  (`disableSms: false` = 대체발송 허용). 애플리케이션에서 2회 발송하는 구조를
+  새로 만들지 않는다. SDK 동작이 요구와 다르면 **추측하지 말고 되돌려 보고**한다.
+- 모드는 **서버 전용 환경변수 + 타입 있는 정책 모듈**로 읽는다.
+  기본값은 `SMS_ONLY`(현재 운영 상태)로 둔다.
+- 임계값·재시도·rate limit을 **새로 만들지 않는다.** 기존
+  `isRetryableNotificationProviderError` / `getNotificationRetryDelaySeconds` 재사용.
+
+**C-3. claim이 두 채널을 모두 집도록 새 마이그레이션 (필수)**
+
+- **기존 migration 수정 금지 — 새 파일만 만든다.**
+- `claim_notification_deliveries`가 `OWNER_CONTACT` 목적에 대해
+  `SMS`와 `KAKAO_ALIMTALK`을 **둘 다 claim** 하도록 갱신한다.
+- `20260810120000_sms_owner_notification_provider.sql`이 되돌려 놓은 SMS 복귀를
+  **역행시키지 않는다.** 단일 채널 고정을 이중 채널 허용으로 넓히는 방향이다.
+- 채널별 발송 결과·실패 사유가 구분돼 기록되는지 확인한다(운영 판단의 근거 데이터).
+- `20260721041000`이 만들었다가 `20260810120000`이 제거한
+  **강제 채널 변환 트리거를 되살리지 않는다.** 채널은 정책이 정한다.
+- pgTAP에 채널별 claim·권한 assertion을 추가한다.
+
+**C-4. 미구성 provider의 프로덕션 선택을 fail-closed로 차단**
+
+- production superRefine에 `kakao-alimtalk` 분기를 추가해,
+  `pfId`·`templateId`·SOLAPI 자격증명이 없으면 **기동을 명시적으로 실패**시킨다.
+- 실패 메시지에 secret 값을 담지 않는다.
+
+**C-5. 카피 — 채널명에 묶이지 않게 (결정 요청 포함)**
 
 - `apps/web/content/messages.ts:757`(KO) / `:1667`(EN)이 지금
-  **"카카오 알림톡으로 Taptolk 링크를 받습니다"** 라고 단정한다.
-  현재 실제 채널은 **SMS**다. 사용자에게 사실과 다른 약속이 나가고 있다.
-- 카피 **문구 계약은 디자인 레인 소유**다. Codex는 KO/EN 문구안을 제시하고
-  승인 후 `apps/web/content/`에 반영한다. 임의 확정 금지.
-- KO/EN을 **함께** 바꾼다(둘 중 하나만 바꾸면 WCJ 실패).
-- 인증 완료 후 카카오로 전환할 때 다시 바꿀 것이므로, 문구를 채널명에 덜 묶이게
-  쓰는 안도 함께 제시한다.
+  **"카카오 알림톡으로 Taptolk 링크를 받습니다"** 라고 단정하는데, 현재 실제 채널은 SMS다.
+- 오픈 후 채널이 바뀔 수 있으므로 **채널명을 단정하지 않는 문구**를 우선안으로 제시한다
+  (예: "문자 또는 카카오 알림톡으로" / 채널 언급 없이 "링크를 받습니다").
+- 카피 **문구 계약은 디자인 레인 소유**다. Codex는 KO/EN 안을 제시하고 승인 후 반영한다.
+- KO/EN을 **함께** 바꾼다(한쪽만 바꾸면 WCJ 실패).
 
-**C-3. 기존 카카오 워크오더는 그대로 유효 (중복 작성 금지)**
+**C-6. 기존 카카오 워크오더와의 관계**
 
-- `docs/development/workorder-kakao-alimtalk-live-provider.md`가 이미 상세하다
-  (Port 계약, 복호화 경계, 재시도 매핑, 처리방침 갱신, 제품 결정 4건).
-- **인증·계약 확보 후 그 문서로 착수한다.** 본 문서는 그 앞단의 안전 고정만 다룬다.
-- 그 문서 §4(SERVICE stage guard 등록 누락)는 **이미 해소됐다**(surfaces 2건 등록).
-  해당 절은 완료 처리로 표시만 하고 다시 작업하지 않는다.
+- `docs/development/workorder-kakao-alimtalk-live-provider.md`는 **여전히 정본**이다.
+  특히 **§2 복호화 경계(전화번호 평문 취급 지점)** 를 그대로 지킨다.
+- 본 문서와 충돌 시 다음만 갱신된 것으로 본다:
+  - 상태: "착수 불가" → **어댑터·정책·마이그레이션·테스트는 지금 착수**
+    (인증 의존 값 `pfId`·`templateId`와 실발송 검증만 게이트로 남김)
+  - §3.4 대체발송 우려: SMS·알림톡 **동일 수탁자(SOLAPI)** 이므로 수탁자 증가 없음
+  - §4 SERVICE stage guard: **이미 해소**(surfaces 2건 등록) — 재작업 금지
 
-### 3.4 수용 기준
+### 3.5 인증 확보 후에만 가능한 것 (외부 게이트)
 
-- [ ] 프로덕션에서 미구현 provider 선택 시 기동이 **명시적으로 실패**함을 테스트로 증명
-- [ ] `solapi-sms` 경로 회귀 없음(기존 테스트 유지)
+- `pfId`(발신프로필 키) · 승인된 `templateId` · 승인된 KO/EN 템플릿 문구
+- 실제 발송 검증(운영자가 지정한 테스트 수신번호로만, **실번호·영수증 원문 기록 금지**)
+- 처리방침 위탁 조항에 **알림톡 발송** 명시 → 갱신 전 프로덕션 알림톡 활성화 금지
+
+### 3.6 수용 기준
+
+- [ ] 알림톡 어댑터 구현, Port·`variables` 2필드 **무변경**
+- [ ] 채널 정책 3모드가 **설정으로 전환**되고 기본값 `SMS_ONLY`
+- [ ] 새 마이그레이션으로 claim이 `SMS`·`KAKAO_ALIMTALK`을 **둘 다** 집음(기존 파일 무수정)
+- [ ] `pfId`/`templateId` 미설정 시 알림톡 경로 fail-closed, 프로덕션 기동 실패 테스트
+- [ ] `solapi-sms` 기존 경로 회귀 없음(480 테스트 유지)
+- [ ] 복호화된 전화번호가 로그·오류·예외·재시도 payload·감사·메트릭에 **없음을 테스트로 증명**
+- [ ] SDK 요청 본문 자동 로깅 차단 확인 · `verify:secrets` PASS
 - [ ] 카피 KO/EN 동시 반영, `validate:wcj` PASS
-- [ ] `KAKAO_ALIMTALK` enum·DB 채널 복귀 마이그레이션 **무변경**
-- [ ] `.env.example`·문서·로그·테스트 fixture에 secret 값 없음
+- [ ] `.env.example`·문서·로그·fixture에 secret **값** 없음(키 이름만)
 
 ---
 
@@ -244,5 +316,9 @@ credential·전화번호·OTP·QR token·response token·secret은 Git·문서·
 ## 9. 권장 착수 순서
 
 1. **갭 A** — 시나리오 2 전체를 막고 있고, 파일럿 전 실SMS 검증의 전제다.
-2. **갭 C-1** — 짧고, 인증 대기 기간의 사고를 막는다.
-3. **갭 B** — 정본 결정 요청을 먼저 올리고, 회신 후 구현.
+2. **갭 C-4** — 짧다. 인증 대기 기간에 오설정으로 알림이 전멸하는 것을 먼저 막는다.
+3. **갭 C-1 ~ C-3** — 알림톡 어댑터 · 채널 정책 · claim 마이그레이션.
+   인증 값(`pfId`·`templateId`) 없이도 **여기까지 전부 완성**한다.
+   완료 시점에 "인증만 나오면 설정 한 줄로 알림톡 전환" 상태가 되어야 한다.
+4. **갭 C-5** — 카피 문구안 제시 → 디자인 레인 승인 → 반영.
+5. **갭 B** — 정본 결정 요청을 먼저 올리고, 회신 후 구현.
