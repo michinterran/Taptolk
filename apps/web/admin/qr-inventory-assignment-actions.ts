@@ -27,8 +27,11 @@ type ActionStatus =
   | "assetReplaced"
   | "assetRevoked"
   | "batchReceived"
+  | "batchReceiptRecorded"
   | "importCommitted"
   | "importValidated";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -46,6 +49,18 @@ function path(
   value: ActionError | ActionStatus,
 ): Route {
   return getLocalizedAdminPath(locale, `/qr-inventory?${kind}=${value}`) as Route;
+}
+
+function sitePath(
+  locale: AppLocale,
+  kind: "error" | "status",
+  value: ActionError | ActionStatus,
+  formData: FormData,
+): Route {
+  const siteId = readString(formData, "siteId");
+  return UUID_PATTERN.test(siteId)
+    ? (getLocalizedAdminPath(locale, `/sites/${siteId}?${kind}=${value}`) as Route)
+    : path(locale, kind, value);
 }
 
 function mapError(error: unknown): ActionError {
@@ -123,14 +138,23 @@ async function run(
   formData: FormData,
   status: ActionStatus,
   command: (context: Awaited<ReturnType<typeof commandContext>>) => Promise<unknown>,
+  destination: "inventory" | "site" = "inventory",
 ): Promise<never> {
   const locale = readLocale(formData);
   try {
     await command(await commandContext(locale));
   } catch (error) {
-    redirect(path(locale, "error", mapError(error)));
+    redirect(
+      destination === "site"
+        ? sitePath(locale, "error", mapError(error), formData)
+        : path(locale, "error", mapError(error)),
+    );
   }
-  redirect(path(locale, "status", status));
+  redirect(
+    destination === "site"
+      ? sitePath(locale, "status", status, formData)
+      : path(locale, "status", status),
+  );
 }
 
 export async function receiveQrBatch(formData: FormData): Promise<never> {
@@ -144,6 +168,25 @@ export async function receiveQrBatch(formData: FormData): Promise<never> {
       ...scope(formData),
     });
   });
+}
+
+export async function receiveQrBatchQuantity(formData: FormData): Promise<never> {
+  return run(
+    formData,
+    "batchReceiptRecorded",
+    async ({ actor, service }) => {
+      await service.receiveBatchQuantity({
+        actor,
+        auditRequestId: crypto.randomUUID(),
+        batchId: readString(formData, "batchId"),
+        expectedBatchVersion: Number(readString(formData, "expectedVersion")),
+        receivedQuantity: Number(readString(formData, "receivedQuantity")),
+        reason: readString(formData, "reason"),
+        ...scope(formData),
+      });
+    },
+    "site",
+  );
 }
 
 export async function assignQrAsset(formData: FormData): Promise<never> {

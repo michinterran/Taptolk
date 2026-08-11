@@ -23,7 +23,7 @@ export function AdminProfileView({
   return (
     <div className="operations-shell admin-profile-shell">
       <PageHeader description={copy.description} eyebrow={copy.eyebrow} lines={[copy.title]} />
-      <SideCard className="admin-profile-panel" title={copy.title}>
+      <SideCard className="admin-profile-panel">
         <aside>
           <IdentificationCard aria-hidden="true" size={32} />
           <dl>

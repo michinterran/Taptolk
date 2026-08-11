@@ -371,15 +371,24 @@ export function MeterBar({ className, max = 100, tone, value, ...props }: MeterB
 
 export type PaginationProps = HTMLAttributes<HTMLElement> & {
   next?: ReactNode;
+  pages?: ReactNode;
   previous?: ReactNode;
   summary: ReactNode;
 };
 
-export function Pagination({ className, next, previous, summary, ...props }: PaginationProps) {
+export function Pagination({
+  className,
+  next,
+  pages,
+  previous,
+  summary,
+  ...props
+}: PaginationProps) {
   return (
     <nav className={cx("tt-pagination", className)} {...props}>
       <div className="tt-pagination__controls">
         {previous}
+        {pages}
         {next}
       </div>
       <p className="tt-pagination__summary">{summary}</p>

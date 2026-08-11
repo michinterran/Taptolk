@@ -29,7 +29,9 @@ function mapError(error: { code?: string; message?: string }) {
     message.includes("NOT_COMMITTABLE") ||
     message.includes("NOT_REPLACEABLE") ||
     message.includes("COUNT_MISMATCH") ||
-    message.includes("NOT_DELIVERED")
+    message.includes("NOT_DELIVERED") ||
+    message.includes("NOT_RECEIVABLE") ||
+    message.includes("EXCEEDS_PENDING")
   ) {
     return new QrInventoryAssignmentRepositoryError("BLOCKED");
   }
@@ -85,7 +87,12 @@ function assertCommandResult(
 }
 
 function isBatchStatus(value: unknown): value is QrInventoryAssignmentBatchItem["status"] {
-  return value === "DELIVERED" || value === "DISTRIBUTING" || value === "COMPLETED";
+  return (
+    value === "DELIVERED" ||
+    value === "PARTIALLY_RECEIVED" ||
+    value === "DISTRIBUTING" ||
+    value === "COMPLETED"
+  );
 }
 
 function isAssetStatus(value: unknown): value is QrInventoryAssignmentAssetItem["status"] {
@@ -264,6 +271,18 @@ export function createSupabaseQrInventoryAssignmentRepository(
         await client.rpc("receive_qr_batch", {
           p_batch_id: input.batchId,
           p_expected_version: input.expectedBatchVersion,
+          p_reason: input.reason,
+          p_request_id: input.auditRequestId,
+        }),
+      );
+    },
+    async receiveBatchQuantity(input) {
+      return assertCommandResult(
+        "receive_batch_quantity",
+        await client.rpc("receive_qr_batch_quantity", {
+          p_batch_id: input.batchId,
+          p_expected_version: input.expectedBatchVersion,
+          p_received_quantity: input.receivedQuantity,
           p_reason: input.reason,
           p_request_id: input.auditRequestId,
         }),

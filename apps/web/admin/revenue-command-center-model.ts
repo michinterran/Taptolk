@@ -8,6 +8,17 @@ function number(row: Record<string, unknown>, key: string): number {
   return value;
 }
 
+function isFixtureCompany(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const row = value as Record<string, unknown>;
+  return (
+    row.is_test_fixture === true ||
+    (typeof row.name === "string" && /^Taptolk E2E\b/iu.test(row.name))
+  );
+}
+
 function company(value: unknown): RevenueCompanyItem {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("REVENUE_COMMAND_CENTER_UNAVAILABLE");
@@ -42,7 +53,7 @@ export function mapRevenueCommandCenterModel(value: unknown): RevenueCommandCent
   if (typeof row.fresh_at !== "string" || !Array.isArray(row.companies)) {
     throw new Error("REVENUE_COMMAND_CENTER_UNAVAILABLE");
   }
-  const companies = row.companies.map(company);
+  const companies = row.companies.filter((item) => !isFixtureCompany(item)).map(company);
   return {
     activeQrCount: companies.reduce((total, item) => total + item.activeQrCount, 0),
     companies,

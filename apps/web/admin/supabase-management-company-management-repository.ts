@@ -25,9 +25,13 @@ function readResult(value: unknown): ManagementCompanyCommandResult | null {
   if (!value || typeof value !== "object") {
     return null;
   }
-  const candidate = value as { id?: unknown; version?: unknown };
+  const candidate = value as { id?: unknown; tenantId?: unknown; version?: unknown };
   return typeof candidate.id === "string" && typeof candidate.version === "number"
-    ? { id: candidate.id, version: candidate.version }
+    ? {
+        id: candidate.id,
+        ...(typeof candidate.tenantId === "string" ? { tenantId: candidate.tenantId } : {}),
+        version: candidate.version,
+      }
     : null;
 }
 
@@ -88,10 +92,17 @@ export function createSupabaseManagementCompanyManagementRepository(
         "create",
         await client.rpc("create_management_company", {
           p_business_number: input.businessNumber,
+          p_address: input.address,
+          p_contact_email: input.contactEmail,
+          p_contact_name: input.contactName,
+          p_contact_phone_encrypted: input.contactPhoneEncrypted,
           p_name: input.name,
+          p_operations_manager_email: input.operationsManagerEmail,
+          p_operations_manager_name: input.operationsManagerName,
+          p_operations_manager_phone_encrypted: input.operationsManagerPhoneEncrypted,
           p_reason: input.reason,
+          p_representative_phone_encrypted: input.representativePhoneEncrypted,
           p_request_id: input.requestId,
-          p_tenant_id: input.tenantId,
         }),
       );
     },
@@ -100,10 +111,18 @@ export function createSupabaseManagementCompanyManagementRepository(
         "update",
         await client.rpc("update_management_company", {
           p_business_number: input.businessNumber,
+          p_address: input.address,
           p_company_id: input.companyId,
+          p_contact_email: input.contactEmail,
+          p_contact_name: input.contactName,
+          p_contact_phone_encrypted: input.contactPhoneEncrypted,
           p_expected_version: input.expectedVersion,
           p_name: input.name,
+          p_operations_manager_email: input.operationsManagerEmail,
+          p_operations_manager_name: input.operationsManagerName,
+          p_operations_manager_phone_encrypted: input.operationsManagerPhoneEncrypted,
           p_reason: input.reason,
+          p_representative_phone_encrypted: input.representativePhoneEncrypted,
           p_request_id: input.requestId,
         }),
       );

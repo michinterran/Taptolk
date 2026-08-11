@@ -159,10 +159,50 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
     return { status: "CONFIGURATION_MISSING" };
   }
 
-  const claimsResult = await client.auth.getClaims();
-  const claims = claimsResult.data?.claims;
-  const subject = claims?.sub;
-  if (claimsResult.error || typeof subject !== "string") {
+  let subject: string | undefined;
+  let email: string | null = null;
+  let mfaLevel: "aal1" | "aal2" | null = null;
+  try {
+    const claimsResult = await client.auth.getClaims();
+    const claims = claimsResult.data?.claims;
+    if (!claimsResult.error && typeof claims?.sub === "string") {
+      subject = claims.sub;
+      email = typeof claims.email === "string" ? claims.email : null;
+      mfaLevel = normalizeMfaLevel(claims.aal);
+    }
+  } catch {
+    // Some local Supabase key formats cannot be decoded by getClaims; getUser still validates server-side.
+  }
+
+  if (!subject) {
+    let userResult: Awaited<ReturnType<typeof client.auth.getUser>>;
+    try {
+      userResult = await client.auth.getUser();
+    } catch {
+      return {
+        decision: { state: "UNAUTHENTICATED" },
+        email: null,
+        mfaLevel: null,
+        status: "AVAILABLE",
+        userId: null,
+      };
+    }
+    const user = userResult.data.user;
+    if (userResult.error || !user) {
+      return {
+        decision: { state: "UNAUTHENTICATED" },
+        email: null,
+        mfaLevel: null,
+        status: "AVAILABLE",
+        userId: null,
+      };
+    }
+    subject = user.id;
+    email = user.email ?? null;
+    mfaLevel = normalizeMfaLevel((user as { aal?: unknown }).aal);
+  }
+
+  if (typeof subject !== "string") {
     return {
       decision: { state: "UNAUTHENTICATED" },
       email: null,
@@ -171,9 +211,6 @@ export async function loadAdminContext(): Promise<AdminContextLoadResult> {
       userId: null,
     };
   }
-  const emailClaim = claims?.email;
-  const email = typeof emailClaim === "string" ? emailClaim : null;
-  const mfaLevel = normalizeMfaLevel(claims?.aal);
 
   const profileResult = await client
     .from("admin_profiles")

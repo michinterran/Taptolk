@@ -45,7 +45,11 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  await client.auth.getClaims();
+  try {
+    await client.auth.getClaims();
+  } catch {
+    // A failed refresh attempt must not block admin routing; page guards validate the user.
+  }
   return response;
 }
 

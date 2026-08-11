@@ -11,12 +11,12 @@ import {
   SignOutIcon,
   UserCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { getAdminLandingArea } from "@taptolk/auth";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { signOutAdmin } from "../auth/actions";
 import { loadAdminContext } from "../auth/admin-context";
+import { getAdminConsoleArea } from "../auth/admin-routing";
 import { getAdminRoleLabel, getAdminScopeLabel } from "../content/admin-copy";
 import { getMessages } from "../content/messages";
 import type { AppLocale } from "../i18n/config";
@@ -55,8 +55,12 @@ export async function AdminPageHeader({
   if (context.status === "AVAILABLE" && context.decision.state === "READY") {
     const copy = getMessages(locale);
     const { membership } = context.decision;
-    const isPlatform = getAdminLandingArea(membership.role) === "platform";
-    const workspaceHref = `/${locale}/admin/${isPlatform ? "platform" : "dashboard"}` as Route;
+    const area = getAdminConsoleArea(membership);
+    const isPlatform = area === "platform";
+    const isCompany = area === "company";
+    const workspaceHref = `/${locale}/admin/${
+      isPlatform ? "platform" : isCompany ? "company" : "dashboard"
+    }` as Route;
     const navigationSections: readonly AdminNavigationSection[] = isPlatform
       ? [
           {
@@ -76,6 +80,11 @@ export async function AdminPageHeader({
                 href: `/${locale}/admin/platform/management-companies` as Route,
                 icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
                 label: copy["admin.nav.managementCompanies"],
+              },
+              {
+                href: `/${locale}/admin/sites` as Route,
+                icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.sites"],
               },
             ],
           },
@@ -119,62 +128,119 @@ export async function AdminPageHeader({
               ]
             : []),
         ]
-      : [
-          {
-            label: copy["admin.nav.group.overview"],
-            items: [
-              {
-                href: `/${locale}/admin/dashboard` as Route,
-                icon: <HouseIcon aria-hidden="true" weight="duotone" />,
-                label: copy["admin.nav.overview"],
-              },
-            ],
-          },
-          {
-            label: copy["admin.nav.group.customers"],
-            items: [
-              {
-                href: `/${locale}/admin/sites` as Route,
-                icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
-                label: copy["admin.nav.sites"],
-              },
-            ],
-          },
-          {
-            label: copy["admin.nav.group.service"],
-            items: [
-              {
-                href: `/${locale}/admin/qr-inventory` as Route,
-                icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
-                label: copy["admin.nav.qr"],
-              },
-              {
-                href: `/${locale}/admin/operations` as Route,
-                icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
-                label: copy["admin.nav.operations"],
-              },
-              {
-                href: `/${locale}/admin/reports` as Route,
-                icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
-                label: copy["admin.nav.reports"],
-              },
-            ],
-          },
-          ...(["MANAGEMENT_ADMIN", "SITE_ADMIN"].includes(membership.role)
-            ? [
+      : isCompany
+        ? [
+            {
+              label: copy["admin.nav.group.overview"],
+              items: [
                 {
-                  label: copy["admin.nav.group.administration"],
-                  items: [
-                    {
-                      href: `/${locale}/admin/accounts` as Route,
-                      icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
-                      label: copy["admin.nav.access"],
-                    },
-                  ],
+                  href: `/${locale}/admin/company` as Route,
+                  icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.overview"],
                 },
-              ]
-            : []),
-        ];
+              ],
+            },
+            {
+              label: copy["admin.nav.group.customers"],
+              items: [
+                {
+                  href: `/${locale}/admin/sites` as Route,
+                  icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.sites"],
+                },
+              ],
+            },
+            {
+              label: copy["admin.nav.group.service"],
+              items: [
+                {
+                  href: `/${locale}/admin/qr-inventory` as Route,
+                  icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.qr"],
+                },
+                {
+                  href: `/${locale}/admin/operations` as Route,
+                  icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.operations"],
+                },
+                {
+                  href: `/${locale}/admin/reports` as Route,
+                  icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.reports"],
+                },
+              ],
+            },
+            ...(membership.role === "MANAGEMENT_ADMIN"
+              ? [
+                  {
+                    label: copy["admin.nav.group.administration"],
+                    items: [
+                      {
+                        href: `/${locale}/admin/accounts` as Route,
+                        icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
+                        label: copy["admin.nav.access"],
+                      },
+                    ],
+                  },
+                ]
+              : []),
+          ]
+        : [
+            {
+              label: copy["admin.nav.group.overview"],
+              items: [
+                {
+                  href: `/${locale}/admin/dashboard` as Route,
+                  icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.overview"],
+                },
+              ],
+            },
+            {
+              label: copy["admin.nav.group.customers"],
+              items: [
+                {
+                  href: `/${locale}/admin/sites` as Route,
+                  icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.sites"],
+                },
+              ],
+            },
+            {
+              label: copy["admin.nav.group.service"],
+              items: [
+                {
+                  href: `/${locale}/admin/qr-inventory` as Route,
+                  icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.qr"],
+                },
+                {
+                  href: `/${locale}/admin/operations` as Route,
+                  icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.operations"],
+                },
+                {
+                  href: `/${locale}/admin/reports` as Route,
+                  icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.reports"],
+                },
+              ],
+            },
+            ...(["MANAGEMENT_ADMIN", "SITE_ADMIN"].includes(membership.role)
+              ? [
+                  {
+                    label: copy["admin.nav.group.administration"],
+                    items: [
+                      {
+                        href: `/${locale}/admin/accounts` as Route,
+                        icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
+                        label: copy["admin.nav.access"],
+                      },
+                    ],
+                  },
+                ]
+              : []),
+          ];
     const navigation = navigationSections.flatMap((section) => section.items);
     const searchItems: readonly ConsoleSearchItem[] = navigationSections.flatMap((section) =>
       section.items.map((item) => ({
@@ -185,12 +251,20 @@ export async function AdminPageHeader({
     );
     const profileHref = `/${locale}/admin/profile` as Route;
     const isProfile = pathname === profileHref;
-    const currentItem =
-      navigation.find((item) => pathname === item.href) ??
-      navigation.find(
-        (item) => item.href !== workspaceHref && pathname.startsWith(`${item.href}/`),
-      ) ??
-      (isProfile ? undefined : navigation[0]);
+    const isAccountApproval = pathname === `/${locale}/admin/platform/access`;
+    const accountHref = `/${locale}/admin/accounts` as Route;
+    const currentItem = isAccountApproval
+      ? navigation.find((item) => item.href === accountHref)
+      : (navigation.find((item) => pathname === item.href) ??
+        navigation.find(
+          (item) => item.href !== workspaceHref && pathname.startsWith(`${item.href}/`),
+        ) ??
+        (isProfile ? undefined : navigation[0]));
+    const currentLabel = isAccountApproval
+      ? copy["admin.nav.access"]
+      : isProfile
+        ? copy["admin.shared.account"]
+        : (currentItem?.label ?? copy["admin.nav.overview"]);
     return (
       <>
         <aside aria-label={copy["admin.nav.sidebar"]} className="admin-console-sidebar">
@@ -203,7 +277,11 @@ export async function AdminPageHeader({
           <div className="admin-console-identity">
             <span>{copy["admin.nav.workspace"]}</span>
             <strong>
-              {isPlatform ? copy["admin.platform.eyebrow"] : copy["admin.dashboard.eyebrow"]}
+              {isPlatform
+                ? copy["admin.platform.eyebrow"]
+                : isCompany
+                  ? copy["admin.company.eyebrow"]
+                  : copy["admin.dashboard.eyebrow"]}
             </strong>
           </div>
 
@@ -258,7 +336,7 @@ export async function AdminPageHeader({
               href={workspaceHref}
               title={copy["admin.nav.scopeHome"]}
             >
-              {isPlatform ? (
+              {isPlatform || isCompany ? (
                 <CirclesFourIcon aria-hidden="true" weight="duotone" />
               ) : (
                 <MapPinAreaIcon aria-hidden="true" weight="duotone" />
@@ -267,11 +345,7 @@ export async function AdminPageHeader({
             </Link>
             <div className="admin-console-location">
               <span>{copy["admin.nav.current"]}</span>
-              <strong>
-                {isProfile
-                  ? copy["admin.shared.account"]
-                  : (currentItem?.label ?? copy["admin.nav.overview"])}
-              </strong>
+              <strong>{isProfile ? copy["admin.shared.account"] : currentLabel}</strong>
             </div>
           </div>
           <ConsoleSearch

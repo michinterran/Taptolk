@@ -2,6 +2,7 @@ import {
   AdminAccountApprovalService,
   type AdminApprovalQueue,
   type AdminApprovalScopeCatalog,
+  type AdminApprovalSort,
 } from "@taptolk/application";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -37,9 +38,26 @@ function readPage(value: string | string[] | undefined): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
-function readStatus(value: string | string[] | undefined): "approved" | "rejected" | null {
+function readSearch(value: string | string[] | undefined): string {
   const candidate = Array.isArray(value) ? value[0] : value;
-  return candidate === "approved" || candidate === "rejected" ? candidate : null;
+  return candidate?.trim().slice(0, 120) ?? "";
+}
+
+function readSort(value: string | string[] | undefined): AdminApprovalSort {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  return candidate === "oldest" ? "oldest" : "newest";
+}
+
+function readStatus(
+  value: string | string[] | undefined,
+): "approved" | "assigned" | "invited" | "rejected" | null {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  return candidate === "approved" ||
+    candidate === "assigned" ||
+    candidate === "invited" ||
+    candidate === "rejected"
+    ? candidate
+    : null;
 }
 
 function readErrorMessage(
@@ -50,6 +68,8 @@ function readErrorMessage(
   const errors = {
     conflict: copy["admin.approvals.error.conflict"],
     configuration: copy["admin.approvals.error.configuration"],
+    "account-not-found": copy["admin.approvals.error.accountNotFound"],
+    expired: copy["admin.access.error.invitationExpired"],
     forbidden: copy["admin.approvals.error.forbidden"],
     unavailable: copy["admin.approvals.error.unavailable"],
     validation: copy["admin.approvals.error.validation"],
@@ -65,6 +85,8 @@ export default async function PlatformAccessApprovalPage({
   searchParams: Promise<{
     error?: string | string[];
     page?: string | string[];
+    q?: string | string[];
+    sort?: string | string[];
     status?: string | string[];
   }>;
 }) {
@@ -79,6 +101,8 @@ export default async function PlatformAccessApprovalPage({
   }
 
   const copy = getMessages(locale);
+  const search = readSearch(query.q);
+  const sort = readSort(query.sort);
   const [sessionClient, serviceClient] = await Promise.all([
     createAdminServerClient(),
     Promise.resolve(createAdminServiceClient()),
@@ -105,6 +129,8 @@ export default async function PlatformAccessApprovalPage({
           userId: context.userId,
         },
         page: readPage(query.page),
+        search,
+        sort,
       });
       queue = result.queue;
       scopes = result.scopes;
@@ -127,8 +153,18 @@ export default async function PlatformAccessApprovalPage({
           configurationDescription: copy["admin.approvals.configuration.description"],
           configurationTitle: copy["admin.approvals.configuration.title"],
           description: copy["admin.approvals.description"],
+          directAssignmentDescription: copy["admin.approvals.direct.description"],
+          directAssignmentEmail: copy["admin.approvals.direct.email"],
+          directAssignmentEmailPlaceholder: copy["admin.approvals.direct.emailPlaceholder"],
+          directAssignmentSend: copy["admin.approvals.direct.send"],
+          directAssignmentTitle: copy["admin.approvals.direct.title"],
           displayName: copy["admin.approvals.displayName"],
           emailStatus: copy["admin.approvals.emailStatus"],
+          invitationDescription: copy["admin.approvals.invitation.description"],
+          invitationEmail: copy["admin.approvals.invitation.email"],
+          invitationEmailPlaceholder: copy["admin.approvals.invitation.emailPlaceholder"],
+          invitationSend: copy["admin.approvals.invitation.send"],
+          invitationTitle: copy["admin.approvals.invitation.title"],
           emptyDescription: copy["admin.approvals.empty.description"],
           emptyTitle: copy["admin.approvals.empty.title"],
           eyebrow: copy["admin.approvals.eyebrow"],
@@ -153,6 +189,7 @@ export default async function PlatformAccessApprovalPage({
             google: copy["admin.approvals.provider.google"],
             other: copy["admin.approvals.provider.other"],
           },
+          reset: copy["admin.approvals.reset"],
           reason: copy["admin.approvals.reason"],
           reasonPlaceholder: copy["admin.approvals.reasonPlaceholder"],
           reject: copy["admin.approvals.reject"],
@@ -160,6 +197,7 @@ export default async function PlatformAccessApprovalPage({
           rejectReason: copy["admin.approvals.rejectReason"],
           rejectReasonPlaceholder: copy["admin.approvals.rejectReasonPlaceholder"],
           rejectSummary: copy["admin.approvals.rejectSummary"],
+          review: copy["admin.approvals.review"],
           role: copy["admin.approvals.role"],
           roleLabels: {
             MANAGEMENT_ADMIN: getAdminRoleLabel(copy, "MANAGEMENT_ADMIN"),
@@ -177,13 +215,20 @@ export default async function PlatformAccessApprovalPage({
             TENANT: getAdminScopeLabel(copy, "TENANT"),
           },
           scopeType: copy["admin.approvals.scopeType"],
+          search: copy["admin.approvals.search"],
+          searchPlaceholder: copy["admin.approvals.searchPlaceholder"],
           securityNote: copy["admin.approvals.securityNote"],
           signOut: copy["admin.shared.signOut"],
           site: copy["admin.approvals.site"],
           statusLabels: {
             approved: copy["admin.approvals.status.approved"],
+            assigned: copy["admin.approvals.status.assigned"],
+            invited: copy["admin.approvals.status.invited"],
             rejected: copy["admin.approvals.status.rejected"],
           },
+          sort: copy["admin.approvals.sort"],
+          sortNewest: copy["admin.approvals.sortNewest"],
+          sortOldest: copy["admin.approvals.sortOldest"],
           tenant: copy["admin.approvals.tenant"],
           titleLines: [copy["admin.approvals.line1"], copy["admin.approvals.line2"]],
           total: copy["admin.approvals.total"],
@@ -197,6 +242,8 @@ export default async function PlatformAccessApprovalPage({
         locale={locale}
         queue={queue}
         scopes={scopes}
+        search={search}
+        sort={sort}
         status={readStatus(query.status)}
       />
     </main>

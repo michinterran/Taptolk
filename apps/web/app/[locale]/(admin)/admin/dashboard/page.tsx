@@ -1,7 +1,6 @@
-import { getAdminLandingArea } from "@taptolk/auth";
 import { notFound, redirect } from "next/navigation";
 import { loadOperationsDashboard } from "../../../../../admin/load-operations-dashboard";
-import { getLocalizedAdminPath } from "../../../../../auth/admin-routing";
+import { getAdminConsoleArea, getLocalizedAdminPath } from "../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../auth/page-guard";
 import { AdminDashboardView } from "../../../../../components/admin-dashboard-view";
 import { ADMIN_OVERVIEW_COPY } from "../../../../../content/admin-overview-copy";
@@ -15,8 +14,12 @@ export default async function TenantAdminPage({ params }: { params: Promise<{ lo
   }
 
   const context = await requireReadyAdminContext(locale);
-  if (getAdminLandingArea(context.decision.membership.role) === "platform") {
+  const area = getAdminConsoleArea(context.decision.membership);
+  if (area === "platform") {
     redirect(getLocalizedAdminPath(locale, "/platform"));
+  }
+  if (area === "company") {
+    redirect(getLocalizedAdminPath(locale, "/company"));
   }
 
   const copy = getMessages(locale);

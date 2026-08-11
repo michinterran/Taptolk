@@ -53,6 +53,17 @@ function siteCatalogPath(
   return getLocalizedAdminPath(locale, `/sites?${kind}=${value}`) as Route;
 }
 
+function siteActionPath(
+  locale: AppLocale,
+  siteId: string,
+  kind: "error" | "status",
+  value: SiteActionError | SiteActionStatus,
+): Route {
+  return siteId
+    ? (getLocalizedAdminPath(locale, `/sites/${siteId}?${kind}=${value}`) as Route)
+    : siteCatalogPath(locale, kind, value);
+}
+
 function mapError(error: unknown): SiteActionError {
   if (error instanceof AdminAuthorizationError) {
     return "forbidden";
@@ -113,6 +124,7 @@ export async function createSite(formData: FormData): Promise<never> {
 
 export async function updateSiteOperational(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
+  const siteId = readString(formData, "siteId");
   try {
     const { actor, service } = await createService(locale);
     await service.updateOperational({
@@ -129,13 +141,14 @@ export async function updateSiteOperational(formData: FormData): Promise<never> 
       type: readString(formData, "siteType"),
     });
   } catch (error) {
-    redirect(siteCatalogPath(locale, "error", mapError(error)));
+    redirect(siteActionPath(locale, siteId, "error", mapError(error)));
   }
-  redirect(siteCatalogPath(locale, "status", "operationalUpdated"));
+  redirect(siteActionPath(locale, siteId, "status", "operationalUpdated"));
 }
 
 export async function updateSiteContract(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
+  const siteId = readString(formData, "siteId");
   try {
     const { actor, service } = await createService(locale);
     await service.updateContract({
@@ -149,17 +162,18 @@ export async function updateSiteContract(formData: FormData): Promise<never> {
       tenantId: readString(formData, "tenantId"),
     });
   } catch (error) {
-    redirect(siteCatalogPath(locale, "error", mapError(error)));
+    redirect(siteActionPath(locale, siteId, "error", mapError(error)));
   }
-  redirect(siteCatalogPath(locale, "status", "contractUpdated"));
+  redirect(siteActionPath(locale, siteId, "status", "contractUpdated"));
 }
 
 export async function changeSiteStatus(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
+  const siteId = readString(formData, "siteId");
   const currentStatus = readStatus(formData, "currentStatus");
   const nextStatus = readStatus(formData, "nextStatus");
   if (!currentStatus || !nextStatus) {
-    redirect(siteCatalogPath(locale, "error", "validation"));
+    redirect(siteActionPath(locale, siteId, "error", "validation"));
   }
   try {
     const { actor, service } = await createService(locale);
@@ -175,7 +189,7 @@ export async function changeSiteStatus(formData: FormData): Promise<never> {
       tenantId: readString(formData, "tenantId"),
     });
   } catch (error) {
-    redirect(siteCatalogPath(locale, "error", mapError(error)));
+    redirect(siteActionPath(locale, siteId, "error", mapError(error)));
   }
-  redirect(siteCatalogPath(locale, "status", "statusChanged"));
+  redirect(siteActionPath(locale, siteId, "status", "statusChanged"));
 }

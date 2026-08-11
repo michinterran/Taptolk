@@ -6,6 +6,7 @@ import {
   ManagementCompanyManagementService,
   type OrganizationStatus,
 } from "@taptolk/application";
+import { parseServerEnvironment } from "@taptolk/config";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getLocalizedAdminPath } from "../auth/admin-routing";
@@ -13,6 +14,7 @@ import { requireReadyAdminContext } from "../auth/page-guard";
 import { createAdminServerClient } from "../auth/server-client";
 import type { AppLocale } from "../i18n/config";
 import { isAppLocale } from "../i18n/locale";
+import { protectManagementCompanyPhone } from "./management-company-contact-protector";
 import {
   createSupabaseManagementCompanyManagementRepository,
   ManagementCompanyRepositoryError,
@@ -44,6 +46,31 @@ function catalogPath(
   return getLocalizedAdminPath(locale, `/platform/management-companies?${kind}=${value}`) as Route;
 }
 
+function companyPath(locale: AppLocale, companyId: string): Route {
+  return getLocalizedAdminPath(locale, `/platform/management-companies/${companyId}`) as Route;
+}
+
+function safeReturnPath(formData: FormData, locale: AppLocale): Route {
+  const fallback = getLocalizedAdminPath(locale, "/platform/management-companies") as Route;
+  const value = readString(formData, "returnTo");
+  const detailPrefix = `/${locale}/admin/platform/management-companies/`;
+  if (
+    value === `/${locale}/admin/platform/management-companies` ||
+    value.startsWith(detailPrefix)
+  ) {
+    return value as Route;
+  }
+  return fallback;
+}
+
+function appendActionState(
+  path: Route,
+  kind: "error" | "status",
+  value: CompanyActionError | CompanyActionStatus,
+): Route {
+  return `${path}${path.includes("?") ? "&" : "?"}${kind}=${value}` as Route;
+}
+
 function mapError(error: unknown): CompanyActionError {
   if (error instanceof AdminAuthorizationError) {
     return "forbidden";
@@ -60,7 +87,31 @@ function mapError(error: unknown): CompanyActionError {
           ? "forbidden"
           : "unavailable";
   }
+  if (
+    error instanceof Error &&
+    (error.message === "MANAGEMENT_COMPANY_CONTACT_PHONE_INVALID" ||
+      error.message === "MANAGEMENT_COMPANY_CONTACT_PROTECTION_CONFIG_INVALID")
+  ) {
+    return error.message === "MANAGEMENT_COMPANY_CONTACT_PHONE_INVALID"
+      ? "validation"
+      : "unavailable";
+  }
   return "unavailable";
+}
+
+function readProtectedPhone(formData: FormData, key: string): string {
+  const value = readString(formData, key);
+  if (!value.trim()) {
+    return "";
+  }
+  const environment = parseServerEnvironment();
+  if (!environment.APP_ENCRYPTION_KEY_V1) {
+    throw new Error("MANAGEMENT_COMPANY_CONTACT_PROTECTION_CONFIG_INVALID");
+  }
+  return protectManagementCompanyPhone(value, {
+    encryptionSecret: environment.APP_ENCRYPTION_KEY_V1,
+    keyVersion: environment.APP_ENCRYPTION_KEY_VERSION,
+  });
 }
 
 async function createService(locale: AppLocale) {
@@ -87,48 +138,67 @@ async function createService(locale: AppLocale) {
 
 export async function createManagementCompany(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
+  let companyId = "";
   try {
     const { actor, service } = await createService(locale);
-    await service.create({
+    const result = await service.create({
+      address: readString(formData, "address"),
       actor,
       businessNumber: readString(formData, "businessNumber"),
+      contactEmail: readString(formData, "contactEmail"),
+      contactName: readString(formData, "contactName"),
+      contactPhoneEncrypted: readProtectedPhone(formData, "contactPhone"),
       name: readString(formData, "name"),
+      operationsManagerEmail: readString(formData, "operationsManagerEmail"),
+      operationsManagerName: readString(formData, "operationsManagerName"),
+      operationsManagerPhoneEncrypted: readProtectedPhone(formData, "operationsManagerPhone"),
+      representativePhoneEncrypted: readProtectedPhone(formData, "representativePhone"),
       reason: readString(formData, "reason"),
       requestId: crypto.randomUUID(),
-      tenantId: readString(formData, "tenantId"),
     });
+    companyId = result.id;
   } catch (error) {
     redirect(catalogPath(locale, "error", mapError(error)));
   }
-  redirect(catalogPath(locale, "status", "created"));
+  redirect(appendActionState(companyPath(locale, companyId), "status", "created"));
 }
 
 export async function updateManagementCompany(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
+  const returnTo = safeReturnPath(formData, locale);
   try {
     const { actor, service } = await createService(locale);
     await service.update({
+      address: readString(formData, "address"),
       actor,
       businessNumber: readString(formData, "businessNumber"),
       companyId: readString(formData, "companyId"),
+      contactEmail: readString(formData, "contactEmail"),
+      contactName: readString(formData, "contactName"),
+      contactPhoneEncrypted: readProtectedPhone(formData, "contactPhone"),
       expectedVersion: Number(readString(formData, "expectedVersion")),
       name: readString(formData, "name"),
+      operationsManagerEmail: readString(formData, "operationsManagerEmail"),
+      operationsManagerName: readString(formData, "operationsManagerName"),
+      operationsManagerPhoneEncrypted: readProtectedPhone(formData, "operationsManagerPhone"),
+      representativePhoneEncrypted: readProtectedPhone(formData, "representativePhone"),
       reason: readString(formData, "reason"),
       requestId: crypto.randomUUID(),
       tenantId: readString(formData, "tenantId"),
     });
   } catch (error) {
-    redirect(catalogPath(locale, "error", mapError(error)));
+    redirect(appendActionState(returnTo, "error", mapError(error)));
   }
-  redirect(catalogPath(locale, "status", "updated"));
+  redirect(appendActionState(returnTo, "status", "updated"));
 }
 
 export async function changeManagementCompanyStatus(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
+  const returnTo = safeReturnPath(formData, locale);
   const currentStatus = readStatus(formData, "currentStatus");
   const nextStatus = readStatus(formData, "nextStatus");
   if (!currentStatus || !nextStatus) {
-    redirect(catalogPath(locale, "error", "validation"));
+    redirect(appendActionState(returnTo, "error", "validation"));
   }
   try {
     const { actor, service } = await createService(locale);
@@ -143,7 +213,7 @@ export async function changeManagementCompanyStatus(formData: FormData): Promise
       tenantId: readString(formData, "tenantId"),
     });
   } catch (error) {
-    redirect(catalogPath(locale, "error", mapError(error)));
+    redirect(appendActionState(returnTo, "error", mapError(error)));
   }
-  redirect(catalogPath(locale, "status", "statusChanged"));
+  redirect(appendActionState(returnTo, "status", "statusChanged"));
 }

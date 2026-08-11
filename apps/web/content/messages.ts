@@ -6,9 +6,26 @@ export const ko = {
   "admin.access.line2": "아직 확인할 수 없습니다.",
   "admin.access.profileInactive": "관리자 프로필이 활성 상태가 아닙니다.",
   "admin.access.membershipInactive": "사용 가능한 활성 소속이 없습니다.",
+  "admin.access.error.load.description":
+    "관리자 접근 상태를 확인하는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+  "admin.access.error.load.title": "접근 상태를 확인할 수 없습니다.",
+  "admin.access.error.invitationExpired":
+    "초대가 만료되었습니다. 플랫폼 슈퍼어드민에게 새 초대를 요청해 주세요.",
+  "admin.access.invitation.accept": "초대 수락하고 접근 열기",
+  "admin.access.invitation.description":
+    "슈퍼어드민이 지정한 역할과 운영 범위를 확인한 뒤 이 계정의 관리자 접근을 활성화합니다.",
+  "admin.access.invitation.role": "역할",
+  "admin.access.invitation.scope": "접근 범위",
+  "admin.access.invitation.title": "관리자 초대가 도착했습니다.",
   "admin.approvals.account": "가입 계정",
   "admin.approvals.approve": "역할과 범위 승인",
-  "admin.approvals.back": "플랫폼 콘솔로 돌아가기",
+  "admin.approvals.direct.description":
+    "이미 Taptolk 로그인 계정이 있는 담당자에게 관리회사 또는 사이트 운영 범위를 즉시 부여합니다. 계정이 없다면 이메일 초대를 사용하세요.",
+  "admin.approvals.direct.email": "기존 로그인 이메일",
+  "admin.approvals.direct.emailPlaceholder": "기존 Taptolk 계정 이메일",
+  "admin.approvals.direct.send": "기존 계정에 권한 부여",
+  "admin.approvals.direct.title": "기존 계정 직접 권한 부여",
+  "admin.approvals.back": "계정·권한으로 돌아가기",
   "admin.approvals.configuration.description":
     "서버 연결이 완료된 뒤 다시 확인해 주세요. 연결 설정은 운영 문서를 따르며, 보안 키는 브라우저나 저장소에 두지 않습니다.",
   "admin.approvals.configuration.title": "승인 목록 연결이 아직 준비되지 않았습니다.",
@@ -16,15 +33,25 @@ export const ko = {
     "인증을 마친 신규 계정의 업무 역할과 접근 범위를 검토합니다. 승인은 프로필·소속·감사 로그를 하나의 트랜잭션으로 기록합니다.",
   "admin.approvals.displayName": "관리자 표시 이름",
   "admin.approvals.emailStatus": "이메일 상태",
+  "admin.approvals.invitation.description":
+    "업무용 이메일을 초대하고 역할과 관리 범위를 지정합니다. 초대받은 사용자는 로그인 후 자신의 초대를 수락해야 접근할 수 있습니다.",
+  "admin.approvals.invitation.email": "초대 이메일",
+  "admin.approvals.invitation.emailPlaceholder": "admin@example.com",
+  "admin.approvals.invitation.send": "관리자 초대 보내기",
+  "admin.approvals.invitation.title": "새 관리자 초대",
   "admin.approvals.empty.description":
     "새로운 이메일 가입 또는 Google SSO 계정이 생성되면 이 검토 큐에 표시됩니다.",
   "admin.approvals.empty.title": "현재 승인 대기 계정이 없습니다.",
   "admin.approvals.error.configuration": "서버 연결 설정을 확인해 주세요.",
+  "admin.approvals.error.accountNotFound":
+    "해당 이메일의 Taptolk 로그인 계정을 찾지 못했습니다. 계정이 없다면 이메일 초대를 보내 주세요.",
   "admin.approvals.error.conflict": "이미 승인 또는 거절된 계정입니다. 목록을 새로 확인해 주세요.",
   "admin.approvals.error.forbidden": "이 작업을 수행할 슈퍼어드민 권한이 없습니다.",
   "admin.approvals.error.unavailable":
     "승인 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.approvals.error.validation": "역할, 접근 범위, 표시 이름과 처리 사유를 확인해 주세요.",
+  "admin.directory.error.unavailable":
+    "계정·권한 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
   "admin.approvals.eyebrow": "계정·권한 관리",
   "admin.approvals.joinedAt": "가입 시각",
   "admin.approvals.line1": "계정 승인",
@@ -40,20 +67,30 @@ export const ko = {
   "admin.approvals.provider.other": "기타 인증",
   "admin.approvals.reason": "승인 사유",
   "admin.approvals.reasonPlaceholder": "담당 업무와 승인 근거를 3자 이상 입력해 주세요.",
+  "admin.approvals.reset": "초기화",
   "admin.approvals.reject": "계정 요청 거절",
   "admin.approvals.rejectDescription":
     "거절하면 Auth 계정은 삭제하지 않고 관리자 프로필을 종료 상태로 기록합니다.",
   "admin.approvals.rejectReason": "거절 사유",
   "admin.approvals.rejectReasonPlaceholder": "거절 근거를 3자 이상 입력해 주세요.",
   "admin.approvals.rejectSummary": "이 가입 요청을 거절해야 하나요?",
+  "admin.approvals.review": "가입 요청 검토 열기",
   "admin.approvals.role": "부여할 역할",
   "admin.approvals.scopeHelp":
     "플랫폼 역할은 고객 범위를 선택하지 않습니다. 관리회사·관리 현장 역할은 역할과 일치하는 범위를 모두 선택해야 합니다.",
   "admin.approvals.scopeType": "접근 범위 유형",
+  "admin.approvals.search": "검색",
+  "admin.approvals.searchPlaceholder": "이름 또는 이메일 검색",
   "admin.approvals.securityNote": "슈퍼어드민 권한 · 서버 권한 재검증 · 변경 기록 보존",
   "admin.approvals.site": "관리 현장",
   "admin.approvals.status.approved": "관리자 계정이 승인되었습니다.",
+  "admin.approvals.status.assigned": "기존 로그인 계정에 운영 권한이 부여되었습니다.",
+  "admin.approvals.status.invited":
+    "관리자 초대를 보냈습니다. 초대받은 사용자는 이메일 링크에서 접근을 수락합니다.",
   "admin.approvals.status.rejected": "가입 요청이 거절 처리되었습니다.",
+  "admin.approvals.sort": "가입일 정렬",
+  "admin.approvals.sortNewest": "최신 가입순",
+  "admin.approvals.sortOldest": "오래된 가입순",
   "admin.approvals.tenant": "계약 고객",
   "admin.approvals.total": "승인 대기 {count}개 계정",
   "admin.approvals.truncated":
@@ -65,7 +102,7 @@ export const ko = {
   "admin.auth.configuration.title": "로그인 준비 중입니다.",
   "admin.auth.error.configuration":
     "로그인 연결이 아직 준비되지 않았습니다. 운영팀에 문의해 주세요.",
-  "admin.auth.error.invalidCode": "인증 앱의 최신 6자리 코드를 확인해 주세요.",
+  "admin.auth.error.invalidCode": "로그인 확인 정보가 올바르지 않습니다. 다시 시도해 주세요.",
   "admin.auth.error.invalidCredentials": "이메일 또는 비밀번호가 올바르지 않습니다.",
   "admin.auth.error.session": "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.",
   "admin.auth.error.unavailable": "인증 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
@@ -77,6 +114,7 @@ export const ko = {
   "admin.dashboard.description":
     "인증된 역할과 소속 범위를 확인하고 허용된 운영 기능으로 이동하는 관리 홈입니다.",
   "admin.dashboard.eyebrow": "테넌트 운영 대시보드",
+  "admin.company.eyebrow": "관리회사 운영 콘솔",
   "admin.dashboard.line1": "계약 사이트를 안전하게 관리하는",
   "admin.dashboard.line2": "운영 공간에 연결되었습니다.",
   "admin.dashboard.next.description":
@@ -139,10 +177,10 @@ export const ko = {
     "좌측 메뉴에서 테넌트·관리회사·사이트 현황, 승인 작업과 QR 운영을 관리합니다.",
   "admin.platform.next.title": "플랫폼 운영 환경",
   "admin.platform.tenantsAction": "테넌트",
-  "admin.role.managementAdmin": "관리회사 관리자",
-  "admin.role.platformOperator": "플랫폼 운영자",
+  "admin.role.managementAdmin": "지정 관리자",
+  "admin.role.platformOperator": "Admin",
   "admin.role.readOnly": "읽기 전용",
-  "admin.role.siteAdmin": "사이트 관리자",
+  "admin.role.siteAdmin": "지정 관리자",
   "admin.role.siteOperator": "사이트 운영자",
   "admin.role.superAdmin": "슈퍼어드민",
   "admin.scope.managementCompany": "관리회사 범위",
@@ -323,6 +361,7 @@ export const ko = {
   "admin.qr.batch.status.cancelled": "취소",
   "admin.qr.batch.status.completed": "완료",
   "admin.qr.batch.status.delivered": "배송 완료",
+  "admin.qr.batch.status.partiallyReceived": "부분 입고",
   "admin.qr.batch.status.distributing": "배포 중",
   "admin.qr.batch.status.draft": "샘플 연결 대기",
   "admin.qr.batch.status.failed": "실패",
@@ -524,6 +563,7 @@ export const ko = {
   "admin.qr.status.assetReplaced": "기존 Binding 이력을 보존한 채 교체 QR로 이전했습니다.",
   "admin.qr.status.assetRevoked": "QR이 폐기되었고 활성 Binding이 종료되었습니다.",
   "admin.qr.status.batchReceived": "Batch 수량이 검증되어 IN_STOCK으로 입고되었습니다.",
+  "admin.qr.status.batchReceiptRecorded": "QR 입고 수량과 사유가 기록되었습니다.",
   "admin.qr.status.brandAssetUploaded": "브랜드 로고가 검증되어 안전하게 등록되었습니다.",
   "admin.qr.status.batchCancelled": "QR Batch 요청이 취소되었습니다.",
   "admin.qr.status.batchRequested":
@@ -570,7 +610,17 @@ export const ko = {
   "admin.qr.waiting.sample": "샘플 아티팩트 연결과 품질검사가 필요합니다.",
   "admin.sites.actions": "관리",
   "admin.sites.address": "주소",
-  "admin.sites.back": "관리 콘솔로 돌아가기",
+  "admin.sites.address.detail": "상세주소",
+  "admin.sites.address.detail.placeholder": "동, 호수, 관리사무소 위치 등",
+  "admin.sites.address.help": "주소 검색으로 도로명 또는 지번 주소를 선택합니다.",
+  "admin.sites.address.search.close": "닫기",
+  "admin.sites.address.search.fallback":
+    "주소 검색 스크립트를 불러오지 못했습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요.",
+  "admin.sites.address.search.jibun": "지번주소",
+  "admin.sites.address.search.open": "주소 검색",
+  "admin.sites.address.search.road": "도로명주소",
+  "admin.sites.address.search.title": "사이트 주소 검색",
+  "admin.sites.address.search.zonecode": "우편번호",
   "admin.sites.close": "운영 종료",
   "admin.sites.company": "관리회사",
   "admin.sites.contract.save": "계약 한도 저장",
@@ -584,7 +634,7 @@ export const ko = {
   "admin.sites.createdAt": "생성일",
   "admin.sites.description":
     "PostgreSQL RLS가 현재 역할과 소속 범위에 허용한 아파트·오피스텔·빌딩만 조회하고 운영합니다.",
-  "admin.sites.edit": "사이트 작업",
+  "admin.sites.moreActions": "추가 작업",
   "admin.sites.empty.description":
     "슈퍼어드민이 활성 관리회사 아래 첫 사이트를 등록하면 이 범위에 표시됩니다.",
   "admin.sites.empty.title": "현재 범위에 등록된 사이트가 없습니다.",
@@ -661,6 +711,7 @@ export const ko = {
   "admin.sites.type.building": "빌딩",
   "admin.sites.type.officetel": "오피스텔",
   "admin.sites.type.other": "기타",
+  "admin.sites.view": "상세 보기",
   "landing.eyebrow": "전화번호 공개 없이 시작하는 차량 연락",
   "landing.faq.app.answer":
     "필요하지 않습니다. 차량의 QR을 스캔하면 휴대폰 브라우저에서 바로 요청을 보낼 수 있고, 회원가입도 필요하지 않습니다.",
@@ -835,9 +886,26 @@ export const en = {
   "admin.access.line2": "is not available yet.",
   "admin.access.profileInactive": "The admin profile is not active.",
   "admin.access.membershipInactive": "No active membership is available.",
+  "admin.access.error.load.description":
+    "There was a problem checking administrator access. Please try again shortly.",
+  "admin.access.error.load.title": "Administrator access could not be checked.",
+  "admin.access.error.invitationExpired":
+    "This invitation has expired. Ask a platform Super Admin to send a new invitation.",
+  "admin.access.invitation.accept": "Accept invitation and open access",
+  "admin.access.invitation.description":
+    "Review the role and operating scope assigned by the Super Admin, then activate admin access for this account.",
+  "admin.access.invitation.role": "Role",
+  "admin.access.invitation.scope": "Access scope",
+  "admin.access.invitation.title": "You have an administrator invitation.",
   "admin.approvals.account": "Applicant account",
   "admin.approvals.approve": "Approve role and scope",
-  "admin.approvals.back": "Back to platform console",
+  "admin.approvals.direct.description":
+    "Grant a management-company or site operating scope immediately to an existing Taptolk sign-in account. Use an email invitation when the account does not exist.",
+  "admin.approvals.direct.email": "Existing sign-in email",
+  "admin.approvals.direct.emailPlaceholder": "Existing Taptolk account email",
+  "admin.approvals.direct.send": "Grant access to existing account",
+  "admin.approvals.direct.title": "Grant access to an existing account",
+  "admin.approvals.back": "Back to accounts and permissions",
   "admin.approvals.configuration.description":
     "Try again once the server connection is complete. Connection setup follows the operations guide, and security keys never belong in the browser or the repository.",
   "admin.approvals.configuration.title": "The approval queue connection is not ready yet.",
@@ -845,10 +913,18 @@ export const en = {
     "Review the operating role and access scope for newly authenticated accounts. Approval records the profile, membership, and audit event in one transaction.",
   "admin.approvals.displayName": "Admin display name",
   "admin.approvals.emailStatus": "Email status",
+  "admin.approvals.invitation.description":
+    "Invite a work email and assign its operating role and scope. The invited user must sign in and accept before access opens.",
+  "admin.approvals.invitation.email": "Invitation email",
+  "admin.approvals.invitation.emailPlaceholder": "admin@example.com",
+  "admin.approvals.invitation.send": "Send administrator invitation",
+  "admin.approvals.invitation.title": "Invite a new administrator",
   "admin.approvals.empty.description":
     "New email registrations and Google SSO accounts will appear in this review queue.",
   "admin.approvals.empty.title": "There are no accounts waiting for approval.",
   "admin.approvals.error.configuration": "Check the server connection settings.",
+  "admin.approvals.error.accountNotFound":
+    "No Taptolk sign-in account was found for that email. Send an email invitation if the account does not exist.",
   "admin.approvals.error.conflict":
     "This account was already approved or rejected. Refresh the review queue.",
   "admin.approvals.error.forbidden":
@@ -857,6 +933,8 @@ export const en = {
     "The approval service is unavailable. Please try again shortly.",
   "admin.approvals.error.validation":
     "Check the role, access scope, display name, and decision reason.",
+  "admin.directory.error.unavailable":
+    "The accounts and permissions list is unavailable. Please try again shortly.",
   "admin.approvals.eyebrow": "Accounts and permissions",
   "admin.approvals.joinedAt": "Registered",
   "admin.approvals.line1": "Account approvals",
@@ -873,6 +951,7 @@ export const en = {
   "admin.approvals.reason": "Approval reason",
   "admin.approvals.reasonPlaceholder":
     "Enter at least three characters describing the operating need and approval basis.",
+  "admin.approvals.reset": "Reset",
   "admin.approvals.reject": "Reject account request",
   "admin.approvals.rejectDescription":
     "Rejection keeps the Auth identity and records a closed admin profile instead of deleting history.",
@@ -880,15 +959,25 @@ export const en = {
   "admin.approvals.rejectReasonPlaceholder":
     "Enter at least three characters explaining the decision.",
   "admin.approvals.rejectSummary": "Should this registration request be rejected?",
+  "admin.approvals.review": "Open registration review",
   "admin.approvals.role": "Role to grant",
   "admin.approvals.scopeHelp":
     "Platform roles do not use a customer scope. Management-company and managed-location roles require every matching scope selection.",
   "admin.approvals.scopeType": "Access scope type",
+  "admin.approvals.search": "Search",
+  "admin.approvals.searchPlaceholder": "Search name or email",
   "admin.approvals.securityNote":
     "Super Admin permission · server reauthorization · every change recorded",
   "admin.approvals.site": "Managed location",
   "admin.approvals.status.approved": "The admin account was approved.",
+  "admin.approvals.status.assigned":
+    "Operating access was granted to the existing sign-in account.",
+  "admin.approvals.status.invited":
+    "The administrator invitation was sent. Access opens after the invitee accepts it.",
   "admin.approvals.status.rejected": "The registration request was rejected.",
+  "admin.approvals.sort": "Registration date",
+  "admin.approvals.sortNewest": "Newest first",
+  "admin.approvals.sortOldest": "Oldest first",
   "admin.approvals.tenant": "Contract customer",
   "admin.approvals.total": "{count} accounts waiting for approval",
   "admin.approvals.truncated":
@@ -900,7 +989,7 @@ export const en = {
   "admin.auth.configuration.title": "Sign-in is being prepared.",
   "admin.auth.error.configuration":
     "The sign-in connection is not ready yet. Contact the operations team.",
-  "admin.auth.error.invalidCode": "Check the latest six-digit code in your authenticator app.",
+  "admin.auth.error.invalidCode": "The sign-in verification information is invalid. Try again.",
   "admin.auth.error.invalidCredentials": "The email or password is incorrect.",
   "admin.auth.error.session": "Your session has expired. Sign in again.",
   "admin.auth.error.unavailable":
@@ -913,6 +1002,7 @@ export const en = {
   "admin.dashboard.description":
     "This is the operations home that confirms your role and membership scope and links to the operations you are allowed to run.",
   "admin.dashboard.eyebrow": "Tenant operations dashboard",
+  "admin.company.eyebrow": "Management company operations console",
   "admin.dashboard.line1": "You are connected to the workspace",
   "admin.dashboard.line2": "for managing contracted sites.",
   "admin.dashboard.next.description":
@@ -975,10 +1065,10 @@ export const en = {
     "Use the left navigation to manage tenants, management companies, sites, approvals, and QR operations.",
   "admin.platform.next.title": "Platform operating context",
   "admin.platform.tenantsAction": "Tenants",
-  "admin.role.managementAdmin": "Management company admin",
-  "admin.role.platformOperator": "Platform operator",
+  "admin.role.managementAdmin": "Designated admin",
+  "admin.role.platformOperator": "Admin",
   "admin.role.readOnly": "Read only",
-  "admin.role.siteAdmin": "Site admin",
+  "admin.role.siteAdmin": "Designated admin",
   "admin.role.siteOperator": "Site operator",
   "admin.role.superAdmin": "Super Admin",
   "admin.scope.managementCompany": "Management company scope",
@@ -1167,6 +1257,7 @@ export const en = {
   "admin.qr.batch.status.cancelled": "Cancelled",
   "admin.qr.batch.status.completed": "Completed",
   "admin.qr.batch.status.delivered": "Delivered",
+  "admin.qr.batch.status.partiallyReceived": "Partially received",
   "admin.qr.batch.status.distributing": "Distributing",
   "admin.qr.batch.status.draft": "Waiting for sample",
   "admin.qr.batch.status.failed": "Failed",
@@ -1372,6 +1463,7 @@ export const en = {
     "The Binding moved to a replacement QR without deleting prior history.",
   "admin.qr.status.assetRevoked": "The QR was revoked and its active Binding was ended.",
   "admin.qr.status.batchReceived": "The Batch quantity was verified and received into IN_STOCK.",
+  "admin.qr.status.batchReceiptRecorded": "The QR receipt quantity and reason were recorded.",
   "admin.qr.status.brandAssetUploaded": "The brand logo was validated and registered safely.",
   "admin.qr.status.batchCancelled": "The QR Batch request was cancelled.",
   "admin.qr.status.batchRequested":
@@ -1423,7 +1515,17 @@ export const en = {
   "admin.qr.waiting.sample": "A sample artifact and quality checks are required.",
   "admin.sites.actions": "Manage",
   "admin.sites.address": "Address",
-  "admin.sites.back": "Back to admin console",
+  "admin.sites.address.detail": "Address detail",
+  "admin.sites.address.detail.placeholder": "Building, unit, office location, etc.",
+  "admin.sites.address.help": "Use address search to select a road-name or lot address.",
+  "admin.sites.address.search.close": "Close",
+  "admin.sites.address.search.fallback":
+    "Address search could not load. Check the network and try again.",
+  "admin.sites.address.search.jibun": "Lot address",
+  "admin.sites.address.search.open": "Search address",
+  "admin.sites.address.search.road": "Road-name address",
+  "admin.sites.address.search.title": "Search site address",
+  "admin.sites.address.search.zonecode": "Postal code",
   "admin.sites.close": "Close operations",
   "admin.sites.company": "Management company",
   "admin.sites.contract.save": "Save contract limit",
@@ -1437,7 +1539,7 @@ export const en = {
   "admin.sites.createdAt": "Created",
   "admin.sites.description":
     "Operate only the apartments, officetels, and buildings allowed by the current role, membership scope, and PostgreSQL RLS.",
-  "admin.sites.edit": "Site actions",
+  "admin.sites.moreActions": "More actions",
   "admin.sites.empty.description":
     "A site will appear here after a Super Admin registers it under an active management company.",
   "admin.sites.empty.title": "No sites are available in this scope.",
@@ -1518,6 +1620,7 @@ export const en = {
   "admin.sites.type.building": "Building",
   "admin.sites.type.officetel": "Officetel",
   "admin.sites.type.other": "Other",
+  "admin.sites.view": "View details",
   "landing.eyebrow": "Vehicle contact that starts without sharing a phone number",
   "landing.faq.app.answer":
     "No. Scanning the QR on the vehicle opens the request screen straight in your phone browser, and no account is needed.",

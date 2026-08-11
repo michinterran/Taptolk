@@ -37,6 +37,10 @@ function readRelationName(value: unknown): string | null {
   return typeof name === "string" ? name : null;
 }
 
+function canUseLegacyCatalogRead(error: { code?: string } | null) {
+  return error?.code === "42703" && process.env.TAPTOLK_ALLOW_LEGACY_SITE_CATALOG === "true";
+}
+
 function mapSiteRow(row: unknown): SiteCatalogItem {
   if (!row || typeof row !== "object") {
     throw new Error("Site catalog returned an invalid row.");
@@ -84,16 +88,33 @@ export function createSupabaseSiteCatalogRepository(
 ): SiteCatalogRepository {
   return {
     async list({ limit, offset }) {
-      const result = await client
+      const query = client
         .from("sites")
         .select(
           "id, tenant_id, management_company_id, name, site_type, address, timezone, contract_vehicle_limit, status, version, created_at, management_companies!inner(name, tenants!inner(name))",
           { count: "exact" },
         )
+        .eq("is_test_fixture", false)
+        .eq("management_companies.is_test_fixture", false)
+        .eq("management_companies.tenants.is_test_fixture", false)
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .order("id", { ascending: true })
         .range(offset, offset + limit - 1);
+      let result = await query;
+      if (canUseLegacyCatalogRead(result.error)) {
+        logger.warn("admin.site_catalog.legacy_read_fallback", { scope: "sites" });
+        result = (await client
+          .from("sites")
+          .select(
+            "id, tenant_id, management_company_id, name, site_type, address, timezone, contract_vehicle_limit, status, version, created_at, management_companies!inner(name, tenants!inner(name))",
+            { count: "exact" },
+          )
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: true })
+          .range(offset, offset + limit - 1)) as typeof result;
+      }
       if (result.error) {
         logger.error("admin.site_catalog.query_failed", { errorCode: result.error.code });
         throw new Error("Unable to load the Site catalog.");
@@ -104,15 +125,32 @@ export function createSupabaseSiteCatalogRepository(
       };
     },
     async listActiveParents() {
-      const result = await client
+      const query = client
         .from("management_companies")
-        .select("id, tenant_id, name, tenants!inner(name, status, deleted_at)")
+        .select(
+          "id, tenant_id, name, is_test_fixture, tenants!inner(name, status, deleted_at, is_test_fixture)",
+        )
         .eq("status", "ACTIVE")
+        .eq("is_test_fixture", false)
+        .eq("tenants.is_test_fixture", false)
         .is("deleted_at", null)
         .eq("tenants.status", "ACTIVE")
         .is("tenants.deleted_at", null)
         .order("name", { ascending: true })
         .order("id", { ascending: true });
+      let result = await query;
+      if (canUseLegacyCatalogRead(result.error)) {
+        logger.warn("admin.site_catalog.legacy_read_fallback", { scope: "parents" });
+        result = (await client
+          .from("management_companies")
+          .select("id, tenant_id, name, tenants!inner(name, status, deleted_at)")
+          .eq("status", "ACTIVE")
+          .is("deleted_at", null)
+          .eq("tenants.status", "ACTIVE")
+          .is("tenants.deleted_at", null)
+          .order("name", { ascending: true })
+          .order("id", { ascending: true })) as typeof result;
+      }
       if (result.error) {
         logger.error("admin.site_catalog.parent_options_failed", {
           errorCode: result.error.code,

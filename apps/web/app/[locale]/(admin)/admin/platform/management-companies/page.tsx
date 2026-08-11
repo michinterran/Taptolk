@@ -90,6 +90,8 @@ export default async function ManagementCompaniesPage({
         catalog={catalog}
         copy={{
           actions: copy["admin.companies.actions"],
+          address: copy["admin.companies.address"],
+          addressHelp: copy["admin.companies.address.help"],
           back: copy["admin.companies.back"],
           businessNumber: copy["admin.companies.businessNumber"],
           businessNumberHelp: copy["admin.companies.businessNumber.help"],
@@ -110,6 +112,8 @@ export default async function ManagementCompaniesPage({
           },
           localeTitle: copy["locale.switcher.label"],
           logoAlt: copy["admin.brand.logoAlt"],
+          managementCode: copy["admin.companies.managementCode"],
+          managementCodeHelp: copy["admin.companies.managementCode.help"],
           name: copy["admin.companies.name"],
           platformDirect: copy["admin.companies.platformDirect"],
           next: copy["admin.companies.next"],

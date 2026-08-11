@@ -26,6 +26,7 @@ import {
 } from "./supabase-admin-account-approval-repository";
 
 type ApprovalActionError =
+  | "account-not-found"
   | "conflict"
   | "configuration"
   | "forbidden"
@@ -60,7 +61,7 @@ function readScopeType(formData: FormData): AdminScopeType | null {
 function approvalCenterPath(
   locale: AppLocale,
   kind: "error" | "status",
-  value: ApprovalActionError | "approved" | "rejected",
+  value: ApprovalActionError | "approved" | "assigned" | "rejected",
 ): Route {
   return getLocalizedAdminPath(locale, `/platform/access?${kind}=${value}`) as Route;
 }
@@ -70,12 +71,31 @@ function mapActionError(error: unknown): ApprovalActionError {
     return "forbidden";
   }
   if (error instanceof AdminAccountApprovalError) {
+    if (error.code === "ACCOUNT_NOT_FOUND") {
+      return "account-not-found";
+    }
     return "validation";
   }
   if (error instanceof AdminAccountApprovalRepositoryError) {
     return error.code === "CONFLICT" ? "conflict" : "unavailable";
   }
   return "unavailable";
+}
+
+function readScope(formData: FormData): AdminMembershipScope {
+  const managementCompanyId = readOptionalString(formData, "managementCompanyId");
+  const siteId = readOptionalString(formData, "siteId");
+  const tenantId = readOptionalString(formData, "tenantId");
+  const scopeType = readScopeType(formData);
+  if (!scopeType) {
+    throw new AdminAccountApprovalError("INVALID_SCOPE");
+  }
+  return {
+    ...(managementCompanyId ? { managementCompanyId } : {}),
+    ...(siteId ? { siteId } : {}),
+    ...(tenantId ? { tenantId } : {}),
+    type: scopeType,
+  };
 }
 
 async function createApprovalService(locale: AppLocale) {
@@ -114,20 +134,15 @@ async function createApprovalService(locale: AppLocale) {
 export async function approvePendingAdmin(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
   const role = readRole(formData);
-  const scopeType = readScopeType(formData);
-  if (!role || !scopeType) {
+  if (!role) {
     redirect(approvalCenterPath(locale, "error", "validation"));
   }
-
-  const managementCompanyId = readOptionalString(formData, "managementCompanyId");
-  const siteId = readOptionalString(formData, "siteId");
-  const tenantId = readOptionalString(formData, "tenantId");
-  const scope: AdminMembershipScope = {
-    ...(managementCompanyId ? { managementCompanyId } : {}),
-    ...(siteId ? { siteId } : {}),
-    ...(tenantId ? { tenantId } : {}),
-    type: scopeType,
-  };
+  let scope: AdminMembershipScope;
+  try {
+    scope = readScope(formData);
+  } catch {
+    redirect(approvalCenterPath(locale, "error", "validation"));
+  }
   const { actor, service } = await createApprovalService(locale);
 
   try {
@@ -145,6 +160,38 @@ export async function approvePendingAdmin(formData: FormData): Promise<never> {
   }
 
   redirect(approvalCenterPath(locale, "status", "approved"));
+}
+
+export async function assignExistingAdmin(formData: FormData): Promise<never> {
+  const locale = readLocale(formData);
+  const role = readRole(formData);
+  if (!role) {
+    redirect(approvalCenterPath(locale, "error", "validation"));
+  }
+
+  let scope: AdminMembershipScope;
+  try {
+    scope = readScope(formData);
+  } catch {
+    redirect(approvalCenterPath(locale, "error", "validation"));
+  }
+
+  const { actor, service } = await createApprovalService(locale);
+  try {
+    await service.assignExisting({
+      actor,
+      displayName: readString(formData, "displayName"),
+      email: readString(formData, "email"),
+      reason: readString(formData, "reason"),
+      requestId: crypto.randomUUID(),
+      role,
+      scope,
+    });
+  } catch (error) {
+    redirect(approvalCenterPath(locale, "error", mapActionError(error)));
+  }
+
+  redirect(approvalCenterPath(locale, "status", "assigned"));
 }
 
 export async function rejectPendingAdmin(formData: FormData): Promise<never> {

@@ -20,7 +20,7 @@ function read(formData: FormData, key: string): string {
 export async function updateAdminDirectoryMembership(formData: FormData): Promise<never> {
   const localeValue = read(formData, "locale");
   const locale: AppLocale = isAppLocale(localeValue) ? localeValue : "en";
-  const path = `/${locale}/admin/platform/access/directory` as Route;
+  const path = `/${locale}/admin/accounts` as Route;
   try {
     const context = await requireReadyAdminContext(locale);
     const sessionClient = await createAdminServerClient();

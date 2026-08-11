@@ -4,8 +4,8 @@ import {
   SiteCatalogService,
   SiteLifecycleRequestService,
 } from "@taptolk/application";
-import { getAdminLandingArea } from "@taptolk/auth";
 import { roleHasPermission } from "@taptolk/domain";
+import { PageHeader } from "@taptolk/ui";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseSiteCatalogRepository } from "../../../../../admin/supabase-site-catalog-repository";
 import { createSupabaseSiteLifecycleRequestRepository } from "../../../../../admin/supabase-site-lifecycle-request-repository";
@@ -13,6 +13,7 @@ import { toAdminAuthorizationContext } from "../../../../../auth/admin-authoriza
 import { getLocalizedAdminPath } from "../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../auth/page-guard";
 import { createAdminServerClient } from "../../../../../auth/server-client";
+import { AdminPageHeader } from "../../../../../components/admin-page-header";
 import { SiteCatalogView } from "../../../../../components/site-catalog-view";
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
@@ -24,6 +25,16 @@ function readValue(value: string | string[] | undefined): string | undefined {
 function readPage(value: string | string[] | undefined): number {
   const parsed = Number(readValue(value));
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function isSiteCatalogUnavailable(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return (
+    error.message === "Unable to load the Site catalog." ||
+    error.message === "Unable to load active Site parents."
+  );
 }
 
 export default async function SitesPage({
@@ -51,16 +62,56 @@ export default async function SitesPage({
   const membership = context.decision.membership;
   const authorization = toAdminAuthorizationContext(membership, context.mfaLevel === "aal2");
   const actor = { authorization, userId: context.userId };
-  const [catalog, lifecycleRequests] = await Promise.all([
-    new SiteCatalogService(createSupabaseSiteCatalogRepository(client)).list({
-      actor: authorization,
-      page: readPage(query.page),
-    }),
-    new SiteLifecycleRequestService(createSupabaseSiteLifecycleRequestRepository(client)).list({
-      actor,
-    }),
-  ]);
   const copy = getMessages(locale);
+  let catalog: Awaited<ReturnType<SiteCatalogService["list"]>>;
+  let lifecycleRequests: Awaited<ReturnType<SiteLifecycleRequestService["list"]>>;
+  try {
+    [catalog, lifecycleRequests] = await Promise.all([
+      new SiteCatalogService(createSupabaseSiteCatalogRepository(client)).list({
+        actor: authorization,
+        page: readPage(query.page),
+      }),
+      new SiteLifecycleRequestService(createSupabaseSiteLifecycleRequestRepository(client)).list({
+        actor,
+      }),
+    ]);
+  } catch (error) {
+    if (!isSiteCatalogUnavailable(error)) {
+      throw error;
+    }
+    return (
+      <main className="admin-dashboard-shell">
+        <div className="admin-catalog-canvas">
+          <AdminPageHeader
+            locale={locale}
+            localeLabels={{
+              en: copy["locale.english"],
+              ko: copy["locale.korean"],
+            }}
+            localeTitle={copy["locale.switcher.label"]}
+            logoAlt={copy["admin.brand.logoAlt"]}
+            pathname={`/${locale}/admin/sites`}
+          />
+          <PageHeader
+            description={copy["admin.sites.description"]}
+            eyebrow={copy["admin.sites.eyebrow"]}
+            lines={[copy["admin.sites.line1"], copy["admin.sites.line2"]]}
+          />
+          <section
+            aria-labelledby="admin-sites-unavailable-title"
+            className="admin-data-unavailable"
+            role="status"
+          >
+            <h2 id="admin-sites-unavailable-title">{copy["admin.sites.error.unavailable"]}</h2>
+            <p>{copy["shared.error.description"]}</p>
+            <a className="tt-button tt-button--secondary" href={`/${locale}/admin/sites`}>
+              {copy["shared.error.retry"]}
+            </a>
+          </section>
+        </div>
+      </main>
+    );
+  }
   const errorMessages: Readonly<Record<string, string>> = {
     blocked: copy["admin.sites.error.blocked"],
     conflict: copy["admin.sites.error.conflict"],
@@ -80,31 +131,15 @@ export default async function SitesPage({
   };
   const error = readValue(query.error);
   const status = readValue(query.status);
-  const isPlatform = getAdminLandingArea(membership.role) === "platform";
-
   return (
     <main className="admin-dashboard-shell">
       <SiteCatalogView
-        backHref={getLocalizedAdminPath(locale, isPlatform ? "/platform" : "/dashboard")}
-        canChangeStatus={roleHasPermission(membership.role, "site:suspend-approve")}
-        canClose={roleHasPermission(membership.role, "site:archive-approve")}
         canCreate={roleHasPermission(membership.role, "site:create")}
-        canRequestClose={
-          !roleHasPermission(membership.role, "site:archive-approve") &&
-          roleHasPermission(membership.role, "site:archive-request")
-        }
-        canRequestStatus={
-          !roleHasPermission(membership.role, "site:suspend-approve") &&
-          roleHasPermission(membership.role, "site:suspend-request")
-        }
-        canUpdateContract={roleHasPermission(membership.role, "site:update-contract")}
-        canUpdateOperational={roleHasPermission(membership.role, "site:update-operational")}
         catalog={catalog}
         contractVehicleLimitMax={SITE_CONTRACT_VEHICLE_LIMIT_MAX}
         copy={{
           actions: copy["admin.sites.actions"],
           address: copy["admin.sites.address"],
-          back: copy["admin.sites.back"],
           close: copy["admin.sites.close"],
           company: copy["admin.sites.company"],
           contractLimit: copy["admin.sites.contractLimit"],
@@ -115,7 +150,6 @@ export default async function SitesPage({
           createTitle: copy["admin.sites.create.title"],
           createdAt: copy["admin.sites.createdAt"],
           description: copy["admin.sites.description"],
-          edit: copy["admin.sites.edit"],
           emptyDescription: copy["admin.sites.empty.description"],
           emptyTitle: copy["admin.sites.empty.title"],
           eyebrow: copy["admin.sites.eyebrow"],
@@ -145,6 +179,7 @@ export default async function SitesPage({
           },
           localeTitle: copy["locale.switcher.label"],
           logoAlt: copy["admin.brand.logoAlt"],
+          moreActions: copy["admin.sites.moreActions"],
           name: copy["admin.sites.name"],
           next: copy["admin.sites.next"],
           noActiveParent: copy["admin.sites.noActiveParent"],
@@ -161,7 +196,6 @@ export default async function SitesPage({
           saveContract: copy["admin.sites.contract.save"],
           saveOperational: copy["admin.sites.operational.save"],
           securityNote: copy["admin.sites.securityNote"],
-          signOut: copy["admin.shared.signOut"],
           status: copy["admin.sites.status"],
           statusDescription: copy["admin.sites.status.description"],
           statusLabels: {
@@ -181,6 +215,7 @@ export default async function SitesPage({
             OFFICETEL: copy["admin.sites.type.officetel"],
             OTHER: copy["admin.sites.type.other"],
           },
+          view: copy["admin.sites.view"],
         }}
         defaultTimezone={DEFAULT_SITE_TIMEZONE}
         errorMessage={error ? errorMessages[error] : undefined}

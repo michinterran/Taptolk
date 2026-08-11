@@ -22,6 +22,11 @@ interface ProfileStatusRow {
   user_id: string;
 }
 
+interface MembershipStatusRow {
+  status: "ACTIVE" | "INVITED" | "REVOKED" | "SUSPENDED";
+  user_id: string;
+}
+
 interface ScopeRow {
   id: string;
   name: string;
@@ -41,6 +46,21 @@ export class AdminAccountApprovalRepositoryError extends Error {
 
 const logger = createLogger({ service: "taptolk-web" });
 const AUTH_PAGE_SIZE = 200;
+const AUTH_LOOKUP_LIMIT = 10_000;
+const FIXTURE_MARKERS = [
+  /^taptolk e2e\b/iu,
+  /\btaptolk-e2e-/iu,
+  /^demo-/iu,
+  /^\[데모\]/u,
+  /@demo\.taptolk\.example$/iu,
+  /@example\.com$/iu,
+];
+
+function isFixtureText(value: string | null | undefined): boolean {
+  return (
+    value !== null && value !== undefined && FIXTURE_MARKERS.some((marker) => marker.test(value))
+  );
+}
 
 function mapProvider(value: unknown): AdminIdentityProvider {
   if (value === "email" || value === "google") {
@@ -85,6 +105,39 @@ export function createSupabaseAdminAccountApprovalRepository(
   serviceClient: AdminServiceClient,
 ): AdminAccountApprovalRepository {
   return {
+    async findUserIdByEmail(email) {
+      let page = 1;
+      let scanned = 0;
+
+      while (scanned < AUTH_LOOKUP_LIMIT) {
+        const result = await serviceClient.auth.admin.listUsers({
+          page,
+          perPage: Math.min(AUTH_PAGE_SIZE, AUTH_LOOKUP_LIMIT - scanned),
+        });
+        if (result.error) {
+          logger.error("admin.account_approval.auth_lookup_failed", {
+            errorCode: result.error.code ?? null,
+          });
+          throw new AdminAccountApprovalRepositoryError("UNAVAILABLE");
+        }
+
+        const matchingUser = result.data.users.find(
+          (user) => user.email?.trim().toLowerCase() === email,
+        );
+        if (matchingUser) {
+          return matchingUser.id;
+        }
+
+        scanned += result.data.users.length;
+        if (result.data.nextPage === null || result.data.users.length === 0) {
+          break;
+        }
+        page = result.data.nextPage;
+      }
+
+      return null;
+    },
+
     async approve(input) {
       const result = await sessionClient.rpc("approve_admin_account", {
         p_display_name: input.displayName,
@@ -151,16 +204,34 @@ export function createSupabaseAdminAccountApprovalRepository(
         throw new AdminAccountApprovalRepositoryError("UNAVAILABLE");
       }
 
+      const invitedMembershipResult =
+        userIds.length === 0
+          ? { data: [] as MembershipStatusRow[], error: null }
+          : await sessionClient
+              .from("admin_memberships")
+              .select("user_id, status")
+              .in("user_id", userIds)
+              .eq("status", "INVITED");
+      if (invitedMembershipResult.error) {
+        logger.error("admin.account_approval.membership_directory_failed", {
+          errorCode: invitedMembershipResult.error.code,
+        });
+        throw new AdminAccountApprovalRepositoryError("UNAVAILABLE");
+      }
+
       const profileStatusByUser = new Map(
         (profileResult.data ?? []).map((profile) => [
           profile.user_id,
           (profile as ProfileStatusRow).status,
         ]),
       );
+      const invitedUserIds = new Set(
+        (invitedMembershipResult.data ?? []).map((membership) => membership.user_id),
+      );
       const accounts = users
         .filter((user) => {
           const status = profileStatusByUser.get(user.id);
-          return status === undefined || status === "INVITED";
+          return (status === undefined || status === "INVITED") && !invitedUserIds.has(user.id);
         })
         .filter(
           (
@@ -169,6 +240,9 @@ export function createSupabaseAdminAccountApprovalRepository(
             created_at: string;
             email: string;
           } => typeof user.email === "string" && typeof user.created_at === "string",
+        )
+        .filter(
+          (user) => !isFixtureText(user.email) && !isFixtureText(readSuggestedDisplayName(user)),
         )
         .map(
           (user): PendingAdminAccount => ({
@@ -225,13 +299,15 @@ export function createSupabaseAdminAccountApprovalRepository(
       }
 
       return {
-        managementCompanies: (companyResult.data ?? []).map((company) =>
-          mapScopeOption(company, company.tenant_id, company.tenant_id),
-        ),
-        sites: (siteResult.data ?? []).map((site) =>
-          mapScopeOption(site, site.tenant_id, site.management_company_id),
-        ),
-        tenants: (tenantResult.data ?? []).map((tenant) => mapScopeOption(tenant, tenant.id, null)),
+        managementCompanies: (companyResult.data ?? [])
+          .filter((company) => !isFixtureText(company.name))
+          .map((company) => mapScopeOption(company, company.tenant_id, company.tenant_id)),
+        sites: (siteResult.data ?? [])
+          .filter((site) => !isFixtureText(site.name))
+          .map((site) => mapScopeOption(site, site.tenant_id, site.management_company_id)),
+        tenants: (tenantResult.data ?? [])
+          .filter((tenant) => !isFixtureText(tenant.name))
+          .map((tenant) => mapScopeOption(tenant, tenant.id, null)),
       };
     },
 

@@ -2,6 +2,7 @@ import type { AppLocale } from "../i18n/config";
 
 export interface AdminAnalyticsCopy {
   activeQr: string;
+  apply: string;
   back: string;
   contactCount: string;
   dailyDetail: string;
@@ -13,9 +14,22 @@ export interface AdminAnalyticsCopy {
   eyebrow: string;
   failed: string;
   freshAt: string;
+  generatedQr: string;
   line1: string;
   line2: string;
+  next: string;
   openReports: string;
+  outputReadyBatches: string;
+  page: string;
+  pageSize: string;
+  previous: string;
+  period: string;
+  periodCustom: string;
+  periodToday: string;
+  days: string;
+  startDate: string;
+  endDate: string;
+  pendingActivation: string;
   deliveryRate: string;
   escalationRate: string;
   qrProduction: string;
@@ -27,12 +41,18 @@ export interface AdminAnalyticsCopy {
   scopeAll: string;
   sent: string;
   siteCount: string;
+  totalBatches: string;
+  totalQr: string;
+  unavailableDescription: string;
+  unavailableTitle: string;
   unresolved: string;
+  retry: string;
 }
 
 export const ADMIN_ANALYTICS_COPY: Readonly<Record<AppLocale, AdminAnalyticsCopy>> = Object.freeze({
   en: {
     activeQr: "Active QR assets",
+    apply: "Apply",
     back: "Back to dashboard",
     contactCount: "Contact requests",
     dailyDetail: "Daily operating detail",
@@ -45,9 +65,22 @@ export const ADMIN_ANALYTICS_COPY: Readonly<Record<AppLocale, AdminAnalyticsCopy
     eyebrow: "Operations report",
     failed: "Final failures",
     freshAt: "Data refreshed",
-    line1: "Read the operating signal",
-    line2: "before it becomes a service risk.",
+    generatedQr: "Generated QR",
+    line1: "Reports",
+    line2: "Operating quality and readiness",
+    next: "Next",
     openReports: "Open reports",
+    outputReadyBatches: "Output-ready batches",
+    page: "Page {current} of {total}",
+    pageSize: "Rows per page",
+    previous: "Previous",
+    period: "Report period",
+    periodCustom: "Custom period",
+    periodToday: "Today",
+    days: " days",
+    startDate: "Start date",
+    endDate: "End date",
+    pendingActivation: "Pending activation",
     deliveryRate: "Delivery success",
     escalationRate: "Office escalation rate",
     qrProduction: "QR production readiness",
@@ -59,10 +92,17 @@ export const ADMIN_ANALYTICS_COPY: Readonly<Record<AppLocale, AdminAnalyticsCopy
     scopeAll: "All authorized locations",
     sent: "Sent or delivered",
     siteCount: "Managed locations",
+    totalBatches: "QR batches",
+    totalQr: "Total QR",
+    unavailableDescription:
+      "The approved operations data source is temporarily unavailable. No operational figures are shown until it recovers.",
+    unavailableTitle: "Report data is temporarily unavailable",
     unresolved: "Unresolved requests",
+    retry: "Try again",
   },
   ko: {
     activeQr: "활성 QR",
+    apply: "적용",
     back: "대시보드로 돌아가기",
     contactCount: "차량 연락 요청",
     dailyDetail: "일별 운영 상세",
@@ -75,9 +115,22 @@ export const ADMIN_ANALYTICS_COPY: Readonly<Record<AppLocale, AdminAnalyticsCopy
     eyebrow: "운영 리포트",
     failed: "최종 실패",
     freshAt: "데이터 기준 시각",
-    line1: "서비스 리스크가 되기 전에",
-    line2: "운영 신호를 먼저 읽습니다.",
+    generatedQr: "생성된 QR",
+    line1: "리포트",
+    line2: "운영 품질과 준비도",
+    next: "다음",
     openReports: "미처리 신고",
+    outputReadyBatches: "출력 준비 묶음",
+    page: "{current} / {total} 페이지",
+    pageSize: "페이지당 표시",
+    previous: "이전",
+    period: "리포트 기간",
+    periodCustom: "기간 설정",
+    periodToday: "오늘",
+    days: "일",
+    startDate: "시작일",
+    endDate: "종료일",
+    pendingActivation: "활성화 대기",
     deliveryRate: "알림 전달 성공률",
     escalationRate: "관리사무소 전달률",
     qrProduction: "QR 제작 준비도",
@@ -89,6 +142,12 @@ export const ADMIN_ANALYTICS_COPY: Readonly<Record<AppLocale, AdminAnalyticsCopy
     scopeAll: "승인된 전체 관리 현장",
     sent: "전송·도달",
     siteCount: "관리 현장",
+    totalBatches: "QR 묶음",
+    totalQr: "전체 QR",
+    unavailableDescription:
+      "승인된 운영 데이터 원본에 일시적으로 연결할 수 없습니다. 복구될 때까지 운영 수치를 임의로 표시하지 않습니다.",
+    unavailableTitle: "리포트 데이터를 불러올 수 없습니다",
     unresolved: "미해결 요청",
+    retry: "다시 시도",
   },
 });

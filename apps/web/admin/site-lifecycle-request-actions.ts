@@ -39,8 +39,12 @@ function path(
   locale: AppLocale,
   kind: "error" | "status",
   value: LifecycleActionError | LifecycleActionStatus,
+  siteId?: string,
 ): Route {
-  return getLocalizedAdminPath(locale, `/sites?${kind}=${value}`) as Route;
+  return getLocalizedAdminPath(
+    locale,
+    siteId ? `/sites/${siteId}?${kind}=${value}` : `/sites?${kind}=${value}`,
+  ) as Route;
 }
 
 function mapError(error: unknown): LifecycleActionError {
@@ -98,6 +102,7 @@ function reviewInput(formData: FormData) {
 
 export async function requestSiteLifecycle(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
+  const siteId = readString(formData, "siteId");
   try {
     const { actor, service } = await context(locale);
     await service.request({
@@ -112,9 +117,9 @@ export async function requestSiteLifecycle(formData: FormData): Promise<never> {
       tenantId: readString(formData, "tenantId"),
     });
   } catch (error) {
-    redirect(path(locale, "error", mapError(error)));
+    redirect(path(locale, "error", mapError(error), siteId));
   }
-  redirect(path(locale, "status", "requestCreated"));
+  redirect(path(locale, "status", "requestCreated", siteId));
 }
 
 export async function approveSiteLifecycleRequest(formData: FormData): Promise<never> {
@@ -141,11 +146,12 @@ export async function rejectSiteLifecycleRequest(formData: FormData): Promise<ne
 
 export async function cancelSiteLifecycleRequest(formData: FormData): Promise<never> {
   const locale = readLocale(formData);
+  const siteId = readString(formData, "siteId");
   try {
     const { actor, service } = await context(locale);
     await service.cancel({ actor, ...reviewInput(formData) });
   } catch (error) {
-    redirect(path(locale, "error", mapError(error)));
+    redirect(path(locale, "error", mapError(error), siteId));
   }
-  redirect(path(locale, "status", "requestCancelled"));
+  redirect(path(locale, "status", "requestCancelled", siteId));
 }

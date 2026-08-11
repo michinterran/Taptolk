@@ -1,6 +1,7 @@
 import "server-only";
 
 import type {
+  AdminDirectoryChangeAction,
   AdminDirectoryItem,
   AdminDirectoryMembershipStatus,
   AdminDirectoryRepository,
@@ -27,12 +28,73 @@ const MEMBERSHIP_STATUSES = new Set<AdminDirectoryMembershipStatus>([
   "REVOKED",
   "SUSPENDED",
 ]);
+const CHANGE_ACTIONS = new Set<AdminDirectoryChangeAction>([
+  "ADMIN_ACCOUNT_APPROVED",
+  "ADMIN_ACCOUNT_INVITATION_ACCEPTED",
+  "ADMIN_ACCOUNT_INVITED",
+  "ADMIN_ACCOUNT_REJECTED",
+  "ADMIN_MEMBERSHIP_ASSIGNMENT_UPDATED",
+]);
+const FIXTURE_MARKERS = [
+  /^taptolk e2e\b/iu,
+  /\btaptolk-e2e-/iu,
+  /^demo-/iu,
+  /^\[데모\]/u,
+  /@demo\.taptolk\.example$/iu,
+  /@example\.com$/iu,
+];
+
+function isFixtureDirectoryItem(item: AdminDirectoryItem): boolean {
+  return [
+    item.displayName,
+    item.email,
+    item.tenantName,
+    item.managementCompanyName,
+    item.siteName,
+  ].some((value) => value !== null && FIXTURE_MARKERS.some((marker) => marker.test(value)));
+}
 
 function nullableString(row: Record<string, unknown>, key: string): string | null {
   const value = row[key];
-  if (value === null) return null;
+  if (value === null || value === undefined) return null;
   if (typeof value !== "string") throw new Error("ADMIN_DIRECTORY_UNAVAILABLE");
   return value;
+}
+
+interface DirectoryChangeRow {
+  action: string;
+  created_at: string;
+  resource_id: string;
+  resource_type: string;
+}
+
+function mergeLatestChangeSummary(
+  items: readonly AdminDirectoryItem[],
+  changes: readonly DirectoryChangeRow[],
+): readonly AdminDirectoryItem[] {
+  const latestByResource = new Map<string, DirectoryChangeRow>();
+  for (const change of changes) {
+    if (
+      !CHANGE_ACTIONS.has(change.action as AdminDirectoryChangeAction) ||
+      !change.resource_id ||
+      !change.created_at ||
+      latestByResource.has(change.resource_id)
+    ) {
+      continue;
+    }
+    latestByResource.set(change.resource_id, change);
+  }
+
+  return items.map((item) => {
+    if (item.lastChangedAction && item.lastChangedAt) return item;
+    const change = latestByResource.get(item.membershipId) ?? latestByResource.get(item.userId);
+    if (!change) return item;
+    return {
+      ...item,
+      lastChangedAction: change.action as AdminDirectoryChangeAction,
+      lastChangedAt: change.created_at,
+    };
+  });
 }
 
 function mapItem(value: unknown, emailByUser: ReadonlyMap<string, string>): AdminDirectoryItem {
@@ -59,10 +121,19 @@ function mapItem(value: unknown, emailByUser: ReadonlyMap<string, string>): Admi
   const tenantId = nullableString(row, "tenant_id");
   const managementCompanyId = nullableString(row, "management_company_id");
   const siteId = nullableString(row, "site_id");
+  const lastChangedAction = nullableString(row, "last_changed_action");
+  const lastChangedAt = nullableString(row, "last_changed_at");
+  const lastChangedByDisplayName = nullableString(row, "last_changed_by_display_name");
   return {
     createdAt: row.created_at,
     displayName: row.display_name,
     email: emailByUser.get(row.user_id) ?? null,
+    lastChangedAction:
+      lastChangedAction && CHANGE_ACTIONS.has(lastChangedAction as AdminDirectoryChangeAction)
+        ? (lastChangedAction as AdminDirectoryChangeAction)
+        : null,
+    lastChangedAt,
+    lastChangedByDisplayName,
     managementCompanyName: nullableString(row, "management_company_name"),
     membershipId: row.membership_id,
     profileStatus: row.profile_status as AdminDirectoryItem["profileStatus"],
@@ -99,7 +170,21 @@ export function createSupabaseAdminDirectoryRepository(
           typeof user.email === "string" ? [[user.id, user.email] as const] : [],
         ),
       );
-      return directory.data.map((item) => mapItem(item, emailByUser));
+      const items = directory.data
+        .map((item) => mapItem(item, emailByUser))
+        .filter((item) => !isFixtureDirectoryItem(item));
+      const resourceIds = items.flatMap((item) => [item.membershipId, item.userId]);
+      const changesResult =
+        resourceIds.length === 0
+          ? { data: [] as DirectoryChangeRow[], error: null }
+          : await serviceClient
+              .from("audit_logs")
+              .select("resource_id, resource_type, action, created_at")
+              .in("resource_type", ["ADMIN_MEMBERSHIP", "ADMIN_PROFILE"])
+              .in("resource_id", resourceIds)
+              .order("created_at", { ascending: false });
+      if (changesResult.error) throw new Error("ADMIN_DIRECTORY_UNAVAILABLE");
+      return mergeLatestChangeSummary(items, changesResult.data ?? []);
     },
     async update(input) {
       const result = await sessionClient.rpc("update_admin_membership_assignment", {

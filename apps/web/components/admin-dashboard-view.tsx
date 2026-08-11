@@ -7,15 +7,7 @@ import {
   WarningCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import type { ManagementCompanyCatalogItem, OperationsDashboardModel } from "@taptolk/application";
-import {
-  DataTable,
-  MeterBar,
-  PageHeader,
-  SideCard,
-  StatStrip,
-  StatTile,
-  StatusPill,
-} from "@taptolk/ui";
+import { DataTable, MeterBar, PageHeader, StatusPill } from "@taptolk/ui";
 import type { AdminOverviewCopy } from "../content/admin-overview-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -73,12 +65,6 @@ export function AdminDashboardView({
     model.medianOwnerResponseMs === null
       ? copy.noResponseData
       : `${decimal.format(model.medianOwnerResponseMs / 1_000)}${copy.seconds}`;
-  const totalSignals =
-    model.contactCount +
-    model.unresolvedCount +
-    model.escalatedCount +
-    model.notificationFailedCount +
-    model.openReportCount;
   const deliveryFailureRate = percent(
     model.notificationFailedCount + model.notificationRetryCount,
     model.notificationSentCount,
@@ -273,49 +259,40 @@ export function AdminDashboardView({
         lines={titleLines}
       />
 
-      <section aria-label={copy.overviewTitle} className="admin-overview-section">
-        <p className="admin-overview-freshness">
-          {copy.freshAt}:{" "}
-          <time dateTime={model.freshAt}>
-            {new Intl.DateTimeFormat(locale, {
-              dateStyle: "medium",
-              timeStyle: "short",
-            }).format(new Date(model.freshAt))}
-          </time>
-        </p>
-        <StatStrip>
-          {metrics.map((metric) => (
-            <StatTile key={metric.label} {...metric} />
-          ))}
-        </StatStrip>
-        <p className="admin-overview-scope-note">{copy.scopeNotice}</p>
-      </section>
+      <p className="admin-overview-freshness">
+        {copy.freshAt}:{" "}
+        <time dateTime={model.freshAt}>
+          {new Intl.DateTimeFormat(locale, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }).format(new Date(model.freshAt))}
+        </time>
+      </p>
 
-      <section className="admin-command-grid" aria-labelledby="portfolio-title">
-        <SideCard
-          className="admin-command-panel admin-command-panel--wide"
-          title={copy.customerPortfolioTitle}
-        >
-          <p>{copy.customerPortfolioDescription}</p>
-          {variant === "platform" ? (
-            <DataTable
-              columns={platformColumns}
-              getRowKey={(company) => company.id}
-              rows={companyPortfolio}
-            />
-          ) : (
-            <DataTable
-              columns={customerColumns}
-              getRowKey={(row) => row.name}
-              rows={customerRows}
-            />
-          )}
-        </SideCard>
+      <section className="console-dashboard-grid" aria-label={copy.overviewTitle}>
+        <article className="console-dashboard-widget console-dashboard-widget--metrics">
+          <header>
+            <h2>{copy.overviewTitle}</h2>
+            <p>{copy.overviewDescription}</p>
+          </header>
+          <dl className="console-dashboard-metrics">
+            {metrics.map((metric) => (
+              <div key={metric.label}>
+                <dt>
+                  {metric.icon}
+                  {metric.label}
+                </dt>
+                <dd>{metric.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </article>
 
-        <SideCard
-          className="admin-command-panel admin-command-panel--queue"
-          title={copy.approvalQueue}
-        >
+        <article className="console-dashboard-widget">
+          <header>
+            <h2>{copy.approvalQueue}</h2>
+            <p>{copy.attentionDescription}</p>
+          </header>
           <div className="admin-command-queue">
             {attentionItems.length > 0 ? (
               attentionItems.map((item) => (
@@ -337,46 +314,55 @@ export function AdminDashboardView({
               </a>
             ) : null}
           </div>
-        </SideCard>
+        </article>
+
+        <article className="console-dashboard-widget">
+          <header>
+            <h2>{copy.operationFlow}</h2>
+            <p>{copy.operationFlowDescription}</p>
+          </header>
+          <div className="admin-command-bars">
+            <div>
+              <span>{copy.unresolved}</span>
+              <MeterBar value={percent(model.unresolvedCount, model.contactCount) ?? 0} />
+            </div>
+            <div>
+              <span>{copy.escalated}</span>
+              <MeterBar
+                tone="warning"
+                value={percent(model.escalatedCount, model.contactCount) ?? 0}
+              />
+            </div>
+            <div>
+              <span>{copy.deliveryHealth}</span>
+              <MeterBar tone="success" value={deliverySuccessRate ?? 0} />
+            </div>
+          </div>
+          <p className="console-dashboard-widget__note">{copy.scopeNotice}</p>
+        </article>
       </section>
 
       <section
-        className="admin-command-grid admin-command-grid--charts"
-        aria-label={copy.actionReports}
+        className="console-dashboard-widget console-dashboard-widget--table console-dashboard-table"
+        aria-label={copy.customerPortfolio}
       >
-        <SideCard className="admin-command-panel" title={copy.operationFlow}>
-          <p>{copy.operationFlowDescription}</p>
-          <div className="admin-command-bars">
-            <MeterBar value={percent(model.unresolvedCount, model.contactCount) ?? 0} />
-            <MeterBar
-              tone="warning"
-              value={percent(model.escalatedCount, model.contactCount) ?? 0}
-            />
-            <MeterBar
-              tone="danger"
-              value={percent(model.notificationFailedCount, model.notificationSentCount) ?? 0}
-            />
-          </div>
-        </SideCard>
-        <SideCard className="admin-command-panel" title={copy.deliveryHealth}>
-          <p>{copy.deliveryHealthDescription}</p>
-          <div className="admin-command-bars">
-            <MeterBar tone="success" value={deliverySuccessRate ?? 0} />
-            <MeterBar
-              tone="danger"
-              value={percent(model.notificationFailedCount, model.notificationSentCount) ?? 0}
-            />
-            <MeterBar tone="warning" value={percent(model.openReportCount, totalSignals) ?? 0} />
-          </div>
-        </SideCard>
-        <SideCard className="admin-command-panel" title={copy.locationHierarchy}>
-          <p>{copy.locationHierarchyDescription}</p>
-          <div className="admin-command-hierarchy admin-command-hierarchy--two" aria-hidden="true">
-            <span>{copy.actionManagementCompanies}</span>
-            <i />
-            <span>{copy.actionSites}</span>
-          </div>
-        </SideCard>
+        <header>
+          <h2>{copy.customerPortfolio}</h2>
+          <p>{copy.customerPortfolioDescription}</p>
+        </header>
+        {variant === "platform" ? (
+          <DataTable
+            columns={platformColumns}
+            getRowKey={(company) => company.id}
+            rows={companyPortfolio.slice(0, 5)}
+          />
+        ) : (
+          <DataTable
+            columns={customerColumns}
+            getRowKey={(row) => row.name}
+            rows={customerRows.slice(0, 5)}
+          />
+        )}
       </section>
     </>
   );

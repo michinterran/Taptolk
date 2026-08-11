@@ -3,6 +3,7 @@ import type { AppLocale } from "../i18n/config";
 export interface AdminRevenueCopy {
   activeContracts: string;
   activeQr: string;
+  apply: string;
   actions: string;
   back: string;
   billingReadiness: string;
@@ -18,6 +19,9 @@ export interface AdminRevenueCopy {
   effectiveFrom: string;
   line1: string;
   line2: string;
+  next: string;
+  page: string;
+  pageSize: string;
   providerCost: string;
   providerCostDescription: string;
   monthlyProjection: string;
@@ -30,6 +34,7 @@ export interface AdminRevenueCopy {
   revenueNotice: string;
   reason: string;
   reasonPlaceholder: string;
+  previous: string;
   save: string;
   sent: string;
   siteCount: string;
@@ -39,6 +44,7 @@ export const ADMIN_REVENUE_COPY: Readonly<Record<AppLocale, AdminRevenueCopy>> =
   en: {
     activeContracts: "Active contract scope",
     activeQr: "Active QR assets",
+    apply: "Apply",
     actions: "Pricing",
     back: "Back to dashboard",
     billingReadiness: "Billing readiness",
@@ -55,8 +61,11 @@ export const ADMIN_REVENUE_COPY: Readonly<Record<AppLocale, AdminRevenueCopy>> =
     eyebrow: "Revenue management",
     freshAt: "Data refreshed",
     effectiveFrom: "Effective from",
-    line1: "Manage contract value",
-    line2: "without mixing it with operating guesses.",
+    line1: "Revenue management",
+    line2: "Contracts, production, and provider costs",
+    next: "Next",
+    page: "Page {current} of {total}",
+    pageSize: "Rows per page",
     providerCost: "Recorded provider cost",
     providerCostDescription:
       "Only costs recorded by approved server-side telemetry are shown here.",
@@ -71,6 +80,7 @@ export const ADMIN_REVENUE_COPY: Readonly<Record<AppLocale, AdminRevenueCopy>> =
       "The monthly projection is active QR count multiplied by each company’s versioned price. It is not an issued invoice or recognized accounting revenue.",
     reason: "Change reason",
     reasonPlaceholder: "Enter the contract basis for this pricing change.",
+    previous: "Previous",
     save: "Save pricing policy",
     sent: "Sent or delivered",
     siteCount: "Managed locations",
@@ -78,6 +88,7 @@ export const ADMIN_REVENUE_COPY: Readonly<Record<AppLocale, AdminRevenueCopy>> =
   ko: {
     activeContracts: "활성 계약 범위",
     activeQr: "활성 QR",
+    apply: "적용",
     actions: "단가 설정",
     back: "대시보드로 돌아가기",
     billingReadiness: "청구 준비 상태",
@@ -94,8 +105,11 @@ export const ADMIN_REVENUE_COPY: Readonly<Record<AppLocale, AdminRevenueCopy>> =
     eyebrow: "매출 관리",
     freshAt: "데이터 기준 시각",
     effectiveFrom: "적용 시작일",
-    line1: "운영 추정과 섞지 않고,",
-    line2: "계약 가치를 관리합니다.",
+    line1: "매출 관리",
+    line2: "계약·제작·전송 비용",
+    next: "다음",
+    page: "{current} / {total} 페이지",
+    pageSize: "페이지당 표시",
     providerCost: "기록된 발송 비용",
     providerCostDescription: "승인된 서버 텔레메트리에 기록된 비용만 보여줍니다.",
     monthlyProjection: "월 운영 매출 예상액",
@@ -109,6 +123,7 @@ export const ADMIN_REVENUE_COPY: Readonly<Record<AppLocale, AdminRevenueCopy>> =
       "월 예상액은 활성 QR 수와 관리회사별 버전 단가를 곱한 값입니다. 세금계산서 발행액이나 회계상 확정 매출과는 구분됩니다.",
     reason: "변경 사유",
     reasonPlaceholder: "단가 변경의 계약 근거를 입력하세요.",
+    previous: "이전",
     save: "단가 정책 저장",
     sent: "전송·도달",
     siteCount: "관리 현장",

@@ -12,12 +12,19 @@ import { ADMIN_DIRECTORY_COPY } from "../../../../../content/admin-directory-cop
 import { getMessages } from "../../../../../content/messages";
 import { isAppLocale } from "../../../../../i18n/locale";
 
+function readStatus(value: string | string[] | undefined): "updated" | null {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  return candidate === "updated" ? candidate : null;
+}
+
 export default async function AdminAccountsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ status?: string | string[] }>;
 }) {
-  const { locale } = await params;
+  const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isAppLocale(locale)) notFound();
   const context = await requireReadyAdminContext(locale);
   const sessionClient = await createAdminServerClient();
@@ -25,7 +32,8 @@ export default async function AdminAccountsPage({
   if (!sessionClient || !serviceClient) {
     redirect(getLocalizedAdminPath(locale, "/login?error=configuration"));
   }
-  let items: readonly AdminDirectoryItem[];
+  let items: readonly AdminDirectoryItem[] = [];
+  let directoryError = false;
   try {
     items = await new AdminDirectoryService(
       createSupabaseAdminDirectoryRepository(sessionClient, serviceClient),
@@ -39,7 +47,7 @@ export default async function AdminAccountsPage({
       },
     });
   } catch {
-    redirect(getLocalizedAdminPath(locale, "/dashboard"));
+    directoryError = true;
   }
   const messages = getMessages(locale);
   return (
@@ -56,9 +64,11 @@ export default async function AdminAccountsPage({
         canApprove={context.decision.membership.role === "SUPER_ADMIN"}
         copy={ADMIN_DIRECTORY_COPY[locale]}
         currentUserId={context.userId}
+        errorMessage={directoryError ? messages["admin.directory.error.unavailable"] : null}
         items={items}
         locale={locale}
         messages={messages}
+        statusMessage={readStatus(query.status) ? ADMIN_DIRECTORY_COPY[locale].updated : null}
       />
     </main>
   );

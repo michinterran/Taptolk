@@ -1,16 +1,47 @@
 import {
   ArrowLeft,
   BellRinging,
+  CalendarBlank,
+  CaretRight,
   ChartLine,
   QrCode,
   ShieldWarning,
 } from "@phosphor-icons/react/dist/ssr";
 import type { OperationsDailyPoint, OperationsDashboardModel } from "@taptolk/application";
-import { DataTable, PageHeader, SideCard, StatStrip, StatTile } from "@taptolk/ui";
+import { DataTable, PageHeader, Pagination, StatStrip, StatTile } from "@taptolk/ui";
+import type { Route } from "next";
+import Link from "next/link";
+import { OPERATIONS_PERIOD_DAYS } from "../admin/operations-range";
+import type { QrOperationsScopeSummary } from "../admin/qr-operations-scope-summary";
 import type { AdminAnalyticsCopy } from "../content/admin-analytics-copy";
 import type { AppLocale } from "../i18n/config";
+import { ConsoleQueryForm } from "./console-query-form";
 
 const EMPTY_VALUE = "—";
+
+function reportQuery(
+  locale: AppLocale,
+  params: {
+    companyId?: string | undefined;
+    days?: number | undefined;
+    endDate?: string | undefined;
+    page?: number | undefined;
+    pageSize?: number | undefined;
+    siteId?: string | undefined;
+    startDate?: string | undefined;
+  },
+): Route {
+  const query = new URLSearchParams();
+  if (params.companyId) query.set("company", params.companyId);
+  if (params.siteId) query.set("site", params.siteId);
+  if (params.days) query.set("days", String(params.days));
+  if (params.startDate) query.set("start", params.startDate);
+  if (params.endDate) query.set("end", params.endDate);
+  if (params.page && params.page > 1) query.set("page", String(params.page));
+  if (params.pageSize && params.pageSize !== 10) query.set("pageSize", String(params.pageSize));
+  const value = query.toString();
+  return `/${locale}/admin/reports${value ? `?${value}` : ""}` as Route;
+}
 
 /** Null when there is no basis to divide by, so a scope with no activity reads as
     "no data" instead of a perfect score. */
@@ -24,13 +55,29 @@ function percent(part: number, total: number): number | null {
 export function AdminAnalyticsView({
   backHref,
   copy,
+  endDate,
+  isExplicitRange,
   locale,
   model,
+  page,
+  pageSize,
+  qrOperations,
+  siteId,
+  startDate,
+  companyId,
 }: {
   backHref: string;
   copy: AdminAnalyticsCopy;
+  companyId?: string;
+  endDate: string;
+  isExplicitRange: boolean;
   locale: AppLocale;
   model: OperationsDashboardModel;
+  page: number;
+  pageSize: number;
+  qrOperations: QrOperationsScopeSummary;
+  siteId?: string;
+  startDate: string;
 }) {
   const number = new Intl.NumberFormat(locale);
   const contactTotal = model.contactCount;
@@ -41,6 +88,15 @@ export function AdminAnalyticsView({
   const deliveryRate = percent(model.notificationSentCount, deliveryTotal);
   const escalationRate = percent(model.escalatedCount, contactTotal);
   const scopeLabel = model.scopeSiteName ?? model.scopeManagementCompanyName ?? copy.scopeAll;
+  const totalDailyPages = Math.max(1, Math.ceil(model.dailySeries.length / pageSize));
+  const currentDailyPage = Math.min(Math.max(page, 1), totalDailyPages);
+  const dailyRows = model.dailySeries.slice(
+    (currentDailyPage - 1) * pageSize,
+    currentDailyPage * pageSize,
+  );
+  const dailyPageSummary = copy.page
+    .replace("{current}", String(currentDailyPage))
+    .replace("{total}", String(totalDailyPages));
   const dailyColumns = [
     {
       cell: (point: OperationsDailyPoint) =>
@@ -87,7 +143,7 @@ export function AdminAnalyticsView({
       <PageHeader
         description={copy.description}
         eyebrow={copy.eyebrow}
-        lines={[copy.line1, copy.line2]}
+        lines={[copy.line1]}
         actions={
           <>
             <a className="operations-back operations-back--compact" href={backHref}>
@@ -114,31 +170,79 @@ export function AdminAnalyticsView({
         }
       />
 
-      <StatStrip columns={4} aria-label={copy.responseQuality}>
-        <StatTile
-          icon={<ChartLine aria-hidden="true" size={22} />}
-          label={copy.resolutionRate}
-          value={resolutionRate === null ? EMPTY_VALUE : `${resolutionRate}%`}
-        />
-        <StatTile
-          icon={<BellRinging aria-hidden="true" size={22} />}
-          label={copy.deliveryRate}
-          value={deliveryRate === null ? EMPTY_VALUE : `${deliveryRate}%`}
-        />
-        <StatTile
-          icon={<ShieldWarning aria-hidden="true" size={22} />}
-          label={copy.escalationRate}
-          {...(escalationRate !== null && escalationRate > 0 ? ({ tone: "warning" } as const) : {})}
-          value={escalationRate === null ? EMPTY_VALUE : `${escalationRate}%`}
-        />
-        <StatTile
-          icon={<QrCode aria-hidden="true" size={22} />}
-          label={copy.activeQr}
-          value={number.format(model.activeQrCount)}
-        />
-      </StatStrip>
+      <section
+        className="operations-period-controls admin-report-period-controls"
+        aria-label={copy.period}
+      >
+        <nav className="tt-console-tabs operations-period-tabs" aria-label={copy.period}>
+          {OPERATIONS_PERIOD_DAYS.map((days) => (
+            <Link
+              aria-current={!isExplicitRange && model.windowDays === days ? "page" : undefined}
+              href={reportQuery(locale, { companyId, days, pageSize, siteId })}
+              key={days}
+            >
+              {days === 1 ? copy.periodToday : `${days}${copy.days}`}
+            </Link>
+          ))}
+        </nav>
 
-      <section className="admin-report-grid">
+        <div className="operations-custom-range">
+          <span className="operations-period-custom-label">
+            <CalendarBlank aria-hidden="true" size={15} />
+            {copy.periodCustom}
+          </span>
+          <ConsoleQueryForm className="operations-date-range">
+            <input aria-label={copy.scope} name="company" type="hidden" value={companyId ?? ""} />
+            <input aria-label={copy.scope} name="site" type="hidden" value={siteId ?? ""} />
+            <label>
+              <span className="sr-only">{copy.startDate}</span>
+              <input
+                aria-label={copy.startDate}
+                defaultValue={startDate}
+                name="start"
+                type="date"
+              />
+            </label>
+            <span className="operations-date-range__separator" aria-hidden="true">
+              <CaretRight size={14} />
+            </span>
+            <label>
+              <span className="sr-only">{copy.endDate}</span>
+              <input aria-label={copy.endDate} defaultValue={endDate} name="end" type="date" />
+            </label>
+            <button className="tt-button tt-button--secondary tt-button--compact" type="submit">
+              {copy.apply}
+            </button>
+          </ConsoleQueryForm>
+        </div>
+      </section>
+
+      <section className="console-analytics-frame admin-report-grid">
+        <StatStrip columns={4} aria-label={copy.responseQuality}>
+          <StatTile
+            icon={<ChartLine aria-hidden="true" size={22} />}
+            label={copy.resolutionRate}
+            value={resolutionRate === null ? EMPTY_VALUE : `${resolutionRate}%`}
+          />
+          <StatTile
+            icon={<BellRinging aria-hidden="true" size={22} />}
+            label={copy.deliveryRate}
+            value={deliveryRate === null ? EMPTY_VALUE : `${deliveryRate}%`}
+          />
+          <StatTile
+            icon={<ShieldWarning aria-hidden="true" size={22} />}
+            label={copy.escalationRate}
+            {...(escalationRate !== null && escalationRate > 0
+              ? ({ tone: "warning" } as const)
+              : {})}
+            value={escalationRate === null ? EMPTY_VALUE : `${escalationRate}%`}
+          />
+          <StatTile
+            icon={<QrCode aria-hidden="true" size={22} />}
+            label={copy.activeQr}
+            value={number.format(qrOperations.activeQr)}
+          />
+        </StatStrip>
         <article className="admin-report-section" id="response-quality">
           <header>
             <h2>{copy.responseQuality}</h2>
@@ -187,31 +291,111 @@ export function AdminAnalyticsView({
           <dl>
             <div>
               <dt>{copy.siteCount}</dt>
-              <dd>{number.format(model.siteCount)}</dd>
+              <dd>{number.format(qrOperations.siteCount)}</dd>
             </div>
             <div>
-              <dt>{copy.activeQr}</dt>
-              <dd>{number.format(model.activeQrCount)}</dd>
+              <dt>{copy.totalQr}</dt>
+              <dd>{number.format(qrOperations.totalQr)}</dd>
             </div>
             <div>
-              <dt>{copy.openReports}</dt>
-              <dd>{number.format(model.openReportCount)}</dd>
+              <dt>{copy.outputReadyBatches}</dt>
+              <dd>{number.format(qrOperations.outputReadyBatches)}</dd>
             </div>
           </dl>
         </article>
       </section>
 
-      <SideCard
-        className="admin-report-detail"
-        title={copy.dailyDetail}
-        actions={<span>{model.windowDays}</span>}
-      >
-        <DataTable
-          columns={dailyColumns}
-          getRowKey={(point) => point.date}
-          rows={model.dailySeries}
-        />
-      </SideCard>
+      <section className="console-list-surface admin-report-detail">
+        <header className="console-section-heading">
+          <h2>{copy.dailyDetail}</h2>
+          <span>{model.windowDays}</span>
+        </header>
+        <DataTable columns={dailyColumns} getRowKey={(point) => point.date} rows={dailyRows} />
+        <footer className="admin-report-detail__footer">
+          <Pagination
+            aria-label={copy.dailyDetail}
+            className="admin-pagination admin-pagination--compact"
+            next={
+              currentDailyPage < totalDailyPages ? (
+                <Link
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  href={reportQuery(locale, {
+                    companyId,
+                    endDate,
+                    page: currentDailyPage + 1,
+                    pageSize,
+                    siteId,
+                    startDate,
+                  })}
+                >
+                  {copy.next}
+                </Link>
+              ) : (
+                <button
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  disabled
+                  type="button"
+                >
+                  {copy.next}
+                </button>
+              )
+            }
+            previous={
+              currentDailyPage > 1 ? (
+                <Link
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  href={reportQuery(locale, {
+                    companyId,
+                    endDate,
+                    page: currentDailyPage - 1,
+                    pageSize,
+                    siteId,
+                    startDate,
+                  })}
+                >
+                  {copy.previous}
+                </Link>
+              ) : (
+                <button
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  disabled
+                  type="button"
+                >
+                  {copy.previous}
+                </button>
+              )
+            }
+            summary={dailyPageSummary}
+          />
+          <ConsoleQueryForm className="admin-report-page-size-form">
+            <input aria-label={copy.scope} name="company" type="hidden" value={companyId ?? ""} />
+            <input aria-label={copy.scope} name="site" type="hidden" value={siteId ?? ""} />
+            {!isExplicitRange ? (
+              <input aria-label={copy.period} name="days" type="hidden" value={model.windowDays} />
+            ) : null}
+            {isExplicitRange ? (
+              <input aria-label={copy.startDate} name="start" type="hidden" value={startDate} />
+            ) : null}
+            {isExplicitRange ? (
+              <input aria-label={copy.endDate} name="end" type="hidden" value={endDate} />
+            ) : null}
+            <label>
+              <span>{copy.pageSize}</span>
+              <select aria-label={copy.pageSize} defaultValue={String(pageSize)} name="pageSize">
+                {[10, 25, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <input aria-label={copy.page} name="page" type="hidden" value="1" />
+            <button className="tt-button tt-button--secondary tt-button--compact" type="submit">
+              {copy.apply}
+            </button>
+          </ConsoleQueryForm>
+        </footer>
+      </section>
     </div>
   );
 }
