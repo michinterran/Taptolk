@@ -13702,6 +13702,139 @@ html[data-console-theme="light"] body:has(.admin-dashboard-shell) {
   padding: 0;
 }
 
+/* Site catalog keeps discovery controls in the list toolbar so filters are
+   server-backed and remain visible without adding another panel layer. */
+.admin-site-catalog-toolbar {
+  border-bottom: 1px solid var(--tt-color-border);
+  display: grid;
+  gap: var(--tt-space-3);
+  padding-block: var(--tt-space-3);
+}
+
+.admin-site-catalog-toolbar__primary,
+.admin-site-catalog-toolbar__secondary {
+  align-items: end;
+  display: grid;
+  gap: var(--tt-space-2);
+}
+
+.admin-site-catalog-toolbar__primary {
+  grid-template-columns: minmax(16rem, 2fr) repeat(3, minmax(9rem, 1fr));
+}
+
+.admin-site-catalog-toolbar__secondary {
+  grid-template-columns: repeat(2, minmax(8rem, 1fr)) repeat(2, minmax(10rem, 1fr)) auto;
+}
+
+.admin-site-catalog-date {
+  display: grid;
+  gap: var(--tt-space-1);
+  min-width: 0;
+}
+
+.admin-site-catalog-date span,
+.admin-catalog-page-size-form label > span {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-2xs);
+  font-weight: var(--tt-font-weight-semibold);
+}
+
+.admin-site-catalog-date input {
+  background: var(--tt-color-background);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-xs);
+  color: var(--tt-color-text);
+  font: inherit;
+  min-height: var(--tt-console-v2-control-height);
+  min-width: 0;
+  padding-inline: var(--tt-space-3);
+}
+
+.admin-site-catalog-toolbar__actions {
+  align-items: center;
+  display: flex;
+  gap: var(--tt-space-2);
+  justify-content: flex-end;
+}
+
+.admin-catalog-page-size-form {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.admin-catalog-page-size-form label {
+  align-items: center;
+  display: flex;
+  gap: var(--tt-space-2);
+}
+
+.admin-catalog-page-size-form select {
+  background: var(--tt-color-background);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-xs);
+  color: var(--tt-color-text);
+  font: inherit;
+  min-height: var(--tt-console-v2-control-height);
+  padding-inline: var(--tt-space-2);
+}
+
+@media (max-width: 72rem) {
+  .admin-site-catalog-toolbar__primary,
+  .admin-site-catalog-toolbar__secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-site-catalog-toolbar__primary .admin-search-control {
+    grid-column: 1 / -1;
+  }
+
+  .admin-site-catalog-toolbar__actions {
+    justify-content: flex-start;
+  }
+
+  .admin-catalog-page-size-form {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 44rem) {
+  .admin-site-catalog-toolbar__primary,
+  .admin-site-catalog-toolbar__secondary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-site-catalog-toolbar__primary .admin-search-control {
+    grid-column: auto;
+  }
+
+  .admin-site-catalog-toolbar__primary .admin-filter-select,
+  .admin-site-catalog-toolbar__secondary .admin-filter-select,
+  .admin-site-catalog-date,
+  .admin-site-catalog-toolbar__actions {
+    width: 100%;
+  }
+
+  .admin-site-catalog-toolbar__actions {
+    justify-content: stretch;
+  }
+
+  .admin-site-catalog-toolbar__actions .tt-button {
+    flex: 1 1 0;
+  }
+
+  .console-list-surface > .admin-catalog-footer {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    row-gap: var(--tt-space-3);
+  }
+
+  .console-list-surface > .admin-catalog-footer > .tt-pagination,
+  .console-list-surface > .admin-catalog-footer .admin-catalog-page-size-form {
+    grid-column: 1;
+    justify-self: center;
+  }
+}
+
 .admin-revenue-company-footer,
 .admin-report-detail__footer {
   align-items: center;

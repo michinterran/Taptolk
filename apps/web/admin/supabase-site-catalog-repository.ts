@@ -4,6 +4,8 @@ import type {
   OrganizationStatus,
   SiteCatalogItem,
   SiteCatalogRepository,
+  SiteCatalogSort,
+  SiteCatalogSortDirection,
   SiteType,
 } from "@taptolk/application";
 import { createLogger } from "@taptolk/observability";
@@ -39,6 +41,20 @@ function readRelationName(value: unknown): string | null {
 
 function canUseLegacyCatalogRead(error: { code?: string } | null) {
   return error?.code === "42703" && process.env.TAPTOLK_ALLOW_LEGACY_SITE_CATALOG === "true";
+}
+
+function escapeIlike(value: string): string {
+  return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+}
+
+function kstStartOfDay(value: string): string {
+  return new Date(`${value}T00:00:00+09:00`).toISOString();
+}
+
+function kstStartOfNextDay(value: string): string {
+  const nextDay = new Date(`${value}T00:00:00+09:00`);
+  nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+  return nextDay.toISOString();
 }
 
 function mapSiteRow(row: unknown): SiteCatalogItem {
@@ -87,8 +103,19 @@ export function createSupabaseSiteCatalogRepository(
   client: AdminServerClient,
 ): SiteCatalogRepository {
   return {
-    async list({ limit, offset }) {
-      const query = client
+    async list({
+      createdFrom,
+      createdTo,
+      direction,
+      limit,
+      managementCompanyId,
+      offset,
+      search,
+      siteType,
+      sort,
+      status,
+    }) {
+      let query = client
         .from("sites")
         .select(
           "id, tenant_id, management_company_id, name, site_type, address, timezone, contract_vehicle_limit, status, version, created_at, management_companies!inner(name, tenants!inner(name))",
@@ -97,21 +124,83 @@ export function createSupabaseSiteCatalogRepository(
         .eq("is_test_fixture", false)
         .eq("management_companies.is_test_fixture", false)
         .eq("management_companies.tenants.is_test_fixture", false)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .order("id", { ascending: true })
-        .range(offset, offset + limit - 1);
+        .is("deleted_at", null);
+      if (managementCompanyId) {
+        query = query.eq("management_company_id", managementCompanyId);
+      }
+      if (siteType) {
+        query = query.eq("site_type", siteType);
+      }
+      if (status) {
+        query = query.eq("status", status);
+      }
+      if (search) {
+        const escaped = escapeIlike(search);
+        query = query.or(`name.ilike.%${escaped}%,address.ilike.%${escaped}%`);
+      }
+      if (createdFrom) {
+        query = query.gte("created_at", kstStartOfDay(createdFrom));
+      }
+      if (createdTo) {
+        query = query.lt("created_at", kstStartOfNextDay(createdTo));
+      }
+      if (sort === ("name" satisfies SiteCatalogSort)) {
+        query = query.order("name", {
+          ascending: direction === ("asc" satisfies SiteCatalogSortDirection),
+        });
+      } else if (sort === ("contractLimit" satisfies SiteCatalogSort)) {
+        query = query.order("contract_vehicle_limit", {
+          ascending: direction === ("asc" satisfies SiteCatalogSortDirection),
+        });
+      } else {
+        query = query.order("created_at", {
+          ascending: direction === ("asc" satisfies SiteCatalogSortDirection),
+        });
+      }
+      query = query.order("id", { ascending: true }).range(offset, offset + limit - 1);
       let result = await query;
       if (canUseLegacyCatalogRead(result.error)) {
         logger.warn("admin.site_catalog.legacy_read_fallback", { scope: "sites" });
-        result = (await client
+        let legacyQuery = client
           .from("sites")
           .select(
             "id, tenant_id, management_company_id, name, site_type, address, timezone, contract_vehicle_limit, status, version, created_at, management_companies!inner(name, tenants!inner(name))",
             { count: "exact" },
           )
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
+          .is("deleted_at", null);
+        if (managementCompanyId) {
+          legacyQuery = legacyQuery.eq("management_company_id", managementCompanyId);
+        }
+        if (siteType) {
+          legacyQuery = legacyQuery.eq("site_type", siteType);
+        }
+        if (status) {
+          legacyQuery = legacyQuery.eq("status", status);
+        }
+        if (search) {
+          const escaped = escapeIlike(search);
+          legacyQuery = legacyQuery.or(`name.ilike.%${escaped}%,address.ilike.%${escaped}%`);
+        }
+        if (createdFrom) {
+          legacyQuery = legacyQuery.gte("created_at", kstStartOfDay(createdFrom));
+        }
+        if (createdTo) {
+          legacyQuery = legacyQuery.lt("created_at", kstStartOfNextDay(createdTo));
+        }
+        if (sort === ("name" satisfies SiteCatalogSort)) {
+          legacyQuery = legacyQuery.order("name", {
+            ascending: direction === ("asc" satisfies SiteCatalogSortDirection),
+          });
+        } else if (sort === ("contractLimit" satisfies SiteCatalogSort)) {
+          legacyQuery = legacyQuery.order("contract_vehicle_limit", {
+            ascending: direction === ("asc" satisfies SiteCatalogSortDirection),
+          });
+        } else {
+          legacyQuery = legacyQuery.order("created_at", {
+            ascending: direction === ("asc" satisfies SiteCatalogSortDirection),
+          });
+        }
+        result = (await legacyQuery
           .order("id", { ascending: true })
           .range(offset, offset + limit - 1)) as typeof result;
       }

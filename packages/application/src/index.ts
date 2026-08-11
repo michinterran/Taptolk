@@ -314,10 +314,16 @@ export {
 } from "./scheduled-privacy-cleanup-service.js";
 export {
   SITE_CATALOG_PAGE_SIZE,
+  SITE_CATALOG_PAGE_SIZE_OPTIONS,
   type SiteCatalogItem,
   type SiteCatalogPage,
+  type SiteCatalogPageSize,
+  type SiteCatalogQuery,
+  type SiteCatalogQueryState,
   type SiteCatalogRepository,
   SiteCatalogService,
+  type SiteCatalogSort,
+  type SiteCatalogSortDirection,
   type SiteParentOption,
 } from "./site-catalog-service.js";
 export {

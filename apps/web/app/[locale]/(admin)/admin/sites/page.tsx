@@ -1,9 +1,13 @@
 import {
   DEFAULT_SITE_TIMEZONE,
+  type OrganizationStatus,
   SITE_CONTRACT_VEHICLE_LIMIT_MAX,
   SITE_CONTRACT_VEHICLE_LIMIT_MIN,
   SiteCatalogService,
+  type SiteCatalogSort,
+  type SiteCatalogSortDirection,
   SiteLifecycleRequestService,
+  type SiteType,
 } from "@taptolk/application";
 import { roleHasPermission } from "@taptolk/domain";
 import { PageHeader } from "@taptolk/ui";
@@ -28,6 +32,35 @@ function readPage(value: string | string[] | undefined): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
+function readPageSize(value: string | string[] | undefined): number | undefined {
+  const parsed = Number(readValue(value));
+  return parsed === 10 || parsed === 20 || parsed === 50 ? parsed : undefined;
+}
+
+function readSiteType(value: string | string[] | undefined): SiteType | undefined {
+  const type = readValue(value);
+  return type === "APARTMENT" || type === "OFFICETEL" || type === "BUILDING" || type === "OTHER"
+    ? type
+    : undefined;
+}
+
+function readSiteStatus(value: string | string[] | undefined): OrganizationStatus | undefined {
+  const status = readValue(value);
+  return status === "ACTIVE" || status === "SUSPENDED" || status === "CLOSED" ? status : undefined;
+}
+
+function readSiteSort(value: string | string[] | undefined): SiteCatalogSort | undefined {
+  const sort = readValue(value);
+  return sort === "createdAt" || sort === "name" || sort === "contractLimit" ? sort : undefined;
+}
+
+function readSiteDirection(
+  value: string | string[] | undefined,
+): SiteCatalogSortDirection | undefined {
+  const direction = readValue(value);
+  return direction === "asc" || direction === "desc" ? direction : undefined;
+}
+
 function isSiteCatalogUnavailable(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
@@ -44,9 +77,18 @@ export default async function SitesPage({
 }: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{
+    company?: string | string[];
+    createdFrom?: string | string[];
+    createdTo?: string | string[];
+    direction?: string | string[];
     error?: string | string[];
     page?: string | string[];
+    pageSize?: string | string[];
+    q?: string | string[];
+    sort?: string | string[];
+    state?: string | string[];
     status?: string | string[];
+    type?: string | string[];
   }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
@@ -64,13 +106,34 @@ export default async function SitesPage({
   const authorization = toAdminAuthorizationContext(membership, context.mfaLevel === "aal2");
   const actor = { authorization, userId: context.userId };
   const copy = getMessages(locale);
+  const createdFrom = readValue(query.createdFrom);
+  const createdTo = readValue(query.createdTo);
+  const direction = readSiteDirection(query.direction);
+  const managementCompanyId = readValue(query.company);
+  const search = readValue(query.q);
+  const siteType = readSiteType(query.type);
+  const sort = readSiteSort(query.sort);
+  const siteStatus = readSiteStatus(query.state);
+  const pageSize = readPageSize(query.pageSize);
+  const siteCatalogQuery = {
+    page: readPage(query.page),
+    ...(createdFrom ? { createdFrom } : {}),
+    ...(createdTo ? { createdTo } : {}),
+    ...(direction ? { direction } : {}),
+    ...(managementCompanyId ? { managementCompanyId } : {}),
+    ...(pageSize ? { pageSize } : {}),
+    ...(search ? { search } : {}),
+    ...(siteType ? { siteType } : {}),
+    ...(sort ? { sort } : {}),
+    ...(siteStatus ? { status: siteStatus } : {}),
+  };
   let catalog: Awaited<ReturnType<SiteCatalogService["list"]>>;
   let lifecycleRequests: Awaited<ReturnType<SiteLifecycleRequestService["list"]>>;
   try {
     [catalog, lifecycleRequests] = await Promise.all([
       new SiteCatalogService(createSupabaseSiteCatalogRepository(client)).list({
         actor: authorization,
-        page: readPage(query.page),
+        query: siteCatalogQuery,
       }),
       new SiteLifecycleRequestService(createSupabaseSiteLifecycleRequestRepository(client)).list({
         actor,
@@ -156,6 +219,8 @@ export default async function SitesPage({
           },
           close: copy["admin.sites.close"],
           company: copy["admin.sites.company"],
+          companyFilter: copy["admin.sites.filters.company"],
+          clearFilters: copy["admin.sites.filters.clear"],
           contractLimit: copy["admin.sites.contractLimit"],
           contractLimitHelp: copy["admin.sites.contractLimit.help"],
           contractTitle: copy["admin.sites.contract.title"],
@@ -163,6 +228,8 @@ export default async function SitesPage({
           createDescription: copy["admin.sites.create.description"],
           createTitle: copy["admin.sites.create.title"],
           createdAt: copy["admin.sites.createdAt"],
+          createdFrom: copy["admin.sites.filters.createdFrom"],
+          createdTo: copy["admin.sites.filters.createdTo"],
           description: copy["admin.sites.description"],
           emptyDescription: copy["admin.sites.empty.description"],
           emptyTitle: copy["admin.sites.empty.title"],
@@ -202,6 +269,12 @@ export default async function SitesPage({
           operationalDescription: copy["admin.sites.operational.description"],
           operationalTitle: copy["admin.sites.operational.title"],
           page: copy["admin.sites.page"],
+          pageSize: copy["admin.sites.filters.pageSize"],
+          pageSizeOptions: [
+            copy["admin.sites.filters.pageSize.10"],
+            copy["admin.sites.filters.pageSize.20"],
+            copy["admin.sites.filters.pageSize.50"],
+          ],
           paginationLabel: copy["admin.sites.pagination"],
           parent: copy["admin.sites.parent"],
           previous: copy["admin.sites.previous"],
@@ -212,7 +285,17 @@ export default async function SitesPage({
           requiredHint: copy["admin.sites.required.help"],
           saveContract: copy["admin.sites.contract.save"],
           saveOperational: copy["admin.sites.operational.save"],
+          search: copy["admin.sites.filters.search"],
+          applyFilters: copy["admin.sites.filters.apply"],
+          filters: copy["admin.sites.filters.label"],
           securityNote: copy["admin.sites.securityNote"],
+          sort: copy["admin.sites.filters.sort"],
+          sortCreatedAt: copy["admin.sites.filters.sort.createdAt"],
+          sortName: copy["admin.sites.filters.sort.name"],
+          sortContractLimit: copy["admin.sites.filters.sort.contractLimit"],
+          direction: copy["admin.sites.filters.direction"],
+          directionAscending: copy["admin.sites.filters.direction.asc"],
+          directionDescending: copy["admin.sites.filters.direction.desc"],
           status: copy["admin.sites.status"],
           statusDescription: copy["admin.sites.status.description"],
           statusLabels: {

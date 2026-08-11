@@ -1,11 +1,14 @@
+import { Funnel, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import type {
   OrganizationStatus,
   SiteCatalogPage,
+  SiteCatalogQueryState,
   SiteLifecycleAction,
   SiteLifecycleRequestItem,
   SiteLifecycleRequestReadModel,
   SiteType,
 } from "@taptolk/application";
+import { SITE_CATALOG_PAGE_SIZE_OPTIONS } from "@taptolk/application";
 import {
   type AddressFieldLabels,
   DataTable,
@@ -23,6 +26,7 @@ import {
 import { DAUM_POSTCODE_SCRIPT_SRC } from "../config/address-search";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
+import { ConsoleQueryForm } from "./console-query-form";
 import { ManagementCompanyAddressSearchField } from "./management-company-address-search-field";
 
 interface SiteCatalogCopy {
@@ -34,6 +38,8 @@ interface SiteCatalogCopy {
   addressSearch: AddressFieldLabels;
   close: string;
   company: string;
+  companyFilter: string;
+  clearFilters: string;
   contractLimit: string;
   contractLimitHelp: string;
   contractTitle: string;
@@ -41,6 +47,8 @@ interface SiteCatalogCopy {
   createDescription: string;
   createTitle: string;
   createdAt: string;
+  createdFrom: string;
+  createdTo: string;
   description: string;
   emptyDescription: string;
   emptyTitle: string;
@@ -73,6 +81,8 @@ interface SiteCatalogCopy {
   operationalDescription: string;
   operationalTitle: string;
   page: string;
+  pageSize: string;
+  pageSizeOptions: readonly [string, string, string];
   paginationLabel: string;
   parent: string;
   previous: string;
@@ -83,7 +93,17 @@ interface SiteCatalogCopy {
   requiredHint: string;
   saveContract: string;
   saveOperational: string;
+  search: string;
+  applyFilters: string;
+  filters: string;
   securityNote: string;
+  sort: string;
+  sortCreatedAt: string;
+  sortName: string;
+  sortContractLimit: string;
+  direction: string;
+  directionAscending: string;
+  directionDescending: string;
   status: string;
   statusDescription: string;
   statusLabels: Readonly<Record<OrganizationStatus, string>>;
@@ -160,8 +180,84 @@ function LifecycleRequestHiddenFields({
   );
 }
 
-function getPageHref(locale: AppLocale, page: number): string {
-  return `/${locale}/admin/sites?page=${page}`;
+function getSiteQueryParams(query: SiteCatalogQueryState, page?: number): URLSearchParams {
+  const params = new URLSearchParams();
+  if (query.search) params.set("q", query.search);
+  if (query.managementCompanyId) params.set("company", query.managementCompanyId);
+  if (query.siteType) params.set("type", query.siteType);
+  if (query.status) params.set("state", query.status);
+  if (query.createdFrom) params.set("createdFrom", query.createdFrom);
+  if (query.createdTo) params.set("createdTo", query.createdTo);
+  if (query.sort !== "createdAt") params.set("sort", query.sort);
+  if (query.direction !== "desc") params.set("direction", query.direction);
+  if (query.pageSize !== 20) params.set("pageSize", String(query.pageSize));
+  if (page && page > 1) params.set("page", String(page));
+  return params;
+}
+
+function getPageHref(locale: AppLocale, page: number, query: SiteCatalogQueryState): string {
+  const params = getSiteQueryParams(query, page);
+  const suffix = params.toString();
+  return `/${locale}/admin/sites${suffix ? `?${suffix}` : ""}`;
+}
+
+function QueryHiddenFields({ query }: { query: SiteCatalogQueryState }) {
+  return (
+    <>
+      {query.search ? (
+        <input id="site-query-search" name="q" type="hidden" value={query.search} />
+      ) : null}
+      {query.managementCompanyId ? (
+        <input
+          id="site-query-company"
+          name="company"
+          type="hidden"
+          value={query.managementCompanyId}
+        />
+      ) : null}
+      {query.siteType ? (
+        <input id="site-query-type" name="type" type="hidden" value={query.siteType} />
+      ) : null}
+      {query.status ? (
+        <input id="site-query-state" name="state" type="hidden" value={query.status} />
+      ) : null}
+      {query.createdFrom ? (
+        <input
+          id="site-query-created-from"
+          name="createdFrom"
+          type="hidden"
+          value={query.createdFrom}
+        />
+      ) : null}
+      {query.createdTo ? (
+        <input id="site-query-created-to" name="createdTo" type="hidden" value={query.createdTo} />
+      ) : null}
+      <input id="site-query-sort" name="sort" type="hidden" value={query.sort} />
+      <input id="site-query-direction" name="direction" type="hidden" value={query.direction} />
+    </>
+  );
+}
+
+function getPageNumbers(
+  currentPage: number,
+  totalPages: number,
+): Array<number | "ellipsis-leading" | "ellipsis-trailing"> {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+  const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+  const sortedPages = Array.from(pages)
+    .filter((page) => page > 0 && page <= totalPages)
+    .sort((left, right) => left - right);
+  const result: Array<number | "ellipsis-leading" | "ellipsis-trailing"> = [];
+  sortedPages.forEach((page, index) => {
+    const previousPage = sortedPages[index - 1];
+    if (previousPage !== undefined && page - previousPage > 1) {
+      result.push(index === 1 ? "ellipsis-leading" : "ellipsis-trailing");
+    }
+    result.push(page);
+  });
+  return result;
 }
 
 function getFormatterLocale(locale: AppLocale): string {
@@ -525,6 +621,113 @@ export function SiteCatalogView({
         </section>
       ) : null}
 
+      <ConsoleQueryForm aria-label={copy.filters} className="admin-site-catalog-toolbar">
+        <div className="admin-site-catalog-toolbar__primary">
+          <div className="admin-search-control admin-search-control--catalog">
+            <MagnifyingGlass aria-hidden="true" size={17} />
+            <label className="sr-only" htmlFor="site-catalog-search">
+              {copy.search}
+            </label>
+            <input
+              defaultValue={catalog.query.search ?? ""}
+              id="site-catalog-search"
+              name="q"
+              placeholder={copy.search}
+              type="search"
+            />
+          </div>
+
+          <label className="admin-filter-select" htmlFor="site-catalog-company">
+            <Funnel aria-hidden="true" size={16} />
+            <span className="sr-only">{copy.companyFilter}</span>
+            <select
+              defaultValue={catalog.query.managementCompanyId ?? ""}
+              id="site-catalog-company"
+              name="company"
+            >
+              <option value="">{copy.companyFilter}</option>
+              {catalog.parentOptions.map((parent) => (
+                <option key={parent.managementCompanyId} value={parent.managementCompanyId}>
+                  {parent.managementCompanyName}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="admin-filter-select" htmlFor="site-catalog-type">
+            <span className="sr-only">{copy.type}</span>
+            <select defaultValue={catalog.query.siteType ?? ""} id="site-catalog-type" name="type">
+              <option value="">{copy.type}</option>
+              <option value="APARTMENT">{copy.typeLabels.APARTMENT}</option>
+              <option value="OFFICETEL">{copy.typeLabels.OFFICETEL}</option>
+              <option value="BUILDING">{copy.typeLabels.BUILDING}</option>
+              <option value="OTHER">{copy.typeLabels.OTHER}</option>
+            </select>
+          </label>
+
+          <label className="admin-filter-select" htmlFor="site-catalog-state">
+            <span className="sr-only">{copy.status}</span>
+            <select defaultValue={catalog.query.status ?? ""} id="site-catalog-state" name="state">
+              <option value="">{copy.status}</option>
+              <option value="ACTIVE">{copy.statusLabels.ACTIVE}</option>
+              <option value="SUSPENDED">{copy.statusLabels.SUSPENDED}</option>
+              <option value="CLOSED">{copy.statusLabels.CLOSED}</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="admin-site-catalog-toolbar__secondary">
+          <label className="admin-site-catalog-date" htmlFor="site-catalog-created-from">
+            <span>{copy.createdFrom}</span>
+            <input
+              defaultValue={catalog.query.createdFrom ?? ""}
+              id="site-catalog-created-from"
+              name="createdFrom"
+              type="date"
+            />
+          </label>
+          <label className="admin-site-catalog-date" htmlFor="site-catalog-created-to">
+            <span>{copy.createdTo}</span>
+            <input
+              defaultValue={catalog.query.createdTo ?? ""}
+              id="site-catalog-created-to"
+              name="createdTo"
+              type="date"
+            />
+          </label>
+          <label className="admin-filter-select" htmlFor="site-catalog-sort">
+            <span className="sr-only">{copy.sort}</span>
+            <select defaultValue={catalog.query.sort} id="site-catalog-sort" name="sort">
+              <option value="createdAt">{copy.sortCreatedAt}</option>
+              <option value="name">{copy.sortName}</option>
+              <option value="contractLimit">{copy.sortContractLimit}</option>
+            </select>
+          </label>
+          <label className="admin-filter-select" htmlFor="site-catalog-direction">
+            <span className="sr-only">{copy.direction}</span>
+            <select
+              defaultValue={catalog.query.direction}
+              id="site-catalog-direction"
+              name="direction"
+            >
+              <option value="desc">{copy.directionDescending}</option>
+              <option value="asc">{copy.directionAscending}</option>
+            </select>
+          </label>
+          <div className="admin-site-catalog-toolbar__actions">
+            <button className="tt-button tt-button--compact" type="submit">
+              {copy.applyFilters}
+            </button>
+            <a
+              className="tt-button tt-button--secondary tt-button--compact"
+              href={`/${locale}/admin/sites`}
+            >
+              {copy.clearFilters}
+            </a>
+          </div>
+        </div>
+      </ConsoleQueryForm>
+
       <section className="console-list-surface" aria-label={copy.paginationLabel}>
         <section aria-live="polite" className="admin-catalog-summary">
           <strong>{copy.total.replace("{count}", String(catalog.total))}</strong>
@@ -539,27 +742,55 @@ export function SiteCatalogView({
           rows={catalog.items}
         />
 
-        <Pagination
-          aria-label={copy.paginationLabel}
-          className="admin-catalog-footer"
-          next={hasNext ? <a href={getPageHref(locale, catalog.page + 1)}>{copy.next}</a> : null}
-          pages={Array.from({ length: totalPages }, (_, index) => {
-            const page = index + 1;
-            return (
-              <a
-                aria-current={page === catalog.page ? "page" : undefined}
-                href={getPageHref(locale, page)}
-                key={page}
+        <div className="admin-catalog-footer">
+          <Pagination
+            aria-label={copy.paginationLabel}
+            className="admin-pagination--compact"
+            next={
+              hasNext ? (
+                <a href={getPageHref(locale, catalog.page + 1, catalog.query)}>{copy.next}</a>
+              ) : null
+            }
+            pages={getPageNumbers(catalog.page, totalPages).map((page) =>
+              typeof page === "string" ? (
+                <span aria-hidden="true" key={page}>
+                  …
+                </span>
+              ) : (
+                <a
+                  aria-current={page === catalog.page ? "page" : undefined}
+                  href={getPageHref(locale, page, catalog.query)}
+                  key={page}
+                >
+                  {page}
+                </a>
+              ),
+            )}
+            previous={
+              hasPrevious ? (
+                <a href={getPageHref(locale, catalog.page - 1, catalog.query)}>{copy.previous}</a>
+              ) : null
+            }
+            summary={pageSummary}
+          />
+          <ConsoleQueryForm aria-label={copy.pageSize} className="admin-catalog-page-size-form">
+            <QueryHiddenFields query={catalog.query} />
+            <label htmlFor="site-catalog-page-size">
+              <span>{copy.pageSize}</span>
+              <select
+                defaultValue={String(catalog.pageSize)}
+                id="site-catalog-page-size"
+                name="pageSize"
               >
-                {page}
-              </a>
-            );
-          })}
-          previous={
-            hasPrevious ? <a href={getPageHref(locale, catalog.page - 1)}>{copy.previous}</a> : null
-          }
-          summary={pageSummary}
-        />
+                {SITE_CATALOG_PAGE_SIZE_OPTIONS.map((option, index) => (
+                  <option key={option} value={option}>
+                    {copy.pageSizeOptions[index]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </ConsoleQueryForm>
+        </div>
       </section>
     </>
   );

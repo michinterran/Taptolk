@@ -8,6 +8,35 @@ import type { OrganizationStatus } from "./management-company-catalog-service.js
 import type { SiteType } from "./site-service.js";
 
 export const SITE_CATALOG_PAGE_SIZE = 20;
+export const SITE_CATALOG_PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+export type SiteCatalogPageSize = (typeof SITE_CATALOG_PAGE_SIZE_OPTIONS)[number];
+export type SiteCatalogSort = "contractLimit" | "createdAt" | "name";
+export type SiteCatalogSortDirection = "asc" | "desc";
+
+export interface SiteCatalogQuery {
+  createdFrom?: string;
+  createdTo?: string;
+  direction?: SiteCatalogSortDirection;
+  managementCompanyId?: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  siteType?: SiteType;
+  sort?: SiteCatalogSort;
+  status?: OrganizationStatus;
+}
+
+export interface SiteCatalogQueryState {
+  createdFrom?: string;
+  createdTo?: string;
+  direction: SiteCatalogSortDirection;
+  managementCompanyId?: string;
+  pageSize: SiteCatalogPageSize;
+  search?: string;
+  siteType?: SiteType;
+  sort: SiteCatalogSort;
+  status?: OrganizationStatus;
+}
 
 export interface SiteCatalogItem {
   address: string | null;
@@ -37,21 +66,78 @@ export interface SiteCatalogPage {
   page: number;
   pageSize: number;
   parentOptions: readonly SiteParentOption[];
+  query: SiteCatalogQueryState;
   total: number;
 }
 
 export interface SiteCatalogRepository {
   list(input: {
+    createdFrom?: string;
+    createdTo?: string;
+    direction: SiteCatalogSortDirection;
     limit: number;
+    managementCompanyId?: string;
     offset: number;
+    search?: string;
+    siteType?: SiteType;
+    sort: SiteCatalogSort;
+    status?: OrganizationStatus;
   }): Promise<{ items: readonly SiteCatalogItem[]; total: number }>;
   listActiveParents(): Promise<readonly SiteParentOption[]>;
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
+
+function normalizeDate(value: string | undefined): string | undefined {
+  const candidate = value?.trim();
+  if (!candidate || !DATE_PATTERN.test(candidate)) {
+    return undefined;
+  }
+  const parsed = new Date(`${candidate}T00:00:00.000Z`);
+  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== candidate
+    ? undefined
+    : candidate;
+}
+
+function normalizeSearch(value: string | undefined): string | undefined {
+  const candidate = value?.trim().slice(0, 100);
+  return candidate || undefined;
+}
+
+function normalizePageSize(value: number | undefined): SiteCatalogPageSize {
+  return SITE_CATALOG_PAGE_SIZE_OPTIONS.includes(value as SiteCatalogPageSize)
+    ? (value as SiteCatalogPageSize)
+    : SITE_CATALOG_PAGE_SIZE;
+}
+
+function normalizeSort(value: SiteCatalogSort | undefined): SiteCatalogSort {
+  return value === "name" || value === "contractLimit" || value === "createdAt"
+    ? value
+    : "createdAt";
+}
+
+function normalizeDirection(value: SiteCatalogSortDirection | undefined): SiteCatalogSortDirection {
+  return value === "asc" || value === "desc" ? value : "desc";
+}
+
+function isSiteType(value: SiteType | undefined): value is SiteType {
+  return (
+    value === "APARTMENT" || value === "OFFICETEL" || value === "BUILDING" || value === "OTHER"
+  );
+}
+
+function isOrganizationStatus(value: OrganizationStatus | undefined): value is OrganizationStatus {
+  return value === "ACTIVE" || value === "SUSPENDED" || value === "CLOSED";
 }
 
 export class SiteCatalogService {
   constructor(private readonly repository: SiteCatalogRepository) {}
 
-  async list(input: { actor: AdminAuthorizationContext; page?: number }): Promise<SiteCatalogPage> {
+  async list(input: {
+    actor: AdminAuthorizationContext;
+    query?: SiteCatalogQuery;
+  }): Promise<SiteCatalogPage> {
     const resource = {
       ...(input.actor.scope.managementCompanyId
         ? { managementCompanyId: input.actor.scope.managementCompanyId }
@@ -60,21 +146,55 @@ export class SiteCatalogService {
       tenantId: input.actor.scope.tenantId ?? "platform-site-catalog",
     };
     assertAdminAuthorized(authorizeAdminAction(input.actor, "site:read", resource));
-    const page = Number.isInteger(input.page) && (input.page ?? 0) > 0 ? (input.page as number) : 1;
+    const requestedQuery = input.query ?? {};
+    const page =
+      Number.isInteger(requestedQuery.page) && (requestedQuery.page ?? 0) > 0
+        ? (requestedQuery.page as number)
+        : 1;
+    const pageSize = normalizePageSize(requestedQuery.pageSize);
+    const sort = normalizeSort(requestedQuery.sort);
+    const direction = normalizeDirection(requestedQuery.direction);
+    const createdFrom = normalizeDate(requestedQuery.createdFrom);
+    const createdTo = normalizeDate(requestedQuery.createdTo);
+    const hasValidDateRange = !createdFrom || !createdTo || createdFrom <= createdTo;
+    const managementCompanyId = requestedQuery.managementCompanyId?.trim();
+    const search = normalizeSearch(requestedQuery.search);
+    const query: SiteCatalogQueryState = {
+      ...(createdFrom && hasValidDateRange ? { createdFrom } : {}),
+      ...(createdTo && hasValidDateRange ? { createdTo } : {}),
+      direction,
+      ...(managementCompanyId && UUID_PATTERN.test(managementCompanyId)
+        ? { managementCompanyId }
+        : {}),
+      pageSize,
+      ...(search ? { search } : {}),
+      ...(isSiteType(requestedQuery.siteType) ? { siteType: requestedQuery.siteType } : {}),
+      sort,
+      ...(isOrganizationStatus(requestedQuery.status) ? { status: requestedQuery.status } : {}),
+    };
     const [catalog, parentOptions] = await Promise.all([
       this.repository.list({
-        limit: SITE_CATALOG_PAGE_SIZE,
-        offset: (page - 1) * SITE_CATALOG_PAGE_SIZE,
+        ...(query.createdFrom ? { createdFrom: query.createdFrom } : {}),
+        ...(query.createdTo ? { createdTo: query.createdTo } : {}),
+        direction: query.direction,
+        limit: query.pageSize,
+        ...(query.managementCompanyId ? { managementCompanyId: query.managementCompanyId } : {}),
+        offset: (page - 1) * query.pageSize,
+        ...(query.search ? { search: query.search } : {}),
+        ...(query.siteType ? { siteType: query.siteType } : {}),
+        sort: query.sort,
+        ...(query.status ? { status: query.status } : {}),
       }),
-      roleHasPermission(input.actor.role, "site:create")
+      roleHasPermission(input.actor.role, "site:read")
         ? this.repository.listActiveParents()
         : Promise.resolve([]),
     ]);
     return {
       ...catalog,
       page,
-      pageSize: SITE_CATALOG_PAGE_SIZE,
+      pageSize: query.pageSize,
       parentOptions,
+      query,
     };
   }
 }
