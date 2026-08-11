@@ -268,6 +268,51 @@
 
 ---
 
+## 3-A. 갭 D (P0, 오픈 전 필수) — 공개 엔드포인트 CAPTCHA가 무력화 상태
+
+### D.1 확인된 사실
+
+- `packages/application/src/public-contact-service.ts:78`의 기본 검증기가
+  **`async verify() { return true; }`** — 무조건 통과다.
+- `PublicContactService` 생성자의 `captcha` 인자는 **기본값으로만 쓰이고**,
+  `apps/web/public-contact/public-contact-runtime.ts`가 **실제 검증기를 주입하지 않는다**
+  (`new PublicContactService(repository, hasher, secretFactory, policy)` — 5번째 인자 없음).
+- `packages/config`에 **CAPTCHA 관련 환경변수가 없다.** 구현 어댑터도 없다
+  (`PublicContactCaptchaVerifier`는 인터페이스 + 테스트에만 등장).
+- 라우트는 `captchaToken`을 optional로 받아 서비스까지 넘기지만 **아무도 검증하지 않는다.**
+
+**즉 Port만 있고 Adapter가 없다.** 연락 요청 생성은 무회원 공개 엔드포인트인데
+봇 방어가 rate limit(IP/QR/디바이스 한도)에만 의존한다.
+
+> rate limit은 정상 동작한다(`DEVICE_TOTAL_LIMIT_PER_10_MINUTES`,
+> `IP_QR_LIMIT_PER_10_MINUTES`, `QR_GLOBAL_LIMIT_PER_MINUTE`).
+> 완전 무방비는 아니지만, **분산 IP 기반 자동화에는 rate limit만으로 부족**하고
+> 발송 1건당 SMS 비용이 발생하므로 비용 유발 공격면이 열려 있다.
+
+### D.2 구현 범위
+
+- `PublicContactCaptchaVerifier` **Port는 그대로 두고 어댑터를 추가**한다.
+- **provider 선택은 운영자 승인 사항이다.** Codex가 임의로 벤더를 고르지 않는다.
+  후보와 트레이드오프(비용·국내 접근성·개인정보 이전 여부·무료 한도)를 정리해
+  **운영자에게 결정을 요청**한다. `착수 금지` 목록의 "live CAPTCHA provider"에 해당한다.
+- 자격증명은 **서버 전용 env**로만 주입한다. `NEXT_PUBLIC_` 금지
+  (site key처럼 공개가 전제인 값만 예외이며, secret key는 절대 노출 금지).
+- **미설정 시 동작을 명시적으로 정한다.** 지금처럼 조용히 통과시키지 말고,
+  최소한 비프로덕션은 통과 / **프로덕션은 미설정이면 기동 실패(fail-closed)** 로 한다.
+  이 기본값 결정도 운영자에게 확인한다.
+- 검증 실패는 기존 오류 계약(`VALIDATION` / `LIMITED`)에 매핑하고 새 정책을 만들지 않는다.
+- CAPTCHA 토큰·IP·응답 원문을 로그에 남기지 않는다.
+
+### D.3 수용 기준
+
+- [ ] 실제 검증기가 런타임에서 주입됨(기본 always-true 경로가 프로덕션에서 도달 불가)
+- [ ] 프로덕션 미설정 시 기동 실패를 테스트로 증명
+- [ ] 기존 rate limit 정책 회귀 없음
+- [ ] 토큰·IP·provider 응답 원문이 로그에 없음 (`verify:secrets` PASS)
+- [ ] provider 선택·미설정 기본값에 대한 **운영자 결정 기록**
+
+---
+
 ## 4. 부수 정리 (P2)
 
 | 항목 | 조치 | 소유 |
@@ -320,5 +365,10 @@ credential·전화번호·OTP·QR token·response token·secret은 Git·문서·
 3. **갭 C-1 ~ C-3** — 알림톡 어댑터 · 채널 정책 · claim 마이그레이션.
    인증 값(`pfId`·`templateId`) 없이도 **여기까지 전부 완성**한다.
    완료 시점에 "인증만 나오면 설정 한 줄로 알림톡 전환" 상태가 되어야 한다.
-4. **갭 C-5** — 카피 문구안 제시 → 디자인 레인 승인 → 반영.
-5. **갭 B** — 정본 결정 요청을 먼저 올리고, 회신 후 구현.
+4. **갭 D** — CAPTCHA 어댑터. provider 선택은 운영자 결정 요청과 병행한다.
+5. **갭 C-5** — 카피 문구안 제시 → 디자인 레인 승인 → 반영.
+6. **갭 B** — 정본 결정 요청을 먼저 올리고, 회신 후 구현
+   (운영자 명시 승인 시 §2.2 예외 조항으로 잠정 배선).
+
+> 이 워크오더를 전부 끝내도 **서비스 오픈 조건은 충족되지 않는다.**
+> 남은 검증·인프라·법무 항목은 `docs/development/LAUNCH_READINESS.md`를 따른다.
