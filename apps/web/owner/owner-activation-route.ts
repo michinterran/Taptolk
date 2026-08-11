@@ -70,6 +70,7 @@ const completeSchema = z
     privacyVersion: z.string().regex(/^[A-Z0-9][A-Z0-9._-]{0,31}$/u),
     proof: z.string().min(16).max(500),
     publicToken: sharedSchema.publicToken,
+    siteContactLocation: z.string().min(2).max(160),
     termsVersion: z.string().regex(/^[A-Z0-9][A-Z0-9._-]{0,31}$/u),
   })
   .strict();

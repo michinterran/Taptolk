@@ -9,6 +9,8 @@ import {
   RandomOwnerActivationSecretFactory,
 } from "./owner-activation-crypto";
 import {
+  hasSolapiOwnerOtpConfig,
+  SolapiOwnerOtpProvider,
   StagingMockOwnerOtpProvider,
   UnavailableOwnerOtpProvider,
 } from "./owner-activation-provider";
@@ -31,6 +33,16 @@ export function createOwnerActivationService(): OwnerActivationService | null {
       environment.APP_ENV !== "production" &&
       environment.OWNER_VERIFICATION_PROVIDER === "mock" &&
       environment.OWNER_STAGING_MOCK_OTP;
+    const solapiConfig = {
+      apiKey: environment.SOLAPI_API_KEY,
+      apiSecret: environment.SOLAPI_API_SECRET,
+      from: environment.SOLAPI_SMS_FROM,
+    };
+    const solapiProvider =
+      environment.OWNER_VERIFICATION_PROVIDER === "solapi-sms" &&
+      hasSolapiOwnerOtpConfig(solapiConfig)
+        ? new SolapiOwnerOtpProvider(solapiConfig)
+        : null;
     stage = "SERVICE";
     return new OwnerActivationService(
       createSupabaseOwnerActivationRepository(client),
@@ -40,7 +52,9 @@ export function createOwnerActivationService(): OwnerActivationService | null {
         environment.APP_ENCRYPTION_KEY_VERSION,
       ),
       new RandomOwnerActivationSecretFactory(mockProvider || undefined),
-      mockProvider ? new StagingMockOwnerOtpProvider() : new UnavailableOwnerOtpProvider(),
+      mockProvider
+        ? new StagingMockOwnerOtpProvider()
+        : (solapiProvider ?? new UnavailableOwnerOtpProvider()),
       {
         attemptLimit: environment.OWNER_OTP_ATTEMPT_LIMIT,
         dailyPhoneLimit: environment.OWNER_OTP_DAILY_PHONE_LIMIT,

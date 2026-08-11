@@ -13,9 +13,13 @@ export interface OwnerActivationCopy {
   /** A-2 */
   plateTitle: readonly [string, ...string[]];
   plateFieldHint: string;
+  siteContactLocation: string;
+  siteContactLocationHint: string;
+  siteContactLocationTitle: readonly [string, ...string[]];
   /** A-3 */
   phoneTitle: readonly [string, ...string[]];
   sendCode: string;
+  otpMessage: string;
   resendIn: string;
   otpRemaining: string;
   phonePrivacy: string;
@@ -72,8 +76,13 @@ const ko: OwnerActivationCopy = {
   locationAddressMissing: "주소가 등록되어 있지 않습니다.",
   plateTitle: ["차량번호를", "입력하세요"],
   plateFieldHint: "스티커를 붙인 차량의 번호",
+  siteContactLocation: "현장 호출 위치",
+  siteContactLocationHint:
+    "동·호수, 인터폰 호출명, 주차 위치 등. 이름과 전화번호는 입력하지 마세요.",
+  siteContactLocationTitle: ["인터폰으로", "찾을 위치"],
   phoneTitle: ["연락받을", "번호"],
   sendCode: "인증번호 받기",
+  otpMessage: "[Taptolk] 인증번호는 {otp}입니다. 3분 안에 입력해 주세요.",
   resendIn: "다시 받기까지 {seconds}초",
   otpRemaining: "남은 시간 {time}",
   phonePrivacy: "번호는 암호화해 저장하고 호출자에게 보이지 않습니다.",
@@ -130,8 +139,13 @@ const en: OwnerActivationCopy = {
   locationAddressMissing: "No address is on file for this site.",
   plateTitle: ["Enter the", "vehicle plate"],
   plateFieldHint: "The plate of the vehicle carrying this sticker",
+  siteContactLocation: "Site call location",
+  siteContactLocationHint:
+    "Unit, intercom label, or parking location. Do not enter a name or phone number.",
+  siteContactLocationTitle: ["Where the site", "can reach you"],
   phoneTitle: ["Number to", "be reached on"],
   sendCode: "Send a code",
+  otpMessage: "[Taptolk] Your verification code is {otp}. Enter it within 3 minutes.",
   resendIn: "You can ask again in {seconds}s",
   otpRemaining: "{time} left",
   phonePrivacy: "Your number is stored encrypted and is never shown to the caller.",

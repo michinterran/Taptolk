@@ -125,6 +125,7 @@ export function createSupabaseOwnerActivationRepository(
           public_token_hash: input.publicTokenHash,
           session_hash: input.sessionHash,
           session_ttl_seconds: input.sessionTtlSeconds,
+          site_contact_location: input.siteContactLocation,
           terms_version: input.consent.termsVersion,
         },
       });

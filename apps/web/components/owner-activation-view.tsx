@@ -34,7 +34,14 @@ import { getOwnerDeviceHash } from "../owner/owner-device-client";
  * Nothing here is drawn from a mockup number. Values the server does not send
  * are left out rather than filled in (DESIGN_SYSTEM.md §4).
  */
-type Step = "DONE" | "LOADING" | "LOCATION" | "PHONE" | "PLATE" | "STOPPED";
+type Step =
+  | "DONE"
+  | "LOADING"
+  | "LOCATION"
+  | "PHONE"
+  | "PLATE"
+  | "SITE_CONTACT_LOCATION"
+  | "STOPPED";
 type ErrorCode = "CONFLICT" | "INVALID" | "LIMITED" | "UNAVAILABLE" | null;
 
 interface OwnerActivationViewProps {
@@ -51,7 +58,7 @@ interface SiteSummary {
   type: string | null;
 }
 
-const ACTIVATION_STEP_TOTAL = 3;
+const ACTIVATION_STEP_TOTAL = 4;
 
 async function postJson(path: string, body: Readonly<Record<string, unknown>>) {
   const response = await fetch(path, {
@@ -136,6 +143,7 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
   const [working, setWorking] = useState(false);
   const [site, setSite] = useState<SiteSummary>({ address: null, name: null, type: null });
   const [plate, setPlate] = useState("");
+  const [siteContactLocation, setSiteContactLocation] = useState("");
   const [phone, setPhone] = useState("");
   const [challengeId, setChallengeId] = useState("");
   const [otp, setOtp] = useState("");
@@ -213,11 +221,13 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
       privacyVersion: "PRIVACY_V1",
       proof: nextProof,
       publicToken,
+      siteContactLocation,
       termsVersion: "TERMS_V1",
     });
     setDonePlate(readString(completed.data, "vehiclePlateLast4") ?? "");
     setPhone("");
     setPlate("");
+    setSiteContactLocation("");
     setOtp("");
     setRemaining(0);
     setStep("DONE");
@@ -342,8 +352,11 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
       <ActivationShell
         actions={
           <MobileActions>
-            <MobileSecondary onClick={() => goTo("PLATE")}>{copy.back}</MobileSecondary>
-            <MobilePrimary disabled={plate.length === 0} onClick={() => goTo("PHONE")}>
+            <MobileSecondary onClick={() => goTo("LOCATION")}>{copy.back}</MobileSecondary>
+            <MobilePrimary
+              disabled={plate.length === 0}
+              onClick={() => goTo("SITE_CONTACT_LOCATION")}
+            >
               {copy.next}
             </MobilePrimary>
           </MobileActions>
@@ -373,11 +386,51 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
     );
   }
 
+  if (step === "SITE_CONTACT_LOCATION") {
+    return (
+      <ActivationShell
+        actions={
+          <MobileActions>
+            <MobileSecondary onClick={() => goTo("PLATE")}>{copy.back}</MobileSecondary>
+            <MobilePrimary
+              disabled={siteContactLocation.trim().length < 2}
+              onClick={() => goTo("PHONE")}
+            >
+              {copy.next}
+            </MobilePrimary>
+          </MobileActions>
+        }
+        label={fill(copy.stepOf, { current: "3", total: String(ACTIVATION_STEP_TOTAL) })}
+      >
+        {notice}
+        <SemanticHeading as="h1" className="tt-m-heading" lines={copy.siteContactLocationTitle} />
+        <MobileCard>
+          <MobileField
+            controlId="owner-site-contact-location"
+            hint={copy.siteContactLocationHint}
+            hintId="owner-site-contact-location-hint"
+            label={copy.siteContactLocation}
+          >
+            <input
+              aria-describedby="owner-site-contact-location-hint"
+              autoComplete="address-line2"
+              id="owner-site-contact-location"
+              onChange={(event) => setSiteContactLocation(event.target.value)}
+              value={siteContactLocation}
+            />
+          </MobileField>
+        </MobileCard>
+      </ActivationShell>
+    );
+  }
+
   return (
     <ActivationShell
       actions={
         <MobileActions>
-          <MobileSecondary onClick={() => goTo("PLATE")}>{copy.back}</MobileSecondary>
+          <MobileSecondary onClick={() => goTo("SITE_CONTACT_LOCATION")}>
+            {copy.back}
+          </MobileSecondary>
           <MobilePrimary
             disabled={working || otp.length === 0 || challengeId.length === 0}
             onClick={() => void verifyAndComplete()}
@@ -386,7 +439,7 @@ export function OwnerActivationView({ copy, locale, publicToken }: OwnerActivati
           </MobilePrimary>
         </MobileActions>
       }
-      label={fill(copy.stepOf, { current: "3", total: String(ACTIVATION_STEP_TOTAL) })}
+      label={fill(copy.stepOf, { current: "4", total: String(ACTIVATION_STEP_TOTAL) })}
     >
       {notice}
       <SemanticHeading as="h1" className="tt-m-heading" lines={copy.phoneTitle} />
