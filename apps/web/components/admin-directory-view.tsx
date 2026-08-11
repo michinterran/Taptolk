@@ -335,7 +335,13 @@ export function AdminDirectoryView({
     {
       cell: (item: AdminDirectoryItem) =>
         item.userId === currentUserId ? (
-          <ShieldCheck aria-label={copy.account} size={20} />
+          <span className="admin-directory-self-lock" title={copy.currentAccountHint}>
+            <ShieldCheck aria-hidden="true" size={20} />
+            <span>
+              <strong>{copy.currentAccount}</strong>
+              <small>{copy.currentAccountHint}</small>
+            </span>
+          </span>
         ) : (
           <button
             className="tt-button tt-button--secondary tt-button--compact"

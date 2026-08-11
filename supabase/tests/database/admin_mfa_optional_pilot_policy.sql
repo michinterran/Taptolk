@@ -1,6 +1,6 @@
 begin;
 
-select plan(4);
+select plan(6);
 
 select is(
   position(
@@ -47,6 +47,26 @@ select is(
   ),
   0,
   'Super Admin profile review policy no longer requires AAL2 during the pilot'
+);
+
+select is(
+  position(
+    'MFA_REQUIRED' in pg_get_functiondef(
+      'public.create_management_company(text,text,text,text,text,text,text,text,text,text,text,uuid)'::regprocedure
+    )
+  ),
+  0,
+  'management company registration no longer requires MFA during the pilot'
+);
+
+select is(
+  position(
+    'MFA_REQUIRED' in pg_get_functiondef(
+      'public.update_management_company(uuid,integer,text,text,text,text,text,text,text,text,text,text,text,uuid)'::regprocedure
+    )
+  ),
+  0,
+  'management company update no longer requires MFA during the pilot'
 );
 
 select * from finish();

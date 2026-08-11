@@ -4955,6 +4955,34 @@ h3,
   font-weight: 650;
 }
 
+.admin-directory-self-lock {
+  align-items: center;
+  color: var(--tt-color-text-muted);
+  display: inline-flex;
+  gap: var(--tt-space-2);
+  max-width: 15rem;
+}
+
+.admin-directory-self-lock > svg {
+  color: var(--tt-color-brand-strong);
+  flex: 0 0 auto;
+}
+
+.admin-directory-self-lock > span {
+  display: grid;
+  gap: var(--tt-space-1);
+}
+
+.admin-directory-self-lock strong {
+  color: var(--tt-color-text);
+  font-size: var(--tt-font-size-xs);
+}
+
+.admin-directory-self-lock small {
+  font-size: var(--tt-font-size-2xs);
+  line-height: var(--tt-line-body);
+}
+
 .admin-directory-form {
   display: grid;
   gap: 0.75rem;
@@ -11466,8 +11494,15 @@ html[data-console-theme="light"] body:has(.admin-dashboard-shell) {
 }
 
 .admin-console-account-menu > summary {
+  border-radius: var(--tt-radius-pill);
   color: var(--tt-color-text);
+  gap: var(--tt-space-2);
   min-width: 0;
+  padding: var(--tt-space-1) var(--tt-space-2);
+}
+
+.admin-console-account-menu > summary:is(:hover, :focus-visible) {
+  background: var(--tt-color-surface-subtle);
 }
 
 .admin-console-account-menu > summary > svg {
@@ -11477,7 +11512,8 @@ html[data-console-theme="light"] body:has(.admin-dashboard-shell) {
 }
 
 .admin-console-account-menu > summary > span {
-  display: none;
+  display: grid;
+  max-width: 14rem;
 }
 
 .admin-console-account-menu > div {
@@ -11495,6 +11531,31 @@ html[data-console-theme="light"] body:has(.admin-dashboard-shell) {
 .admin-console-account-menu a:hover,
 .admin-console-account-menu button:hover {
   background: var(--tt-color-surface-subtle);
+}
+
+.admin-console-account-menu__identity {
+  border-bottom: 1px solid var(--tt-color-border);
+  display: grid;
+  gap: var(--tt-space-1);
+  margin-bottom: var(--tt-space-1);
+  min-width: 0;
+  padding: var(--tt-space-2) var(--tt-space-3) var(--tt-space-3);
+}
+
+.admin-console-account-menu__identity strong,
+.admin-console-account-menu__identity small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-console-account-menu__identity strong {
+  font-size: var(--tt-font-size-xs);
+}
+
+.admin-console-account-menu__identity small {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-2xs);
 }
 
 .tt-page-header,
@@ -12159,6 +12220,10 @@ html[data-console-theme="light"] body:has(.admin-dashboard-shell) {
   }
 
   .admin-console-location {
+    display: none;
+  }
+
+  .admin-console-account-menu > summary > span {
     display: none;
   }
 

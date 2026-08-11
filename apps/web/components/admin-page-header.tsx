@@ -374,6 +374,10 @@ export async function AdminPageHeader({
                 </span>
               </summary>
               <div>
+                <div className="admin-console-account-menu__identity">
+                  <strong>{getAdminRoleLabel(copy, membership.role)}</strong>
+                  <small title={context.email ?? undefined}>{context.email ?? "-"}</small>
+                </div>
                 <Link href={`/${locale}/admin/profile` as Route}>
                   <IdentificationCardIcon aria-hidden="true" weight="duotone" />
                   {copy["admin.shared.account"]}

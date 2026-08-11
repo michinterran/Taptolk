@@ -15,6 +15,8 @@ export interface AdminDirectoryCopy {
   cancelInvitation: string;
   close: string;
   created: string;
+  currentAccount: string;
+  currentAccountHint: string;
   description: string;
   descending: string;
   displayName: string;
@@ -76,6 +78,8 @@ export const ADMIN_DIRECTORY_COPY: Readonly<Record<AppLocale, AdminDirectoryCopy
     cancelInvitation: "Cancel invitation",
     close: "Close",
     created: "Created",
+    currentAccount: "Current account",
+    currentAccountHint: "Another Super Admin must change this assignment.",
     description:
       "Review active administrator assignments in your server-approved scope and change role or access status with an audit reason.",
     descending: "Descending",
@@ -150,6 +154,8 @@ export const ADMIN_DIRECTORY_COPY: Readonly<Record<AppLocale, AdminDirectoryCopy
     cancelInvitation: "초대 취소",
     close: "닫기",
     created: "생성일",
+    currentAccount: "현재 계정",
+    currentAccountHint: "다른 슈퍼어드민이 이 권한을 변경할 수 있습니다.",
     description:
       "서버가 승인한 범위의 관리자 배정을 확인하고, 운영 사유를 남긴 뒤 역할과 접근 상태를 변경합니다.",
     descending: "내림차순",
