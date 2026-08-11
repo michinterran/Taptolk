@@ -1,6 +1,6 @@
 begin;
 
-select plan(32);
+select plan(36);
 
 select has_table('public', 'abuse_events', 'abuse evidence table exists');
 select has_table('public', 'contact_reports', 'contact report table exists');
@@ -21,6 +21,8 @@ select has_function(
   array['uuid', 'contact_report_status', 'text', 'integer'],
   'scoped Admin report process command exists'
 );
+select has_function('public', 'read_site_escalation_queue', array['uuid'],
+  'scoped site escalation queue exists');
 
 select is_definer('public', 'record_public_abuse_event', array['jsonb'],
   'abuse evidence stays behind service boundary');
@@ -37,6 +39,8 @@ select is_definer(
   array['uuid', 'contact_report_status', 'text', 'integer'],
   'report processing enforces central Admin scope'
 );
+select is_definer('public', 'read_site_escalation_queue', array['uuid'],
+  'site escalation queue stays behind scope function');
 
 select function_privs_are(
   'public', 'record_public_abuse_event', array['jsonb'],
@@ -54,6 +58,10 @@ select function_privs_are(
   'public', 'process_contact_report',
   array['uuid', 'contact_report_status', 'text', 'integer'],
   'anon', array[]::text[], 'anonymous browser cannot process reports'
+);
+select function_privs_are(
+  'public', 'read_site_escalation_queue', array['uuid'],
+  'anon', array[]::text[], 'anonymous browser cannot read site escalation queue'
 );
 
 select table_privs_are(
@@ -149,6 +157,21 @@ select results_eq(
   $$,
   array[true],
   'Admin block uses independently observed network evidence'
+);
+select results_eq(
+  $$
+    select position('vehicle_plate_last4' in lower(pg_get_functiondef(
+      'public.read_site_escalation_queue(uuid)'::regprocedure
+    ))) > 0
+      and position('site_contact_location' in lower(pg_get_functiondef(
+        'public.read_site_escalation_queue(uuid)'::regprocedure
+      ))) > 0
+      and position('phone' in lower(pg_get_functiondef(
+        'public.read_site_escalation_queue(uuid)'::regprocedure
+      ))) = 0
+  $$,
+  array[true],
+  'site escalation queue exposes vehicle suffix and site location without phone data'
 );
 
 select * from finish();

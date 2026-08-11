@@ -1,10 +1,15 @@
 begin;
 
-select plan(59);
+select plan(65);
 
 select has_table('public', 'owners', 'Owner identity table exists');
 select has_table('public', 'owner_devices', 'Owner device table exists');
 select has_table('public', 'vehicle_owners', 'tenant-owned vehicle relationship exists');
+select has_table(
+  'public',
+  'vehicle_site_contact_locations',
+  'site-only Owner location table exists'
+);
 select has_table('public', 'owner_otp_challenges', 'service-only OTP lifecycle exists');
 select has_table(
   'public',
@@ -60,6 +65,12 @@ select has_function(
 );
 select has_function(
   'public',
+  'read_site_escalation_queue',
+  array['uuid'],
+  'site-scoped escalation queue read model exists'
+);
+select has_function(
+  'public',
   'list_owner_vehicles',
   array['text', 'text'],
   'Owner-scoped vehicle read model exists'
@@ -101,6 +112,12 @@ select is_definer(
   'complete_owner_activation',
   array['jsonb'],
   'activation completion is server-only'
+);
+select is_definer(
+  'public',
+  'read_site_escalation_queue',
+  array['uuid'],
+  'site escalation queue enforces scope in the database'
 );
 select is_definer(
   'public',
@@ -160,6 +177,14 @@ select function_privs_are(
   'service_role',
   array['EXECUTE'],
   'service application boundary can complete activation'
+);
+select function_privs_are(
+  'public',
+  'read_site_escalation_queue',
+  array['uuid'],
+  'anon',
+  array[]::text[],
+  'anonymous browser cannot read site escalation queue'
 );
 select function_privs_are(
   'public',
@@ -231,6 +256,13 @@ select table_privs_are(
   array[]::text[],
   'authenticated role has no Owner session table privileges'
 );
+select table_privs_are(
+  'public',
+  'vehicle_site_contact_locations',
+  'authenticated',
+  array[]::text[],
+  'authenticated role cannot directly select site contact locations'
+);
 
 select is(
   (select relrowsecurity from pg_class where oid = 'public.owners'::regclass),
@@ -279,9 +311,28 @@ select results_eq(
       and position('activation_code_hash' in lower(pg_get_functiondef(
         'public.complete_owner_activation(jsonb)'::regprocedure
       ))) = 0
+      and position('site_contact_location' in lower(pg_get_functiondef(
+        'public.complete_owner_activation(jsonb)'::regprocedure
+      ))) > 0
   $$,
   array[true],
-  'completion does not require activation code hash and still consumes issued code'
+  'completion does not require activation code hash and stores site-only contact location'
+);
+
+select results_eq(
+  $$
+    select position('owner_id' in lower(pg_get_functiondef(
+      'public.read_site_escalation_queue(uuid)'::regprocedure
+    ))) = 0
+      and position('phone' in lower(pg_get_functiondef(
+        'public.read_site_escalation_queue(uuid)'::regprocedure
+      ))) = 0
+      and position('site_contact_location' in lower(pg_get_functiondef(
+        'public.read_site_escalation_queue(uuid)'::regprocedure
+      ))) > 0
+  $$,
+  array[true],
+  'site escalation queue excludes Owner identity and direct phone fields'
 );
 
 select results_eq(

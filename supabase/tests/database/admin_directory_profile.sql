@@ -1,8 +1,14 @@
 begin;
 
-select plan(8);
+select plan(9);
 
 select has_function('public', 'read_admin_account_directory', array[]::text[], 'account directory read model exists');
+select ok(
+  position('last_changed_at' in pg_get_functiondef(
+    'public.read_admin_account_directory()'::regprocedure
+  )) > 0,
+  'account directory exposes a redacted latest change summary'
+);
 select has_function(
   'public',
   'update_current_admin_profile',

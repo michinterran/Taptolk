@@ -1,6 +1,6 @@
 begin;
 
-select plan(6);
+select plan(9);
 
 select has_function(
   'public',
@@ -15,6 +15,22 @@ select function_returns(
   array['uuid', 'uuid', 'integer'],
   'jsonb',
   'command center returns a redacted JSON read model'
+);
+
+select has_function(
+  'public',
+  'read_operations_command_center_by_range',
+  array['uuid', 'uuid', 'date', 'date'],
+  'range-aware operations command center function exists'
+);
+
+select function_privs_are(
+  'public',
+  'read_operations_command_center_by_range',
+  array['uuid', 'uuid', 'date', 'date'],
+  'anon',
+  array[]::text[],
+  'anon cannot execute range-aware operations analytics'
 );
 
 select function_privs_are(
@@ -48,6 +64,28 @@ select is_definer(
   'read_operations_command_center',
   array['uuid', 'uuid', 'integer'],
   'command center is security definer and checks site scope internally'
+);
+
+select ok(
+  position(
+    'site.is_test_fixture = false'
+    in pg_get_functiondef(
+      'public.read_operations_command_center(uuid, uuid, integer)'::regprocedure
+    )
+  ) > 0
+  and position(
+    'company.is_test_fixture = false'
+    in pg_get_functiondef(
+      'public.read_operations_command_center(uuid, uuid, integer)'::regprocedure
+    )
+  ) > 0
+  and position(
+    'tenant.is_test_fixture = false'
+    in pg_get_functiondef(
+      'public.read_operations_command_center(uuid, uuid, integer)'::regprocedure
+    )
+  ) > 0,
+  'command center excludes fixture tenants, companies, and sites in the read model'
 );
 
 select * from finish();
