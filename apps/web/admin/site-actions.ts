@@ -78,7 +78,9 @@ function mapError(error: unknown): SiteActionError {
         ? "conflict"
         : error.code === "FORBIDDEN"
           ? "forbidden"
-          : "unavailable";
+          : error.code === "VALIDATION"
+            ? "validation"
+            : "unavailable";
   }
   return "unavailable";
 }

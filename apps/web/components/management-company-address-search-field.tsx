@@ -8,10 +8,12 @@ interface ManagementCompanyAddressSearchFieldProps {
   ariaInvalid?: boolean;
   detailLabel: string;
   detailPlaceholder: string;
+  detailRequirementLabel?: string;
   idPrefix?: string;
   initialAddress?: string;
   labels: AddressFieldLabels;
   name: string;
+  required?: boolean;
   scriptSrc: string;
 }
 
@@ -20,10 +22,12 @@ export function ManagementCompanyAddressSearchField({
   ariaInvalid = false,
   detailLabel,
   detailPlaceholder,
+  detailRequirementLabel,
   idPrefix = "company-create-address",
   initialAddress = "",
   labels,
   name,
+  required = false,
   scriptSrc,
 }: ManagementCompanyAddressSearchFieldProps) {
   const [address, setAddress] = useState<AddressValue>({});
@@ -63,13 +67,19 @@ export function ManagementCompanyAddressSearchField({
         aria-describedby={ariaDescribedBy}
         aria-invalid={ariaInvalid}
         aria-label={labels.roadAddress}
+        aria-required={required}
         className="admin-company-address-search__selected"
         placeholder={labels.roadAddress}
         readOnly
         value={selectedAddress || initialAddress}
       />
       <label className="admin-field" htmlFor={`${idPrefix}-detail`}>
-        <span>{detailLabel}</span>
+        <span className="admin-field-label">
+          {detailLabel}
+          {detailRequirementLabel ? (
+            <span className="admin-field-requirement">{detailRequirementLabel}</span>
+          ) : null}
+        </span>
         <input
           autoComplete="address-line2"
           id={`${idPrefix}-detail`}

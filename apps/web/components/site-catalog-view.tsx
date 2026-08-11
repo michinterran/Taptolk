@@ -7,6 +7,7 @@ import type {
   SiteType,
 } from "@taptolk/application";
 import {
+  type AddressFieldLabels,
   DataTable,
   type DataTableColumn,
   EmptyState,
@@ -19,12 +20,18 @@ import {
   approveSiteLifecycleRequest,
   rejectSiteLifecycleRequest,
 } from "../admin/site-lifecycle-request-actions";
+import { DAUM_POSTCODE_SCRIPT_SRC } from "../config/address-search";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
+import { ManagementCompanyAddressSearchField } from "./management-company-address-search-field";
 
 interface SiteCatalogCopy {
   actions: string;
   address: string;
+  addressDetail: string;
+  addressDetailPlaceholder: string;
+  addressHelp: string;
+  addressSearch: AddressFieldLabels;
   close: string;
   company: string;
   contractLimit: string;
@@ -62,6 +69,7 @@ interface SiteCatalogCopy {
   next: string;
   noActiveParent: string;
   notAvailable: string;
+  optional: string;
   operationalDescription: string;
   operationalTitle: string;
   page: string;
@@ -71,6 +79,8 @@ interface SiteCatalogCopy {
   reactivate: string;
   reason: string;
   reasonPlaceholder: string;
+  required: string;
+  requiredHint: string;
   saveContract: string;
   saveOperational: string;
   securityNote: string;
@@ -87,9 +97,20 @@ interface SiteCatalogCopy {
   view: string;
 }
 
+function Requirement({ copy, optional = false }: { copy: SiteCatalogCopy; optional?: boolean }) {
+  return (
+    <span
+      className={`admin-field-requirement ${optional ? "" : "admin-field-requirement--required"}`}
+    >
+      {optional ? copy.optional : copy.required}
+    </span>
+  );
+}
+
 interface SiteCatalogViewProps {
   canCreate: boolean;
   catalog: SiteCatalogPage;
+  contractVehicleLimitMin: number;
   contractVehicleLimitMax: number;
   copy: SiteCatalogCopy;
   defaultTimezone: string;
@@ -181,12 +202,14 @@ function SiteRowActions({
 
 function SiteRegistrationMenu({
   catalog,
+  contractVehicleLimitMin,
   contractVehicleLimitMax,
   copy,
   defaultTimezone,
   locale,
 }: {
   catalog: SiteCatalogPage;
+  contractVehicleLimitMin: number;
   contractVehicleLimitMax: number;
   copy: SiteCatalogCopy;
   defaultTimezone: string;
@@ -203,9 +226,21 @@ function SiteRegistrationMenu({
         {catalog.parentOptions.length > 0 ? (
           <form action={createSite} className="admin-tenant-form">
             <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+            <input
+              aria-label={copy.timezone}
+              name="timezone"
+              type="hidden"
+              value={defaultTimezone}
+            />
+            <div className="admin-company-form__guidance">
+              <strong>{copy.requiredHint}</strong>
+            </div>
             <div className="admin-tenant-field-grid">
               <label className="admin-field" htmlFor="site-create-parent">
-                <span>{copy.parent}</span>
+                <span className="admin-field-label">
+                  {copy.parent}
+                  <Requirement copy={copy} />
+                </span>
                 <select id="site-create-parent" name="parentScope" required>
                   {catalog.parentOptions.map((parent) => (
                     <option
@@ -218,11 +253,17 @@ function SiteRegistrationMenu({
                 </select>
               </label>
               <label className="admin-field" htmlFor="site-create-name">
-                <span>{copy.name}</span>
+                <span className="admin-field-label">
+                  {copy.name}
+                  <Requirement copy={copy} />
+                </span>
                 <input id="site-create-name" maxLength={200} name="name" required />
               </label>
               <label className="admin-field" htmlFor="site-create-type">
-                <span>{copy.type}</span>
+                <span className="admin-field-label">
+                  {copy.type}
+                  <Requirement copy={copy} />
+                </span>
                 <select id="site-create-type" name="siteType" required>
                   {Object.entries(copy.typeLabels).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -231,36 +272,45 @@ function SiteRegistrationMenu({
                   ))}
                 </select>
               </label>
-              <label className="admin-field" htmlFor="site-create-timezone">
-                <span>{copy.timezone}</span>
-                <input
-                  defaultValue={defaultTimezone}
-                  id="site-create-timezone"
-                  maxLength={64}
-                  name="timezone"
-                  required
-                />
-              </label>
               <label className="admin-field" htmlFor="site-create-limit">
-                <span>{copy.contractLimit}</span>
+                <span className="admin-field-label">
+                  {copy.contractLimit}
+                  <Requirement copy={copy} />
+                </span>
                 <input
-                  defaultValue={0}
+                  defaultValue={contractVehicleLimitMin}
                   id="site-create-limit"
                   max={contractVehicleLimitMax}
-                  min={0}
+                  min={contractVehicleLimitMin}
                   name="contractVehicleLimit"
                   required
                   type="number"
                 />
                 <small>{copy.contractLimitHelp}</small>
               </label>
-              <label className="admin-field" htmlFor="site-create-address">
-                <span>{copy.address}</span>
-                <input id="site-create-address" maxLength={500} name="address" />
-              </label>
+              <div className="admin-field admin-company-form__wide-field">
+                <span className="admin-field-label">
+                  {copy.address}
+                  <Requirement copy={copy} />
+                </span>
+                <ManagementCompanyAddressSearchField
+                  detailLabel={copy.addressDetail}
+                  detailPlaceholder={copy.addressDetailPlaceholder}
+                  detailRequirementLabel={copy.optional}
+                  idPrefix="site-create-address"
+                  labels={copy.addressSearch}
+                  name="address"
+                  required
+                  scriptSrc={DAUM_POSTCODE_SCRIPT_SRC}
+                />
+                <small>{copy.addressHelp}</small>
+              </div>
             </div>
             <label className="admin-field" htmlFor="site-create-reason">
-              <span>{copy.reason}</span>
+              <span className="admin-field-label">
+                {copy.reason}
+                <Requirement copy={copy} />
+              </span>
               <textarea
                 id="site-create-reason"
                 maxLength={500}
@@ -285,6 +335,7 @@ function SiteRegistrationMenu({
 export function SiteCatalogView({
   canCreate,
   catalog,
+  contractVehicleLimitMin,
   contractVehicleLimitMax,
   copy,
   defaultTimezone,
@@ -377,6 +428,7 @@ export function SiteCatalogView({
           canCreate ? (
             <SiteRegistrationMenu
               catalog={catalog}
+              contractVehicleLimitMin={contractVehicleLimitMin}
               contractVehicleLimitMax={contractVehicleLimitMax}
               copy={copy}
               defaultTimezone={defaultTimezone}

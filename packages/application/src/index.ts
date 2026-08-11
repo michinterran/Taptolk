@@ -336,6 +336,7 @@ export {
 export {
   DEFAULT_SITE_TIMEZONE,
   SITE_CONTRACT_VEHICLE_LIMIT_MAX,
+  SITE_CONTRACT_VEHICLE_LIMIT_MIN,
   SITE_TYPES,
   type SiteActor,
   SiteApplicationService,

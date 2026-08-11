@@ -6,6 +6,7 @@ import type {
   SiteType,
   SiteWorkspace,
 } from "@taptolk/application";
+import { SITE_CONTRACT_VEHICLE_LIMIT_MIN } from "@taptolk/application";
 import {
   type AddressFieldLabels,
   DataTable,
@@ -72,6 +73,14 @@ function headingLine(value: string): readonly [string] {
 
 function statusTone(status: OrganizationStatus): "success" | "warning" {
   return status === "ACTIVE" ? "success" : "warning";
+}
+
+function RequiredField({ copy }: { copy: AdminSiteWorkspaceCopy }) {
+  return (
+    <span className="admin-field-requirement admin-field-requirement--required">
+      {copy.required}
+    </span>
+  );
 }
 
 function WorkspaceHiddenFields({
@@ -340,7 +349,10 @@ export function SiteWorkspaceView({
                       <h3>{copy.locationInformation}</h3>
                       <div className="admin-workspace-form__grid">
                         <label className="admin-field" htmlFor="site-workspace-name">
-                          <span>{copy.locationName}</span>
+                          <span className="admin-field-label">
+                            {copy.locationName}
+                            <RequiredField copy={copy} />
+                          </span>
                           <input
                             defaultValue={model.name}
                             id="site-workspace-name"
@@ -350,7 +362,10 @@ export function SiteWorkspaceView({
                           />
                         </label>
                         <label className="admin-field" htmlFor="site-workspace-type">
-                          <span>{copy.type}</span>
+                          <span className="admin-field-label">
+                            {copy.type}
+                            <RequiredField copy={copy} />
+                          </span>
                           <select
                             defaultValue={model.type}
                             id="site-workspace-type"
@@ -365,21 +380,29 @@ export function SiteWorkspaceView({
                           </select>
                         </label>
                         <div className="admin-field admin-workspace-address-field">
-                          <span>{copy.address}</span>
+                          <span className="admin-field-label">
+                            {copy.address}
+                            <RequiredField copy={copy} />
+                          </span>
                           <ManagementCompanyAddressSearchField
                             detailLabel={addressSearch.detailLabel}
                             detailPlaceholder={addressSearch.detailPlaceholder}
+                            detailRequirementLabel={copy.optional}
                             idPrefix="site-workspace-address"
                             initialAddress={model.address ?? ""}
                             labels={addressSearch.labels}
                             name="address"
+                            required
                             scriptSrc={DAUM_POSTCODE_SCRIPT_SRC}
                           />
                           <small>{addressSearch.help}</small>
                         </div>
                       </div>
                       <label className="admin-field" htmlFor="site-workspace-operational-reason">
-                        <span>{copy.changeReason}</span>
+                        <span className="admin-field-label">
+                          {copy.changeReason}
+                          <RequiredField copy={copy} />
+                        </span>
                         <textarea
                           id="site-workspace-operational-reason"
                           maxLength={500}
@@ -402,12 +425,15 @@ export function SiteWorkspaceView({
                       <WorkspaceHiddenFields copy={copy} locale={locale} model={model} />
                       <h3>{copy.contractTitle}</h3>
                       <label className="admin-field" htmlFor="site-workspace-contract-limit">
-                        <span>{copy.contractLimit}</span>
+                        <span className="admin-field-label">
+                          {copy.contractLimit}
+                          <RequiredField copy={copy} />
+                        </span>
                         <input
                           defaultValue={model.contractVehicleLimit}
                           id="site-workspace-contract-limit"
                           max={contractVehicleLimitMax}
-                          min={0}
+                          min={SITE_CONTRACT_VEHICLE_LIMIT_MIN}
                           name="contractVehicleLimit"
                           required
                           type="number"
@@ -415,7 +441,10 @@ export function SiteWorkspaceView({
                         <small>{copy.contractLimitHelp}</small>
                       </label>
                       <label className="admin-field" htmlFor="site-workspace-contract-reason">
-                        <span>{copy.changeReason}</span>
+                        <span className="admin-field-label">
+                          {copy.changeReason}
+                          <RequiredField copy={copy} />
+                        </span>
                         <textarea
                           id="site-workspace-contract-reason"
                           maxLength={500}

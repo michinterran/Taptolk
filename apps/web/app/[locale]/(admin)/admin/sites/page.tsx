@@ -1,6 +1,7 @@
 import {
   DEFAULT_SITE_TIMEZONE,
   SITE_CONTRACT_VEHICLE_LIMIT_MAX,
+  SITE_CONTRACT_VEHICLE_LIMIT_MIN,
   SiteCatalogService,
   SiteLifecycleRequestService,
 } from "@taptolk/application";
@@ -136,10 +137,23 @@ export default async function SitesPage({
       <SiteCatalogView
         canCreate={roleHasPermission(membership.role, "site:create")}
         catalog={catalog}
+        contractVehicleLimitMin={SITE_CONTRACT_VEHICLE_LIMIT_MIN}
         contractVehicleLimitMax={SITE_CONTRACT_VEHICLE_LIMIT_MAX}
         copy={{
           actions: copy["admin.sites.actions"],
           address: copy["admin.sites.address"],
+          addressDetail: copy["admin.sites.address.detail"],
+          addressDetailPlaceholder: copy["admin.sites.address.detail.placeholder"],
+          addressHelp: copy["admin.sites.address.help"],
+          addressSearch: {
+            close: copy["admin.sites.address.search.close"],
+            fallbackHint: copy["admin.sites.address.search.fallback"],
+            jibunAddress: copy["admin.sites.address.search.jibun"],
+            open: copy["admin.sites.address.search.open"],
+            roadAddress: copy["admin.sites.address.search.road"],
+            title: copy["admin.sites.address.search.title"],
+            zonecode: copy["admin.sites.address.search.zonecode"],
+          },
           close: copy["admin.sites.close"],
           company: copy["admin.sites.company"],
           contractLimit: copy["admin.sites.contractLimit"],
@@ -184,6 +198,7 @@ export default async function SitesPage({
           next: copy["admin.sites.next"],
           noActiveParent: copy["admin.sites.noActiveParent"],
           notAvailable: copy["admin.sites.notAvailable"],
+          optional: copy["admin.companies.field.optional"],
           operationalDescription: copy["admin.sites.operational.description"],
           operationalTitle: copy["admin.sites.operational.title"],
           page: copy["admin.sites.page"],
@@ -193,6 +208,8 @@ export default async function SitesPage({
           reactivate: copy["admin.sites.reactivate"],
           reason: copy["admin.sites.reason"],
           reasonPlaceholder: copy["admin.sites.reason.placeholder"],
+          required: copy["admin.companies.field.required"],
+          requiredHint: copy["admin.sites.required.help"],
           saveContract: copy["admin.sites.contract.save"],
           saveOperational: copy["admin.sites.operational.save"],
           securityNote: copy["admin.sites.securityNote"],

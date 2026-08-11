@@ -31,6 +31,7 @@ export interface AdminSiteWorkspaceCopy {
   noBatches: string;
   noEscalations: string;
   openRequests: string;
+  optional: string;
   operations: string;
   outputReadyBatches: string;
   pendingActivation: string;
@@ -55,6 +56,7 @@ export interface AdminSiteWorkspaceCopy {
   lifecycleReasonPlaceholder: string;
   reactivate: string;
   reports: string;
+  required: string;
   requestDescription: string;
   requestTitle: string;
   saveContract: string;
@@ -113,6 +115,7 @@ export const ADMIN_SITE_WORKSPACE_COPY: Readonly<Record<AppLocale, AdminSiteWork
       noBatches: "No issued QR batches yet.",
       noEscalations: "No escalated site handling requests.",
       openRequests: "Open requests",
+      optional: "Optional",
       operations: "Operations",
       outputReadyBatches: "Output-ready batches",
       pendingActivation: "Pending activation",
@@ -139,6 +142,7 @@ export const ADMIN_SITE_WORKSPACE_COPY: Readonly<Record<AppLocale, AdminSiteWork
       lifecycleReasonPlaceholder: "Explain why this site must be suspended or ended.",
       reactivate: "Reactivate",
       reports: "Reports",
+      required: "Required",
       requestDescription: "Request a status change when a second reviewer must approve it.",
       requestTitle: "Request a status change",
       saveContract: "Save contract scope",
@@ -198,6 +202,7 @@ export const ADMIN_SITE_WORKSPACE_COPY: Readonly<Record<AppLocale, AdminSiteWork
       noBatches: "아직 발행된 QR 묶음이 없습니다.",
       noEscalations: "사이트 조치 대기 요청이 없습니다.",
       openRequests: "미해결 요청",
+      optional: "선택",
       operations: "운영 모니터링",
       outputReadyBatches: "출력 준비 묶음",
       pendingActivation: "활성화 대기 QR",
@@ -223,6 +228,7 @@ export const ADMIN_SITE_WORKSPACE_COPY: Readonly<Record<AppLocale, AdminSiteWork
       lifecycleReasonPlaceholder: "사이트 운영을 일시 중지하거나 종료하는 사유를 입력하세요.",
       reactivate: "운영 재개",
       reports: "리포트",
+      required: "필수",
       requestDescription: "두 번째 검토자의 승인이 필요한 상태 변경을 요청합니다.",
       requestTitle: "상태 변경 요청",
       saveContract: "계약 범위 저장",

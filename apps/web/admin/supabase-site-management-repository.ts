@@ -7,7 +7,7 @@ import type { createAdminServerClient } from "../auth/server-client";
 type AdminServerClient = NonNullable<Awaited<ReturnType<typeof createAdminServerClient>>>;
 
 export class SiteRepositoryError extends Error {
-  readonly code: "BLOCKED" | "CONFLICT" | "FORBIDDEN" | "UNAVAILABLE";
+  readonly code: "BLOCKED" | "CONFLICT" | "FORBIDDEN" | "UNAVAILABLE" | "VALIDATION";
 
   constructor(code: SiteRepositoryError["code"]) {
     super(`Site repository failed: ${code}`);
@@ -30,6 +30,9 @@ function readResult(value: unknown): SiteCommandResult | null {
 
 function mapError(error: { code?: string; message?: string }): SiteRepositoryError {
   const message = error.message ?? "";
+  if (error.code === "22023" || error.code === "23514") {
+    return new SiteRepositoryError("VALIDATION");
+  }
   if (
     message.includes("ACTIVE_CONTRACT_EXISTS") ||
     message.includes("PARENT_NOT_ACTIVE") ||

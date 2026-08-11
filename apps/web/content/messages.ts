@@ -644,10 +644,10 @@ export const ko = {
   "admin.sites.contract.save": "계약 한도 저장",
   "admin.sites.contract.title": "계약 차량 한도",
   "admin.sites.contractLimit": "계약 차량 수",
-  "admin.sites.contractLimit.help": "0–1,000,000대 · 슈퍼어드민 전용",
+  "admin.sites.contractLimit.help": "1–1,000,000대 · QR 발행 필수 정보",
   "admin.sites.create": "사이트 등록",
   "admin.sites.create.description":
-    "활성 테넌트와 관리회사 아래 실제 운영 장소를 등록하고 초기 계약 차량 수를 설정합니다.",
+    "활성 관리회사 아래 실제 운영 장소를 등록합니다. 주소와 계약 차량 수는 QR 발행 전제 정보입니다.",
   "admin.sites.create.title": "새 사이트 직접 등록",
   "admin.sites.createdAt": "생성일",
   "admin.sites.description":
@@ -664,7 +664,7 @@ export const ko = {
   "admin.sites.error.unavailable":
     "사이트 운영 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "admin.sites.error.validation":
-    "사이트, 주소, 시간대, 계약 차량 수, 상태와 처리 사유를 확인해 주세요.",
+    "관리회사, 사이트명, 유형, 주소, 1대 이상의 계약 차량 수와 처리 사유를 확인해 주세요.",
   "admin.sites.eyebrow": "역할별 사이트 운영",
   "admin.sites.lifecycle.requestOnly":
     "직접 상태 변경 권한은 부여되지 않습니다. 허용된 범위에서 요청을 만들면 별도 플랫폼 승인자가 검토합니다.",
@@ -710,6 +710,8 @@ export const ko = {
   "admin.sites.reactivate": "운영 재개",
   "admin.sites.reason": "처리 사유",
   "admin.sites.reason.placeholder": "계약 또는 운영 근거를 3자 이상 입력해 주세요.",
+  "admin.sites.required.help":
+    "필수: 관리회사, 사이트명, 유형, 주소, 계약 차량 수, 처리 사유 · 상세주소는 선택이며 시간대는 시스템이 관리합니다.",
   "admin.sites.securityNote": "고객 범위 격리 · 역할별 권한 확인 · 변경 기록 보존",
   "admin.sites.status": "상태",
   "admin.sites.status.active": "운영 중",
@@ -1566,10 +1568,10 @@ export const en = {
   "admin.sites.contract.save": "Save contract limit",
   "admin.sites.contract.title": "Contract vehicle limit",
   "admin.sites.contractLimit": "Contract vehicles",
-  "admin.sites.contractLimit.help": "0–1,000,000 vehicles · Super Admin only",
+  "admin.sites.contractLimit.help": "1–1,000,000 vehicles · required for QR issuance",
   "admin.sites.create": "Register site",
   "admin.sites.create.description":
-    "Register a real operating location under an active tenant and management company, then set its initial contracted vehicle count.",
+    "Register a real operating location under an active management company. Address and contract capacity are prerequisites for QR issuance.",
   "admin.sites.create.title": "Register a site directly",
   "admin.sites.createdAt": "Created",
   "admin.sites.description":
@@ -1586,7 +1588,7 @@ export const en = {
   "admin.sites.error.unavailable":
     "The site operations service is unavailable. Please try again shortly.",
   "admin.sites.error.validation":
-    "Check the site, address, timezone, contracted vehicle count, lifecycle state, and decision reason.",
+    "Check the management company, site name, type, address, contract capacity of at least one vehicle, and decision reason.",
   "admin.sites.eyebrow": "Role-scoped site operations",
   "admin.sites.lifecycle.requestOnly":
     "This role has no direct lifecycle authority. Submit an in-scope request for review by a separate platform approver.",
@@ -1635,6 +1637,8 @@ export const en = {
   "admin.sites.reason": "Decision reason",
   "admin.sites.reason.placeholder":
     "Enter at least three characters explaining the contract or operating basis.",
+  "admin.sites.required.help":
+    "Required: management company, site name, type, address, contract capacity, and decision reason. Address detail is optional; timezone is system-managed.",
   "admin.sites.securityNote":
     "Customer-scope isolation · role-based permissions · every change recorded",
   "admin.sites.status": "Status",

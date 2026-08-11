@@ -568,12 +568,21 @@ values (
   'qr-inventory@example.test'
 );
 
-insert into public.sites (id, tenant_id, management_company_id, name)
+insert into public.sites (
+  id,
+  tenant_id,
+  management_company_id,
+  name,
+  address,
+  contract_vehicle_limit
+)
 values (
   'f0000000-0000-4000-8000-000000000030',
   'f0000000-0000-4000-8000-000000000010',
   'f0000000-0000-4000-8000-000000000020',
-  'Task 0 site'
+  'Task 0 site',
+  'Test address',
+  100
 );
 
 insert into public.admin_memberships (

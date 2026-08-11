@@ -104,7 +104,7 @@ describe("Site application service", () => {
     };
     await service.updateOperational({
       actor,
-      address: "",
+      address: "서울시 중구",
       expectedVersion: 1,
       managementCompanyId: COMPANY_ID,
       name: "Updated Site",
@@ -120,7 +120,7 @@ describe("Site application service", () => {
     await expect(
       service.updateOperational({
         actor,
-        address: "",
+        address: "서울시 중구",
         expectedVersion: 1,
         managementCompanyId: COMPANY_ID,
         name: "Forbidden Site",
@@ -164,7 +164,7 @@ describe("Site application service", () => {
     await expect(
       service.create({
         actor: SUPER_ACTOR,
-        address: "",
+        address: "서울시 중구",
         contractVehicleLimit: 10,
         managementCompanyId: COMPANY_ID,
         name: "Invalid Timezone",
@@ -189,5 +189,27 @@ describe("Site application service", () => {
         tenantId: TENANT_ID,
       }),
     ).rejects.toEqual(new SiteManagementError("INVALID_STATUS_TRANSITION"));
+  });
+
+  it.each([
+    { address: "", contractVehicleLimit: 10, code: "INVALID_ADDRESS" },
+    { address: "서울시 중구", contractVehicleLimit: 0, code: "INVALID_CONTRACT_VEHICLE_LIMIT" },
+  ] as const)("rejects an incomplete active Site registration: $code", async (input) => {
+    const repository = createRepository();
+    await expect(
+      new SiteApplicationService(repository).create({
+        actor: SUPER_ACTOR,
+        address: input.address,
+        contractVehicleLimit: input.contractVehicleLimit,
+        managementCompanyId: COMPANY_ID,
+        name: "Incomplete Site",
+        reason: "신규 계약",
+        requestId: REQUEST_ID,
+        tenantId: TENANT_ID,
+        timezone: "Asia/Seoul",
+        type: "APARTMENT",
+      }),
+    ).rejects.toEqual(new SiteManagementError(input.code));
+    expect(repository.create).not.toHaveBeenCalled();
   });
 });

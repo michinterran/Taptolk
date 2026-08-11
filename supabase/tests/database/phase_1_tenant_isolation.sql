@@ -44,13 +44,17 @@ select throws_ok(
       id,
       tenant_id,
       management_company_id,
-      name
+      name,
+      address,
+      contract_vehicle_limit
     )
     values (
       '40000000-0000-0000-0000-000000000001',
       '10000000-0000-0000-0000-000000000001',
       '20000000-0000-0000-0000-000000000002',
-      'Cross tenant site'
+      'Cross tenant site',
+      'Test address',
+      100
     )
   $$,
   '23503',

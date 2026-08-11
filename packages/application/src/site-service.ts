@@ -1,6 +1,13 @@
-import { type AdminAuthorizationContext, authorizeAdminAction } from "@taptolk/domain";
+import {
+  type AdminAuthorizationContext,
+  authorizeAdminAction,
+  hasSiteOperatingAddress,
+  SITE_CONTRACT_VEHICLE_LIMIT_MIN,
+} from "@taptolk/domain";
 import { assertAdminAuthorized } from "./authorization-error.js";
 import type { OrganizationStatus } from "./management-company-catalog-service.js";
+
+export { SITE_CONTRACT_VEHICLE_LIMIT_MIN } from "@taptolk/domain";
 
 export const SITE_CONTRACT_VEHICLE_LIMIT_MAX = 1_000_000;
 export const DEFAULT_SITE_TIMEZONE = "Asia/Seoul";
@@ -102,12 +109,9 @@ function normalizeName(value: string): string {
   return normalized;
 }
 
-function normalizeAddress(value: string): string | null {
+function normalizeAddress(value: string): string {
   const normalized = value.trim();
-  if (normalized.length === 0) {
-    return null;
-  }
-  if (normalized.length > 500) {
+  if (!hasSiteOperatingAddress(normalized) || normalized.length > 500) {
     throw new SiteManagementError("INVALID_ADDRESS");
   }
   return normalized;
@@ -147,7 +151,11 @@ function assertVersion(value: number): void {
 }
 
 function assertContractVehicleLimit(value: number): void {
-  if (!Number.isInteger(value) || value < 0 || value > SITE_CONTRACT_VEHICLE_LIMIT_MAX) {
+  if (
+    !Number.isInteger(value) ||
+    value < SITE_CONTRACT_VEHICLE_LIMIT_MIN ||
+    value > SITE_CONTRACT_VEHICLE_LIMIT_MAX
+  ) {
     throw new SiteManagementError("INVALID_CONTRACT_VEHICLE_LIMIT");
   }
 }
