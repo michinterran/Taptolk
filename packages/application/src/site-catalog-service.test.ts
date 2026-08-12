@@ -23,8 +23,6 @@ describe("SiteCatalogService", () => {
     await service.list({
       actor,
       query: {
-        createdFrom: "2026-08-01",
-        createdTo: "2026-08-12",
         direction: "asc",
         managementCompanyId: "11111111-1111-4111-8111-111111111111",
         page: 2,
@@ -37,8 +35,6 @@ describe("SiteCatalogService", () => {
     });
 
     expect(repository.list).toHaveBeenCalledWith({
-      createdFrom: "2026-08-01",
-      createdTo: "2026-08-12",
       direction: "asc",
       limit: 10,
       managementCompanyId: "11111111-1111-4111-8111-111111111111",
@@ -57,8 +53,6 @@ describe("SiteCatalogService", () => {
     const page = await service.list({
       actor,
       query: {
-        createdFrom: "2026-08-12",
-        createdTo: "2026-08-01",
         direction: "sideways" as "asc",
         managementCompanyId: "not-a-uuid",
         page: 0,

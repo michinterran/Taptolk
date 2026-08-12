@@ -27,6 +27,12 @@ export function ConsoleQueryForm({ children, ...props }: ConsoleQueryFormProps) 
         const query = search.toString();
         router.push((query.length > 0 ? `${pathname}?${query}` : pathname) as Route);
       }}
+      onChange={(event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.closest("[data-submit-on-change]")) {
+          event.currentTarget.requestSubmit();
+        }
+      }}
     >
       {children}
     </form>

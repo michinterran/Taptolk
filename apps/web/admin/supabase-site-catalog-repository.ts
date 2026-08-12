@@ -47,16 +47,6 @@ function escapeIlike(value: string): string {
   return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
 }
 
-function kstStartOfDay(value: string): string {
-  return new Date(`${value}T00:00:00+09:00`).toISOString();
-}
-
-function kstStartOfNextDay(value: string): string {
-  const nextDay = new Date(`${value}T00:00:00+09:00`);
-  nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-  return nextDay.toISOString();
-}
-
 function mapSiteRow(row: unknown): SiteCatalogItem {
   if (!row || typeof row !== "object") {
     throw new Error("Site catalog returned an invalid row.");
@@ -103,18 +93,7 @@ export function createSupabaseSiteCatalogRepository(
   client: AdminServerClient,
 ): SiteCatalogRepository {
   return {
-    async list({
-      createdFrom,
-      createdTo,
-      direction,
-      limit,
-      managementCompanyId,
-      offset,
-      search,
-      siteType,
-      sort,
-      status,
-    }) {
+    async list({ direction, limit, managementCompanyId, offset, search, siteType, sort, status }) {
       let query = client
         .from("sites")
         .select(
@@ -137,12 +116,6 @@ export function createSupabaseSiteCatalogRepository(
       if (search) {
         const escaped = escapeIlike(search);
         query = query.or(`name.ilike.%${escaped}%,address.ilike.%${escaped}%`);
-      }
-      if (createdFrom) {
-        query = query.gte("created_at", kstStartOfDay(createdFrom));
-      }
-      if (createdTo) {
-        query = query.lt("created_at", kstStartOfNextDay(createdTo));
       }
       if (sort === ("name" satisfies SiteCatalogSort)) {
         query = query.order("name", {
@@ -180,12 +153,6 @@ export function createSupabaseSiteCatalogRepository(
         if (search) {
           const escaped = escapeIlike(search);
           legacyQuery = legacyQuery.or(`name.ilike.%${escaped}%,address.ilike.%${escaped}%`);
-        }
-        if (createdFrom) {
-          legacyQuery = legacyQuery.gte("created_at", kstStartOfDay(createdFrom));
-        }
-        if (createdTo) {
-          legacyQuery = legacyQuery.lt("created_at", kstStartOfNextDay(createdTo));
         }
         if (sort === ("name" satisfies SiteCatalogSort)) {
           legacyQuery = legacyQuery.order("name", {

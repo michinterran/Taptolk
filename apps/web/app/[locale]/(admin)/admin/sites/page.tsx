@@ -78,8 +78,6 @@ export default async function SitesPage({
   params: Promise<{ locale: string }>;
   searchParams: Promise<{
     company?: string | string[];
-    createdFrom?: string | string[];
-    createdTo?: string | string[];
     direction?: string | string[];
     error?: string | string[];
     page?: string | string[];
@@ -106,8 +104,6 @@ export default async function SitesPage({
   const authorization = toAdminAuthorizationContext(membership, context.mfaLevel === "aal2");
   const actor = { authorization, userId: context.userId };
   const copy = getMessages(locale);
-  const createdFrom = readValue(query.createdFrom);
-  const createdTo = readValue(query.createdTo);
   const direction = readSiteDirection(query.direction);
   const managementCompanyId = readValue(query.company);
   const search = readValue(query.q);
@@ -117,8 +113,6 @@ export default async function SitesPage({
   const pageSize = readPageSize(query.pageSize);
   const siteCatalogQuery = {
     page: readPage(query.page),
-    ...(createdFrom ? { createdFrom } : {}),
-    ...(createdTo ? { createdTo } : {}),
     ...(direction ? { direction } : {}),
     ...(managementCompanyId ? { managementCompanyId } : {}),
     ...(pageSize ? { pageSize } : {}),
@@ -228,8 +222,6 @@ export default async function SitesPage({
           createDescription: copy["admin.sites.create.description"],
           createTitle: copy["admin.sites.create.title"],
           createdAt: copy["admin.sites.createdAt"],
-          createdFrom: copy["admin.sites.filters.createdFrom"],
-          createdTo: copy["admin.sites.filters.createdTo"],
           description: copy["admin.sites.description"],
           emptyDescription: copy["admin.sites.empty.description"],
           emptyTitle: copy["admin.sites.empty.title"],
@@ -286,7 +278,7 @@ export default async function SitesPage({
           saveContract: copy["admin.sites.contract.save"],
           saveOperational: copy["admin.sites.operational.save"],
           search: copy["admin.sites.filters.search"],
-          applyFilters: copy["admin.sites.filters.apply"],
+          searchAction: copy["admin.sites.filters.searchAction"],
           filters: copy["admin.sites.filters.label"],
           securityNote: copy["admin.sites.securityNote"],
           sort: copy["admin.sites.filters.sort"],
@@ -294,8 +286,13 @@ export default async function SitesPage({
           sortName: copy["admin.sites.filters.sort.name"],
           sortContractLimit: copy["admin.sites.filters.sort.contractLimit"],
           direction: copy["admin.sites.filters.direction"],
-          directionAscending: copy["admin.sites.filters.direction.asc"],
-          directionDescending: copy["admin.sites.filters.direction.desc"],
+          directionContractLimitAscending: copy["admin.sites.filters.direction.contractLimit.asc"],
+          directionContractLimitDescending:
+            copy["admin.sites.filters.direction.contractLimit.desc"],
+          directionCreatedAtAscending: copy["admin.sites.filters.direction.createdAt.asc"],
+          directionCreatedAtDescending: copy["admin.sites.filters.direction.createdAt.desc"],
+          directionNameAscending: copy["admin.sites.filters.direction.name.asc"],
+          directionNameDescending: copy["admin.sites.filters.direction.name.desc"],
           status: copy["admin.sites.status"],
           statusDescription: copy["admin.sites.status.description"],
           statusLabels: {

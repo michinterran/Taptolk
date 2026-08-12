@@ -47,8 +47,6 @@ interface SiteCatalogCopy {
   createDescription: string;
   createTitle: string;
   createdAt: string;
-  createdFrom: string;
-  createdTo: string;
   description: string;
   emptyDescription: string;
   emptyTitle: string;
@@ -94,7 +92,7 @@ interface SiteCatalogCopy {
   saveContract: string;
   saveOperational: string;
   search: string;
-  applyFilters: string;
+  searchAction: string;
   filters: string;
   securityNote: string;
   sort: string;
@@ -102,8 +100,12 @@ interface SiteCatalogCopy {
   sortName: string;
   sortContractLimit: string;
   direction: string;
-  directionAscending: string;
-  directionDescending: string;
+  directionContractLimitAscending: string;
+  directionContractLimitDescending: string;
+  directionCreatedAtAscending: string;
+  directionCreatedAtDescending: string;
+  directionNameAscending: string;
+  directionNameDescending: string;
   status: string;
   statusDescription: string;
   statusLabels: Readonly<Record<OrganizationStatus, string>>;
@@ -186,8 +188,6 @@ function getSiteQueryParams(query: SiteCatalogQueryState, page?: number): URLSea
   if (query.managementCompanyId) params.set("company", query.managementCompanyId);
   if (query.siteType) params.set("type", query.siteType);
   if (query.status) params.set("state", query.status);
-  if (query.createdFrom) params.set("createdFrom", query.createdFrom);
-  if (query.createdTo) params.set("createdTo", query.createdTo);
   if (query.sort !== "createdAt") params.set("sort", query.sort);
   if (query.direction !== "desc") params.set("direction", query.direction);
   if (query.pageSize !== 20) params.set("pageSize", String(query.pageSize));
@@ -220,17 +220,6 @@ function QueryHiddenFields({ query }: { query: SiteCatalogQueryState }) {
       ) : null}
       {query.status ? (
         <input id="site-query-state" name="state" type="hidden" value={query.status} />
-      ) : null}
-      {query.createdFrom ? (
-        <input
-          id="site-query-created-from"
-          name="createdFrom"
-          type="hidden"
-          value={query.createdFrom}
-        />
-      ) : null}
-      {query.createdTo ? (
-        <input id="site-query-created-to" name="createdTo" type="hidden" value={query.createdTo} />
       ) : null}
       <input id="site-query-sort" name="sort" type="hidden" value={query.sort} />
       <input id="site-query-direction" name="direction" type="hidden" value={query.direction} />
@@ -276,6 +265,30 @@ function getSiteStatusTone(
   }
 
   return "warning";
+}
+
+function getDirectionLabels(
+  sort: SiteCatalogQueryState["sort"],
+  copy: SiteCatalogCopy,
+): { ascending: string; descending: string } {
+  if (sort === "contractLimit") {
+    return {
+      ascending: copy.directionContractLimitAscending,
+      descending: copy.directionContractLimitDescending,
+    };
+  }
+
+  if (sort === "name") {
+    return {
+      ascending: copy.directionNameAscending,
+      descending: copy.directionNameDescending,
+    };
+  }
+
+  return {
+    ascending: copy.directionCreatedAtAscending,
+    descending: copy.directionCreatedAtDescending,
+  };
 }
 
 function SiteRowActions({
@@ -444,6 +457,7 @@ export function SiteCatalogView({
   const hasPrevious = catalog.page > 1;
   const hasNext = catalog.page < totalPages;
   const hasRowActions = true;
+  const directionLabels = getDirectionLabels(catalog.query.sort, copy);
   const pageSummary = copy.page
     .replace("{current}", String(catalog.page))
     .replace("{total}", String(totalPages));
@@ -623,18 +637,28 @@ export function SiteCatalogView({
 
       <ConsoleQueryForm aria-label={copy.filters} className="admin-site-catalog-toolbar">
         <div className="admin-site-catalog-toolbar__primary">
-          <div className="admin-search-control admin-search-control--catalog">
-            <MagnifyingGlass aria-hidden="true" size={17} />
-            <label className="sr-only" htmlFor="site-catalog-search">
-              {copy.search}
-            </label>
-            <input
-              defaultValue={catalog.query.search ?? ""}
-              id="site-catalog-search"
-              name="q"
-              placeholder={copy.search}
-              type="search"
-            />
+          <div className="admin-site-catalog-search">
+            <div className="admin-search-control admin-search-control--catalog">
+              <MagnifyingGlass aria-hidden="true" size={17} />
+              <label className="sr-only" htmlFor="site-catalog-search">
+                {copy.search}
+              </label>
+              <input
+                defaultValue={catalog.query.search ?? ""}
+                id="site-catalog-search"
+                name="q"
+                placeholder={copy.search}
+                type="search"
+              />
+            </div>
+            <button
+              aria-label={copy.searchAction}
+              className="tt-button tt-button--compact admin-site-catalog-search__button"
+              type="submit"
+            >
+              <MagnifyingGlass aria-hidden="true" size={16} />
+              <span>{copy.searchAction}</span>
+            </button>
           </div>
 
           <label className="admin-filter-select" htmlFor="site-catalog-company">
@@ -677,54 +701,40 @@ export function SiteCatalogView({
         </div>
 
         <div className="admin-site-catalog-toolbar__secondary">
-          <label className="admin-site-catalog-date" htmlFor="site-catalog-created-from">
-            <span>{copy.createdFrom}</span>
-            <input
-              defaultValue={catalog.query.createdFrom ?? ""}
-              id="site-catalog-created-from"
-              name="createdFrom"
-              type="date"
-            />
-          </label>
-          <label className="admin-site-catalog-date" htmlFor="site-catalog-created-to">
-            <span>{copy.createdTo}</span>
-            <input
-              defaultValue={catalog.query.createdTo ?? ""}
-              id="site-catalog-created-to"
-              name="createdTo"
-              type="date"
-            />
-          </label>
-          <label className="admin-filter-select" htmlFor="site-catalog-sort">
-            <span className="sr-only">{copy.sort}</span>
-            <select defaultValue={catalog.query.sort} id="site-catalog-sort" name="sort">
-              <option value="createdAt">{copy.sortCreatedAt}</option>
-              <option value="name">{copy.sortName}</option>
-              <option value="contractLimit">{copy.sortContractLimit}</option>
-            </select>
-          </label>
-          <label className="admin-filter-select" htmlFor="site-catalog-direction">
-            <span className="sr-only">{copy.direction}</span>
-            <select
-              defaultValue={catalog.query.direction}
-              id="site-catalog-direction"
-              name="direction"
-            >
-              <option value="desc">{copy.directionDescending}</option>
-              <option value="asc">{copy.directionAscending}</option>
-            </select>
-          </label>
-          <div className="admin-site-catalog-toolbar__actions">
-            <button className="tt-button tt-button--compact" type="submit">
-              {copy.applyFilters}
-            </button>
-            <a
-              className="tt-button tt-button--secondary tt-button--compact"
-              href={`/${locale}/admin/sites`}
-            >
-              {copy.clearFilters}
-            </a>
+          <div className="admin-site-catalog-sort">
+            <span className="admin-site-catalog-section-label">{copy.sort}</span>
+            <label className="admin-filter-select" htmlFor="site-catalog-sort">
+              <span className="sr-only">{copy.sort}</span>
+              <select
+                data-submit-on-change="true"
+                defaultValue={catalog.query.sort}
+                id="site-catalog-sort"
+                name="sort"
+              >
+                <option value="createdAt">{copy.sortCreatedAt}</option>
+                <option value="name">{copy.sortName}</option>
+                <option value="contractLimit">{copy.sortContractLimit}</option>
+              </select>
+            </label>
+            <label className="admin-filter-select" htmlFor="site-catalog-direction">
+              <span className="sr-only">{copy.direction}</span>
+              <select
+                data-submit-on-change="true"
+                defaultValue={catalog.query.direction}
+                id="site-catalog-direction"
+                name="direction"
+              >
+                <option value="desc">{directionLabels.descending}</option>
+                <option value="asc">{directionLabels.ascending}</option>
+              </select>
+            </label>
           </div>
+          <a
+            className="tt-button tt-button--secondary tt-button--compact admin-site-catalog-reset"
+            href={`/${locale}/admin/sites`}
+          >
+            {copy.clearFilters}
+          </a>
         </div>
       </ConsoleQueryForm>
 

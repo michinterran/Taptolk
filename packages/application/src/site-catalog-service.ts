@@ -14,8 +14,6 @@ export type SiteCatalogSort = "contractLimit" | "createdAt" | "name";
 export type SiteCatalogSortDirection = "asc" | "desc";
 
 export interface SiteCatalogQuery {
-  createdFrom?: string;
-  createdTo?: string;
   direction?: SiteCatalogSortDirection;
   managementCompanyId?: string;
   page?: number;
@@ -27,8 +25,6 @@ export interface SiteCatalogQuery {
 }
 
 export interface SiteCatalogQueryState {
-  createdFrom?: string;
-  createdTo?: string;
   direction: SiteCatalogSortDirection;
   managementCompanyId?: string;
   pageSize: SiteCatalogPageSize;
@@ -72,8 +68,6 @@ export interface SiteCatalogPage {
 
 export interface SiteCatalogRepository {
   list(input: {
-    createdFrom?: string;
-    createdTo?: string;
     direction: SiteCatalogSortDirection;
     limit: number;
     managementCompanyId?: string;
@@ -87,18 +81,6 @@ export interface SiteCatalogRepository {
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
-
-function normalizeDate(value: string | undefined): string | undefined {
-  const candidate = value?.trim();
-  if (!candidate || !DATE_PATTERN.test(candidate)) {
-    return undefined;
-  }
-  const parsed = new Date(`${candidate}T00:00:00.000Z`);
-  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== candidate
-    ? undefined
-    : candidate;
-}
 
 function normalizeSearch(value: string | undefined): string | undefined {
   const candidate = value?.trim().slice(0, 100);
@@ -154,14 +136,9 @@ export class SiteCatalogService {
     const pageSize = normalizePageSize(requestedQuery.pageSize);
     const sort = normalizeSort(requestedQuery.sort);
     const direction = normalizeDirection(requestedQuery.direction);
-    const createdFrom = normalizeDate(requestedQuery.createdFrom);
-    const createdTo = normalizeDate(requestedQuery.createdTo);
-    const hasValidDateRange = !createdFrom || !createdTo || createdFrom <= createdTo;
     const managementCompanyId = requestedQuery.managementCompanyId?.trim();
     const search = normalizeSearch(requestedQuery.search);
     const query: SiteCatalogQueryState = {
-      ...(createdFrom && hasValidDateRange ? { createdFrom } : {}),
-      ...(createdTo && hasValidDateRange ? { createdTo } : {}),
       direction,
       ...(managementCompanyId && UUID_PATTERN.test(managementCompanyId)
         ? { managementCompanyId }
@@ -174,8 +151,6 @@ export class SiteCatalogService {
     };
     const [catalog, parentOptions] = await Promise.all([
       this.repository.list({
-        ...(query.createdFrom ? { createdFrom: query.createdFrom } : {}),
-        ...(query.createdTo ? { createdTo: query.createdTo } : {}),
         direction: query.direction,
         limit: query.pageSize,
         ...(query.managementCompanyId ? { managementCompanyId: query.managementCompanyId } : {}),
