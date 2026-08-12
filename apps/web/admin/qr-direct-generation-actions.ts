@@ -6,6 +6,7 @@ import {
   type QrDirectGenerationResult,
   QrDirectGenerationService,
 } from "@taptolk/application";
+import { createLogger } from "@taptolk/observability";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { toAdminAuthorizationContext } from "../auth/admin-authorization";
@@ -20,6 +21,8 @@ import {
 } from "./supabase-qr-direct-generation-repository";
 
 type ActionError = "blocked" | "conflict" | "forbidden" | "unavailable" | "validation";
+
+const logger = createLogger({ service: "taptolk-web" });
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -46,7 +49,11 @@ function path(
 
 function mapError(error: unknown): ActionError {
   if (error instanceof AdminAuthorizationError) return "forbidden";
-  if (error instanceof QrDirectGenerationError) return "validation";
+  if (error instanceof QrDirectGenerationError) {
+    // A missing or stale site version is a concurrency conflict. The page can
+    // recover by reloading the site snapshot while preserving the scope.
+    return error.code === "INVALID_VERSION" ? "conflict" : "validation";
+  }
   if (error instanceof QrDirectGenerationRepositoryError) {
     return error.code === "BLOCKED"
       ? "blocked"
@@ -88,6 +95,16 @@ export async function requestAdminDirectQrGeneration(formData: FormData): Promis
       siteId,
     });
   } catch (error) {
+    logger.warn("admin.qr_direct_generation.rejected", {
+      errorCode:
+        error instanceof QrDirectGenerationError
+          ? `QR_DIRECT_${error.code}`
+          : error instanceof AdminAuthorizationError
+            ? "ADMIN_AUTHORIZATION"
+            : error instanceof QrDirectGenerationRepositoryError
+              ? `QR_DIRECT_REPOSITORY_${error.code}`
+              : "QR_DIRECT_UNKNOWN",
+    });
     redirect(
       path(locale, "error", mapError(error), {
         company: companyId,

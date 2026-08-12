@@ -29,6 +29,7 @@ import type { AdminQrOperationsCopy } from "../content/admin-qr-operations-copy"
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
 import { ConsoleQueryForm } from "./console-query-form";
+import { QrGenerationProgressPoller } from "./qr-generation-progress-poller";
 import { QrScopeSelector } from "./qr-scope-selector";
 
 interface QrOperationsViewProps {
@@ -130,6 +131,10 @@ function stepClass(index: number, activeStep: number): string {
   return "is-locked";
 }
 
+function isTerminalBatchStatus(status: QrBatchStatus): boolean {
+  return ["CANCELLED", "COMPLETED", "DELIVERED", "FAILED", "PARTIALLY_COMPLETED"].includes(status);
+}
+
 function clampPage(value: number, totalPages: number): number {
   if (!Number.isInteger(value)) return 1;
   return Math.min(Math.max(value, 1), totalPages);
@@ -204,10 +209,14 @@ export function QrOperationsView({
       ? scopedBatches.filter((batch) => activeBatchIdSet.has(batch.id))
       : [];
   const trackedProgress = aggregateProgress(trackedBatches);
-  const trackedProgressPercent = percent(trackedProgress.generated, trackedProgress.requested);
   const hasTrackedRequest = Boolean(activeRequestId || activeBatchIds.length > 0);
   const hasTrackedBatches = trackedBatches.length > 0;
+  const progressRequested = trackedProgress.requested || (hasTrackedRequest ? quantity : 0);
+  const trackedProgressPercent = percent(trackedProgress.generated, progressRequested);
   const downloadReady = hasTrackedBatches && trackedProgress.ready;
+  const allTrackedBatchesTerminal =
+    hasTrackedBatches && trackedBatches.every((batch) => isTerminalBatchStatus(batch.status));
+  const shouldPollProgress = hasTrackedRequest && !downloadReady && !allTrackedBatchesTerminal;
   const activeStep = hasTrackedRequest ? (downloadReady ? 3 : 2) : scopeConfirmed ? 1 : 0;
   const plan = quantityPlan(quantity);
   const idempotencyKey = crypto.randomUUID();
@@ -749,12 +758,12 @@ export function QrOperationsView({
                           ? copy.progressPending
                           : copy.progressEmpty}
                     </p>
-                    {hasTrackedBatches ? (
+                    {hasTrackedRequest ? (
                       <>
                         <div className="qr-console-v2-progress__meter">
                           <strong>
                             {trackedProgressPercent}% · {number.format(trackedProgress.generated)} /{" "}
-                            {number.format(trackedProgress.requested)}
+                            {number.format(progressRequested)}
                           </strong>
                           <MeterBar
                             tone={trackedProgressPercent >= 100 ? "success" : "warning"}
@@ -779,6 +788,10 @@ export function QrOperationsView({
                             <dd>{number.format(trackedProgress.failed)}</dd>
                           </div>
                         </dl>
+                        <QrGenerationProgressPoller
+                          active={shouldPollProgress}
+                          label={copy.progressAutoRefresh}
+                        />
                         <div className="qr-console-v2-progress-actions">
                           <Link
                             className="tt-button tt-button--secondary tt-button--compact"

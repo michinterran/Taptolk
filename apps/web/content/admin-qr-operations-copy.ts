@@ -40,6 +40,7 @@ export interface AdminQrOperationsCopy {
   previous: string;
   progressDescription: string;
   progressEmpty: string;
+  progressAutoRefresh: string;
   progressPending: string;
   progressFailed: string;
   progressOutput: string;
@@ -141,6 +142,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       progressDescription:
         "The generation worker updates this progress as unique QR assets and SVG output are produced.",
       progressEmpty: "No generation request is being tracked on this screen yet.",
+      progressAutoRefresh: "Updating automatically while generation is in progress.",
       progressPending:
         "The generation request was accepted. Progress will appear when the batch record is ready.",
       progressFailed: "Failed",
@@ -266,6 +268,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       previous: "이전",
       progressDescription: "worker가 고유 QR 자산과 SVG 출력을 만들면서 진행률이 갱신됩니다.",
       progressEmpty: "아직 이 화면에서 추적 중인 생성 요청이 없습니다.",
+      progressAutoRefresh: "생성이 진행되는 동안 진행률을 자동으로 갱신합니다.",
       progressPending: "생성 요청을 접수했습니다. 발행 묶음이 준비되면 진행률을 표시합니다.",
       progressFailed: "실패",
       progressOutput: "SVG 출력",
