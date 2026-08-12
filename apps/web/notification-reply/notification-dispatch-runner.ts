@@ -10,6 +10,8 @@ export const NOTIFICATION_DISPATCH_POLICY = Object.freeze({
   limit: 10,
 });
 
+export type NotificationDispatchChannel = "SMS" | "WEB_PUSH";
+
 export type NotificationDispatchBatchResult = {
   claimed: number;
   failedFinal: number;
@@ -33,22 +35,38 @@ export class NotificationDispatchUnavailableError extends Error {
 }
 
 export async function runNotificationDispatchBatch(input: {
+  channels?: readonly NotificationDispatchChannel[];
   workerId: string;
 }): Promise<NotificationDispatchBatchResult> {
+  const channels = input.channels ?? ["SMS", "WEB_PUSH"];
+  const runSms = channels.includes("SMS");
+  const runWebPush = channels.includes("WEB_PUSH");
+  const result = runSms
+    ? await runSmsDispatch(input.workerId)
+    : { claimed: 0, failedFinal: 0, retryScheduled: 0, sent: 0 };
+  const webPush = runWebPush
+    ? await runWebPushDispatch(input.workerId)
+    : { skipped: true as const };
+  return { ...result, webPush };
+}
+
+async function runSmsDispatch(workerId: string) {
   const service = createNotificationDispatchService();
   if (!service) {
     throw new NotificationDispatchUnavailableError();
   }
-  const result = await service.run({
+  return service.run({
     ...NOTIFICATION_DISPATCH_POLICY,
-    workerId: input.workerId,
+    workerId,
   });
+}
+
+async function runWebPushDispatch(workerId: string) {
   const webPushService = createWebPushNotificationDispatchService();
-  const webPush = webPushService
-    ? await webPushService.run({
+  return webPushService
+    ? webPushService.run({
         ...NOTIFICATION_DISPATCH_POLICY,
-        workerId: `wp-${input.workerId}`,
+        workerId: `wp-${workerId}`,
       })
     : { skipped: true as const };
-  return { ...result, webPush };
 }

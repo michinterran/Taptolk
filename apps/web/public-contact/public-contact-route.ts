@@ -166,7 +166,9 @@ export async function createPublicContact(request: Request): Promise<NextRespons
       secure,
       value: result.sessionToken,
     });
-    scheduleNotificationDispatchNudge("CONTACT_CREATED");
+    if (!result.merged) {
+      scheduleNotificationDispatchNudge("CONTACT_CREATED");
+    }
     return response;
   } catch (error) {
     return errorResponse(error);

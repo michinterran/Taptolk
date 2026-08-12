@@ -6,6 +6,7 @@ import { createLogger, type StructuredLogger } from "@taptolk/observability";
 import { after } from "next/server";
 import {
   type NotificationDispatchBatchResult,
+  type NotificationDispatchChannel,
   runNotificationDispatchBatch,
 } from "./notification-dispatch-runner";
 
@@ -13,7 +14,10 @@ export type NotificationDispatchNudgeReason = "CONTACT_CREATED" | "OFFICE_ALERT_
 
 export interface NotificationDispatchNudgeDependencies {
   logger: Pick<StructuredLogger, "info" | "warn">;
-  run(input: { workerId: string }): Promise<NotificationDispatchBatchResult>;
+  run(input: {
+    channel: NotificationDispatchChannel;
+    workerId: string;
+  }): Promise<NotificationDispatchBatchResult>;
   schedule(callback: () => Promise<void>): void;
 }
 
@@ -23,15 +27,26 @@ const defaultDependencies: NotificationDispatchNudgeDependencies = {
   schedule: after,
 };
 
+const pendingChannels = new Set<NotificationDispatchChannel>();
+
+function channelFor(reason: NotificationDispatchNudgeReason): NotificationDispatchChannel {
+  return reason === "CONTACT_CREATED" ? "SMS" : "WEB_PUSH";
+}
+
 export function scheduleNotificationDispatchNudge(
   reason: NotificationDispatchNudgeReason,
   dependencies: NotificationDispatchNudgeDependencies = defaultDependencies,
 ): void {
+  const channel = channelFor(reason);
+  if (pendingChannels.has(channel)) {
+    return;
+  }
+  pendingChannels.add(channel);
   const workerId = `nudge-${randomUUID()}`;
   try {
     dependencies.schedule(async () => {
       try {
-        const result = await dependencies.run({ workerId });
+        const result = await dependencies.run({ channel, workerId });
         dependencies.logger.info("notification_dispatch.nudge_completed", {
           claimedCount: result.claimed,
           reason,
@@ -44,9 +59,12 @@ export function scheduleNotificationDispatchNudge(
           errorCode: "DISPATCH_FAILED",
           reason,
         });
+      } finally {
+        pendingChannels.delete(channel);
       }
     });
   } catch {
+    pendingChannels.delete(channel);
     dependencies.logger.warn("notification_dispatch.nudge_schedule_failed", {
       errorCode: "SCHEDULE_FAILED",
       reason,

@@ -39,7 +39,10 @@ describe("notification dispatch nudge", () => {
 
     await callbacks[0]?.();
 
-    expect(target.run).toHaveBeenCalledWith({ workerId: expect.stringMatching(/^nudge-/u) });
+    expect(target.run).toHaveBeenCalledWith({
+      channel: "SMS",
+      workerId: expect.stringMatching(/^nudge-/u),
+    });
     expect(target.logger.info).toHaveBeenCalledWith(
       "notification_dispatch.nudge_completed",
       expect.objectContaining({ claimedCount: 1, reason: "CONTACT_CREATED", sentCount: 1 }),
@@ -70,5 +73,27 @@ describe("notification dispatch nudge", () => {
       errorCode: "SCHEDULE_FAILED",
       reason: "OFFICE_ALERT_QUEUED",
     });
+  });
+
+  it("coalesces duplicate nudges for the same channel until the scheduled work finishes", async () => {
+    const { callbacks, target } = dependencies();
+    scheduleNotificationDispatchNudge("CONTACT_CREATED", target);
+    scheduleNotificationDispatchNudge("CONTACT_CREATED", target);
+
+    expect(callbacks).toHaveLength(1);
+    await callbacks[0]?.();
+    expect(target.run).toHaveBeenCalledOnce();
+  });
+
+  it("keeps SMS and Web Push nudges independent", async () => {
+    const sms = dependencies();
+    const webPush = dependencies();
+    scheduleNotificationDispatchNudge("CONTACT_CREATED", sms.target);
+    scheduleNotificationDispatchNudge("OFFICE_ALERT_QUEUED", webPush.target);
+
+    expect(sms.callbacks).toHaveLength(1);
+    expect(webPush.callbacks).toHaveLength(1);
+    await sms.callbacks[0]?.();
+    await webPush.callbacks[0]?.();
   });
 });
