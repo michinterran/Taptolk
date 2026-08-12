@@ -482,6 +482,7 @@ export function QrOperationsView({
                         companyLabel={copy.company}
                         initialCompanyId={company?.id ?? ""}
                         initialSiteId={selectedSite?.id ?? ""}
+                        key={`${company?.id ?? ""}:${selectedSite?.id ?? ""}`}
                         locale={locale}
                         quantity={quantity}
                         reviewLabel={copy.selectScope}
@@ -584,6 +585,7 @@ export function QrOperationsView({
                             <input
                               defaultValue={quantity}
                               id="qr-quantity"
+                              key={`qr-quantity-${quantity}`}
                               max={QR_DIRECT_GENERATION_QUANTITY_MAX}
                               min={QR_DIRECT_GENERATION_QUANTITY_MIN}
                               name="quantity"
