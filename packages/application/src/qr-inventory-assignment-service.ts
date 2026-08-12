@@ -65,6 +65,9 @@ export interface QrInventoryAssignmentAssetItem {
   managementCompanyId: string;
   siteId: string;
   status:
+    | "GENERATED"
+    | "PRINT_READY"
+    | "PRINTED"
     | "ACTIVATION_PENDING"
     | "ACTIVE"
     | "ASSIGNED"
@@ -73,7 +76,8 @@ export interface QrInventoryAssignmentAssetItem {
     | "LOST"
     | "REPLACED"
     | "REVOKED"
-    | "SUSPENDED";
+    | "SUSPENDED"
+    | "EXPIRED";
   tenantId: string;
   version: number;
 }

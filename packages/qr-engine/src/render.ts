@@ -111,6 +111,10 @@ export interface StickerRenderResult {
   svg: string;
 }
 
+export interface DynamicQrRenderInput {
+  publicUrl: string;
+}
+
 function escapeAttribute(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
@@ -168,6 +172,31 @@ ${customerLogo}
 <image href="${escapeAttribute(input.taptolkLogoDataUri)}" x="300" y="840" width="400" height="90" preserveAspectRatio="xMidYMid meet"/>
 </g>
 </svg>`;
+  const png = await sharp(Buffer.from(svg), { density: 300 }).png().toBuffer();
+  const decodedValue = await decodeQrFromImage(png);
+  if (decodedValue !== input.publicUrl) {
+    throw new Error("QR_DECODE_MISMATCH");
+  }
+  return {
+    checksumSha256: createHash("sha256").update(svg).digest("hex"),
+    decodedValue,
+    png,
+    svg,
+  };
+}
+
+/**
+ * Generates the QR-only artifact used by the admin direct-generation path.
+ * Site-specific artwork is intentionally not part of this renderer.
+ */
+export async function renderDynamicQr(input: DynamicQrRenderInput): Promise<StickerRenderResult> {
+  const svg = await QRCode.toString(input.publicUrl, {
+    color: { dark: "#111111", light: "#FFFFFF" },
+    errorCorrectionLevel: "H",
+    margin: 4,
+    type: "svg",
+    width: 1000,
+  });
   const png = await sharp(Buffer.from(svg), { density: 300 }).png().toBuffer();
   const decodedValue = await decodeQrFromImage(png);
   if (decodedValue !== input.publicUrl) {

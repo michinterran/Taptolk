@@ -47,6 +47,8 @@ interface QrOperationsViewProps {
   selectedCompanyId?: string | undefined;
   selectedQuantity: number;
   selectedSiteId?: string | undefined;
+  sitePage: number;
+  sitePageSize: number;
   statusMessage?: string | undefined;
 }
 
@@ -173,6 +175,8 @@ export function QrOperationsView({
   selectedCompanyId,
   selectedQuantity,
   selectedSiteId,
+  sitePage,
+  sitePageSize,
   statusMessage,
 }: QrOperationsViewProps) {
   const number = new Intl.NumberFormat(locale);
@@ -219,6 +223,24 @@ export function QrOperationsView({
     batches: activeBatchIds.join(","),
     company: companyHref,
     confirmed: scopeConfirmed ? 1 : undefined,
+    quantity,
+    request: activeRequestId,
+    site: siteHref,
+  };
+
+  const sitePageSizeValue = clampPageSize(sitePageSize);
+  const totalSitePages = Math.max(1, Math.ceil(operationsModel.sites.length / sitePageSizeValue));
+  const currentSitePage = clampPage(sitePage, totalSitePages);
+  const sitePageStart = (currentSitePage - 1) * sitePageSizeValue;
+  const pagedSites = operationsModel.sites.slice(sitePageStart, sitePageStart + sitePageSizeValue);
+  const siteRangeStart = operationsModel.sites.length === 0 ? 0 : sitePageStart + 1;
+  const siteRangeEnd = Math.min(operationsModel.sites.length, sitePageStart + pagedSites.length);
+  const siteQueryBase = {
+    batches: activeBatchIds.join(","),
+    company: companyHref,
+    confirmed: scopeConfirmed ? 1 : undefined,
+    page: currentBatchPage,
+    pageSize,
     quantity,
     request: activeRequestId,
     site: siteHref,
@@ -305,6 +327,73 @@ export function QrOperationsView({
     },
   ] satisfies Array<DataTableColumn<QrOperationsBatch>>;
 
+  const siteColumns = [
+    {
+      cell: (site) => (
+        <span className="tt-table-entity">
+          <strong>{site.name}</strong>
+          <small>{companyById.get(site.managementCompanyId)?.name ?? copy.company}</small>
+        </span>
+      ),
+      header: copy.site,
+      key: "site",
+    },
+    {
+      align: "right",
+      cell: (site) => number.format(site.totalQr),
+      header: copy.siteTotal,
+      key: "total",
+    },
+    {
+      align: "right",
+      cell: (site) => number.format(site.activeQr),
+      header: copy.siteActiveQr,
+      key: "active",
+    },
+    {
+      align: "right",
+      cell: (site) => number.format(site.pendingActivationQr),
+      header: copy.sitePendingActivation,
+      key: "pending",
+    },
+    {
+      align: "right",
+      cell: (site) => number.format(site.batchCount),
+      header: copy.siteBatches,
+      key: "batches",
+    },
+    {
+      cell: (site) => (
+        <StatusPill
+          tone={
+            site.status === "ACTIVE"
+              ? "success"
+              : site.status === "SUSPENDED"
+                ? "warning"
+                : "danger"
+          }
+        >
+          {copy.siteStatusLabels[site.status] ?? site.status}
+        </StatusPill>
+      ),
+      header: copy.status,
+      key: "status",
+    },
+    {
+      align: "right",
+      cell: (site) => (
+        <Link
+          className="tt-button tt-button--secondary tt-button--compact"
+          href={`/${locale}/admin/qr-inventory/sites/${site.id}` as Route}
+        >
+          {copy.siteOpenOperations}
+        </Link>
+      ),
+      header: copy.operationsPanel,
+      key: "operations",
+    },
+  ] satisfies Array<DataTableColumn<(typeof operationsModel.sites)[number]>>;
+
   return (
     <>
       <AdminPageHeader
@@ -323,13 +412,7 @@ export function QrOperationsView({
           lines={headingLine(copy.title)}
         />
         <div className="qr-console-v2-progress-actions">
-          <Link
-            className="tt-button tt-button--secondary tt-button--compact"
-            href={`/${locale}/admin/qr-inventory/approval` as Route}
-          >
-            {copy.approvalWorkflow}
-          </Link>
-          <span className="qr-console-v2-help">{copy.approvalWorkflowDescription}</span>
+          <span className="qr-console-v2-help">{copy.siteOperationsDescription}</span>
         </div>
 
         {statusMessage ? (
@@ -945,6 +1028,96 @@ export function QrOperationsView({
                 {copy.applyPageSize}
               </button>
             </ConsoleQueryForm>
+          </footer>
+        </section>
+
+        <section className="console-list-surface qr-console-v2-table-panel" id="qr-sites">
+          <header className="console-section-heading">
+            <div>
+              <span className="admin-hierarchy-label">{copy.siteOperations}</span>
+              <h2>{copy.siteOperations}</h2>
+              <p>{copy.siteOperationsDescription}</p>
+            </div>
+          </header>
+          <DataTable
+            className="admin-table-scroll admin-table-scroll--catalog qr-operations-table"
+            columns={siteColumns}
+            empty={<EmptyState description={copy.empty} title={copy.siteOperations} />}
+            getRowKey={(site) => site.id}
+            rows={pagedSites}
+          />
+          <footer className="qr-console-v2-table-footer">
+            <span>
+              {formatTemplate(copy.tableRange, {
+                end: number.format(siteRangeEnd),
+                start: number.format(siteRangeStart),
+                total: number.format(operationsModel.sites.length),
+              })}
+            </span>
+            <nav className="qr-console-v2-pagination" aria-label={copy.siteOperations}>
+              {currentSitePage > 1 ? (
+                <Link
+                  aria-label={copy.previous}
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  href={withQuery(locale, {
+                    ...siteQueryBase,
+                    sitePage: currentSitePage - 1,
+                    sitePageSize: sitePageSizeValue,
+                  })}
+                  title={copy.previous}
+                >
+                  <CaretLeft aria-hidden="true" size={15} />
+                </Link>
+              ) : (
+                <button
+                  aria-label={copy.previous}
+                  className="tt-button tt-button--secondary tt-button--compact is-disabled"
+                  disabled
+                  title={copy.previous}
+                  type="button"
+                >
+                  <CaretLeft aria-hidden="true" size={15} />
+                </button>
+              )}
+              {visiblePages(currentSitePage, totalSitePages).map((page) => (
+                <Link
+                  aria-current={page === currentSitePage ? "page" : undefined}
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  href={withQuery(locale, {
+                    ...siteQueryBase,
+                    sitePage: page,
+                    sitePageSize: sitePageSizeValue,
+                  })}
+                  key={page}
+                >
+                  {number.format(page)}
+                </Link>
+              ))}
+              {currentSitePage < totalSitePages ? (
+                <Link
+                  aria-label={copy.next}
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  href={withQuery(locale, {
+                    ...siteQueryBase,
+                    sitePage: currentSitePage + 1,
+                    sitePageSize: sitePageSizeValue,
+                  })}
+                  title={copy.next}
+                >
+                  <CaretRight aria-hidden="true" size={15} />
+                </Link>
+              ) : (
+                <button
+                  aria-label={copy.next}
+                  className="tt-button tt-button--secondary tt-button--compact is-disabled"
+                  disabled
+                  title={copy.next}
+                  type="button"
+                >
+                  <CaretRight aria-hidden="true" size={15} />
+                </button>
+              )}
+            </nav>
           </footer>
         </section>
       </div>

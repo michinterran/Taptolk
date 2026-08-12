@@ -1,8 +1,6 @@
 import type { AppLocale } from "../i18n/config";
 
 export interface AdminQrOperationsCopy {
-  approvalWorkflow: string;
-  approvalWorkflowDescription: string;
   activeQr: string;
   addressEmpty: string;
   allCompanies: string;
@@ -67,6 +65,15 @@ export interface AdminQrOperationsCopy {
   selectScope: string;
   selectedCompany: string;
   selectedSite: string;
+  siteActiveQr: string;
+  siteBatches: string;
+  siteGeneratedQr: string;
+  siteOpenOperations: string;
+  siteOperations: string;
+  siteOperationsDescription: string;
+  sitePendingActivation: string;
+  siteStatusLabels: Readonly<Record<string, string>>;
+  siteTotal: string;
   splitPlan: string;
   stepDone: string;
   stepLocked: string;
@@ -89,9 +96,6 @@ export interface AdminQrOperationsCopy {
 export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperationsCopy>> =
   Object.freeze({
     en: {
-      approvalWorkflow: "Open design and approval",
-      approvalWorkflowDescription:
-        "Use the gated sample and final approval flow before production generation.",
       activeQr: "Active QR",
       addressEmpty: "Address not registered",
       allCompanies: "All management companies",
@@ -103,7 +107,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       company: "Management company",
       completedBatches: "Completed batches",
       confirmed: "Scope confirmed",
-      confirmSelection: "Confirm this company and site",
+      confirmSelection: "Continue with this location",
       description:
         "Generate unique dynamic QR codes by management company and site, then monitor generation, SVG output, activation, and operating status.",
       directQuantity: "Direct quantity",
@@ -161,9 +165,23 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       refreshProgress: "Refresh progress",
       readyDownload: "Download ready",
       scopePanel: "Company and site selection",
-      selectScope: "Review selection",
+      selectScope: "Confirm selected location",
       selectedCompany: "Selected management company",
       selectedSite: "Selected site",
+      siteActiveQr: "Active",
+      siteBatches: "Batches",
+      siteGeneratedQr: "Generated",
+      siteOpenOperations: "Open site operations",
+      siteOperations: "Site QR operations",
+      siteOperationsDescription:
+        "Open a site to review QR status, manage inventory, and continue generation. Site artwork is handled outside Taptolk.",
+      sitePendingActivation: "Activation pending",
+      siteStatusLabels: {
+        ACTIVE: "Operating",
+        CLOSED: "Closed",
+        SUSPENDED: "Suspended",
+      },
+      siteTotal: "Total QR",
       splitPlan: "{count} QR codes · {batches} server batches · last batch {last} codes",
       stepDone: "Done",
       stepLocked: "Locked",
@@ -204,8 +222,6 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       workflowState: "Workflow state",
     },
     ko: {
-      approvalWorkflow: "디자인·승인 작업면 열기",
-      approvalWorkflowDescription: "제작 전 샘플 검토와 최종 승인 흐름을 먼저 진행합니다.",
       activeQr: "활성 QR",
       addressEmpty: "주소 미등록",
       allCompanies: "전체 관리회사",
@@ -217,7 +233,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       company: "관리회사",
       completedBatches: "완료 묶음",
       confirmed: "범위 확인 완료",
-      confirmSelection: "이 관리회사와 사이트로 확정",
+      confirmSelection: "이 현장으로 계속",
       description:
         "관리회사와 사이트 기준으로 중복 없는 동적 QR을 생성하고, SVG 출력·활성화·운영 상태를 한 화면에서 관리합니다.",
       directQuantity: "직접 수량",
@@ -273,9 +289,23 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       refreshProgress: "진행률 새로고침",
       readyDownload: "다운로드 준비 완료",
       scopePanel: "관리회사와 사이트 선택",
-      selectScope: "선택 검토",
+      selectScope: "선택한 현장 확인",
       selectedCompany: "선택한 관리회사",
       selectedSite: "선택한 사이트",
+      siteActiveQr: "활성 QR",
+      siteBatches: "생성 묶음",
+      siteGeneratedQr: "생성 QR",
+      siteOpenOperations: "사이트 운영 열기",
+      siteOperations: "사이트별 QR 운영",
+      siteOperationsDescription:
+        "사이트를 열어 QR 상태·재고·교체·폐기를 관리하고 추가 생성을 이어갑니다. 사이트별 디자인은 Taptolk 외부에서 적용합니다.",
+      sitePendingActivation: "활성화 대기",
+      siteStatusLabels: {
+        ACTIVE: "운영 중",
+        CLOSED: "종료",
+        SUSPENDED: "일시정지",
+      },
+      siteTotal: "전체 QR",
       splitPlan: "{count}개 QR · 서버 {batches}묶음 · 마지막 묶음 {last}개",
       stepDone: "완료",
       stepLocked: "대기",

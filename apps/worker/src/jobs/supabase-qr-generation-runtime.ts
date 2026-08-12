@@ -137,8 +137,17 @@ export class SupabaseQrGenerationExecutionRepository implements QrGenerationExec
       throw mapRuntimeError(result.error);
     }
     const context = mapContext(result.data);
+    const batchMode = await this.client
+      .from("qr_batches")
+      .select("request_mode")
+      .eq("id", context.batchId)
+      .maybeSingle();
+    if (batchMode.error) {
+      throw new SupabaseQrGenerationRuntimeError("UNAVAILABLE");
+    }
+    const renderMode = batchMode.data?.request_mode === "ADMIN_DIRECT" ? "QR_ONLY" : "STICKER";
     if (!context.customerLogoSource) {
-      return context;
+      return { ...context, renderMode };
     }
     const source = context.customerLogoSource;
     const download = await this.client.storage.from(source.bucket).download(source.path);
@@ -150,6 +159,7 @@ export class SupabaseQrGenerationExecutionRepository implements QrGenerationExec
       customerLogoDataUri: `data:${source.mimeType};base64,${Buffer.from(
         await download.data.arrayBuffer(),
       ).toString("base64")}`,
+      renderMode,
     };
   }
 

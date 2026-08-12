@@ -41,6 +41,8 @@ export default async function QrInventoryPage({
     confirmed?: string | string[];
     page?: string | string[];
     pageSize?: string | string[];
+    sitePage?: string | string[];
+    sitePageSize?: string | string[];
     request?: string | string[];
     error?: string | string[];
     quantity?: string | string[];
@@ -142,6 +144,8 @@ export default async function QrInventoryPage({
   const selectedQuantity = readQuantity(query.quantity);
   const batchPage = readPositiveInteger(query.page, 1);
   const batchPageSize = readPositiveInteger(query.pageSize, 10);
+  const sitePage = readPositiveInteger(query.sitePage, 1);
+  const sitePageSize = readPositiveInteger(query.sitePageSize, 10);
   const activeRequestId = readValue(query.request);
   const activeBatchIds =
     readValue(query.batches)
@@ -170,6 +174,8 @@ export default async function QrInventoryPage({
         selectedCompanyId={selectedCompanyId}
         selectedQuantity={selectedQuantity}
         selectedSiteId={selectedSiteId}
+        sitePage={sitePage}
+        sitePageSize={sitePageSize}
         statusMessage={status ? statusMessages[status] : undefined}
       />
     </main>

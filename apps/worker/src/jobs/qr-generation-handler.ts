@@ -3,6 +3,7 @@ import {
   createQrCredentialGenerator,
   type IssuedQrCredential,
   issueQrBatch,
+  renderDynamicQr,
   renderSticker,
   type StickerTemplateCode,
 } from "@taptolk/qr-engine";
@@ -23,6 +24,7 @@ export interface QrGenerationExecutionContext {
   stickerDesignVersionId: string;
   templateCode: StickerTemplateCode;
   tenantId: string;
+  renderMode?: "QR_ONLY" | "STICKER";
 }
 
 export interface QrGenerationArtifact {
@@ -81,6 +83,7 @@ export interface QrGenerationRenderer {
     publicUrl: string;
     taptolkLogoDataUri: string;
     templateCode: StickerTemplateCode;
+    renderMode?: "QR_ONLY" | "STICKER";
   }): Promise<{
     checksumSha256: string;
     decodedValue: string;
@@ -180,14 +183,16 @@ export class QrGenerationHandler {
               `/q/${credential.publicToken.value}`,
               this.options.publicQrBaseUrl,
             ).toString();
-            const rendered = await this.renderer.render({
+            const renderInput = {
               ...(context.customerLogoDataUri
                 ? { customerLogoDataUri: context.customerLogoDataUri }
                 : {}),
               publicUrl,
               taptolkLogoDataUri: this.options.taptolkLogoDataUri,
               templateCode: context.templateCode,
-            });
+              ...(context.renderMode ? { renderMode: context.renderMode } : {}),
+            };
+            const rendered = await this.renderer.render(renderInput);
             if (rendered.decodedValue !== publicUrl) {
               throw new Error("QR_DECODE_MISMATCH");
             }
@@ -239,5 +244,9 @@ export class QrGenerationHandler {
 }
 
 export const sharpQrGenerationRenderer: QrGenerationRenderer = {
-  render: renderSticker,
+  async render(input) {
+    return input.renderMode === "QR_ONLY"
+      ? renderDynamicQr({ publicUrl: input.publicUrl })
+      : renderSticker(input);
+  },
 };

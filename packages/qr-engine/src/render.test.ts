@@ -1,8 +1,19 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { renderSticker, STICKER_TEMPLATES } from "./render.js";
+import { renderDynamicQr, renderSticker, STICKER_TEMPLATES } from "./render.js";
 
 describe("sticker rendering", () => {
+  it("renders a QR-only SVG without sticker artwork or logos", async () => {
+    const publicUrl = "https://taptolk.example/q/qr-only-token";
+    const result = await renderDynamicQr({ publicUrl });
+
+    expect(result.decodedValue).toBe(publicUrl);
+    expect(result.svg).toContain("<svg");
+    expect(result.svg).not.toContain("holo-base");
+    expect(result.svg).not.toContain("taptolk");
+    expect(result.svg).not.toContain("<image");
+  }, 20_000);
+
   it("declares the four required immutable template codes", () => {
     expect(Object.keys(STICKER_TEMPLATES)).toEqual([
       "ROUND_BLUE_HOLOGRAM_V1",

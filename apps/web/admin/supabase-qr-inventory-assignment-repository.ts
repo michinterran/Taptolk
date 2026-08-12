@@ -97,6 +97,9 @@ function isBatchStatus(value: unknown): value is QrInventoryAssignmentBatchItem[
 
 function isAssetStatus(value: unknown): value is QrInventoryAssignmentAssetItem["status"] {
   return [
+    "GENERATED",
+    "PRINT_READY",
+    "PRINTED",
     "IN_STOCK",
     "ASSIGNED",
     "ACTIVATION_PENDING",
@@ -106,6 +109,7 @@ function isAssetStatus(value: unknown): value is QrInventoryAssignmentAssetItem[
     "DAMAGED",
     "REPLACED",
     "REVOKED",
+    "EXPIRED",
   ].includes(String(value));
 }
 

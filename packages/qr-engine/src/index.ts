@@ -29,6 +29,7 @@ export {
 } from "./print-export.js";
 export {
   decodeQrFromImage,
+  renderDynamicQr,
   renderSticker,
   STICKER_TEMPLATES,
   type StickerRenderInput,

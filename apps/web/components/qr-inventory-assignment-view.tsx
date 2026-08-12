@@ -14,7 +14,7 @@ import {
 } from "../admin/qr-inventory-assignment-actions";
 import type { AppLocale } from "../i18n/config";
 
-interface InventoryAssignmentCopy {
+export interface InventoryAssignmentCopy {
   assign: string;
   assignDescription: string;
   assignTitle: string;

@@ -109,9 +109,9 @@ Taptolk는 전화번호 공유 서비스가 아니다. 카카오 알림톡은 A�
 |---|---|---|
 | Caller B | 차량에 연락하려는 외부 사용자 | 회원가입 없음 |
 | Owner A | QR이 연결된 차량 연락 수신자 | 휴대전화 OTP |
-| Taptolk Super Admin | 전체 플랫폼 운영자 | 이메일 + 비밀번호, MFA 선택 |
-| Management Company Admin | 관리회사 산하 단지 관리 | 이메일 + 비밀번호, MFA 선택 |
-| Site Admin | 특정 아파트 관리사무소 관리자 | 이메일 + 비밀번호, MFA 선택 |
+| Taptolk Super Admin | 전체 플랫폼 운영자 | 이메일 + 비밀번호 |
+| Management Company Admin | 관리회사 산하 단지 관리 | 이메일 + 비밀번호 |
+| Site Admin | 특정 아파트 관리사무소 관리자 | 이메일 + 비밀번호 |
 | Site Operator | QR 배포·차량 배정·미응답 처리 | 이메일 + 비밀번호 |
 | Read Only Auditor | 통계·감사 로그 조회 | 이메일 + 비밀번호 |
 | Print Vendor | 인쇄 주문만 확인하는 외부 사용자 | Phase 2 |
@@ -123,9 +123,9 @@ Taptolk는 전화번호 공유 서비스가 아니다. 카카오 알림톡은 A�
 | Tenant | Taptolk에서 데이터 격리의 최상위 고객 단위 |
 | Management Company | 여러 아파트를 관리하는 관리회사 |
 | Site | 아파트, 오피스텔, 빌딩 등 실제 운영 장소 |
-| QR Batch | 동일 Site와 디자인으로 발행되는 QR 묶음 |
+| QR Batch | 동일 Site에 발행되는 동적 QR 묶음 |
 | QR Asset | 개별적으로 추적되는 하나의 QR 디지털 자산 |
-| Sticker Design | 배경·고객 로고·QR·Taptolk 로고의 조합 |
+| QR SVG | 사이트별 외부 디자인에 배치할 수 있는 QR-only SVG 출력물 |
 | Binding | QR과 차량을 연결하는 기간 기반 관계 |
 | Activation | 차주가 QR 사용권한과 휴대전화·차량을 최종 연결하는 과정 |
 | Contact Session | A와 B 사이의 일회성·목적 제한형 연락 세션 |
@@ -153,19 +153,12 @@ Taptolk는 전화번호 공유 서비스가 아니다. 카카오 알림톡은 A�
 - Site별 원하는 수량 입력
 - 암호학적으로 안전한 고유 QR 생성
 - 중복 방지
-- 3~4개 배경 템플릿 선택
-- 고객 로고 선택·업로드
-- Taptolk 하단 로고 고정
-- 중앙 QR 배치
-- 샘플 미리보기 생성
-- 관리자 샘플 승인
-- 대량 비동기 렌더링
-- PNG 미리보기
-- SVG 개별 출력
-- 인쇄용 PDF
-- Batch CSV
-- ZIP 다운로드
+- 사이트별 동적 QR 생성
+- QR-only SVG 개별 출력 및 묶음 다운로드
+- 대량 비동기 생성과 진행률
 - QR 자동 디코딩 품질검사
+- 사이트별 QR 배치·개별 자산 운영
+- 활성화·정지·분실·파손·교체·폐기 이력 관리
 
 ### QR 라이프사이클
 
@@ -487,33 +480,32 @@ Super Admin 로그인
 - Site가 비활성 상태면 QR 신규 발행이 금지된다.
 - 계약 차량 수를 초과하는 활성화는 정책에 따라 차단 또는 승인 대기 처리한다.
 
-## 6.2 QR Batch 생성·디자인·인쇄
+## 6.2 QR Batch 생성·SVG 출력
 
 ```text
 관리자
 → 관리회사 선택
 → Site 선택
 → 수량 입력
-→ 배경 템플릿 선택
-→ 상단 로고 선택 또는 업로드
-→ 샘플 생성
-→ 샘플 QR 디코딩 검사
-→ 관리자 승인
-→ QR Batch 생성
-→ Queue에 대량 렌더 Job
+→ 동적 QR Batch 생성
+→ Queue에 대량 생성 Job
 → 진행률 표시
-→ PDF·SVG·CSV·ZIP 생성
-→ 인쇄 주문 상태 변경
+→ QR-only SVG 개별 파일 및 묶음 다운로드
+→ 사이트별 QR 자산 운영
 ```
 
 ### 비즈니스 규칙
 
 - Batch 하나는 Site 하나에만 귀속된다.
 - QR 공개 토큰은 전체 시스템에서 중복될 수 없다.
-- Batch 승인 후 디자인 설정을 수정할 수 없다.
-- 수정이 필요하면 새 Sticker Design Version과 새 Render Job을 생성한다.
-- QR Asset 자체는 재렌더링해도 동일하게 유지한다.
-- 전체 대량 렌더 전 샘플 승인이 필수다.
+- 사이트별 외부 디자인은 Taptolk QR 생성 정책에 포함하지 않는다.
+- SVG에는 QR와 필수 여백만 포함하며 로고·배경·스티커 템플릿을 포함하지 않는다.
+- 전체 대량 생성은 durable Job과 idempotency로 중복 발행을 방지한다.
+- QR Asset 자체는 SVG를 다시 다운로드하거나 외부 디자인에 배치해도 동일하게 유지한다.
+
+> 기존 `sticker_design_versions` 및 STANDARD Batch 데이터는 과거 이력 호환을 위해
+> 삭제하지 않는다. 신규 발행 화면과 신규 RPC는 QR-only 정책만 사용하며, 템플릿·로고·샘플
+> 승인 화면은 신규 운영 흐름에서 제공하지 않는다.
 
 ## 6.3 Site 입고·재고
 
@@ -1378,8 +1370,11 @@ Activation Code 검증
 ## 9.4 관리자
 
 - Supabase Auth Email/Password
-- MFA 기능은 유지하되 파일럿 기간에는 관리자 전 역할에서 선택 사항으로 둔다
-- Production 전 Super Admin, 고위험 작업, 개인정보 대량 조회에 대한 MFA 또는 재확인 정책을 재검토한다
+- MFA는 MVP/파일럿 사용자-facing 개발 범위에서 제외한다.
+- 기존 내부 `mfaLevel`/`mfaVerified` 호환 필드는 권한 경계 타입 안정성을 위해 남길 수 있으나,
+  `/admin/mfa/*` 화면, MFA 등록/확인 여정, MFA 상태 표시, MFA 기반 개발 과제는 만들지 않는다.
+- Production 전 Super Admin, 고위험 작업, 개인정보 대량 조회에는 MFA가 아니라 별도 운영자 승인
+  후 재확인 정책을 새로 정의한다.
 - Admin Session Idle Timeout
 - 개인정보 조회 시 Audit Log
 
@@ -2716,7 +2711,6 @@ INTERNAL_ERROR
 ## Phase 1 — Tenant·Admin
 
 - Admin Auth
-- Optional MFA Foundation
 - Tenant
 - Management Company
 - Site
