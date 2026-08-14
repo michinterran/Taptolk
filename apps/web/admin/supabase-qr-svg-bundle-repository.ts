@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 import { QrSvgBundleError, type QrSvgBundleRepository } from "@taptolk/application";
+import { buildSvgExportBundleFromPrintBundle } from "@taptolk/qr-engine";
 import type { createAdminServerClient } from "../auth/server-client";
 import type { createAdminServiceClient } from "../auth/service-client";
 
@@ -92,16 +93,22 @@ export function createSupabaseQrSvgBundleRepository(
       if (exportResult.error || !isPrintExportRow(exportResult.data)) {
         throw new QrSvgBundleError("NOT_READY");
       }
-      const bytes = await readArtifact(
+      const printBundleBytes = await readArtifact(
         serviceClient,
         exportResult.data.storage_path,
         exportResult.data.checksum_sha256,
         exportResult.data.byte_size,
       );
+      let artifact: ReturnType<typeof buildSvgExportBundleFromPrintBundle>;
+      try {
+        artifact = buildSvgExportBundleFromPrintBundle(batch.batch_code, printBundleBytes);
+      } catch {
+        throw new QrSvgBundleError("NOT_READY");
+      }
       return {
-        bytes,
-        checksumSha256: exportResult.data.checksum_sha256,
-        filename: `${batch.batch_code}-svg-bundle.zip`,
+        bytes: artifact.bytes,
+        checksumSha256: artifact.checksumSha256,
+        filename: artifact.filename,
         mimeType: "application/zip",
       };
     },

@@ -20,6 +20,7 @@ export {
 export {
   buildPrintExportBundle,
   buildSvgExportBundle,
+  buildSvgExportBundleFromPrintBundle,
   inspectPrintPdf,
   type PrintExportArtifact,
   type PrintExportBundle,

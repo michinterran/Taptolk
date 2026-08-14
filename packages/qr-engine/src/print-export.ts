@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { strToU8, zipSync } from "fflate";
+import { strToU8, unzipSync, zipSync } from "fflate";
 import { PDFDocument } from "pdf-lib";
 
 export interface PrintExportItem {
@@ -231,4 +231,66 @@ export function buildSvgExportBundle(
     "application/zip",
     zipSync(zipEntries, { level: 6 }),
   );
+}
+
+export function buildSvgExportBundleFromPrintBundle(
+  batchCode: string,
+  printBundleBytes: Uint8Array,
+): PrintExportArtifact {
+  let entries: Record<string, Uint8Array>;
+  let manifest: unknown;
+  try {
+    entries = unzipSync(printBundleBytes);
+    const manifestBytes = entries[`${batchCode}-checksums.json`];
+    if (!manifestBytes) {
+      throw new Error("PRINT_BUNDLE_MANIFEST_MISSING");
+    }
+    manifest = JSON.parse(new TextDecoder().decode(manifestBytes));
+  } catch {
+    throw new Error("INVALID_PRINT_BUNDLE");
+  }
+  const candidate = manifest as {
+    batchCode?: unknown;
+    files?: unknown;
+    itemCount?: unknown;
+    schemaVersion?: unknown;
+  };
+  if (
+    candidate.batchCode !== batchCode ||
+    candidate.schemaVersion !== 1 ||
+    !Number.isInteger(candidate.itemCount) ||
+    !Array.isArray(candidate.files) ||
+    candidate.files.length !== candidate.itemCount
+  ) {
+    throw new Error("INVALID_PRINT_BUNDLE_MANIFEST");
+  }
+  const items = candidate.files.map((value) => {
+    const row = value as {
+      humanCode?: unknown;
+      ordinal?: unknown;
+      printFile?: unknown;
+      renderChecksumSha256?: unknown;
+    };
+    if (
+      typeof row.humanCode !== "string" ||
+      !Number.isInteger(row.ordinal) ||
+      typeof row.ordinal !== "number" ||
+      typeof row.printFile !== "string" ||
+      row.printFile !== `svg/${row.ordinal.toString().padStart(5, "0")}.svg` ||
+      typeof row.renderChecksumSha256 !== "string"
+    ) {
+      throw new Error("INVALID_PRINT_BUNDLE_ITEM");
+    }
+    const svgBytes = entries[row.printFile];
+    if (!svgBytes || sha256(svgBytes) !== row.renderChecksumSha256) {
+      throw new Error("INVALID_PRINT_BUNDLE_SVG");
+    }
+    return {
+      humanCode: row.humanCode,
+      ordinal: row.ordinal,
+      printSvg: new TextDecoder().decode(svgBytes),
+      renderChecksumSha256: row.renderChecksumSha256,
+    };
+  });
+  return buildSvgExportBundle(batchCode, items);
 }

@@ -2,6 +2,10 @@ import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+const { buildSvgExportBundleFromPrintBundle } = vi.hoisted(() => ({
+  buildSvgExportBundleFromPrintBundle: vi.fn(),
+}));
+vi.mock("@taptolk/qr-engine", () => ({ buildSvgExportBundleFromPrintBundle }));
 
 import { createSupabaseQrSvgBundleRepository } from "./supabase-qr-svg-bundle-repository";
 
@@ -18,7 +22,9 @@ function query(result: { data: unknown; error: unknown }) {
 
 describe("Supabase QR SVG bundle repository", () => {
   const bytes = new TextEncoder().encode("ready-print-bundle");
+  const svgBytes = new TextEncoder().encode("svg-only-bundle");
   const checksum = createHash("sha256").update(bytes).digest("hex");
+  const svgChecksum = createHash("sha256").update(svgBytes).digest("hex");
   const batchQuery = query({
     data: {
       batch_code: "BATCH001",
@@ -42,6 +48,12 @@ describe("Supabase QR SVG bundle repository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     download.mockResolvedValue({ data: new Blob([bytes]), error: null });
+    buildSvgExportBundleFromPrintBundle.mockReturnValue({
+      bytes: svgBytes,
+      checksumSha256: svgChecksum,
+      filename: "BATCH001-svg-bundle.zip",
+      mimeType: "application/zip",
+    });
   });
 
   it("downloads the worker-produced ready ZIP and verifies its integrity", async () => {
@@ -60,10 +72,11 @@ describe("Supabase QR SVG bundle repository", () => {
       serviceClient as never,
     ).get("00000000-0000-4000-8000-000000000001");
 
-    expect(Array.from(artifact.bytes)).toEqual(Array.from(bytes));
-    expect(artifact.checksumSha256).toBe(checksum);
+    expect(Array.from(artifact.bytes)).toEqual(Array.from(svgBytes));
+    expect(artifact.checksumSha256).toBe(svgChecksum);
     expect(artifact.filename).toBe("BATCH001-svg-bundle.zip");
     expect(download).toHaveBeenCalledTimes(1);
+    expect(buildSvgExportBundleFromPrintBundle).toHaveBeenCalledWith("BATCH001", bytes);
     expect(exportQuery.eq).toHaveBeenCalledWith("export_type", "ZIP");
     expect(exportQuery.eq).toHaveBeenCalledWith("status", "READY");
   });

@@ -2,7 +2,11 @@ import { readFile } from "node:fs/promises";
 import { unzipSync } from "fflate";
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
-import { buildPrintExportBundle, buildSvgExportBundle } from "./print-export.js";
+import {
+  buildPrintExportBundle,
+  buildSvgExportBundle,
+  buildSvgExportBundleFromPrintBundle,
+} from "./print-export.js";
 import { renderSticker } from "./render.js";
 
 describe("print export bundle", () => {
@@ -39,6 +43,11 @@ describe("print export bundle", () => {
       "BATCH_TEST_001-checksums.json",
       "BATCH_TEST_001-manifest.csv",
       "preview/00001.png",
+      "svg/00001.svg",
+    ]);
+    const svgBundle = buildSvgExportBundleFromPrintBundle("BATCH_TEST_001", bundle.zip.bytes);
+    expect(Object.keys(unzipSync(svgBundle.bytes)).sort()).toEqual([
+      "BATCH_TEST_001-svg-checksums.json",
       "svg/00001.svg",
     ]);
     expect(
