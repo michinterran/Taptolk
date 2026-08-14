@@ -15,6 +15,7 @@ import { requireReadyAdminContext } from "../auth/page-guard";
 import { createAdminServerClient } from "../auth/server-client";
 import type { AppLocale } from "../i18n/config";
 import { isAppLocale } from "../i18n/locale";
+import { enqueueQrGenerationPipelineWake } from "../internal/qr-generation-pipeline-wake";
 import {
   createSupabaseQrDirectGenerationRepository,
   QrDirectGenerationRepositoryError,
@@ -114,6 +115,14 @@ export async function requestAdminDirectQrGeneration(formData: FormData): Promis
       }),
     );
   }
+  await Promise.all(
+    result.batches.map((batch) =>
+      enqueueQrGenerationPipelineWake({
+        batchId: batch.batchId,
+        requestId: result.requestId,
+      }),
+    ),
+  );
   redirect(
     path(locale, "status", "batchRequested", {
       batches: result.batches.map((batch) => batch.batchId).join(","),

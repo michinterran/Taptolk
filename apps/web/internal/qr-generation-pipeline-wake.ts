@@ -21,7 +21,7 @@ export async function enqueueQrGenerationPipelineWake(input: {
   });
   await send(QR_GENERATION_PIPELINE_TOPIC, wake, {
     delaySeconds: 5,
-    idempotencyKey: `qr-generation-approval-${wake.requestId}`,
+    idempotencyKey: `qr-generation-approval-${wake.requestId}-${wake.batchId}`,
     retentionSeconds: 86_400,
   });
 }
