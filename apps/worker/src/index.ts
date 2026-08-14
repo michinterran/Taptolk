@@ -19,6 +19,7 @@ import {
   type SupabasePgmqClient,
   SupabasePgmqQueue,
 } from "./pgmq-queue-runtime.js";
+import { resolveQrCredentialEncryption } from "./qr-credential-encryption.js";
 
 const environment = parseServerEnvironment();
 const clientEnvironment = parseClientEnvironment(process.env);
@@ -36,10 +37,11 @@ let queueTimer: NodeJS.Timeout | null = null;
 let stopping = false;
 
 async function initializeQrQueueWorker(): Promise<void> {
+  const credentialEncryption = resolveQrCredentialEncryption(environment);
   if (
     !clientEnvironment.NEXT_PUBLIC_SUPABASE_URL ||
     !environment.SUPABASE_SECRET_KEY ||
-    !environment.APP_ENCRYPTION_KEY_V1 ||
+    !credentialEncryption ||
     !environment.PUBLIC_QR_BASE_URL
   ) {
     logger.warn("worker.qr_queue.configuration_unavailable", {
@@ -59,9 +61,9 @@ async function initializeQrQueueWorker(): Promise<void> {
     sharpQrGenerationRenderer,
     {
       encryptionKey: createHash("sha256")
-        .update(`qr-credential-encryption\0${environment.APP_ENCRYPTION_KEY_V1}`, "utf8")
+        .update(`qr-credential-encryption\0${credentialEncryption.secret}`, "utf8")
         .digest(),
-      keyVersion: environment.APP_ENCRYPTION_KEY_VERSION,
+      keyVersion: credentialEncryption.keyVersion,
       publicQrBaseUrl: environment.PUBLIC_QR_BASE_URL,
       renderConcurrency: environment.QR_GENERATION_RENDER_CONCURRENCY,
       taptolkLogoDataUri: await readWorkerTaptolkLogoDataUri(),

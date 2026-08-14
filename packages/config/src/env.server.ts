@@ -88,6 +88,7 @@ const serverEnvironmentSchema = z
     QR_PRINT_EXPORT_STORE_CONCURRENCY: integerEnvironmentSchema(1, 1, 4),
     QR_GENERATION_QUEUE_SEND_TIMEOUT_MS: integerEnvironmentSchema(3_000, 250, 10_000),
     QR_GENERATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS: integerEnvironmentSchema(3_600, 60, 86_400),
+    QR_CREDENTIAL_ENCRYPTION_KEY_V2: optionalSecretSchema,
     QUEUE_WORKER_SECRET: optionalSecretSchema,
     RESPONSE_TOKEN_TTL_MINUTES: integerEnvironmentSchema(60),
     SENTRY_AUTH_TOKEN: optionalSecretSchema,

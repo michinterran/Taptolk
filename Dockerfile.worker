@@ -1,0 +1,29 @@
+FROM node:24-bookworm-slim AS build
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
+RUN corepack enable
+
+WORKDIR /workspace
+COPY . .
+
+RUN corepack pnpm install --frozen-lockfile
+RUN corepack pnpm build:packages
+RUN corepack pnpm --filter @taptolk/worker build
+RUN corepack pnpm --config.strict-peer-dependencies=false \
+  --filter @taptolk/worker deploy --legacy --prod /runtime/apps/worker
+RUN mkdir -p /runtime/apps/web/public/brand && \
+  cp /workspace/apps/web/public/brand/taptolk-logo.png \
+    /runtime/apps/web/public/brand/taptolk-logo.png
+
+FROM node:24-bookworm-slim AS runtime
+
+ENV NODE_ENV=production
+
+WORKDIR /app/apps/worker
+COPY --from=build --chown=node:node /runtime /app
+
+USER node
+
+CMD ["node", "dist/index.js"]

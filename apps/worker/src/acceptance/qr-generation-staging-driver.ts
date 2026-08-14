@@ -22,6 +22,7 @@ import {
   type SupabasePgmqClient,
   SupabasePgmqQueue,
 } from "../pgmq-queue-runtime.js";
+import { resolveQrCredentialEncryption } from "../qr-credential-encryption.js";
 import { queueJobSchema } from "../queue-consumer.js";
 
 const ARTIFACT_BUCKET = "qr-artifacts";
@@ -114,11 +115,12 @@ async function exactCount(
 async function main(): Promise<void> {
   const serverEnvironment = parseServerEnvironment();
   const clientEnvironment = parseClientEnvironment(process.env);
+  const credentialEncryption = resolveQrCredentialEncryption(serverEnvironment);
   const acceptanceLabel = process.env.TAPTOLK_QR_ACCEPTANCE_LABEL;
   assertCondition(serverEnvironment.APP_ENV === "staging", "ACCEPTANCE_STAGING_REQUIRED");
   assertCondition(clientEnvironment.NEXT_PUBLIC_SUPABASE_URL, "ACCEPTANCE_SUPABASE_URL_REQUIRED");
   assertCondition(serverEnvironment.SUPABASE_SECRET_KEY, "ACCEPTANCE_SERVICE_KEY_REQUIRED");
-  assertCondition(serverEnvironment.APP_ENCRYPTION_KEY_V1, "ACCEPTANCE_ENCRYPTION_KEY_REQUIRED");
+  assertCondition(credentialEncryption, "ACCEPTANCE_ENCRYPTION_KEY_REQUIRED");
   assertCondition(
     acceptanceLabel && /^QR1K-[A-Z0-9]{8,24}$/u.test(acceptanceLabel),
     "ACCEPTANCE_LABEL_REQUIRED",
@@ -138,9 +140,9 @@ async function main(): Promise<void> {
   const printRuntime = new SupabaseQrPrintExportRuntime(client, ARTIFACT_BUCKET);
   const generationOptions = {
     encryptionKey: createHash("sha256")
-      .update(`qr-credential-encryption\0${serverEnvironment.APP_ENCRYPTION_KEY_V1}`, "utf8")
+      .update(`qr-credential-encryption\0${credentialEncryption.secret}`, "utf8")
       .digest(),
-    keyVersion: serverEnvironment.APP_ENCRYPTION_KEY_VERSION,
+    keyVersion: credentialEncryption.keyVersion,
     publicQrBaseUrl:
       serverEnvironment.PUBLIC_QR_BASE_URL ?? "https://staging-acceptance.taptolk.invalid",
     renderConcurrency: serverEnvironment.QR_GENERATION_RENDER_CONCURRENCY,
