@@ -3,11 +3,18 @@ import {
   ACTIVATION_CODE_LENGTH,
   createQrCredentialGenerator,
   HUMAN_CODE_LENGTH,
+  hashQrPublicToken,
   issueQrBatch,
   QrIssuanceError,
 } from "./issuance.js";
 
 describe("QR issuance", () => {
+  it("uses the canonical SHA-256 public-token lookup hash", () => {
+    expect(hashQrPublicToken("public-token-fixture")).toBe(
+      "743112c8b3a0efd022d493efc7a25d3242595daacb88f90041af217f8088e4dd",
+    );
+  });
+
   it("issues 1,000 unique, encrypted credentials", () => {
     const generate = createQrCredentialGenerator({
       encryptionKey: Buffer.alloc(32, 7),

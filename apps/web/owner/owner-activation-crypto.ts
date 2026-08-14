@@ -7,6 +7,7 @@ import type {
   OwnerActivationProtector,
   OwnerActivationSecretFactory,
 } from "@taptolk/application";
+import { hashPublicQrTokenLookup } from "../scan/public-token-hash";
 
 function deriveKey(secret: string, purpose: string): Buffer {
   return createHash("sha256").update(`${purpose}\0${secret}`, "utf8").digest();
@@ -33,6 +34,9 @@ export class AesGcmOwnerActivationProtector implements OwnerActivationProtector 
   }
 
   async hash(value: string, purpose: OwnerActivationHashPurpose): Promise<string> {
+    if (purpose === "public-token") {
+      return hashPublicQrTokenLookup(value);
+    }
     const purposeKey = createHmac("sha256", this.hmacRootKey)
       .update(`owner-${purpose}`, "utf8")
       .digest();

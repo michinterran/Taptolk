@@ -12,6 +12,7 @@ export {
   createQrCredentialGenerator,
   type EncryptedSecret,
   HUMAN_CODE_LENGTH,
+  hashQrPublicToken,
   type IssuedQrCredential,
   issueQrBatch,
   type QrCredentialGeneratorOptions,

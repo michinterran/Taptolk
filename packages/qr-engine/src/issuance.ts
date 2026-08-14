@@ -35,6 +35,16 @@ function sha256(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
+/**
+ * Canonical lookup hash for the public credential carried by a QR sticker.
+ *
+ * The issuance engine persists this value in `qr_assets.public_token_hash`, so
+ * every scan entry point must use the exact same policy when looking it up.
+ */
+export function hashQrPublicToken(value: string): string {
+  return sha256(value);
+}
+
 function toBase64Url(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("base64url");
 }
@@ -100,7 +110,7 @@ export function createQrCredentialGenerator(options: QrCredentialGeneratorOption
       humanCode,
       publicToken: {
         ...encrypt(token, options.encryptionKey, options.keyVersion, random),
-        hash: sha256(token),
+        hash: hashQrPublicToken(token),
         value: token,
       },
     };
