@@ -1,7 +1,7 @@
 # ADR-006 — Queue and Worker Runtime
 
 > Date: 2026-07-19
-> Status: Accepted for runtime class; Production host pending benchmark
+> Status: Accepted for bounded Vercel staging pilot; Production runtime pending benchmark
 > Owners: QR Issuance / Platform Operations
 
 ## 1. Context
@@ -16,8 +16,9 @@ and generation cannot be treated as one distributed transaction:
 - PostgreSQL approval may commit while provider publish fails.
 - Provider publish may succeed while the acknowledgement write fails.
 - Queue delivery is at least once.
-- QR generation/render work is CPU/file intensive and may exceed a short web request.
-- A Vercel Function is not a resident Queue consumer.
+- QR generation/render work is CPU/file intensive and may exceed one bounded invocation.
+- A Vercel Function is not a resident polling consumer, but Vercel Queues can now invoke a
+  bounded push consumer and retry it durably.
 
 ## 2. Decision
 
@@ -40,22 +41,31 @@ and generation cannot be treated as one distributed transaction:
 
 ### 2.3 Generation consumer
 
-- Run `apps/worker` as a separately deployed Node.js 24 container for QR generation/render jobs.
-- Do not use a resident Vercel Function, browser process, Next.js request lifecycle, or Supabase
-  Edge Function as the generation consumer.
-- The Worker polls Supabase Queue, validates the versioned payload, loads authoritative scope/state
-  by `jobId`, claims a lease, invokes Application Services, persists checkpoints, and acknowledges
-  only after commit.
-- On `SIGTERM`, it stops claiming, completes or safely abandons the current transaction, and lets
-  the lease/Queue visibility timeout recover unfinished work.
+- Keep Supabase Queues/pgmq as the required durable work queue and database job ledger as business
+  truth.
+- In staging, enqueue a redacted Vercel Queue pipeline trigger before the final approval mutation.
+  The trigger uses the approval request ID as an idempotency key and a short delivery delay. A
+  rejected approval therefore leaves only a bounded no-op trigger, while an accepted approval
+  cannot commit without an already-durable wake signal.
+- A Vercel Queue push Function runs the bounded dispatcher and then consumes at most one Supabase
+  Queue message. It validates the versioned pgmq payload, loads authoritative scope/state by
+  `jobId`, invokes Application Services, persists 50-item checkpoints, and archives pgmq only
+  after commit.
+- The Function and pgmq visibility budget are both bounded at 300 seconds on the current Vercel
+  Hobby staging project. Function timeout or a retry result leaves pgmq unarchived; Vercel Queue
+  redelivery resumes from committed checkpoints.
+- Do not run an infinite polling loop inside a Vercel Function. The standalone Node.js 24 worker
+  remains available for local acceptance and as a Production fallback until the benchmark gate
+  selects the final runtime.
 - Runtime secrets are server-only and least-privileged. Queue messages and logs contain no token,
   code, ciphertext, contact data, reason, storage path, cookie, authorization header, or provider
   credential.
 
 ### 2.4 Host selection
 
-The runtime class is decided; the container vendor is not. Production host selection must compare
-at least:
+The bounded Vercel push Function is selected for the staging pilot because it reuses the current
+project's Preview secrets and needs no additional vendor. Production runtime selection still must
+compare at least:
 
 - Seoul or nearest supported region and Supabase latency
 - Node 24 and native Sharp/PDF dependency support
@@ -64,17 +74,19 @@ at least:
 - concurrency and CPU/memory controls
 - secret management, egress, logs/metrics, rollback, and cost
 
-No provider manifest or new runtime dependency is added until the benchmark gate passes.
+Do not add a non-Vercel container provider unless the benchmark proves the bounded Vercel runtime
+cannot satisfy the acceptance gates and the operator approves that provider.
 
 ## 3. Delivery semantics
 
 ```text
-approval transaction
+Vercel Queue pipeline trigger (delayed, idempotent)
+→ approval transaction
 → job PENDING_DELIVERY
 → dispatcher lease
 → Supabase Queue publish
 → job QUEUED + Batch GENERATION_QUEUED
-→ Worker lease/PROCESSING
+→ bounded Vercel Function pgmq consume/PROCESSING
 → checkpointed Application transaction
 → Queue acknowledgement
 ```
@@ -99,8 +111,9 @@ Direct publish creates lost-job or duplicate-job gaps.
 
 ### 4.2 Long-running Vercel Function consumer
 
-Rejected because Vercel Functions are request/bounded invocation runtimes, not resident polling
-workers. It also mixes web release scaling with generation throughput.
+An infinite or resident Vercel Function poller remains rejected because Functions are bounded
+invocations. This does not reject the Vercel Queue push Function pilot: each invocation performs
+one bounded pgmq iteration, relies on durable redelivery, and resumes from database checkpoints.
 
 ### 4.3 Supabase Edge Function generation
 
@@ -133,7 +146,7 @@ Before Production generation is enabled:
    disk, error rate, and cost estimate.
 8. Alerts cover oldest pending intent, Queue lag, expired leases, repeated retries, terminal
    failures, partial completion, and cleanup failure.
-9. Container host, region, minimum/maximum concurrency, resource limits, deploy/rollback runbook,
+9. Runtime host, region, minimum/maximum concurrency, resource limits, deploy/rollback runbook,
    and secret ownership are approved.
 
 Until these gates pass, only the Plan/Design and local contract remain approved. No document may
@@ -145,21 +158,21 @@ Positive:
 
 - Approval cannot be committed without a durable handoff intent.
 - Queue/provider outages are recoverable without lying about Batch failure.
-- Web and Worker deployments scale independently.
+- Queue delivery and bounded worker invocations scale independently from UI requests.
 - Duplicate delivery is an expected tested path.
 
 Cost:
 
-- Requires a dispatcher lease protocol, durable job ledger, recovery sweep, and container
-  operations.
+- Requires a dispatcher lease protocol, durable job ledger, Vercel Queue trigger, and bounded
+  retry observability.
 - Creates explicit operational metrics and runbooks before Production.
-- Adds one deployment target after benchmark/provider approval.
+- May still add one deployment target if the Production benchmark rejects bounded Vercel compute.
 
 ## 7. Follow-up
 
 - Implement only after
   `docs/02-design/features/qr-final-generation-approval.design.md` is approved for Do.
 - Add versioned Queue payload schema and compatibility policy before first publish.
-- Benchmark at least one realistic 1,000-item batch before choosing the Production container host.
+- Benchmark at least one realistic 1,000-item batch before choosing the Production runtime host.
 - Revisit this ADR if measured jobs are short enough for a different bounded runtime, but do not
   silently change the runtime class inside implementation code.

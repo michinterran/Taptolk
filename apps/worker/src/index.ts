@@ -1,28 +1,9 @@
-import { createHash } from "node:crypto";
-import { createTaptolkAdminClient } from "@taptolk/auth";
-import { APP_IDENTITY, parseClientEnvironment, parseServerEnvironment } from "@taptolk/config";
+import { APP_IDENTITY, parseServerEnvironment } from "@taptolk/config";
 import { createLogger, initializeServerObservability } from "@taptolk/observability";
 import { createWorkerHealth } from "./health.js";
-import {
-  QrGenerationHandler,
-  QrPrintExportHandler,
-  QrWorkerExecutionRuntime,
-  readWorkerTaptolkLogoDataUri,
-  SupabaseQrGenerationArtifactStore,
-  SupabaseQrGenerationExecutionRepository,
-  SupabaseQrPrintExportRuntime,
-  SupabaseQrWorkerFailureRepository,
-  sharpQrGenerationRenderer,
-} from "./jobs/index.js";
-import {
-  runQrQueueIteration,
-  type SupabasePgmqClient,
-  SupabasePgmqQueue,
-} from "./pgmq-queue-runtime.js";
-import { resolveQrCredentialEncryption } from "./qr-credential-encryption.js";
+import { createQrQueueWorkerRuntime } from "./runtime.js";
 
 const environment = parseServerEnvironment();
-const clientEnvironment = parseClientEnvironment(process.env);
 const logger = createLogger({ service: APP_IDENTITY.serviceNames.worker });
 
 initializeServerObservability({
@@ -37,63 +18,21 @@ let queueTimer: NodeJS.Timeout | null = null;
 let stopping = false;
 
 async function initializeQrQueueWorker(): Promise<void> {
-  const credentialEncryption = resolveQrCredentialEncryption(environment);
-  if (
-    !clientEnvironment.NEXT_PUBLIC_SUPABASE_URL ||
-    !environment.SUPABASE_SECRET_KEY ||
-    !credentialEncryption ||
-    !environment.PUBLIC_QR_BASE_URL
-  ) {
+  const runtime = await createQrQueueWorkerRuntime();
+  if (!runtime.ready) {
     logger.warn("worker.qr_queue.configuration_unavailable", {
       errorCode: "CONFIGURATION_UNAVAILABLE",
+      missingVariables: runtime.missingVariables,
     });
     return;
   }
-  const client = createTaptolkAdminClient({
-    secretKey: environment.SUPABASE_SECRET_KEY,
-    url: clientEnvironment.NEXT_PUBLIC_SUPABASE_URL,
-  });
-  const generationRepository = new SupabaseQrGenerationExecutionRepository(client);
-  const artifactStore = new SupabaseQrGenerationArtifactStore(client);
-  const generation = new QrGenerationHandler(
-    generationRepository,
-    artifactStore,
-    sharpQrGenerationRenderer,
-    {
-      encryptionKey: createHash("sha256")
-        .update(`qr-credential-encryption\0${credentialEncryption.secret}`, "utf8")
-        .digest(),
-      keyVersion: credentialEncryption.keyVersion,
-      publicQrBaseUrl: environment.PUBLIC_QR_BASE_URL,
-      renderConcurrency: environment.QR_GENERATION_RENDER_CONCURRENCY,
-      taptolkLogoDataUri: await readWorkerTaptolkLogoDataUri(),
-    },
-  );
-  const printRuntime = new SupabaseQrPrintExportRuntime(client);
-  const execution = new QrWorkerExecutionRuntime(
-    generation,
-    new QrPrintExportHandler(printRuntime, printRuntime, {
-      loadConcurrency: environment.QR_PRINT_EXPORT_LOAD_CONCURRENCY,
-      storeConcurrency: environment.QR_PRINT_EXPORT_STORE_CONCURRENCY,
-    }),
-    new SupabaseQrWorkerFailureRepository(client),
-  );
-  const queue = new SupabasePgmqQueue(
-    client as unknown as SupabasePgmqClient,
-    environment.QR_GENERATION_QUEUE_NAME,
-    environment.QR_GENERATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS,
-  );
 
   const tick = async () => {
     if (stopping) {
       return;
     }
     try {
-      const result = await runQrQueueIteration(
-        queue,
-        execution,
-        environment.QR_GENERATION_QUEUE_MAX_READ_COUNT,
-      );
+      const result = await runtime.runOnce();
       if (result.status !== "EMPTY") {
         logger.info("worker.qr_queue.iteration_completed", {
           resultStatus: result.status,

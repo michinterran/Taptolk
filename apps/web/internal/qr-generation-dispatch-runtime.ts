@@ -19,7 +19,9 @@ import { readSecretSupabaseConfiguration } from "../auth/configuration";
 import { createAdminServiceClient } from "../auth/service-client";
 import {
   buildStagingQrGenerationDispatchConfiguration,
+  buildStagingQrGenerationDispatchRuntimeConfiguration,
   type StagingQrGenerationDispatchConfiguration,
+  type StagingQrGenerationDispatchRuntimeConfiguration,
 } from "./qr-generation-dispatch-configuration";
 
 export class StagingQrGenerationDispatchUnavailableError extends Error {
@@ -44,8 +46,20 @@ export function readStagingQrGenerationDispatchConfiguration(): StagingQrGenerat
   }
 }
 
+export function readStagingQrGenerationDispatchRuntimeConfiguration(): StagingQrGenerationDispatchRuntimeConfiguration | null {
+  try {
+    const environment = parseServerEnvironment();
+    if (!readSecretSupabaseConfiguration()) {
+      return null;
+    }
+    return buildStagingQrGenerationDispatchRuntimeConfiguration(environment);
+  } catch {
+    return null;
+  }
+}
+
 export async function runStagingQrGenerationDispatch(
-  configuration: StagingQrGenerationDispatchConfiguration,
+  configuration: StagingQrGenerationDispatchRuntimeConfiguration,
   requestId: string,
 ): Promise<QrGenerationDispatchRuntimeResult> {
   const client = createAdminServiceClient();

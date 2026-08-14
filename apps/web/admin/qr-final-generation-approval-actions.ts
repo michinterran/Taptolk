@@ -13,6 +13,7 @@ import { requireReadyAdminContext } from "../auth/page-guard";
 import { createAdminServerClient } from "../auth/server-client";
 import type { AppLocale } from "../i18n/config";
 import { isAppLocale } from "../i18n/locale";
+import { enqueueQrGenerationPipelineWake } from "../internal/qr-generation-pipeline-wake";
 import {
   createSupabaseQrFinalGenerationApprovalRepository,
   QrFinalGenerationApprovalRepositoryError,
@@ -133,6 +134,10 @@ export async function requestQrBatchFinalApproval(formData: FormData): Promise<n
 
 export async function approveQrBatchFinalGeneration(formData: FormData): Promise<never> {
   return run(formData, "finalGenerationApproved", async ({ actor, service }) => {
+    await enqueueQrGenerationPipelineWake({
+      batchId: readString(formData, "batchId"),
+      requestId: readString(formData, "requestId"),
+    });
     await service.approveFinalGeneration({
       actor,
       ...commandInput(formData),

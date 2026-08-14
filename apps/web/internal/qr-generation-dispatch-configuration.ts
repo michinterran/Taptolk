@@ -1,8 +1,7 @@
 import type { QrGenerationDispatchRuntimePolicy } from "@taptolk/application";
 import type { ServerEnvironment } from "@taptolk/config";
 
-export interface StagingQrGenerationDispatchConfiguration {
-  cronSecret: string;
+export interface StagingQrGenerationDispatchRuntimeConfiguration {
   publisher: {
     queueName: string;
     requestTimeoutMs: number;
@@ -15,19 +14,19 @@ export interface StagingQrGenerationDispatchConfiguration {
   runtime: QrGenerationDispatchRuntimePolicy;
 }
 
-export function buildStagingQrGenerationDispatchConfiguration(
+export interface StagingQrGenerationDispatchConfiguration
+  extends StagingQrGenerationDispatchRuntimeConfiguration {
+  cronSecret: string;
+}
+
+export function buildStagingQrGenerationDispatchRuntimeConfiguration(
   environment: ServerEnvironment,
-): StagingQrGenerationDispatchConfiguration | null {
-  if (
-    environment.APP_ENV !== "staging" ||
-    !environment.CRON_SECRET ||
-    !environment.SUPABASE_SECRET_KEY
-  ) {
+): StagingQrGenerationDispatchRuntimeConfiguration | null {
+  if (environment.APP_ENV !== "staging" || !environment.SUPABASE_SECRET_KEY) {
     return null;
   }
 
   return {
-    cronSecret: environment.CRON_SECRET,
     publisher: {
       queueName: environment.QR_GENERATION_QUEUE_NAME,
       requestTimeoutMs: environment.QR_GENERATION_QUEUE_SEND_TIMEOUT_MS,
@@ -42,5 +41,19 @@ export function buildStagingQrGenerationDispatchConfiguration(
       durationBudgetMs: environment.QR_GENERATION_DISPATCH_DURATION_BUDGET_MS,
       leaseSeconds: environment.QR_GENERATION_DISPATCH_LEASE_SECONDS,
     },
+  };
+}
+
+export function buildStagingQrGenerationDispatchConfiguration(
+  environment: ServerEnvironment,
+): StagingQrGenerationDispatchConfiguration | null {
+  const runtime = buildStagingQrGenerationDispatchRuntimeConfiguration(environment);
+  if (!runtime || !environment.CRON_SECRET) {
+    return null;
+  }
+
+  return {
+    cronSecret: environment.CRON_SECRET,
+    ...runtime,
   };
 }
