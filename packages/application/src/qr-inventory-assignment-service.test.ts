@@ -34,6 +34,7 @@ function protectedPlate(value: string): ProtectedVehiclePlate {
 function setup() {
   const result = { affectedCount: 1, resourceId: id("9"), version: 2 };
   const repository: QrInventoryAssignmentRepository = {
+    advanceBatchDelivery: vi.fn(async () => result),
     assign: vi.fn(async () => result),
     commitImport: vi.fn(async () => result),
     list: vi.fn(async () => ({ assets: [], batches: [], imports: [] })),
@@ -54,6 +55,49 @@ function setup() {
 }
 
 describe("QR inventory assignment service", () => {
+  it("allows only the Super Admin delivery command through the application boundary", async () => {
+    const { repository, service } = setup();
+    await service.advanceBatchDelivery({
+      actor: {
+        authorization: {
+          mfaVerified: true,
+          role: "SUPER_ADMIN",
+          scope: { type: "PLATFORM" },
+        },
+        userId: id("20"),
+      },
+      auditRequestId: id("21"),
+      batchId: id("22"),
+      expectedBatchVersion: 7,
+      reason: "confirmed print handoff",
+      targetStatus: "SENT_TO_PRINTER",
+      ...scope,
+    });
+    expect(repository.advanceBatchDelivery).toHaveBeenCalledWith({
+      auditRequestId: id("21"),
+      batchId: id("22"),
+      expectedBatchVersion: 7,
+      reason: "confirmed print handoff",
+      targetStatus: "SENT_TO_PRINTER",
+    });
+  });
+
+  it("rejects delivery progression from a site-scoped role", async () => {
+    const { repository, service } = setup();
+    await expect(
+      service.advanceBatchDelivery({
+        actor,
+        auditRequestId: id("23"),
+        batchId: id("24"),
+        expectedBatchVersion: 7,
+        reason: "must stay centralized",
+        targetStatus: "SENT_TO_PRINTER",
+        ...scope,
+      }),
+    ).rejects.toThrow("Admin action denied: ROLE_FORBIDDEN");
+    expect(repository.advanceBatchDelivery).not.toHaveBeenCalled();
+  });
+
   it("returns the scoped redacted inventory read model", async () => {
     const { repository, service } = setup();
     await expect(service.list({ actor })).resolves.toEqual({

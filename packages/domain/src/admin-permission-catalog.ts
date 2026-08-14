@@ -42,6 +42,7 @@ export const ADMIN_PERMISSIONS = [
   "qr-batch:request",
   "qr-batch:sample-approve",
   "qr-batch:generation-approve",
+  "qr-batch:delivery-advance",
   "qr-batch:retry-request",
   "qr-batch:retry",
   "qr-asset:read",

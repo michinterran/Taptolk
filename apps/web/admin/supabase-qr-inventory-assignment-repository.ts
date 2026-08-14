@@ -31,7 +31,9 @@ function mapError(error: { code?: string; message?: string }) {
     message.includes("COUNT_MISMATCH") ||
     message.includes("NOT_DELIVERED") ||
     message.includes("NOT_RECEIVABLE") ||
-    message.includes("EXCEEDS_PENDING")
+    message.includes("EXCEEDS_PENDING") ||
+    message.includes("DELIVERY_TRANSITION") ||
+    message.includes("ASSET_COUNT_MISMATCH")
   ) {
     return new QrInventoryAssignmentRepositoryError("BLOCKED");
   }
@@ -233,6 +235,18 @@ export function createSupabaseQrInventoryAssignmentRepository(
   client: AdminServerClient,
 ): QrInventoryAssignmentRepository {
   return {
+    async advanceBatchDelivery(input) {
+      return assertCommandResult(
+        "advance_batch_delivery",
+        await client.rpc("advance_qr_batch_delivery_as_admin", {
+          p_batch_id: input.batchId,
+          p_expected_version: input.expectedBatchVersion,
+          p_reason: input.reason,
+          p_request_id: input.auditRequestId,
+          p_target_status: input.targetStatus,
+        }),
+      );
+    },
     async assign(input) {
       return assertCommandResult(
         "assign",

@@ -6,6 +6,7 @@ import type {
 import { DataTable, type DataTableColumn, EmptyState, PageHeader, StatusPill } from "@taptolk/ui";
 import type { Route } from "next";
 import Link from "next/link";
+import { advanceQrBatchDelivery } from "../admin/qr-inventory-assignment-actions";
 import type { AdminQrSiteOperationsCopy } from "../content/admin-qr-site-operations-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -14,8 +15,11 @@ import {
   QrInventoryAssignmentView,
 } from "./qr-inventory-assignment-view";
 
+type DeliveryStatus = "DELIVERED" | "PRINTED" | "SENT_TO_PRINTER" | "SHIPPED";
+
 interface QrSiteOperationsViewProps {
   assignmentCopy: InventoryAssignmentCopy;
+  canAdvanceDelivery: boolean;
   canAssign: boolean;
   canRevoke: boolean;
   copy: AdminQrSiteOperationsCopy;
@@ -39,8 +43,17 @@ function statusTone(status: string): "neutral" | "info" | "success" | "warning" 
   return "info";
 }
 
+function nextDeliveryStatus(status: string): DeliveryStatus | null {
+  if (status === "PRINT_FILE_READY") return "SENT_TO_PRINTER";
+  if (status === "SENT_TO_PRINTER") return "PRINTED";
+  if (status === "PRINTED") return "SHIPPED";
+  if (status === "SHIPPED") return "DELIVERED";
+  return null;
+}
+
 export function QrSiteOperationsView({
   assignmentCopy,
+  canAdvanceDelivery,
   canAssign,
   canRevoke,
   copy,
@@ -100,6 +113,46 @@ export function QrSiteOperationsView({
         ),
       header: copy.svgDownload,
       key: "download",
+    },
+    {
+      align: "right",
+      cell: (batch) => {
+        const targetStatus = nextDeliveryStatus(batch.status);
+        return canAdvanceDelivery && targetStatus ? (
+          <form action={advanceQrBatchDelivery}>
+            <input aria-label="batch" name="batchId" type="hidden" value={batch.id} />
+            <input
+              aria-label="batch version"
+              name="expectedVersion"
+              type="hidden"
+              value={batch.version}
+            />
+            <input aria-label="locale" name="locale" type="hidden" value={locale} />
+            <input
+              aria-label="management company"
+              name="managementCompanyId"
+              type="hidden"
+              value={batch.managementCompanyId}
+            />
+            <input aria-label="reason" name="reason" type="hidden" value={copy.deliveryReason} />
+            <input aria-label="site" name="siteId" type="hidden" value={batch.siteId} />
+            <input
+              aria-label="target status"
+              name="targetStatus"
+              type="hidden"
+              value={targetStatus}
+            />
+            <input aria-label="tenant" name="tenantId" type="hidden" value={site.tenantId} />
+            <button className="tt-button tt-button--compact" type="submit">
+              {copy.deliveryActionLabels[targetStatus]}
+            </button>
+          </form>
+        ) : (
+          <span className="admin-catalog-read-only">—</span>
+        );
+      },
+      header: copy.deliveryAction,
+      key: "delivery-action",
     },
   ] satisfies Array<DataTableColumn<QrOperationsBatch>>;
 
@@ -180,6 +233,7 @@ export function QrSiteOperationsView({
             <div>
               <span className="admin-hierarchy-label">{copy.eyebrow}</span>
               <h2>{copy.batchCount}</h2>
+              <p>{copy.deliveryDescription}</p>
             </div>
           </header>
           <DataTable

@@ -157,6 +157,7 @@ export default async function QrSiteOperationsPage({
       assetReplaced: messages["admin.qr.status.assetReplaced"],
       assetRevoked: messages["admin.qr.status.assetRevoked"],
       batchReceived: messages["admin.qr.status.batchReceived"],
+      batchDeliveryAdvanced: ADMIN_QR_SITE_OPERATIONS_COPY[locale].deliveryAdvancedStatus,
       batchReceiptRecorded: messages["admin.qr.status.batchReceiptRecorded"],
       importCommitted: messages["admin.qr.status.importCommitted"],
       importValidated: messages["admin.qr.status.importValidated"],
@@ -167,6 +168,10 @@ export default async function QrSiteOperationsPage({
           assignmentCopy={
             assignmentCopy(messages as Readonly<Record<string, string>>) as InventoryAssignmentCopy
           }
+          canAdvanceDelivery={roleHasPermission(
+            context.decision.membership.role,
+            "qr-batch:delivery-advance",
+          )}
           canAssign={roleHasPermission(context.decision.membership.role, "qr-asset:assign")}
           canRevoke={roleHasPermission(context.decision.membership.role, "qr-asset:revoke")}
           copy={ADMIN_QR_SITE_OPERATIONS_COPY[locale]}

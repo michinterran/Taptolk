@@ -157,6 +157,8 @@ describe("admin RBAC", () => {
     expect(roleHasPermission("SITE_ADMIN", "qr-batch:generation-approve")).toBe(false);
     expect(roleHasPermission("MANAGEMENT_ADMIN", "qr-batch:generation-approve")).toBe(false);
     expect(roleHasPermission("SUPER_ADMIN", "qr-batch:generation-approve")).toBe(true);
+    expect(roleHasPermission("SUPER_ADMIN", "qr-batch:delivery-advance")).toBe(true);
+    expect(roleHasPermission("PLATFORM_OPERATOR", "qr-batch:delivery-advance")).toBe(false);
   });
 
   it("lets Site Operators assign QR assets without issuing or revoking them", () => {

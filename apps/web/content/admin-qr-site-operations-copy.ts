@@ -15,6 +15,11 @@ export interface AdminQrSiteOperationsCopy {
   pendingActivation: string;
   batchCount: string;
   batchStatusLabels: Readonly<Record<string, string>>;
+  deliveryAction: string;
+  deliveryActionLabels: Readonly<Record<string, string>>;
+  deliveryAdvancedStatus: string;
+  deliveryDescription: string;
+  deliveryReason: string;
 }
 
 export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSiteOperationsCopy>> =
@@ -45,6 +50,17 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
         SENT_TO_PRINTER: "Sent to printer",
         SHIPPED: "Shipped",
       },
+      deliveryAction: "Next delivery stage",
+      deliveryActionLabels: {
+        DELIVERED: "Confirm delivery",
+        PRINTED: "Confirm printing",
+        SENT_TO_PRINTER: "Confirm print handoff",
+        SHIPPED: "Confirm shipment",
+      },
+      deliveryAdvancedStatus: "The QR production and delivery workflow advanced one stage.",
+      deliveryDescription:
+        "Super Admin confirms each real print and delivery event. The receiving site records inventory only after delivery.",
+      deliveryReason: "Operator-confirmed print and delivery stage",
       description:
         "Manage the QR assets already issued to this site. Taptolk supplies dynamic QR SVG files; site-specific sticker artwork is handled separately.",
       eyebrow: "Site QR operations",
@@ -88,6 +104,17 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
         SENT_TO_PRINTER: "출력 전달",
         SHIPPED: "배송 중",
       },
+      deliveryAction: "다음 배송 단계",
+      deliveryActionLabels: {
+        DELIVERED: "배송 완료 확인",
+        PRINTED: "출력 완료 확인",
+        SENT_TO_PRINTER: "출력 전달 확인",
+        SHIPPED: "배송 시작 확인",
+      },
+      deliveryAdvancedStatus: "QR 제작·배송 단계가 다음 상태로 전환되었습니다.",
+      deliveryDescription:
+        "슈퍼어드민이 실제 출력·배송 사건을 단계별로 확인합니다. 배송 완료 후 받는 사이트가 입고를 기록합니다.",
+      deliveryReason: "운영자가 출력·배송 단계를 확인함",
       description:
         "이 사이트에 발행된 QR 자산을 운영합니다. Taptolk은 동적 QR SVG만 제공하며 사이트별 스티커 디자인은 별도로 적용합니다.",
       eyebrow: "사이트 QR 운영",

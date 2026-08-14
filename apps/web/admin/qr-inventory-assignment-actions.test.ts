@@ -8,6 +8,7 @@ const managementCompanyId = id("2");
 const siteId = id("3");
 
 const mocks = vi.hoisted(() => ({
+  advanceBatchDelivery: vi.fn(),
   assign: vi.fn(),
   commitImport: vi.fn(),
   list: vi.fn(),
@@ -35,7 +36,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("../auth/admin-authorization", () => ({
   toAdminAuthorizationContext: () => ({
     mfaVerified: true,
-    role: "SITE_ADMIN",
+    role: "SUPER_ADMIN",
     scope: {
       managementCompanyId,
       siteId,
@@ -47,7 +48,7 @@ vi.mock("../auth/admin-authorization", () => ({
 
 vi.mock("../auth/page-guard", () => ({
   requireReadyAdminContext: vi.fn(async () => ({
-    decision: { membership: { role: "SITE_ADMIN" } },
+    decision: { membership: { role: "SUPER_ADMIN" } },
     mfaLevel: "aal2",
     userId: id("4"),
   })),
@@ -59,6 +60,7 @@ vi.mock("../auth/server-client", () => ({
 
 vi.mock("./supabase-qr-inventory-assignment-repository", () => ({
   createSupabaseQrInventoryAssignmentRepository: () => ({
+    advanceBatchDelivery: mocks.advanceBatchDelivery,
     assign: mocks.assign,
     commitImport: mocks.commitImport,
     list: mocks.list,
@@ -82,6 +84,7 @@ vi.mock("./vehicle-plate-protector", () => ({
 }));
 
 import {
+  advanceQrBatchDelivery,
   assignQrAsset,
   commitVehicleImport,
   validateVehicleImport,
@@ -102,6 +105,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   const result = { affectedCount: 1, resourceId: id("9"), version: 2 };
   for (const command of [
+    mocks.advanceBatchDelivery,
     mocks.assign,
     mocks.commitImport,
     mocks.receiveBatch,
@@ -125,6 +129,25 @@ beforeEach(() => {
 });
 
 describe("QR inventory assignment server actions", () => {
+  it("routes a Super Admin delivery transition through the application service", async () => {
+    const formData = baseFormData();
+    formData.set("batchId", id("12"));
+    formData.set("expectedVersion", "7");
+    formData.set("targetStatus", "SENT_TO_PRINTER");
+
+    await expect(advanceQrBatchDelivery(formData)).rejects.toThrow(
+      `REDIRECT:/ko/admin/qr-inventory/sites/${siteId}?status=batchDeliveryAdvanced`,
+    );
+
+    expect(mocks.advanceBatchDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        batchId: id("12"),
+        expectedBatchVersion: 7,
+        targetStatus: "SENT_TO_PRINTER",
+      }),
+    );
+  });
+
   it("routes a protected manual assignment through the application service", async () => {
     const formData = baseFormData();
     formData.set("qrAssetId", id("10"));

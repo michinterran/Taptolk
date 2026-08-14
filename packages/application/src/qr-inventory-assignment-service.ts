@@ -44,6 +44,8 @@ export interface QrInventoryAssignmentCommandResult {
   version: number;
 }
 
+export type QrBatchDeliveryStatus = "DELIVERED" | "PRINTED" | "SENT_TO_PRINTER" | "SHIPPED";
+
 export interface QrInventoryAssignmentBatchItem {
   batchCode: string;
   id: string;
@@ -102,6 +104,13 @@ export interface QrInventoryAssignmentReadModel {
 }
 
 export interface QrInventoryAssignmentRepository {
+  advanceBatchDelivery(input: {
+    auditRequestId: string;
+    batchId: string;
+    expectedBatchVersion: number;
+    reason: string;
+    targetStatus: QrBatchDeliveryStatus;
+  }): Promise<QrInventoryAssignmentCommandResult>;
   assign(input: {
     auditRequestId: string;
     expectedAssetVersion: number;
@@ -158,6 +167,7 @@ export class QrInventoryAssignmentError extends Error {
     readonly code:
       | "EMPTY_CSV"
       | "INVALID_CSV_HEADER"
+      | "INVALID_DELIVERY_STATUS"
       | "INVALID_ID"
       | "INVALID_QUANTITY"
       | "INVALID_REASON"
@@ -185,6 +195,16 @@ function assertVersion(value: number): void {
 function assertQuantity(value: number): void {
   if (!Number.isInteger(value) || value < 1 || value > 100) {
     throw new QrInventoryAssignmentError("INVALID_QUANTITY");
+  }
+}
+
+function assertDeliveryStatus(value: string): asserts value is QrBatchDeliveryStatus {
+  if (
+    !(["DELIVERED", "PRINTED", "SENT_TO_PRINTER", "SHIPPED"] as const).includes(
+      value as QrBatchDeliveryStatus,
+    )
+  ) {
+    throw new QrInventoryAssignmentError("INVALID_DELIVERY_STATUS");
   }
 }
 
@@ -254,6 +274,34 @@ export class QrInventoryAssignmentService {
     private readonly repository: QrInventoryAssignmentRepository,
     private readonly plateProtector: VehiclePlateProtector,
   ) {}
+
+  async advanceBatchDelivery(input: {
+    actor: QrInventoryAssignmentActor;
+    auditRequestId: string;
+    batchId: string;
+    expectedBatchVersion: number;
+    managementCompanyId: string;
+    reason: string;
+    siteId: string;
+    targetStatus: string;
+    tenantId: string;
+  }): Promise<QrInventoryAssignmentCommandResult> {
+    assertUuid(input.actor.userId);
+    assertAdminAuthorized(
+      authorizeAdminAction(input.actor.authorization, "qr-batch:delivery-advance", input),
+    );
+    assertUuid(input.auditRequestId);
+    assertUuid(input.batchId);
+    assertVersion(input.expectedBatchVersion);
+    assertDeliveryStatus(input.targetStatus);
+    return this.repository.advanceBatchDelivery({
+      auditRequestId: input.auditRequestId,
+      batchId: input.batchId,
+      expectedBatchVersion: input.expectedBatchVersion,
+      reason: normalizeReason(input.reason),
+      targetStatus: input.targetStatus,
+    });
+  }
 
   async list(input: {
     actor: QrInventoryAssignmentActor;
