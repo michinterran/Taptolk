@@ -26,21 +26,30 @@ const logoDataUri = readFile(
 export const POST = handleCallback(
   async (message, metadata) => {
     const requestId = crypto.randomUUID();
+    const logger = createLogger({
+      requestId,
+      service: APP_IDENTITY.serviceNames.web,
+    });
     const result = await handleQrGenerationPipelineMessage(message, metadata, {
       async createWorkerRuntime() {
-        return createQrQueueWorkerRuntime(process.env, {
+        const worker = await createQrQueueWorkerRuntime(process.env, {
           taptolkLogoDataUri: await logoDataUri,
           visibilityTimeoutSeconds: QR_GENERATION_VERCEL_FUNCTION_VISIBILITY_TIMEOUT_SECONDS,
         });
+        if (worker.ready) {
+          logger.info("worker.qr_queue.ready");
+        } else {
+          logger.warn("worker.qr_queue.configuration_unavailable", {
+            missingVariables: worker.missingVariables,
+          });
+        }
+        return worker;
       },
       readDispatchConfiguration: readStagingQrGenerationDispatchRuntimeConfiguration,
       runDispatch: runStagingQrGenerationDispatch,
     });
 
-    createLogger({
-      requestId,
-      service: APP_IDENTITY.serviceNames.web,
-    }).info("qr_generation.pipeline.completed", {
+    logger.info("qr_generation.pipeline.completed", {
       dispatchClaimedCount: result.dispatchClaimedCount,
       workerStatus: result.workerStatus,
     });
