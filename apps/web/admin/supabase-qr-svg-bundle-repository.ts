@@ -2,7 +2,6 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 import { QrSvgBundleError, type QrSvgBundleRepository } from "@taptolk/application";
-import { buildSvgExportBundle } from "@taptolk/qr-engine";
 import type { createAdminServerClient } from "../auth/server-client";
 import type { createAdminServiceClient } from "../auth/service-client";
 
@@ -17,25 +16,10 @@ type BatchRow = {
   tenant_id: string;
 };
 
-type GenerationJobRow = {
-  generation_revision: number;
-  id: string;
-};
-
-type GenerationItemRow = {
-  ordinal: number;
-  qr_asset_id: string;
-};
-
-type AssetRow = {
-  human_code: string;
-  id: string;
-};
-
-type RenderedAssetRow = {
+type PrintExportRow = {
+  byte_size: number;
   checksum_sha256: string;
-  print_svg_path: string;
-  qr_asset_id: string;
+  storage_path: string;
 };
 
 function isBatchRow(value: unknown): value is BatchRow {
@@ -50,55 +34,22 @@ function isBatchRow(value: unknown): value is BatchRow {
   );
 }
 
-function isGenerationJobRow(value: unknown): value is GenerationJobRow {
-  const candidate = value as Partial<GenerationJobRow> | null;
+function isPrintExportRow(value: unknown): value is PrintExportRow {
+  const candidate = value as Partial<PrintExportRow> | null;
   return (
     Boolean(candidate) &&
-    typeof candidate?.generation_revision === "number" &&
-    typeof candidate.id === "string"
-  );
-}
-
-function isGenerationItemRow(value: unknown): value is GenerationItemRow {
-  const candidate = value as Partial<GenerationItemRow> | null;
-  return (
-    Boolean(candidate) &&
-    typeof candidate?.ordinal === "number" &&
-    typeof candidate.qr_asset_id === "string"
-  );
-}
-
-function isAssetRow(value: unknown): value is AssetRow {
-  const candidate = value as Partial<AssetRow> | null;
-  return (
-    Boolean(candidate) &&
-    typeof candidate?.human_code === "string" &&
-    typeof candidate.id === "string"
-  );
-}
-
-function isRenderedAssetRow(value: unknown): value is RenderedAssetRow {
-  const candidate = value as Partial<RenderedAssetRow> | null;
-  return (
-    Boolean(candidate) &&
+    typeof candidate?.byte_size === "number" &&
     typeof candidate?.checksum_sha256 === "string" &&
-    typeof candidate.print_svg_path === "string" &&
-    typeof candidate.qr_asset_id === "string"
+    typeof candidate.storage_path === "string"
   );
 }
 
-function assertRows<T>(rows: unknown, predicate: (value: unknown) => value is T): readonly T[] {
-  if (!Array.isArray(rows) || !rows.every(predicate)) {
-    throw new QrSvgBundleError("NOT_READY");
-  }
-  return rows;
-}
-
-async function readSvg(
+async function readArtifact(
   serviceClient: AdminServiceClient,
   path: string,
   checksumSha256: string,
-): Promise<string> {
+  byteSize: number,
+): Promise<Uint8Array> {
   const result = await serviceClient.storage.from("qr-artifacts").download(path);
   if (result.error) {
     throw new QrSvgBundleError("NOT_READY");
@@ -108,7 +59,10 @@ async function readSvg(
   if (actualChecksum !== checksumSha256) {
     throw new QrSvgBundleError("NOT_READY");
   }
-  return new TextDecoder().decode(bytes);
+  if (bytes.byteLength !== byteSize) {
+    throw new QrSvgBundleError("NOT_READY");
+  }
+  return bytes;
 }
 
 export function createSupabaseQrSvgBundleRepository(
@@ -126,71 +80,28 @@ export function createSupabaseQrSvgBundleRepository(
         throw new QrSvgBundleError("NOT_READY");
       }
       const batch = batchResult.data;
-      const jobResult = await serviceClient
-        .from("qr_generation_jobs")
-        .select("id, generation_revision")
+      const exportResult = await serviceClient
+        .from("print_exports")
+        .select("storage_path, checksum_sha256, byte_size")
         .eq("qr_batch_id", batch.id)
-        .eq("status", "COMPLETED")
-        .order("generation_revision", { ascending: false })
+        .eq("export_type", "ZIP")
+        .eq("status", "READY")
+        .order("export_revision", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (jobResult.error || !isGenerationJobRow(jobResult.data)) {
+      if (exportResult.error || !isPrintExportRow(exportResult.data)) {
         throw new QrSvgBundleError("NOT_READY");
       }
-      const itemResult = await serviceClient
-        .from("qr_generation_items")
-        .select("ordinal, qr_asset_id")
-        .eq("generation_job_id", jobResult.data.id)
-        .order("ordinal", { ascending: true });
-      const items = assertRows(itemResult.data, isGenerationItemRow);
-      if (itemResult.error || items.length !== batch.requested_quantity) {
-        throw new QrSvgBundleError("NOT_READY");
-      }
-      const assetIds = items.map((item) => item.qr_asset_id);
-      const [assetResult, renderedResult] = await Promise.all([
-        serviceClient.from("qr_assets").select("id, human_code").in("id", assetIds),
-        serviceClient
-          .from("rendered_assets")
-          .select("qr_asset_id, print_svg_path, checksum_sha256")
-          .eq("tenant_id", batch.tenant_id)
-          .eq("site_id", batch.site_id)
-          .eq("render_version", jobResult.data.generation_revision)
-          .eq("quality_status", "PASSED")
-          .in("qr_asset_id", assetIds),
-      ]);
-      if (assetResult.error || renderedResult.error) {
-        throw new QrSvgBundleError("NOT_READY");
-      }
-      const assetsById = new Map(
-        assertRows(assetResult.data, isAssetRow).map((row) => [row.id, row]),
+      const bytes = await readArtifact(
+        serviceClient,
+        exportResult.data.storage_path,
+        exportResult.data.checksum_sha256,
+        exportResult.data.byte_size,
       );
-      const renderedByAssetId = new Map(
-        assertRows(renderedResult.data, isRenderedAssetRow).map((row) => [row.qr_asset_id, row]),
-      );
-      const exportItems = await Promise.all(
-        items.map(async (item) => {
-          const asset = assetsById.get(item.qr_asset_id);
-          const rendered = renderedByAssetId.get(item.qr_asset_id);
-          if (!asset || !rendered) {
-            throw new QrSvgBundleError("NOT_READY");
-          }
-          return {
-            humanCode: asset.human_code,
-            ordinal: item.ordinal,
-            printSvg: await readSvg(
-              serviceClient,
-              rendered.print_svg_path,
-              rendered.checksum_sha256,
-            ),
-            renderChecksumSha256: rendered.checksum_sha256,
-          };
-        }),
-      );
-      const artifact = buildSvgExportBundle(batch.batch_code, exportItems);
       return {
-        bytes: artifact.bytes,
-        checksumSha256: artifact.checksumSha256,
-        filename: artifact.filename,
+        bytes,
+        checksumSha256: exportResult.data.checksum_sha256,
+        filename: `${batch.batch_code}-svg-bundle.zip`,
         mimeType: "application/zip",
       };
     },
