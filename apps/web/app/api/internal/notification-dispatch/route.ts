@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { APP_IDENTITY } from "@taptolk/config";
 import { createLogger } from "@taptolk/observability";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { handleScheduledNotificationDispatchRequest } from "../../../../internal/scheduled-notification-dispatch-handler";
 import {
   NotificationDispatchUnavailableError,
@@ -12,6 +12,7 @@ import {
   readScheduledNotificationDispatchConfiguration,
 } from "../../../../notification-reply/notification-reply-runtime";
 import { notificationWorkerAuthorized } from "../../../../notification-reply/owner-response-route";
+import { captureSolapiAccountHealth } from "../../../../notification-reply/solapi-operations-runtime";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -42,6 +43,17 @@ export async function GET(request: Request) {
       { errorCode: result.status },
     );
   }
+  if (result.status === 200) {
+    after(async () => {
+      try {
+        await captureSolapiAccountHealth("DISPATCH");
+      } catch {
+        createLogger({ requestId, service: APP_IDENTITY.serviceNames.web }).warn(
+          "solapi.balance.capture_failed",
+        );
+      }
+    });
+  }
   return response(requestId, result.body, result.status);
 }
 
@@ -52,10 +64,17 @@ export async function POST(request: Request) {
     return response(requestId, { error: { code: "UNAUTHORIZED" }, meta: { requestId } }, 401);
   }
   try {
-    return response(requestId, {
-      data: await runNotificationDispatchBatch({ workerId: `manual-${requestId}` }),
-      meta: { requestId },
+    const data = await runNotificationDispatchBatch({ workerId: `manual-${requestId}` });
+    after(async () => {
+      try {
+        await captureSolapiAccountHealth("DISPATCH");
+      } catch {
+        createLogger({ requestId, service: APP_IDENTITY.serviceNames.web }).warn(
+          "solapi.balance.capture_failed",
+        );
+      }
     });
+    return response(requestId, { data, meta: { requestId } });
   } catch (error) {
     if (error instanceof NotificationDispatchUnavailableError) {
       return response(requestId, { error: { code: "UNAVAILABLE" }, meta: { requestId } }, 503);

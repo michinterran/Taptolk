@@ -131,6 +131,7 @@ export class SolapiSmsNotificationProvider implements OwnerNotificationProvider 
         from: this.config.from,
         text: buildOwnerSmsText(input.notification),
         autoTypeDetect: true,
+        customFields: { taptolkDeliveryKey: input.idempotencyKey },
       });
       return { providerMessageId: providerMessageId(result) };
     } catch (error) {

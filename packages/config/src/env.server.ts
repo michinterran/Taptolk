@@ -37,6 +37,8 @@ const serverEnvironmentSchema = z
     OWNER_NOTIFICATION_PROVIDER: z.enum(["mock", "solapi-sms"]).default("mock"),
     SOLAPI_API_KEY: optionalApiKeySchema,
     SOLAPI_API_SECRET: optionalSecretSchema,
+    SOLAPI_BALANCE_STALE_MINUTES: integerEnvironmentSchema(1_500, 60, 10_080),
+    SOLAPI_BALANCE_WARNING_KRW: integerEnvironmentSchema(5_000, 0, 1_000_000_000),
     SOLAPI_SMS_FROM: z.preprocess(
       emptyStringToUndefined,
       z
@@ -44,6 +46,7 @@ const serverEnvironmentSchema = z
         .regex(/^[0-9]{8,14}$/u)
         .optional(),
     ),
+    SOLAPI_WEBHOOK_SECRET: optionalSecretSchema,
     OWNER_SESSION_TTL_SECONDS: integerEnvironmentSchema(43_200, 300, 86_400),
     OWNER_STAGING_MOCK_OTP: z.preprocess(
       emptyStringToUndefined,
@@ -173,7 +176,12 @@ const serverEnvironmentSchema = z
       });
     }
     if (environment.OWNER_NOTIFICATION_PROVIDER === "solapi-sms") {
-      for (const key of ["SOLAPI_API_KEY", "SOLAPI_API_SECRET", "SOLAPI_SMS_FROM"] as const) {
+      for (const key of [
+        "SOLAPI_API_KEY",
+        "SOLAPI_API_SECRET",
+        "SOLAPI_SMS_FROM",
+        "SOLAPI_WEBHOOK_SECRET",
+      ] as const) {
         if (!environment[key]) {
           context.addIssue({
             code: "custom",
@@ -191,7 +199,12 @@ const serverEnvironmentSchema = z
       });
     }
     if (environment.OWNER_VERIFICATION_PROVIDER === "solapi-sms") {
-      for (const key of ["SOLAPI_API_KEY", "SOLAPI_API_SECRET", "SOLAPI_SMS_FROM"] as const) {
+      for (const key of [
+        "SOLAPI_API_KEY",
+        "SOLAPI_API_SECRET",
+        "SOLAPI_SMS_FROM",
+        "SOLAPI_WEBHOOK_SECRET",
+      ] as const) {
         if (!environment[key]) {
           context.addIssue({
             code: "custom",

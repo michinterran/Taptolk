@@ -9972,6 +9972,82 @@ body:has(.tt-m-shell)::before {
   opacity: 0.55;
 }
 
+.tt-button--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.qr-site-filter {
+  align-items: end;
+  border-bottom: 1px solid var(--tt-color-border);
+  display: grid;
+  gap: var(--tt-space-3);
+  grid-template-columns: minmax(14rem, 2fr) repeat(3, minmax(10rem, 1fr)) auto auto;
+  margin-bottom: var(--tt-card-gap);
+  padding-bottom: var(--tt-card-gap);
+}
+
+.qr-site-filter .admin-field,
+.qr-site-page-size-form .admin-field {
+  min-width: 0;
+}
+
+.qr-site-filter .admin-field > span,
+.qr-site-page-size-form .admin-field > span {
+  display: block;
+  margin-bottom: var(--tt-space-1);
+}
+
+.qr-site-filter input,
+.qr-site-filter select,
+.qr-site-page-size-form select {
+  min-width: 0;
+  width: 100%;
+}
+
+.qr-site-results-bar {
+  align-items: baseline;
+  display: flex;
+  gap: var(--tt-space-3);
+  justify-content: space-between;
+  margin-bottom: var(--tt-space-3);
+}
+
+.qr-site-results-bar span {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+}
+
+.qr-site-pagination {
+  align-items: end;
+  border-top: 1px solid var(--tt-color-border);
+  display: flex;
+  gap: var(--tt-space-2);
+  justify-content: center;
+  margin-top: var(--tt-card-gap);
+  padding-top: var(--tt-card-gap);
+}
+
+.qr-site-pagination > span[aria-current="page"] {
+  align-self: center;
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-meta-font-size);
+  min-width: 4rem;
+  text-align: center;
+}
+
+.qr-site-page-size-form {
+  align-items: end;
+  display: flex;
+  gap: var(--tt-space-2);
+  margin-left: var(--tt-space-3);
+}
+
+.qr-site-page-size-form .admin-field {
+  min-width: 7rem;
+}
+
 /* Panel beside a sticky preview rail. */
 .qr-wizard__columns {
   align-items: start;
@@ -10270,6 +10346,14 @@ body:has(.tt-m-shell)::before {
 
   .qr-choice-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qr-site-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qr-site-filter .admin-field:first-child {
+    grid-column: 1 / -1;
   }
 }
 
@@ -12968,6 +13052,15 @@ html[data-console-theme="light"] body:has(.admin-dashboard-shell) {
 
 .operations-rail-section dd {
   font-weight: var(--tt-font-weight-semibold);
+  max-width: 55%;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.operations-rail-section > p {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-xs);
+  margin: 0;
 }
 
 .operations-rail-section--gate > header svg {
