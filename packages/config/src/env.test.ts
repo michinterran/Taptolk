@@ -24,6 +24,8 @@ describe("environment contracts", () => {
     expect(environment.QR_GENERATION_DELIVERY_RETRY_JITTER_RATIO).toBe(0.2);
     expect(environment.PRIVACY_CLEANUP_DURATION_BUDGET_MS).toBe(45_000);
     expect(environment.PRIVACY_CLEANUP_TENANT_LIMIT).toBe(25);
+    expect(environment.SOLAPI_BALANCE_STALE_MINUTES).toBe(1_500);
+    expect(environment.SOLAPI_BALANCE_WARNING_KRW).toBe(5_000);
   });
 
   it("rejects a production environment without server secrets", () => {
@@ -48,11 +50,16 @@ describe("environment contracts", () => {
       OWNER_NOTIFICATION_PROVIDER: "solapi-sms",
       SOLAPI_API_KEY: "NCSAYU7YDBXYORXC",
       SOLAPI_API_SECRET: `solapi-api-secret-${"b".repeat(24)}`,
+      SOLAPI_BALANCE_STALE_MINUTES: "1440",
+      SOLAPI_BALANCE_WARNING_KRW: "10000",
       SOLAPI_SMS_FROM: "0212345678",
+      SOLAPI_WEBHOOK_SECRET: `solapi-webhook-secret-${"c".repeat(24)}`,
     });
 
     expect(environment).toMatchObject({
       OWNER_NOTIFICATION_PROVIDER: "solapi-sms",
+      SOLAPI_BALANCE_STALE_MINUTES: 1_440,
+      SOLAPI_BALANCE_WARNING_KRW: 10_000,
       SOLAPI_SMS_FROM: "0212345678",
     });
     expect(Object.keys(environment)).not.toContain("NEXT_PUBLIC_SOLAPI_API_SECRET");
@@ -67,6 +74,15 @@ describe("environment contracts", () => {
     });
 
     expect(environment.OWNER_VERIFICATION_PROVIDER).toBe("solapi-sms");
+  });
+
+  it.each([
+    { SOLAPI_BALANCE_STALE_MINUTES: "59" },
+    { SOLAPI_BALANCE_STALE_MINUTES: "10081" },
+    { SOLAPI_BALANCE_WARNING_KRW: "-1" },
+    { SOLAPI_BALANCE_WARNING_KRW: "1000000001" },
+  ])("rejects invalid SOLAPI monitoring policy %o", (input) => {
+    expect(() => parseServerEnvironment(input)).toThrow();
   });
 
   it("rejects the unimplemented AlimTalk provider until business approval", () => {

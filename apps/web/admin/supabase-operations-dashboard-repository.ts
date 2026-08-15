@@ -5,7 +5,9 @@ import type {
   OperationsDashboardModel,
   OperationsDashboardRepository,
   OperationsSitePerformance,
+  SolapiOperationsHealthModel,
 } from "@taptolk/application";
+import { parseServerEnvironment } from "@taptolk/config";
 import type { createAdminServerClient } from "../auth/server-client";
 
 type AdminServerClient = NonNullable<Awaited<ReturnType<typeof createAdminServerClient>>>;
@@ -129,12 +131,48 @@ function mapOperationsDashboard(value: unknown): OperationsDashboardModel {
   };
 }
 
+function mapNullableBoolean(value: unknown): boolean | null {
+  if (value === null) return null;
+  if (typeof value !== "boolean") throw new Error("SOLAPI_OPERATIONS_HEALTH_UNAVAILABLE");
+  return value;
+}
+
+function mapSolapiOperationsHealth(value: unknown): SolapiOperationsHealthModel {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("SOLAPI_OPERATIONS_HEALTH_UNAVAILABLE");
+  }
+  const row = value as Record<string, unknown>;
+  const balanceStatus = row.balance_status;
+  if (
+    typeof row.fresh_at !== "string" ||
+    !["HEALTHY", "HIDDEN", "LOW", "STALE", "UNAVAILABLE"].includes(String(balanceStatus)) ||
+    typeof row.balance_visible !== "boolean"
+  ) {
+    throw new Error("SOLAPI_OPERATIONS_HEALTH_UNAVAILABLE");
+  }
+  return {
+    balanceAmount: mapNullableNumber(row.balance_amount),
+    balanceAutoRechargeEnabled: mapNullableBoolean(row.balance_auto_recharge_enabled),
+    balanceCapturedAt: mapNullableString(row.balance_captured_at),
+    balanceLowAlertEnabled: mapNullableBoolean(row.balance_low_alert_enabled),
+    balanceStatus: balanceStatus as SolapiOperationsHealthModel["balanceStatus"],
+    balanceVisible: row.balance_visible,
+    balanceWarningThresholdAmount: mapNullableNumber(row.balance_warning_threshold_amount),
+    deliveryDeliveredCount: mapNumber(row, "delivery_delivered_count"),
+    deliveryFailedCount: mapNumber(row, "delivery_failed_count"),
+    deliveryPendingReportCount: mapNumber(row, "delivery_pending_report_count"),
+    freshAt: row.fresh_at,
+    webhookLastReceivedAt: mapNullableString(row.webhook_last_received_at),
+    webhookUnmatchedCount: mapNumber(row, "webhook_unmatched_count"),
+  };
+}
+
 export function createSupabaseOperationsDashboardRepository(
   client: AdminServerClient,
 ): OperationsDashboardRepository {
   return {
     async read(scope) {
-      const result =
+      const dashboardPromise =
         scope.startDate && scope.endDate
           ? await client.rpc("read_operations_command_center_by_range", {
               p_end_date: scope.endDate,
@@ -147,10 +185,20 @@ export function createSupabaseOperationsDashboardRepository(
               p_management_company_id: scope.managementCompanyId ?? null,
               p_site_id: scope.siteId ?? null,
             });
+      const healthPromise = client.rpc("read_solapi_operations_health", {
+        p_balance_stale_minutes: parseServerEnvironment().SOLAPI_BALANCE_STALE_MINUTES,
+        p_management_company_id: scope.managementCompanyId ?? null,
+        p_site_id: scope.siteId ?? null,
+      });
+      const [result, healthResult] = await Promise.all([dashboardPromise, healthPromise]);
       if (result.error) {
         throw new Error("OPERATIONS_DASHBOARD_UNAVAILABLE");
       }
-      return mapOperationsDashboard(result.data);
+      const dashboard = mapOperationsDashboard(result.data);
+      return {
+        ...dashboard,
+        solapiHealth: healthResult.error ? null : mapSolapiOperationsHealth(healthResult.data),
+      };
     },
   };
 }

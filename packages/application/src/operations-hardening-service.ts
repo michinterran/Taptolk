@@ -33,6 +33,24 @@ export interface OperationsDashboardScope {
   startDate?: string;
 }
 
+export type SolapiBalanceStatus = "HEALTHY" | "HIDDEN" | "LOW" | "STALE" | "UNAVAILABLE";
+
+export interface SolapiOperationsHealthModel {
+  balanceAmount: number | null;
+  balanceAutoRechargeEnabled: boolean | null;
+  balanceCapturedAt: string | null;
+  balanceLowAlertEnabled: boolean | null;
+  balanceStatus: SolapiBalanceStatus;
+  balanceVisible: boolean;
+  balanceWarningThresholdAmount: number | null;
+  deliveryDeliveredCount: number;
+  deliveryFailedCount: number;
+  deliveryPendingReportCount: number;
+  freshAt: string;
+  webhookLastReceivedAt: string | null;
+  webhookUnmatchedCount: number;
+}
+
 export interface OperationsDashboardModel {
   activeBlockCount: number;
   activeQrCount: number;
@@ -53,6 +71,7 @@ export interface OperationsDashboardModel {
   dailySeries: readonly OperationsDailyPoint[];
   scopeManagementCompanyName: string | null;
   scopeSiteName: string | null;
+  solapiHealth?: SolapiOperationsHealthModel | null;
   sitePerformance: readonly OperationsSitePerformance[];
   windowDays: number;
 }

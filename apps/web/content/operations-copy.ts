@@ -3,15 +3,20 @@ import type { AppLocale } from "../i18n/config";
 export interface OperationsCopy {
   activeBlocks: string;
   activeQr: string;
+  autoRecharge: string;
   apply: string;
   back: string;
   batches: string;
+  balance: string;
+  balanceThreshold: string;
   contactCount: string;
   cost: string;
   days: string;
   description: string;
   detail: string;
   deliveryGroup: string;
+  delivered: string;
+  deliveryReportPending: string;
   comparePrevious: string;
   comparePreviousActive: string;
   emptySites: string;
@@ -26,6 +31,7 @@ export interface OperationsCopy {
   noTrendData: string;
   liveStatus: string;
   liveUpdating: string;
+  lowBalanceAlert: string;
   manualGates: string;
   manualGatesDescription: string;
   medianResponse: string;
@@ -42,10 +48,16 @@ export interface OperationsCopy {
   paginationLabel: string;
   qrConsole: string;
   qrSnapshotDescription: string;
+  providerHealth: string;
+  providerHealthDescription: string;
+  providerHealthUnavailable: string;
+  providerStatuses: Readonly<Record<string, string>>;
   reviewChecks: string;
   retrying: string;
   safetyGroup: string;
   sent: string;
+  settingDisabled: string;
+  settingEnabled: string;
   siteCount: string;
   siteComparison: string;
   siteComparisonDescription: string;
@@ -88,15 +100,21 @@ export interface OperationsCopy {
   unresolved: string;
   unavailableDescription: string;
   unavailableTitle: string;
+  webhookLastReceived: string;
+  webhookNeverReceived: string;
+  webhookUnmatched: string;
 }
 
 export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Object.freeze({
   en: {
     activeBlocks: "Active caller blocks",
     activeQr: "Active QR assets",
+    autoRecharge: "Automatic recharge",
     apply: "Apply",
     back: "Back to dashboard",
     batches: "Completed QR batches",
+    balance: "SOLAPI balance",
+    balanceThreshold: "Warning threshold",
     contactCount: "Contact requests",
     cost: "Recorded provider cost",
     comparePrevious: "Compare with previous period",
@@ -106,6 +124,8 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
       "Review the last 24 hours of contact, delivery, safety, and inventory signals within your authorized site scope.",
     detail: "View location",
     deliveryGroup: "Notification delivery",
+    delivered: "Device delivered",
+    deliveryReportPending: "Awaiting delivery report",
     emptySites: "No operating locations are available in the selected scope.",
     escalated: "Site office alerts",
     eyebrow: "Operations health",
@@ -118,6 +138,7 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     noTrendData: "No operational events were recorded in this period.",
     liveStatus: "Live status",
     liveUpdating: "Latest operational snapshot",
+    lowBalanceAlert: "Provider low-balance alert",
     manualGates: "On-site checks",
     manualGatesDescription:
       "Real-device scanning, accessibility, contrast, and physical print quality remain operator checks.",
@@ -135,10 +156,23 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     paginationLabel: "Managed location pagination",
     qrConsole: "Open QR operations",
     qrSnapshotDescription: "Same authorized scope as the QR console.",
+    providerHealth: "SOLAPI delivery health",
+    providerHealthDescription:
+      "Provider-confirmed delivery, failures, webhook freshness, and platform balance state.",
+    providerHealthUnavailable: "Provider health is temporarily unavailable.",
+    providerStatuses: {
+      HEALTHY: "Healthy",
+      HIDDEN: "Platform operators only",
+      LOW: "Low balance",
+      STALE: "Balance check is stale",
+      UNAVAILABLE: "Unavailable",
+    },
     reviewChecks: "Review checks",
     retrying: "Retrying",
     safetyGroup: "Safety and review",
     sent: "Sent or delivered",
+    settingDisabled: "Off",
+    settingEnabled: "On",
     siteCount: "Authorized sites",
     siteComparison: "Managed-location comparison",
     siteComparisonDescription:
@@ -208,13 +242,19 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     unavailableDescription:
       "The approved operations data source is temporarily unavailable. No operational figures are shown until it recovers.",
     unavailableTitle: "Operations data is temporarily unavailable",
+    webhookLastReceived: "Last delivery webhook",
+    webhookNeverReceived: "No delivery webhook recorded",
+    webhookUnmatched: "Unmatched webhooks",
   },
   ko: {
     activeBlocks: "활성 방문자 차단",
     activeQr: "활성 QR",
+    autoRecharge: "자동 충전",
     apply: "적용",
     back: "대시보드로 돌아가기",
     batches: "완료된 QR 제작 묶음",
+    balance: "SOLAPI 잔액",
+    balanceThreshold: "잔액 경고 기준",
     contactCount: "차량 연락 요청",
     cost: "기록된 발송 비용",
     comparePrevious: "이전 기간과 비교",
@@ -224,6 +264,8 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
       "승인된 관리 현장 범위에서 최근 24시간의 연락, 알림, 안전 검토와 QR 운영 신호를 확인합니다.",
     detail: "현장 보기",
     deliveryGroup: "알림 전달",
+    delivered: "단말 도달 완료",
+    deliveryReportPending: "배송결과 대기",
     emptySites: "선택한 범위에 표시할 운영 현장이 없습니다.",
     escalated: "관리사무소 알림",
     eyebrow: "운영 건전성",
@@ -236,6 +278,7 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     noTrendData: "선택한 기간에 기록된 운영 이벤트가 없습니다.",
     liveStatus: "실시간 상태",
     liveUpdating: "최신 운영 스냅샷",
+    lowBalanceAlert: "SOLAPI 잔액 알림",
     manualGates: "현장 확인 항목",
     manualGatesDescription:
       "실기기 스캔, 접근성, 화면 대비와 실제 인쇄 품질은 운영자가 확인합니다.",
@@ -253,10 +296,23 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     paginationLabel: "관리 현장 페이지 이동",
     qrConsole: "QR 운영 관리 열기",
     qrSnapshotDescription: "QR 운영 관리와 동일한 승인 범위입니다.",
+    providerHealth: "SOLAPI 전송 상태",
+    providerHealthDescription:
+      "SOLAPI가 확정한 도달·실패, 웹훅 최신성과 플랫폼 잔액 상태를 확인합니다.",
+    providerHealthUnavailable: "현재 SOLAPI 운영 상태를 불러올 수 없습니다.",
+    providerStatuses: {
+      HEALTHY: "정상",
+      HIDDEN: "플랫폼 운영자만 확인",
+      LOW: "잔액 부족",
+      STALE: "잔액 확인 지연",
+      UNAVAILABLE: "확인 불가",
+    },
     reviewChecks: "점검 항목 보기",
     retrying: "재시도 중",
     safetyGroup: "안전·검토",
     sent: "전송·도달",
+    settingDisabled: "꺼짐",
+    settingEnabled: "켜짐",
     siteCount: "관리 현장",
     siteComparison: "관리 현장별 비교",
     siteComparisonDescription:
@@ -326,5 +382,8 @@ export const OPERATIONS_COPY: Readonly<Record<AppLocale, OperationsCopy>> = Obje
     unavailableDescription:
       "승인된 운영 데이터 원본에 일시적으로 연결할 수 없습니다. 복구될 때까지 운영 수치를 임의로 표시하지 않습니다.",
     unavailableTitle: "운영 데이터를 불러올 수 없습니다",
+    webhookLastReceived: "마지막 배송결과 웹훅",
+    webhookNeverReceived: "수신된 배송결과 웹훅 없음",
+    webhookUnmatched: "연결되지 않은 웹훅",
   },
 });

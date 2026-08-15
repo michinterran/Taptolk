@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  Broadcast,
   CalendarBlank,
   CaretLeft,
   CaretRight,
@@ -126,6 +127,8 @@ export function OperationsDashboardView({
 }) {
   const number = new Intl.NumberFormat(locale);
   const decimal = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+  const won = new Intl.NumberFormat(locale, { currency: "KRW", style: "currency" });
+  const dateTime = new Intl.DateTimeFormat(locale, { dateStyle: "short", timeStyle: "short" });
   const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
   const todayKey = new Intl.DateTimeFormat("en-CA", {
     day: "2-digit",
@@ -190,6 +193,9 @@ export function OperationsDashboardView({
   const pages = visiblePages(safePage, totalPages);
   const relativeTime = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const workQueueItems = workQueue?.items ?? [];
+  const solapiHealth = model.solapiHealth ?? null;
+  const formatSetting = (value: boolean | null) =>
+    value === null ? copy.workNotSet : value ? copy.settingEnabled : copy.settingDisabled;
   const workQueueReturnPath = `/${locale}/admin/operations${scopeQuery({
     companyId,
     comparePrevious,
@@ -538,6 +544,74 @@ export function OperationsDashboardView({
                 <dd>{number.format(model.openReportCount)}</dd>
               </div>
             </dl>
+
+            <section className="operations-rail-section">
+              <header>
+                <div>
+                  <h3>{copy.providerHealth}</h3>
+                  <p>{copy.providerHealthDescription}</p>
+                </div>
+                <Broadcast aria-hidden="true" size={18} />
+              </header>
+              {solapiHealth ? (
+                <dl>
+                  <div>
+                    <dt>{copy.delivered}</dt>
+                    <dd>{number.format(solapiHealth.deliveryDeliveredCount)}</dd>
+                  </div>
+                  <div>
+                    <dt>{copy.deliveryReportPending}</dt>
+                    <dd>{number.format(solapiHealth.deliveryPendingReportCount)}</dd>
+                  </div>
+                  <div>
+                    <dt>{copy.failed}</dt>
+                    <dd>{number.format(solapiHealth.deliveryFailedCount)}</dd>
+                  </div>
+                  <div>
+                    <dt>{copy.webhookUnmatched}</dt>
+                    <dd>{number.format(solapiHealth.webhookUnmatchedCount)}</dd>
+                  </div>
+                  <div>
+                    <dt>{copy.webhookLastReceived}</dt>
+                    <dd>
+                      {solapiHealth.webhookLastReceivedAt
+                        ? dateTime.format(new Date(solapiHealth.webhookLastReceivedAt))
+                        : copy.webhookNeverReceived}
+                    </dd>
+                  </div>
+                  {solapiHealth.balanceVisible ? (
+                    <>
+                      <div>
+                        <dt>{copy.balance}</dt>
+                        <dd>
+                          {solapiHealth.balanceAmount === null
+                            ? (copy.providerStatuses[solapiHealth.balanceStatus] ?? copy.workNotSet)
+                            : `${won.format(solapiHealth.balanceAmount)} · ${copy.providerStatuses[solapiHealth.balanceStatus] ?? copy.workNotSet}`}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>{copy.balanceThreshold}</dt>
+                        <dd>
+                          {solapiHealth.balanceWarningThresholdAmount === null
+                            ? copy.workNotSet
+                            : won.format(solapiHealth.balanceWarningThresholdAmount)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>{copy.autoRecharge}</dt>
+                        <dd>{formatSetting(solapiHealth.balanceAutoRechargeEnabled)}</dd>
+                      </div>
+                      <div>
+                        <dt>{copy.lowBalanceAlert}</dt>
+                        <dd>{formatSetting(solapiHealth.balanceLowAlertEnabled)}</dd>
+                      </div>
+                    </>
+                  ) : null}
+                </dl>
+              ) : (
+                <p role="status">{copy.providerHealthUnavailable}</p>
+              )}
+            </section>
 
             <section className="operations-rail-section">
               <header>

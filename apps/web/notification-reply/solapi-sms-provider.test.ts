@@ -63,6 +63,7 @@ describe("SOLAPI SMS notification provider", () => {
       from: "01098765432",
       text: expect.stringContaining(notification.variables.responseUrl),
       autoTypeDetect: true,
+      customFields: { taptolkDeliveryKey: "i".repeat(64) },
     });
   });
 

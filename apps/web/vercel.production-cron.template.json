@@ -8,6 +8,10 @@
     {
       "path": "/api/internal/notification-dispatch",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/internal/solapi-health",
+      "schedule": "0 0 * * *"
     }
   ]
 }

@@ -1796,6 +1796,85 @@ export const notificationDeliveries = pgTable(
   ],
 );
 
+export const solapiDeliveryReports = pgTable(
+  "solapi_delivery_reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    deliveryId: uuid("delivery_id").references(() => notificationDeliveries.id, {
+      onDelete: "restrict",
+    }),
+    providerMessageId: text("provider_message_id").notNull(),
+    statusCode: text("status_code").notNull(),
+    outcome: text("outcome").notNull(),
+    providerReportedAt: timestamp("provider_reported_at", {
+      mode: "date",
+      withTimezone: true,
+    }).notNull(),
+    providerReceivedAt: timestamp("provider_received_at", { mode: "date", withTimezone: true }),
+    receivedAt: timestamp("received_at", { mode: "date", withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique("uq_solapi_delivery_reports_event").on(
+      table.providerMessageId,
+      table.statusCode,
+      table.providerReportedAt,
+    ),
+    index("idx_solapi_delivery_reports_delivery_received")
+      .on(table.deliveryId, table.receivedAt)
+      .where(sql`${table.deliveryId} is not null`),
+    index("idx_solapi_delivery_reports_unmatched_received")
+      .on(table.receivedAt)
+      .where(sql`${table.deliveryId} is null`),
+    check(
+      "chk_solapi_delivery_reports_message_id",
+      sql`${table.providerMessageId} ~ '^[A-Za-z0-9_-]{8,200}$'`,
+    ),
+    check("chk_solapi_delivery_reports_status_code", sql`${table.statusCode} ~ '^[0-9]{4}$'`),
+    check(
+      "chk_solapi_delivery_reports_outcome",
+      sql`${table.outcome} in ('PENDING', 'DELIVERED', 'FAILED')`,
+    ),
+  ],
+);
+
+export const solapiAccountHealthSnapshots = pgTable(
+  "solapi_account_health_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    checkStatus: text("check_status").notNull(),
+    balanceAmount: numeric("balance_amount", { precision: 14, scale: 2 }),
+    pointAmount: numeric("point_amount", { precision: 14, scale: 2 }),
+    warningThresholdAmount: numeric("warning_threshold_amount", {
+      precision: 14,
+      scale: 2,
+    }).notNull(),
+    autoRechargeEnabled: boolean("auto_recharge_enabled"),
+    lowBalanceAlertEnabled: boolean("low_balance_alert_enabled"),
+    source: text("source").notNull(),
+    errorCode: text("error_code"),
+    capturedAt: timestamp("captured_at", { mode: "date", withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("idx_solapi_account_health_snapshots_captured").on(table.capturedAt),
+    check(
+      "chk_solapi_account_health_status",
+      sql`${table.checkStatus} in ('CHECKED', 'UNAVAILABLE')`,
+    ),
+    check(
+      "chk_solapi_account_health_amounts",
+      sql`${table.warningThresholdAmount} >= 0 and (${table.balanceAmount} is null or ${table.balanceAmount} >= 0) and (${table.pointAmount} is null or ${table.pointAmount} >= 0)`,
+    ),
+    check(
+      "chk_solapi_account_health_source",
+      sql`${table.source} in ('CRON', 'DISPATCH', 'WEBHOOK', 'MANUAL')`,
+    ),
+  ],
+);
+
 export const responseTokens = pgTable(
   "response_tokens",
   {
