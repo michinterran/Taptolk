@@ -54,6 +54,7 @@ describe("environment contracts", () => {
       SOLAPI_BALANCE_WARNING_KRW: "10000",
       SOLAPI_SMS_FROM: "0212345678",
       SOLAPI_WEBHOOK_SECRET: `solapi-webhook-secret-${"c".repeat(24)}`,
+      SOLAPI_WEBHOOK_SECRET_PREVIOUS: `previous-solapi-webhook-secret-${"d".repeat(24)}`,
     });
 
     expect(environment).toMatchObject({
@@ -63,6 +64,7 @@ describe("environment contracts", () => {
       SOLAPI_SMS_FROM: "0212345678",
     });
     expect(Object.keys(environment)).not.toContain("NEXT_PUBLIC_SOLAPI_API_SECRET");
+    expect(environment.SOLAPI_WEBHOOK_SECRET_PREVIOUS).toBeDefined();
   });
 
   it("accepts SOLAPI as the owner OTP verification provider", () => {

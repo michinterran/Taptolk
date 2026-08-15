@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     logger.warn("solapi.webhook.configuration_unavailable");
     return response(requestId, { error: { code: "UNAVAILABLE" } }, 503);
   }
-  if (!solapiWebhookAuthorized(request.headers.get("x-solapi-secret"), configuration.secret)) {
+  if (!solapiWebhookAuthorized(request.headers.get("x-solapi-secret"), configuration.secrets)) {
     logger.warn("solapi.webhook.unauthorized");
     return response(requestId, { error: { code: "UNAUTHORIZED" } }, 401);
   }

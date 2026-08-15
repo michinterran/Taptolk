@@ -47,6 +47,7 @@ const serverEnvironmentSchema = z
         .optional(),
     ),
     SOLAPI_WEBHOOK_SECRET: optionalSecretSchema,
+    SOLAPI_WEBHOOK_SECRET_PREVIOUS: optionalSecretSchema,
     OWNER_SESSION_TTL_SECONDS: integerEnvironmentSchema(43_200, 300, 86_400),
     OWNER_STAGING_MOCK_OTP: z.preprocess(
       emptyStringToUndefined,

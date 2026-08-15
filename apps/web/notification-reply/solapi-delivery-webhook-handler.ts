@@ -23,13 +23,19 @@ function isoDate(value: string): string {
   return parsed.toISOString();
 }
 
-export function solapiWebhookAuthorized(receivedHash: string | null, secret: string): boolean {
+export function solapiWebhookAuthorized(
+  receivedHash: string | null,
+  secrets: string | readonly string[],
+): boolean {
   if (!receivedHash || !/^[0-9a-f]{40}$/iu.test(receivedHash)) {
     return false;
   }
-  const expected = Buffer.from(createHash("sha1").update(secret, "utf8").digest("hex"), "utf8");
   const received = Buffer.from(receivedHash.toLowerCase(), "utf8");
-  return expected.length === received.length && timingSafeEqual(expected, received);
+  const candidates = typeof secrets === "string" ? [secrets] : secrets;
+  return candidates.some((secret) => {
+    const expected = Buffer.from(createHash("sha1").update(secret, "utf8").digest("hex"), "utf8");
+    return expected.length === received.length && timingSafeEqual(expected, received);
+  });
 }
 
 export function parseSolapiDeliveryWebhookPayload(value: unknown): readonly SolapiDeliveryReport[] {

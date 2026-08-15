@@ -14,6 +14,15 @@ describe("SOLAPI delivery webhook handler", () => {
     expect(solapiWebhookAuthorized(null, secret)).toBe(false);
   });
 
+  it("accepts the previous secret during a bounded provider retry window", () => {
+    const currentSecret = "current-webhook-secret";
+    const previousSecret = "previous-webhook-secret";
+    const previousHash = createHash("sha1").update(previousSecret).digest("hex");
+
+    expect(solapiWebhookAuthorized(previousHash, [currentSecret, previousSecret])).toBe(true);
+    expect(solapiWebhookAuthorized(previousHash, [currentSecret])).toBe(false);
+  });
+
   it("keeps only delivery identity, result, time, and the redacted correlation key", () => {
     const report = parseSolapiDeliveryWebhookPayload([
       {

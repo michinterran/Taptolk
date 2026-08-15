@@ -18,10 +18,15 @@ function serviceDependencies() {
   return client ? { client, environment: parseServerEnvironment() } : null;
 }
 
-export function readSolapiWebhookConfiguration(): { secret: string } | null {
+export function readSolapiWebhookConfiguration(): { secrets: readonly string[] } | null {
   try {
-    const secret = parseServerEnvironment().SOLAPI_WEBHOOK_SECRET;
-    return secret ? { secret } : null;
+    const environment = parseServerEnvironment();
+    const secret = environment.SOLAPI_WEBHOOK_SECRET;
+    if (!secret) return null;
+    const secrets = [secret, environment.SOLAPI_WEBHOOK_SECRET_PREVIOUS].filter(
+      (value, index, values): value is string => Boolean(value) && values.indexOf(value) === index,
+    );
+    return { secrets };
   } catch {
     return null;
   }
