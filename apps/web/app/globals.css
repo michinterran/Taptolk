@@ -7501,7 +7501,7 @@ h3,
 .qr-console-v2-review {
   align-items: center;
   border-top: 1px solid var(--tt-color-border);
-  background: var(--tt-console-v2-muted-band);
+  background: var(--tt-color-surface-subtle);
   display: flex;
   gap: var(--tt-space-3);
   justify-content: space-between;
