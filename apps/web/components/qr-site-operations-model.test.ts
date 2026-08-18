@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   getManagedAssets,
   getNextQrDeliveryStatus,
+  getQrActivationReadiness,
+  getQrActivationSummary,
   getStockAssets,
   readQrSiteOperationsSection,
 } from "./qr-site-operations-model";
@@ -33,5 +35,36 @@ describe("QR site operations model", () => {
     };
     expect(getStockAssets(model)).toHaveLength(1);
     expect(getManagedAssets(model).map((item) => item.status)).toEqual(["ACTIVE", "DAMAGED"]);
+  });
+
+  it("explains when a sticker can open owner activation", () => {
+    expect(getQrActivationReadiness("PRINTED")).toBe("WAITING_FOR_RECEIPT");
+    expect(getQrActivationReadiness("IN_STOCK")).toBe("READY");
+    expect(getQrActivationReadiness("ASSIGNED")).toBe("READY");
+    expect(getQrActivationReadiness("ACTIVATION_PENDING")).toBe("PENDING");
+    expect(getQrActivationReadiness("ACTIVE")).toBe("ACTIVE");
+    expect(getQrActivationReadiness("REVOKED")).toBe("BLOCKED");
+  });
+
+  it("summarizes the activation funnel from the asset read model", () => {
+    const model = {
+      assets: [
+        asset("PRINT_READY"),
+        asset("IN_STOCK"),
+        asset("ASSIGNED"),
+        asset("ACTIVATION_PENDING"),
+        asset("ACTIVE"),
+        asset("REVOKED"),
+      ],
+      batches: [],
+      imports: [],
+    };
+    expect(getQrActivationSummary(model)).toEqual({
+      active: 1,
+      blocked: 1,
+      pending: 1,
+      ready: 2,
+      waitingForReceipt: 1,
+    });
   });
 });

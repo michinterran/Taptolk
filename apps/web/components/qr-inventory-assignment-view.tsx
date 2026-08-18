@@ -27,9 +27,12 @@ import {
 } from "../admin/qr-inventory-assignment-actions";
 import type { AdminQrSiteOperationsCopy } from "../content/admin-qr-site-operations-copy";
 import type { AppLocale } from "../i18n/config";
+import { QrOperationConfirmButton } from "./qr-operation-confirm-button";
 import {
   getManagedAssets,
+  getQrActivationReadiness,
   getStockAssets,
+  type QrActivationReadiness,
   type QrSiteOperationsSection,
 } from "./qr-site-operations-model";
 
@@ -134,10 +137,19 @@ function getQrAssetStatusTone(
   return "info";
 }
 
+function getQrActivationReadinessTone(
+  readiness: QrActivationReadiness,
+): "neutral" | "info" | "success" | "warning" | "danger" {
+  if (readiness === "ACTIVE" || readiness === "READY") return "success";
+  if (readiness === "PENDING") return "info";
+  if (readiness === "WAITING_FOR_RECEIPT") return "neutral";
+  return "danger";
+}
+
 function sectionHref(
   locale: AppLocale,
   siteId: string,
-  section: Exclude<QrSiteOperationsSection, "production">,
+  section: QrSiteOperationsSection,
   selection?: { asset?: string; batch?: string },
 ): Route {
   const query = new URLSearchParams({ view: section });
@@ -150,10 +162,12 @@ function assetColumns({
   action,
   actionLabel,
   assignmentCopy,
+  copy,
 }: {
   action?: ((asset: QrInventoryAssignmentAssetItem) => ReactNode) | undefined;
   actionLabel: string;
   assignmentCopy: InventoryAssignmentCopy;
+  copy: AdminQrSiteOperationsCopy;
 }): Array<DataTableColumn<QrInventoryAssignmentAssetItem>> {
   const columns: Array<DataTableColumn<QrInventoryAssignmentAssetItem>> = [
     {
@@ -178,6 +192,18 @@ function assetColumns({
       ),
       header: assignmentCopy.status,
       key: "status",
+    },
+    {
+      cell: (asset) => {
+        const readiness = getQrActivationReadiness(asset.status);
+        return (
+          <StatusPill tone={getQrActivationReadinessTone(readiness)}>
+            {copy.scanStatusLabels[readiness]}
+          </StatusPill>
+        );
+      },
+      header: copy.scanReadiness,
+      key: "scan-readiness",
     },
   ];
   if (action) {
@@ -218,10 +244,10 @@ function InventoryWorkspace({
       align: "right",
       cell: (batch) => (
         <Link
-          className="tt-row-action"
+          className="tt-button tt-button--secondary tt-button--compact qr-site-table-action"
           href={sectionHref(locale, siteId, "inventory", { batch: batch.id })}
         >
-          {copy.select}
+          {copy.receiptAction}
         </Link>
       ),
       header: copy.action,
@@ -234,7 +260,21 @@ function InventoryWorkspace({
       <ConsolePanel description={copy.receiptDescription} title={copy.receiptTitle}>
         <DataTable
           columns={batchColumns}
-          empty={<EmptyState description={copy.noDelivery} title={copy.receiptTitle} />}
+          empty={
+            <EmptyState
+              actions={
+                <Link
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  href={sectionHref(locale, siteId, "production")}
+                >
+                  {copy.goToProduction}
+                </Link>
+              }
+              className="qr-site-empty-state"
+              description={copy.noDelivery}
+              title={copy.receiptTitle}
+            />
+          }
           getRowKey={(batch) => batch.id}
           rows={deliveredBatches}
         />
@@ -262,9 +302,13 @@ function InventoryWorkspace({
                 id={`receive-reason-${selectedBatch.id}`}
                 label={copy.receiptReason}
               />
-              <button className="tt-button tt-button--compact" type="submit">
-                {copy.receiveAll}
-              </button>
+              <QrOperationConfirmButton
+                cancelLabel={copy.cancel}
+                confirmLabel={copy.confirmAction}
+                description={copy.confirmDescriptions.receive}
+                label={copy.receiveAll}
+                title={copy.confirmTitles.receive}
+              />
             </form>
           </PanelBody>
         ) : null}
@@ -272,8 +316,22 @@ function InventoryWorkspace({
 
       <ConsolePanel description={copy.inventoryAssetDescription} title={copy.inventoryAssetTitle}>
         <DataTable
-          columns={assetColumns({ actionLabel: copy.action, assignmentCopy })}
-          empty={<EmptyState description={copy.noInventory} title={copy.inventoryAssetTitle} />}
+          columns={assetColumns({ actionLabel: copy.action, assignmentCopy, copy })}
+          empty={
+            <EmptyState
+              actions={
+                <Link
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  href={sectionHref(locale, siteId, "production")}
+                >
+                  {copy.goToProduction}
+                </Link>
+              }
+              className="qr-site-empty-state"
+              description={copy.noInventory}
+              title={copy.inventoryAssetTitle}
+            />
+          }
           getRowKey={(asset) => asset.id}
           rows={model.assets}
         />
@@ -324,9 +382,13 @@ function AssignmentWorkspace({
             type="hidden"
             value={assignmentCopy.importTitle}
           />
-          <button className="tt-row-action" type="submit">
-            {assignmentCopy.commit}
-          </button>
+          <QrOperationConfirmButton
+            cancelLabel={copy.cancel}
+            confirmLabel={copy.confirmAction}
+            description={copy.confirmDescriptions.import}
+            label={assignmentCopy.commit}
+            title={copy.confirmTitles.import}
+          />
         </form>
       ),
       header: copy.action,
@@ -344,16 +406,31 @@ function AssignmentWorkspace({
           columns={assetColumns({
             action: (asset) => (
               <Link
-                className="tt-row-action"
+                className="tt-button tt-button--secondary tt-button--compact qr-site-table-action"
                 href={sectionHref(locale, siteId, "assignment", { asset: asset.id })}
               >
-                {copy.select}
+                {copy.assignmentAction}
               </Link>
             ),
             actionLabel: copy.action,
             assignmentCopy,
+            copy,
           })}
-          empty={<EmptyState description={copy.noStock} title={copy.sectionLabels.assignment} />}
+          empty={
+            <EmptyState
+              actions={
+                <Link
+                  className="tt-button tt-button--secondary tt-button--compact"
+                  href={sectionHref(locale, siteId, "inventory")}
+                >
+                  {copy.goToInventory}
+                </Link>
+              }
+              className="qr-site-empty-state"
+              description={copy.noStock}
+              title={copy.sectionLabels.assignment}
+            />
+          }
           getRowKey={(asset) => asset.id}
           rows={stockAssets}
         />
@@ -394,9 +471,13 @@ function AssignmentWorkspace({
                 />
               </label>
               <ReasonField copy={assignmentCopy} id={`assignment-reason-${selectedAsset.id}`} />
-              <button className="tt-button tt-button--compact" type="submit">
-                {assignmentCopy.assign}
-              </button>
+              <QrOperationConfirmButton
+                cancelLabel={copy.cancel}
+                confirmLabel={copy.confirmAction}
+                description={copy.confirmDescriptions.assign}
+                label={assignmentCopy.assign}
+                title={copy.confirmTitles.assign}
+              />
             </form>
           </PanelBody>
         ) : null}
@@ -479,16 +560,31 @@ function ExceptionsWorkspace({
         columns={assetColumns({
           action: (asset) => (
             <Link
-              className="tt-row-action"
+              className="tt-button tt-button--secondary tt-button--compact qr-site-table-action"
               href={sectionHref(locale, siteId, "exceptions", { asset: asset.id })}
             >
-              {copy.select}
+              {copy.exceptionAction}
             </Link>
           ),
           actionLabel: copy.action,
           assignmentCopy,
+          copy,
         })}
-        empty={<EmptyState description={copy.noExceptions} title={copy.sectionLabels.exceptions} />}
+        empty={
+          <EmptyState
+            actions={
+              <Link
+                className="tt-button tt-button--secondary tt-button--compact"
+                href={sectionHref(locale, siteId, "assignment")}
+              >
+                {copy.goToAssignment}
+              </Link>
+            }
+            className="qr-site-empty-state"
+            description={copy.noExceptions}
+            title={copy.sectionLabels.exceptions}
+          />
+        }
         getRowKey={(asset) => asset.id}
         rows={managedAssets}
       />
@@ -531,9 +627,13 @@ function ExceptionsWorkspace({
                   </select>
                 </label>
                 <ReasonField copy={assignmentCopy} id={`replace-reason-${selectedAsset.id}`} />
-                <button className="tt-button tt-button--compact" type="submit">
-                  {assignmentCopy.replace}
-                </button>
+                <QrOperationConfirmButton
+                  cancelLabel={copy.cancel}
+                  confirmLabel={copy.confirmAction}
+                  description={copy.confirmDescriptions.replace}
+                  label={assignmentCopy.replace}
+                  title={copy.confirmTitles.replace}
+                />
               </form>
             ) : null}
             <form action={revokeQrAsset} className="qr-site-inline-form">
@@ -551,9 +651,14 @@ function ExceptionsWorkspace({
                 value={selectedAsset.version}
               />
               <ReasonField copy={assignmentCopy} id={`revoke-reason-${selectedAsset.id}`} />
-              <button className="tt-button tt-button--secondary tt-button--compact" type="submit">
-                {assignmentCopy.revoke}
-              </button>
+              <QrOperationConfirmButton
+                cancelLabel={copy.cancel}
+                confirmLabel={copy.confirmAction}
+                description={copy.confirmDescriptions.revoke}
+                label={assignmentCopy.revoke}
+                title={copy.confirmTitles.revoke}
+                tone="danger"
+              />
             </form>
           </div>
         </PanelBody>

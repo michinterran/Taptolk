@@ -24,10 +24,13 @@ import {
   type InventoryAssignmentCopy,
   QrInventoryAssignmentView,
 } from "./qr-inventory-assignment-view";
+import { QrOperationConfirmButton } from "./qr-operation-confirm-button";
 import {
   getManagedAssets,
   getNextQrDeliveryStatus,
+  getQrActivationSummary,
   getStockAssets,
+  type QrActivationReadiness,
   type QrSiteOperationsSection,
 } from "./qr-site-operations-model";
 
@@ -90,6 +93,20 @@ export function QrSiteOperationsView({
   });
   const stockAssets = getStockAssets(model);
   const managedAssets = getManagedAssets(model);
+  const activationSummary = getQrActivationSummary(model);
+  const activationSteps = [
+    "WAITING_FOR_RECEIPT",
+    "READY",
+    "PENDING",
+    "ACTIVE",
+  ] as const satisfies readonly QrActivationReadiness[];
+  const activationCounts: Readonly<Record<QrActivationReadiness, number>> = {
+    ACTIVE: activationSummary.active,
+    BLOCKED: activationSummary.blocked,
+    PENDING: activationSummary.pending,
+    READY: activationSummary.ready,
+    WAITING_FOR_RECEIPT: activationSummary.waitingForReceipt,
+  };
   const batchColumns = [
     {
       cell: (batch) => (
@@ -110,18 +127,21 @@ export function QrSiteOperationsView({
           {copy.batchStatusLabels[batch.status] ?? batch.status}
         </StatusPill>
       ),
-      header: assignmentCopy.status,
+      header: copy.currentStatus,
       key: "status",
     },
     {
       align: "right",
       cell: (batch) =>
         batch.downloadReady ? (
-          <a className="tt-row-action" href={`/api/admin/qr-batches/${batch.id}/svg-bundle`}>
+          <a
+            className="tt-button tt-button--secondary tt-button--compact qr-site-table-action"
+            href={`/api/admin/qr-batches/${batch.id}/svg-bundle`}
+          >
             {copy.svgDownload}
           </a>
         ) : (
-          <span className="admin-catalog-read-only">—</span>
+          <span className="qr-site-unavailable">{copy.notAvailable}</span>
         ),
       header: copy.svgDownload,
       key: "download",
@@ -156,12 +176,18 @@ export function QrSiteOperationsView({
             />
             <input aria-label="tenant" name="tenantId" type="hidden" value={site.tenantId} />
             <input aria-label="work area" name="view" type="hidden" value="production" />
-            <button className="tt-row-action" type="submit">
-              {copy.deliveryActionLabels[targetStatus]}
-            </button>
+            <QrOperationConfirmButton
+              cancelLabel={copy.cancel}
+              confirmLabel={copy.confirmAction}
+              description={copy.confirmDescriptions.delivery}
+              label={copy.deliveryActionLabels[targetStatus]}
+              title={copy.confirmTitles.delivery}
+            />
           </form>
         ) : (
-          <span className="admin-catalog-read-only">—</span>
+          <span className={targetStatus ? "qr-site-unavailable" : "qr-site-completed"}>
+            {targetStatus ? copy.notAvailable : copy.completed}
+          </span>
         );
       },
       header: copy.deliveryAction,
@@ -215,8 +241,8 @@ export function QrSiteOperationsView({
           }
           className="admin-compact-heading admin-compact-heading--workspace"
           description={copy.description}
-          eyebrow={copy.eyebrow}
-          lines={[site.name]}
+          eyebrow={site.name}
+          lines={[copy.title]}
         />
 
         {statusMessage ? (
@@ -232,13 +258,45 @@ export function QrSiteOperationsView({
 
         <StatStrip aria-label={copy.title} className="qr-site-stat-strip" columns={4}>
           <StatTile label={copy.totalQr} value={number.format(site.totalQr)} />
-          <StatTile label={copy.activeQr} value={number.format(site.activeQr)} />
           <StatTile
-            label={copy.pendingActivation}
-            value={number.format(site.pendingActivationQr)}
+            label={copy.activationStepLabels.READY}
+            value={number.format(activationSummary.ready)}
           />
-          <StatTile label={copy.batchCount} value={number.format(site.batchCount)} />
+          <StatTile
+            label={copy.activationStepLabels.PENDING}
+            value={number.format(activationSummary.pending)}
+          />
+          <StatTile
+            label={copy.activationStepLabels.ACTIVE}
+            value={number.format(activationSummary.active)}
+          />
         </StatStrip>
+
+        <section aria-labelledby="qr-activation-guide-title" className="qr-site-activation-guide">
+          <div className="qr-site-activation-guide__header">
+            <div>
+              <h2 id="qr-activation-guide-title">{copy.activationGuideTitle}</h2>
+              <p>{copy.activationGuideDescription}</p>
+            </div>
+            {activationSummary.blocked > 0 ? (
+              <StatusPill tone="warning">
+                {copy.activationStepLabels.BLOCKED} · {number.format(activationSummary.blocked)}
+              </StatusPill>
+            ) : null}
+          </div>
+          <ol className="qr-site-activation-guide__steps">
+            {activationSteps.map((step, index) => (
+              <li key={step}>
+                <span className="qr-site-activation-guide__index">{index + 1}</span>
+                <div>
+                  <strong>{copy.activationStepLabels[step]}</strong>
+                  <small>{copy.activationStepDescriptions[step]}</small>
+                </div>
+                <b>{number.format(activationCounts[step])}</b>
+              </li>
+            ))}
+          </ol>
+        </section>
 
         <nav aria-label={copy.sectionAriaLabel} className="tt-console-tabs qr-site-section-tabs">
           {(
@@ -259,8 +317,6 @@ export function QrSiteOperationsView({
             </Link>
           ))}
         </nav>
-
-        <p className="qr-site-section-description">{copy.sectionDescriptions[section]}</p>
 
         {section === "production" ? (
           <ConsolePanel

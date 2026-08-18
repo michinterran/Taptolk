@@ -7,6 +7,21 @@ export type QrSiteOperationsSection = "production" | "inventory" | "assignment" 
 
 export type QrDeliveryStatus = "DELIVERED" | "PRINTED" | "SENT_TO_PRINTER" | "SHIPPED";
 
+export type QrActivationReadiness =
+  | "ACTIVE"
+  | "BLOCKED"
+  | "PENDING"
+  | "READY"
+  | "WAITING_FOR_RECEIPT";
+
+export interface QrActivationSummary {
+  active: number;
+  blocked: number;
+  pending: number;
+  ready: number;
+  waitingForReceipt: number;
+}
+
 const SECTIONS: readonly QrSiteOperationsSection[] = [
   "production",
   "inventory",
@@ -35,6 +50,37 @@ export function getNextQrDeliveryStatus(status: string): QrDeliveryStatus | null
   if (status === "PRINTED") return "SHIPPED";
   if (status === "SHIPPED") return "DELIVERED";
   return null;
+}
+
+export function getQrActivationReadiness(
+  status: QrInventoryAssignmentAssetItem["status"],
+): QrActivationReadiness {
+  if (status === "ACTIVE") return "ACTIVE";
+  if (status === "ACTIVATION_PENDING") return "PENDING";
+  if (status === "IN_STOCK" || status === "ASSIGNED") return "READY";
+  if (status === "GENERATED" || status === "PRINT_READY" || status === "PRINTED") {
+    return "WAITING_FOR_RECEIPT";
+  }
+  return "BLOCKED";
+}
+
+export function getQrActivationSummary(model: QrInventoryAssignmentReadModel): QrActivationSummary {
+  const summary: QrActivationSummary = {
+    active: 0,
+    blocked: 0,
+    pending: 0,
+    ready: 0,
+    waitingForReceipt: 0,
+  };
+  for (const asset of model.assets) {
+    const readiness = getQrActivationReadiness(asset.status);
+    if (readiness === "ACTIVE") summary.active += 1;
+    else if (readiness === "PENDING") summary.pending += 1;
+    else if (readiness === "READY") summary.ready += 1;
+    else if (readiness === "WAITING_FOR_RECEIPT") summary.waitingForReceipt += 1;
+    else summary.blocked += 1;
+  }
+  return summary;
 }
 
 export function getStockAssets(

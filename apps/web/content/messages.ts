@@ -519,8 +519,8 @@ export const ko = {
   "admin.qr.inventory.empty": "현재 처리할 재고 항목이 없습니다.",
   "admin.qr.inventory.humanCode": "QR 식별 코드",
   "admin.qr.inventory.import.description":
-    "vehicle_plate, qr_human_code 두 열을 검증합니다. 원본 파일은 저장하지 않고 즉시 폐기합니다.",
-  "admin.qr.inventory.import.title": "CSV 검증",
+    "여러 차량을 한 번에 배정할 CSV를 먼저 검증합니다. 원본 파일은 저장하지 않고 즉시 폐기합니다.",
+  "admin.qr.inventory.import.title": "CSV 일괄 배정",
   "admin.qr.inventory.originalDeleted": "원본 CSV 폐기 확인",
   "admin.qr.inventory.replace": "교체 QR로 Binding 이전",
   "admin.qr.inventory.replacement": "교체·폐기",
@@ -1456,8 +1456,8 @@ export const en = {
   "admin.qr.inventory.empty": "No inventory item currently needs action.",
   "admin.qr.inventory.humanCode": "QR Human Code",
   "admin.qr.inventory.import.description":
-    "Validate vehicle_plate and qr_human_code columns. The original file is discarded without storage.",
-  "admin.qr.inventory.import.title": "Validate CSV",
+    "Validate a CSV before assigning multiple vehicles at once. The original file is discarded without storage.",
+  "admin.qr.inventory.import.title": "Bulk assignment by CSV",
   "admin.qr.inventory.originalDeleted": "Original CSV discarded",
   "admin.qr.inventory.replace": "Transfer Binding to replacement",
   "admin.qr.inventory.replacement": "Replacement and revocation",
