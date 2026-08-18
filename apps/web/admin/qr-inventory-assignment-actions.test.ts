@@ -134,9 +134,10 @@ describe("QR inventory assignment server actions", () => {
     formData.set("batchId", id("12"));
     formData.set("expectedVersion", "7");
     formData.set("targetStatus", "SENT_TO_PRINTER");
+    formData.set("view", "production");
 
     await expect(advanceQrBatchDelivery(formData)).rejects.toThrow(
-      `REDIRECT:/ko/admin/qr-inventory/sites/${siteId}?status=batchDeliveryAdvanced`,
+      `REDIRECT:/ko/admin/qr-inventory/sites/${siteId}?status=batchDeliveryAdvanced&view=production`,
     );
 
     expect(mocks.advanceBatchDelivery).toHaveBeenCalledWith(
@@ -152,9 +153,10 @@ describe("QR inventory assignment server actions", () => {
     const formData = baseFormData();
     formData.set("qrAssetId", id("10"));
     formData.set("vehiclePlate", "12가-3456");
+    formData.set("view", "assignment");
 
     await expect(assignQrAsset(formData)).rejects.toThrow(
-      "REDIRECT:/ko/admin/qr-inventory?status=assetAssigned",
+      `REDIRECT:/ko/admin/qr-inventory/sites/${siteId}?status=assetAssigned&view=assignment`,
     );
 
     expect(mocks.protect).toHaveBeenCalledWith("12가3456");
@@ -171,6 +173,7 @@ describe("QR inventory assignment server actions", () => {
   it("validates and saves a CSV import without repository plaintext plates", async () => {
     const formData = baseFormData();
     formData.set("siteScope", `${tenantId}|${managementCompanyId}|${siteId}`);
+    formData.set("view", "assignment");
     formData.set(
       "csvFile",
       new File(["vehicle_plate,qr_human_code\n12가3456,0123456789\n"], "vehicle-import.csv", {
@@ -179,7 +182,7 @@ describe("QR inventory assignment server actions", () => {
     );
 
     await expect(validateVehicleImport(formData)).rejects.toThrow(
-      "REDIRECT:/ko/admin/qr-inventory?status=importValidated",
+      `REDIRECT:/ko/admin/qr-inventory/sites/${siteId}?status=importValidated&view=assignment`,
     );
 
     expect(mocks.saveValidatedImport).toHaveBeenCalledWith(
@@ -200,9 +203,10 @@ describe("QR inventory assignment server actions", () => {
     const formData = baseFormData();
     formData.set("importId", id("11"));
     formData.set("expectedVersion", "3");
+    formData.set("view", "assignment");
 
     await expect(commitVehicleImport(formData)).rejects.toThrow(
-      "REDIRECT:/ko/admin/qr-inventory?status=importCommitted",
+      `REDIRECT:/ko/admin/qr-inventory/sites/${siteId}?status=importCommitted&view=assignment`,
     );
 
     expect(mocks.commitImport).toHaveBeenCalledWith(

@@ -12,6 +12,7 @@ import { requireReadyAdminContext } from "../../../../../../../auth/page-guard";
 import { createAdminServerClient } from "../../../../../../../auth/server-client";
 import { AdminPageHeader } from "../../../../../../../components/admin-page-header";
 import type { InventoryAssignmentCopy } from "../../../../../../../components/qr-inventory-assignment-view";
+import { readQrSiteOperationsSection } from "../../../../../../../components/qr-site-operations-model";
 import { QrSiteOperationsView } from "../../../../../../../components/qr-site-operations-view";
 import { ADMIN_QR_SITE_OPERATIONS_COPY } from "../../../../../../../content/admin-qr-site-operations-copy";
 import { getMessages } from "../../../../../../../content/messages";
@@ -112,7 +113,13 @@ export default async function QrSiteOperationsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; siteId: string }>;
-  searchParams: Promise<{ error?: string | string[]; status?: string | string[] }>;
+  searchParams: Promise<{
+    asset?: string | string[];
+    batch?: string | string[];
+    error?: string | string[];
+    status?: string | string[];
+    view?: string | string[];
+  }>;
 }) {
   const [{ locale, siteId }, query] = await Promise.all([params, searchParams]);
   if (!isAppLocale(locale)) notFound();
@@ -145,6 +152,7 @@ export default async function QrSiteOperationsPage({
     };
     const error = readValue(query.error);
     const status = readValue(query.status);
+    const section = readQrSiteOperationsSection(readValue(query.view));
     const errorMessages: Readonly<Record<string, string>> = {
       blocked: messages["admin.qr.error.blocked"],
       conflict: messages["admin.qr.error.conflict"],
@@ -181,6 +189,9 @@ export default async function QrSiteOperationsPage({
           localeTitle={messages["locale.switcher.label"]}
           logoAlt={messages["admin.brand.logoAlt"]}
           model={model}
+          section={section}
+          selectedAssetId={readValue(query.asset)}
+          selectedBatchId={readValue(query.batch)}
           site={site}
           batches={batches}
           statusMessage={status ? statusMessages[status] : undefined}

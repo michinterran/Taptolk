@@ -517,7 +517,7 @@ export const ko = {
   "admin.qr.inventory.commit": "검증 결과 배정 확정",
   "admin.qr.inventory.csvFile": "차량 배정 CSV",
   "admin.qr.inventory.empty": "현재 처리할 재고 항목이 없습니다.",
-  "admin.qr.inventory.humanCode": "QR Human Code",
+  "admin.qr.inventory.humanCode": "QR 식별 코드",
   "admin.qr.inventory.import.description":
     "vehicle_plate, qr_human_code 두 열을 검증합니다. 원본 파일은 저장하지 않고 즉시 폐기합니다.",
   "admin.qr.inventory.import.title": "CSV 검증",

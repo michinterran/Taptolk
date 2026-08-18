@@ -3,7 +3,17 @@ import type {
   QrOperationsBatch,
   QrOperationsSite,
 } from "@taptolk/application";
-import { DataTable, type DataTableColumn, EmptyState, PageHeader, StatusPill } from "@taptolk/ui";
+import {
+  CellEntity,
+  ConsolePanel,
+  DataTable,
+  type DataTableColumn,
+  EmptyState,
+  PageHeader,
+  StatStrip,
+  StatTile,
+  StatusPill,
+} from "@taptolk/ui";
 import type { Route } from "next";
 import Link from "next/link";
 import { advanceQrBatchDelivery } from "../admin/qr-inventory-assignment-actions";
@@ -14,8 +24,12 @@ import {
   type InventoryAssignmentCopy,
   QrInventoryAssignmentView,
 } from "./qr-inventory-assignment-view";
-
-type DeliveryStatus = "DELIVERED" | "PRINTED" | "SENT_TO_PRINTER" | "SHIPPED";
+import {
+  getManagedAssets,
+  getNextQrDeliveryStatus,
+  getStockAssets,
+  type QrSiteOperationsSection,
+} from "./qr-site-operations-model";
 
 interface QrSiteOperationsViewProps {
   assignmentCopy: InventoryAssignmentCopy;
@@ -29,6 +43,9 @@ interface QrSiteOperationsViewProps {
   localeTitle: string;
   logoAlt: string;
   model: QrInventoryAssignmentReadModel;
+  section: QrSiteOperationsSection;
+  selectedAssetId?: string | undefined;
+  selectedBatchId?: string | undefined;
   site: QrOperationsSite;
   batches: readonly QrOperationsBatch[];
   statusMessage?: string | undefined;
@@ -43,12 +60,8 @@ function statusTone(status: string): "neutral" | "info" | "success" | "warning" 
   return "info";
 }
 
-function nextDeliveryStatus(status: string): DeliveryStatus | null {
-  if (status === "PRINT_FILE_READY") return "SENT_TO_PRINTER";
-  if (status === "SENT_TO_PRINTER") return "PRINTED";
-  if (status === "PRINTED") return "SHIPPED";
-  if (status === "SHIPPED") return "DELIVERED";
-  return null;
+function sectionHref(locale: AppLocale, siteId: string, section: QrSiteOperationsSection): Route {
+  return `/${locale}/admin/qr-inventory/sites/${siteId}?view=${section}` as Route;
 }
 
 export function QrSiteOperationsView({
@@ -63,6 +76,9 @@ export function QrSiteOperationsView({
   localeTitle,
   logoAlt,
   model,
+  section,
+  selectedAssetId,
+  selectedBatchId,
   site,
   batches,
   statusMessage,
@@ -72,15 +88,14 @@ export function QrSiteOperationsView({
     dateStyle: "medium",
     timeStyle: "short",
   });
+  const stockAssets = getStockAssets(model);
+  const managedAssets = getManagedAssets(model);
   const batchColumns = [
     {
       cell: (batch) => (
-        <span className="tt-table-entity">
-          <strong>{batch.batchCode}</strong>
-          <small>{date.format(new Date(batch.createdAt))}</small>
-        </span>
+        <CellEntity meta={date.format(new Date(batch.createdAt))} name={batch.batchCode} />
       ),
-      header: copy.batchCount,
+      header: copy.batchCode,
       key: "batch",
     },
     {
@@ -102,10 +117,7 @@ export function QrSiteOperationsView({
       align: "right",
       cell: (batch) =>
         batch.downloadReady ? (
-          <a
-            className="tt-button tt-button--secondary tt-button--compact"
-            href={`/api/admin/qr-batches/${batch.id}/svg-bundle`}
-          >
+          <a className="tt-row-action" href={`/api/admin/qr-batches/${batch.id}/svg-bundle`}>
             {copy.svgDownload}
           </a>
         ) : (
@@ -117,9 +129,9 @@ export function QrSiteOperationsView({
     {
       align: "right",
       cell: (batch) => {
-        const targetStatus = nextDeliveryStatus(batch.status);
+        const targetStatus = getNextQrDeliveryStatus(batch.status);
         return canAdvanceDelivery && targetStatus ? (
-          <form action={advanceQrBatchDelivery}>
+          <form action={advanceQrBatchDelivery} className="qr-site-row-form">
             <input aria-label="batch" name="batchId" type="hidden" value={batch.id} />
             <input
               aria-label="batch version"
@@ -143,7 +155,8 @@ export function QrSiteOperationsView({
               value={targetStatus}
             />
             <input aria-label="tenant" name="tenantId" type="hidden" value={site.tenantId} />
-            <button className="tt-button tt-button--compact" type="submit">
+            <input aria-label="work area" name="view" type="hidden" value="production" />
+            <button className="tt-row-action" type="submit">
               {copy.deliveryActionLabels[targetStatus]}
             </button>
           </form>
@@ -156,6 +169,13 @@ export function QrSiteOperationsView({
     },
   ] satisfies Array<DataTableColumn<QrOperationsBatch>>;
 
+  const sectionCounts: Readonly<Record<QrSiteOperationsSection, number>> = {
+    assignment: stockAssets.length,
+    exceptions: managedAssets.length,
+    inventory: model.assets.length,
+    production: batches.length,
+  };
+
   return (
     <>
       <AdminPageHeader
@@ -165,11 +185,34 @@ export function QrSiteOperationsView({
         logoAlt={logoAlt}
         pathname={`/${locale}/admin/qr-inventory/sites/${site.id}`}
       />
-      <div className="admin-workspace-canvas console-page">
+      <div className="admin-workspace-canvas console-page qr-site-operations-page">
         <Link className="admin-inline-back" href={`/${locale}/admin/qr-inventory` as Route}>
           {copy.back}
         </Link>
         <PageHeader
+          actions={
+            <div className="qr-site-header-actions">
+              <StatusPill
+                tone={
+                  site.status === "ACTIVE"
+                    ? "success"
+                    : site.status === "SUSPENDED"
+                      ? "warning"
+                      : "danger"
+                }
+              >
+                {copy.siteStatusLabels[site.status] ?? site.status}
+              </StatusPill>
+              <Link
+                className="tt-button tt-button--compact"
+                href={
+                  `/${locale}/admin/qr-inventory?company=${site.managementCompanyId}&confirmed=1&quantity=100&site=${site.id}` as Route
+                }
+              >
+                {copy.generate}
+              </Link>
+            </div>
+          }
           className="admin-compact-heading admin-compact-heading--workspace"
           description={copy.description}
           eyebrow={copy.eyebrow}
@@ -187,80 +230,69 @@ export function QrSiteOperationsView({
           </aside>
         ) : null}
 
-        <div className="qr-console-v2-progress-actions">
-          <Link
-            className="tt-button"
-            href={
-              `/${locale}/admin/qr-inventory?company=${site.managementCompanyId}&confirmed=1&quantity=100&site=${site.id}` as Route
-            }
-          >
-            {copy.generate}
-          </Link>
-          <StatusPill
-            tone={
-              site.status === "ACTIVE"
-                ? "success"
-                : site.status === "SUSPENDED"
-                  ? "warning"
-                  : "danger"
-            }
-          >
-            {copy.siteStatusLabels[site.status] ?? site.status}
-          </StatusPill>
-        </div>
-
-        <section aria-label={copy.title} className="qr-console-v2-summary-grid">
-          <div>
-            <span>{copy.totalQr}</span>
-            <strong>{number.format(site.totalQr)}</strong>
-          </div>
-          <div>
-            <span>{copy.activeQr}</span>
-            <strong>{number.format(site.activeQr)}</strong>
-          </div>
-          <div>
-            <span>{copy.pendingActivation}</span>
-            <strong>{number.format(site.pendingActivationQr)}</strong>
-          </div>
-          <div>
-            <span>{copy.batchCount}</span>
-            <strong>{number.format(site.batchCount)}</strong>
-          </div>
-        </section>
-
-        <section className="console-list-surface qr-console-v2-table-panel">
-          <header className="console-section-heading">
-            <div>
-              <span className="admin-hierarchy-label">{copy.eyebrow}</span>
-              <h2>{copy.batchCount}</h2>
-              <p>{copy.deliveryDescription}</p>
-            </div>
-          </header>
-          <DataTable
-            className="admin-table-scroll admin-table-scroll--catalog qr-operations-table"
-            columns={batchColumns}
-            empty={<EmptyState description={copy.description} title={copy.batchCount} />}
-            getRowKey={(batch) => batch.id}
-            rows={batches}
+        <StatStrip aria-label={copy.title} className="qr-site-stat-strip" columns={4}>
+          <StatTile label={copy.totalQr} value={number.format(site.totalQr)} />
+          <StatTile label={copy.activeQr} value={number.format(site.activeQr)} />
+          <StatTile
+            label={copy.pendingActivation}
+            value={number.format(site.pendingActivationQr)}
           />
-        </section>
+          <StatTile label={copy.batchCount} value={number.format(site.batchCount)} />
+        </StatStrip>
 
-        <section className="console-list-surface" aria-labelledby="qr-site-inventory-title">
-          <header className="console-section-heading">
-            <div>
-              <span className="admin-hierarchy-label">{copy.eyebrow}</span>
-              <h2 id="qr-site-inventory-title">{copy.inventoryTitle}</h2>
-              <p>{copy.inventoryDescription}</p>
-            </div>
-          </header>
+        <nav aria-label={copy.sectionAriaLabel} className="tt-console-tabs qr-site-section-tabs">
+          {(
+            [
+              "production",
+              "inventory",
+              "assignment",
+              "exceptions",
+            ] as const satisfies readonly QrSiteOperationsSection[]
+          ).map((item) => (
+            <Link
+              aria-current={section === item ? "page" : undefined}
+              href={sectionHref(locale, site.id, item)}
+              key={item}
+            >
+              <span>{copy.sectionLabels[item]}</span>
+              <small>{number.format(sectionCounts[item])}</small>
+            </Link>
+          ))}
+        </nav>
+
+        <p className="qr-site-section-description">{copy.sectionDescriptions[section]}</p>
+
+        {section === "production" ? (
+          <ConsolePanel
+            description={copy.sectionDescriptions.production}
+            title={copy.sectionLabels.production}
+          >
+            <DataTable
+              columns={batchColumns}
+              empty={
+                <EmptyState
+                  description={copy.deliveryDescription}
+                  title={copy.sectionLabels.production}
+                />
+              }
+              getRowKey={(batch) => batch.id}
+              rows={batches}
+            />
+          </ConsolePanel>
+        ) : (
           <QrInventoryAssignmentView
+            assignmentCopy={assignmentCopy}
             canAssign={canAssign}
             canRevoke={canRevoke}
-            copy={assignmentCopy}
+            copy={copy}
             locale={locale}
             model={model}
+            section={section}
+            selectedAssetId={selectedAssetId}
+            selectedBatchId={selectedBatchId}
+            siteId={site.id}
           />
-        </section>
+        )}
       </div>
     </>
   );

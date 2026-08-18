@@ -71,8 +71,15 @@ function qrSitePath(
   formData: FormData,
 ): Route {
   const siteId = readString(formData, "siteId");
+  const view = readString(formData, "view");
+  const viewQuery = ["production", "inventory", "assignment", "exceptions"].includes(view)
+    ? `&view=${view}`
+    : "";
   return UUID_PATTERN.test(siteId)
-    ? (getLocalizedAdminPath(locale, `/qr-inventory/sites/${siteId}?${kind}=${value}`) as Route)
+    ? (getLocalizedAdminPath(
+        locale,
+        `/qr-inventory/sites/${siteId}?${kind}=${value}${viewQuery}`,
+      ) as Route)
     : path(locale, kind, value);
 }
 
@@ -175,16 +182,21 @@ async function run(
 }
 
 export async function receiveQrBatch(formData: FormData): Promise<never> {
-  return run(formData, "batchReceived", async ({ actor, service }) => {
-    await service.receiveBatch({
-      actor,
-      auditRequestId: crypto.randomUUID(),
-      batchId: readString(formData, "batchId"),
-      expectedBatchVersion: Number(readString(formData, "expectedVersion")),
-      reason: readString(formData, "reason"),
-      ...scope(formData),
-    });
-  });
+  return run(
+    formData,
+    "batchReceived",
+    async ({ actor, service }) => {
+      await service.receiveBatch({
+        actor,
+        auditRequestId: crypto.randomUUID(),
+        batchId: readString(formData, "batchId"),
+        expectedBatchVersion: Number(readString(formData, "expectedVersion")),
+        reason: readString(formData, "reason"),
+        ...scope(formData),
+      });
+    },
+    "qr-site",
+  );
 }
 
 export async function advanceQrBatchDelivery(formData: FormData): Promise<never> {
@@ -226,83 +238,108 @@ export async function receiveQrBatchQuantity(formData: FormData): Promise<never>
 }
 
 export async function assignQrAsset(formData: FormData): Promise<never> {
-  return run(formData, "assetAssigned", async ({ actor, service }) => {
-    await service.assign({
-      actor,
-      auditRequestId: crypto.randomUUID(),
-      expectedAssetVersion: Number(readString(formData, "expectedVersion")),
-      normalizedPlate: readString(formData, "vehiclePlate"),
-      qrAssetId: readString(formData, "qrAssetId"),
-      reason: readString(formData, "reason"),
-      ...scope(formData),
-    });
-  });
+  return run(
+    formData,
+    "assetAssigned",
+    async ({ actor, service }) => {
+      await service.assign({
+        actor,
+        auditRequestId: crypto.randomUUID(),
+        expectedAssetVersion: Number(readString(formData, "expectedVersion")),
+        normalizedPlate: readString(formData, "vehiclePlate"),
+        qrAssetId: readString(formData, "qrAssetId"),
+        reason: readString(formData, "reason"),
+        ...scope(formData),
+      });
+    },
+    "qr-site",
+  );
 }
 
 export async function validateVehicleImport(formData: FormData): Promise<never> {
-  return run(formData, "importValidated", async ({ actor, service }) => {
-    const source = formData.get("csvFile");
-    if (!(source instanceof File) || source.size === 0 || source.size > 2_000_000) {
-      throw new QrInventoryAssignmentError("EMPTY_CSV");
-    }
-    const validation = await service.validateVehicleCsv({
-      csvBytes: new Uint8Array(await source.arrayBuffer()),
-    });
-    if (validation.invalidRows.length > 0) {
-      throw new QrInventoryAssignmentError("NO_VALID_ROWS");
-    }
-    await service.saveValidatedImport({
-      actor,
-      auditRequestId: crypto.randomUUID(),
-      idempotencyKey: crypto.randomUUID(),
-      reason: readString(formData, "reason"),
-      validation,
-      ...selectedSiteScope(formData),
-    });
-  });
+  return run(
+    formData,
+    "importValidated",
+    async ({ actor, service }) => {
+      const source = formData.get("csvFile");
+      if (!(source instanceof File) || source.size === 0 || source.size > 2_000_000) {
+        throw new QrInventoryAssignmentError("EMPTY_CSV");
+      }
+      const validation = await service.validateVehicleCsv({
+        csvBytes: new Uint8Array(await source.arrayBuffer()),
+      });
+      if (validation.invalidRows.length > 0) {
+        throw new QrInventoryAssignmentError("NO_VALID_ROWS");
+      }
+      await service.saveValidatedImport({
+        actor,
+        auditRequestId: crypto.randomUUID(),
+        idempotencyKey: crypto.randomUUID(),
+        reason: readString(formData, "reason"),
+        validation,
+        ...selectedSiteScope(formData),
+      });
+    },
+    "qr-site",
+  );
 }
 
 export async function commitVehicleImport(formData: FormData): Promise<never> {
-  return run(formData, "importCommitted", async ({ actor, service }) => {
-    await service.commitImport({
-      actor,
-      auditRequestId: crypto.randomUUID(),
-      expectedImportVersion: Number(readString(formData, "expectedVersion")),
-      importId: readString(formData, "importId"),
-      reason: readString(formData, "reason"),
-      ...scope(formData),
-    });
-  });
+  return run(
+    formData,
+    "importCommitted",
+    async ({ actor, service }) => {
+      await service.commitImport({
+        actor,
+        auditRequestId: crypto.randomUUID(),
+        expectedImportVersion: Number(readString(formData, "expectedVersion")),
+        importId: readString(formData, "importId"),
+        reason: readString(formData, "reason"),
+        ...scope(formData),
+      });
+    },
+    "qr-site",
+  );
 }
 
 export async function replaceQrAsset(formData: FormData): Promise<never> {
-  return run(formData, "assetReplaced", async ({ actor, service }) => {
-    const [replacementQrAssetId = "", replacementVersion = ""] = readString(
-      formData,
-      "replacementScope",
-    ).split("|");
-    await service.replace({
-      actor,
-      auditRequestId: crypto.randomUUID(),
-      expectedReplacementVersion: Number(replacementVersion),
-      expectedSourceVersion: Number(readString(formData, "expectedVersion")),
-      reason: readString(formData, "reason"),
-      replacementQrAssetId,
-      sourceQrAssetId: readString(formData, "qrAssetId"),
-      ...scope(formData),
-    });
-  });
+  return run(
+    formData,
+    "assetReplaced",
+    async ({ actor, service }) => {
+      const [replacementQrAssetId = "", replacementVersion = ""] = readString(
+        formData,
+        "replacementScope",
+      ).split("|");
+      await service.replace({
+        actor,
+        auditRequestId: crypto.randomUUID(),
+        expectedReplacementVersion: Number(replacementVersion),
+        expectedSourceVersion: Number(readString(formData, "expectedVersion")),
+        reason: readString(formData, "reason"),
+        replacementQrAssetId,
+        sourceQrAssetId: readString(formData, "qrAssetId"),
+        ...scope(formData),
+      });
+    },
+    "qr-site",
+  );
 }
 
 export async function revokeQrAsset(formData: FormData): Promise<never> {
-  return run(formData, "assetRevoked", async ({ actor, service }) => {
-    await service.revoke({
-      actor,
-      auditRequestId: crypto.randomUUID(),
-      expectedAssetVersion: Number(readString(formData, "expectedVersion")),
-      qrAssetId: readString(formData, "qrAssetId"),
-      reason: readString(formData, "reason"),
-      ...scope(formData),
-    });
-  });
+  return run(
+    formData,
+    "assetRevoked",
+    async ({ actor, service }) => {
+      await service.revoke({
+        actor,
+        auditRequestId: crypto.randomUUID(),
+        expectedAssetVersion: Number(readString(formData, "expectedVersion")),
+        qrAssetId: readString(formData, "qrAssetId"),
+        reason: readString(formData, "reason"),
+        ...scope(formData),
+      });
+    },
+    "qr-site",
+  );
 }

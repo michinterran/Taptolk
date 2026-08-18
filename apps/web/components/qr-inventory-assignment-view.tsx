@@ -1,9 +1,22 @@
 import type {
   QrAssetStatus,
   QrInventoryAssignmentAssetItem,
+  QrInventoryAssignmentBatchItem,
   QrInventoryAssignmentReadModel,
+  VehicleImportItem,
 } from "@taptolk/application";
-import { StatusPill } from "@taptolk/ui";
+import {
+  CellEntity,
+  ConsolePanel,
+  DataTable,
+  type DataTableColumn,
+  EmptyState,
+  PanelBody,
+  StatusPill,
+} from "@taptolk/ui";
+import type { Route } from "next";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   assignQrAsset,
   commitVehicleImport,
@@ -12,7 +25,13 @@ import {
   revokeQrAsset,
   validateVehicleImport,
 } from "../admin/qr-inventory-assignment-actions";
+import type { AdminQrSiteOperationsCopy } from "../content/admin-qr-site-operations-copy";
 import type { AppLocale } from "../i18n/config";
+import {
+  getManagedAssets,
+  getStockAssets,
+  type QrSiteOperationsSection,
+} from "./qr-site-operations-model";
 
 export interface InventoryAssignmentCopy {
   assign: string;
@@ -42,19 +61,26 @@ export interface InventoryAssignmentCopy {
 }
 
 interface InventoryAssignmentViewProps {
+  assignmentCopy: InventoryAssignmentCopy;
   canAssign: boolean;
   canRevoke: boolean;
-  copy: InventoryAssignmentCopy;
+  copy: AdminQrSiteOperationsCopy;
   locale: AppLocale;
   model: QrInventoryAssignmentReadModel;
+  section: Exclude<QrSiteOperationsSection, "production">;
+  selectedAssetId?: string | undefined;
+  selectedBatchId?: string | undefined;
+  siteId: string;
 }
 
 function ScopeFields({
   item,
   locale,
+  view,
 }: {
   item: { managementCompanyId: string; siteId: string; tenantId: string };
   locale: AppLocale;
+  view: Exclude<QrSiteOperationsSection, "production">;
 }) {
   return (
     <>
@@ -67,14 +93,23 @@ function ScopeFields({
         value={item.managementCompanyId}
       />
       <input aria-label="site" name="siteId" type="hidden" value={item.siteId} />
+      <input aria-label="work area" name="view" type="hidden" value={view} />
     </>
   );
 }
 
-function ReasonField({ copy, id }: { copy: InventoryAssignmentCopy; id: string }) {
+function ReasonField({
+  copy,
+  id,
+  label,
+}: {
+  copy: InventoryAssignmentCopy;
+  id: string;
+  label?: string | undefined;
+}) {
   return (
     <label className="admin-field" htmlFor={id}>
-      <span>{copy.reason}</span>
+      <span>{label ?? copy.reason}</span>
       <input
         id={id}
         maxLength={500}
@@ -90,285 +125,445 @@ function ReasonField({ copy, id }: { copy: InventoryAssignmentCopy; id: string }
 function getQrAssetStatusTone(
   status: QrAssetStatus,
 ): "neutral" | "info" | "success" | "warning" | "danger" {
-  if (status === "ACTIVE" || status === "IN_STOCK") {
-    return "success";
-  }
-
+  if (status === "ACTIVE" || status === "IN_STOCK") return "success";
   if (status === "REVOKED" || status === "EXPIRED" || status === "LOST" || status === "DAMAGED") {
     return "danger";
   }
-
-  if (status === "SUSPENDED" || status === "REPLACED") {
-    return "warning";
-  }
-
-  if (status === "GENERATED" || status === "PRINT_READY" || status === "PRINTED") {
-    return "neutral";
-  }
-
+  if (status === "SUSPENDED" || status === "REPLACED") return "warning";
+  if (status === "GENERATED" || status === "PRINT_READY" || status === "PRINTED") return "neutral";
   return "info";
 }
 
-function AssetIdentity({
-  asset,
-  copy,
+function sectionHref(
+  locale: AppLocale,
+  siteId: string,
+  section: Exclude<QrSiteOperationsSection, "production">,
+  selection?: { asset?: string; batch?: string },
+): Route {
+  const query = new URLSearchParams({ view: section });
+  if (selection?.asset) query.set("asset", selection.asset);
+  if (selection?.batch) query.set("batch", selection.batch);
+  return `/${locale}/admin/qr-inventory/sites/${siteId}?${query.toString()}` as Route;
+}
+
+function assetColumns({
+  action,
+  actionLabel,
+  assignmentCopy,
 }: {
-  asset: QrInventoryAssignmentAssetItem;
-  copy: InventoryAssignmentCopy;
-}) {
+  action?: ((asset: QrInventoryAssignmentAssetItem) => ReactNode) | undefined;
+  actionLabel: string;
+  assignmentCopy: InventoryAssignmentCopy;
+}): Array<DataTableColumn<QrInventoryAssignmentAssetItem>> {
+  const columns: Array<DataTableColumn<QrInventoryAssignmentAssetItem>> = [
+    {
+      cell: (asset) => (
+        <CellEntity
+          meta={
+            asset.currentVehicleLast4
+              ? `${assignmentCopy.vehicleLast4} · ${asset.currentVehicleLast4}`
+              : undefined
+          }
+          name={asset.humanCode}
+        />
+      ),
+      header: assignmentCopy.humanCode,
+      key: "asset",
+    },
+    {
+      cell: (asset) => (
+        <StatusPill tone={getQrAssetStatusTone(asset.status)}>
+          {assignmentCopy.statusLabels[asset.status]}
+        </StatusPill>
+      ),
+      header: assignmentCopy.status,
+      key: "status",
+    },
+  ];
+  if (action) {
+    columns.push({ align: "right", cell: action, header: actionLabel, key: "action" });
+  }
+  return columns;
+}
+
+function InventoryWorkspace({
+  assignmentCopy,
+  canAssign,
+  copy,
+  locale,
+  model,
+  selectedBatchId,
+  siteId,
+}: Omit<InventoryAssignmentViewProps, "canRevoke" | "section" | "selectedAssetId">) {
+  const deliveredBatches = model.batches.filter((batch) => batch.status === "DELIVERED");
+  const selectedBatch = deliveredBatches.find((batch) => batch.id === selectedBatchId);
+  const batchColumns: Array<DataTableColumn<QrInventoryAssignmentBatchItem>> = [
+    {
+      cell: (batch) => <CellEntity meta={batch.siteName} name={batch.batchCode} />,
+      header: copy.batchCode,
+      key: "batch",
+    },
+    {
+      align: "right",
+      cell: (batch) => new Intl.NumberFormat(locale).format(batch.requestedQuantity),
+      header: copy.totalQr,
+      key: "quantity",
+    },
+    {
+      cell: () => <StatusPill tone="success">{copy.batchStatusLabels.DELIVERED}</StatusPill>,
+      header: assignmentCopy.status,
+      key: "status",
+    },
+    {
+      align: "right",
+      cell: (batch) => (
+        <Link
+          className="tt-row-action"
+          href={sectionHref(locale, siteId, "inventory", { batch: batch.id })}
+        >
+          {copy.select}
+        </Link>
+      ),
+      header: copy.action,
+      key: "action",
+    },
+  ];
+
   return (
-    <header className="admin-approval-card__header">
-      <div>
-        <span className="admin-approval-card__label">{copy.humanCode}</span>
-        <h3>{asset.humanCode}</h3>
-        {asset.currentVehicleLast4 ? (
-          <small>
-            {copy.vehicleLast4} · {asset.currentVehicleLast4}
-          </small>
+    <div className="qr-site-workspace-stack">
+      <ConsolePanel description={copy.receiptDescription} title={copy.receiptTitle}>
+        <DataTable
+          columns={batchColumns}
+          empty={<EmptyState description={copy.noDelivery} title={copy.receiptTitle} />}
+          getRowKey={(batch) => batch.id}
+          rows={deliveredBatches}
+        />
+        {canAssign && selectedBatch ? (
+          <PanelBody className="qr-site-action-workspace">
+            <div className="qr-site-action-workspace__intro">
+              <span>{copy.batchCode}</span>
+              <strong>{selectedBatch.batchCode}</strong>
+              <small>
+                {copy.totalQr} ·{" "}
+                {new Intl.NumberFormat(locale).format(selectedBatch.requestedQuantity)}
+              </small>
+            </div>
+            <form action={receiveQrBatch} className="qr-site-inline-form">
+              <ScopeFields item={selectedBatch} locale={locale} view="inventory" />
+              <input aria-label="batch" name="batchId" type="hidden" value={selectedBatch.id} />
+              <input
+                aria-label="batch version"
+                name="expectedVersion"
+                type="hidden"
+                value={selectedBatch.version}
+              />
+              <ReasonField
+                copy={assignmentCopy}
+                id={`receive-reason-${selectedBatch.id}`}
+                label={copy.receiptReason}
+              />
+              <button className="tt-button tt-button--compact" type="submit">
+                {copy.receiveAll}
+              </button>
+            </form>
+          </PanelBody>
         ) : null}
-      </div>
-      <StatusPill tone={getQrAssetStatusTone(asset.status)}>
-        {copy.statusLabels[asset.status]}
-      </StatusPill>
-    </header>
+      </ConsolePanel>
+
+      <ConsolePanel description={copy.inventoryAssetDescription} title={copy.inventoryAssetTitle}>
+        <DataTable
+          columns={assetColumns({ actionLabel: copy.action, assignmentCopy })}
+          empty={<EmptyState description={copy.noInventory} title={copy.inventoryAssetTitle} />}
+          getRowKey={(asset) => asset.id}
+          rows={model.assets}
+        />
+      </ConsolePanel>
+    </div>
   );
 }
 
-export function QrInventoryAssignmentView({
+function AssignmentWorkspace({
+  assignmentCopy,
   canAssign,
+  copy,
+  locale,
+  model,
+  selectedAssetId,
+  siteId,
+}: Omit<InventoryAssignmentViewProps, "canRevoke" | "section" | "selectedBatchId">) {
+  const stockAssets = getStockAssets(model);
+  const selectedAsset = stockAssets.find((asset) => asset.id === selectedAssetId);
+  const site = model.batches[0] ?? selectedAsset;
+  const validatedImports = model.imports.filter((item) => item.status === "VALIDATED");
+  const importColumns: Array<DataTableColumn<VehicleImportItem>> = [
+    {
+      cell: (item) => <CellEntity meta={item.createdAt} name={item.rowCount} />,
+      header: assignmentCopy.importTitle,
+      key: "import",
+    },
+    {
+      cell: () => <StatusPill tone="info">{assignmentCopy.originalDeleted}</StatusPill>,
+      header: assignmentCopy.status,
+      key: "status",
+    },
+    {
+      align: "right",
+      cell: (item) => (
+        <form action={commitVehicleImport} className="qr-site-row-form">
+          <ScopeFields item={item} locale={locale} view="assignment" />
+          <input aria-label="import" name="importId" type="hidden" value={item.id} />
+          <input
+            aria-label="import version"
+            name="expectedVersion"
+            type="hidden"
+            value={item.version}
+          />
+          <input
+            aria-label={assignmentCopy.reason}
+            name="reason"
+            type="hidden"
+            value={assignmentCopy.importTitle}
+          />
+          <button className="tt-row-action" type="submit">
+            {assignmentCopy.commit}
+          </button>
+        </form>
+      ),
+      header: copy.action,
+      key: "action",
+    },
+  ];
+
+  return (
+    <div className="qr-site-workspace-stack">
+      <ConsolePanel
+        description={copy.sectionDescriptions.assignment}
+        title={copy.sectionLabels.assignment}
+      >
+        <DataTable
+          columns={assetColumns({
+            action: (asset) => (
+              <Link
+                className="tt-row-action"
+                href={sectionHref(locale, siteId, "assignment", { asset: asset.id })}
+              >
+                {copy.select}
+              </Link>
+            ),
+            actionLabel: copy.action,
+            assignmentCopy,
+          })}
+          empty={<EmptyState description={copy.noStock} title={copy.sectionLabels.assignment} />}
+          getRowKey={(asset) => asset.id}
+          rows={stockAssets}
+        />
+        {canAssign && selectedAsset ? (
+          <PanelBody className="qr-site-action-workspace">
+            <div className="qr-site-action-workspace__intro">
+              <span>{assignmentCopy.humanCode}</span>
+              <strong>{selectedAsset.humanCode}</strong>
+              <StatusPill tone="success">
+                {assignmentCopy.statusLabels[selectedAsset.status]}
+              </StatusPill>
+            </div>
+            <form
+              action={assignQrAsset}
+              className="qr-site-inline-form qr-site-inline-form--two-fields"
+            >
+              <ScopeFields item={selectedAsset} locale={locale} view="assignment" />
+              <input
+                aria-label="QR asset"
+                name="qrAssetId"
+                type="hidden"
+                value={selectedAsset.id}
+              />
+              <input
+                aria-label="QR asset version"
+                name="expectedVersion"
+                type="hidden"
+                value={selectedAsset.version}
+              />
+              <label className="admin-field" htmlFor={`vehicle-plate-${selectedAsset.id}`}>
+                <span>{assignmentCopy.vehiclePlate}</span>
+                <input
+                  autoComplete="off"
+                  id={`vehicle-plate-${selectedAsset.id}`}
+                  maxLength={16}
+                  name="vehiclePlate"
+                  required
+                />
+              </label>
+              <ReasonField copy={assignmentCopy} id={`assignment-reason-${selectedAsset.id}`} />
+              <button className="tt-button tt-button--compact" type="submit">
+                {assignmentCopy.assign}
+              </button>
+            </form>
+          </PanelBody>
+        ) : null}
+      </ConsolePanel>
+
+      {canAssign && site ? (
+        <ConsolePanel
+          description={assignmentCopy.importDescription}
+          title={assignmentCopy.importTitle}
+        >
+          <PanelBody>
+            <details className="qr-site-disclosure">
+              <summary>{assignmentCopy.importTitle}</summary>
+              <form
+                action={validateVehicleImport}
+                className="qr-site-inline-form qr-site-inline-form--two-fields"
+              >
+                <input aria-label="locale" name="locale" type="hidden" value={locale} />
+                <input
+                  aria-label="site scope"
+                  name="siteScope"
+                  type="hidden"
+                  value={`${site.tenantId}|${site.managementCompanyId}|${site.siteId}`}
+                />
+                <input aria-label="site" name="siteId" type="hidden" value={site.siteId} />
+                <input aria-label="work area" name="view" type="hidden" value="assignment" />
+                <label className="admin-field" htmlFor="vehicle-import-file">
+                  <span>{assignmentCopy.csvFile}</span>
+                  <input
+                    accept=".csv,text/csv"
+                    id="vehicle-import-file"
+                    name="csvFile"
+                    required
+                    type="file"
+                  />
+                </label>
+                <ReasonField copy={assignmentCopy} id="vehicle-import-reason" />
+                <p className="qr-site-security-note">{assignmentCopy.securityNote}</p>
+                <button className="tt-button tt-button--compact" type="submit">
+                  {assignmentCopy.importTitle}
+                </button>
+              </form>
+            </details>
+          </PanelBody>
+          {validatedImports.length > 0 ? (
+            <DataTable
+              columns={importColumns}
+              getRowKey={(item) => item.id}
+              rows={validatedImports}
+            />
+          ) : null}
+        </ConsolePanel>
+      ) : null}
+    </div>
+  );
+}
+
+function ExceptionsWorkspace({
+  assignmentCopy,
   canRevoke,
   copy,
   locale,
   model,
-}: InventoryAssignmentViewProps) {
-  const stockAssets = model.assets.filter((asset) => asset.status === "IN_STOCK");
-  const assignedAssets = model.assets.filter((asset) =>
-    ["ASSIGNED", "ACTIVATION_PENDING", "ACTIVE", "SUSPENDED", "LOST", "DAMAGED"].includes(
-      asset.status,
-    ),
-  );
-  const siteOptions = Array.from(
-    new Map(
-      model.batches.map((batch) => [
-        batch.siteId,
-        {
-          label: batch.siteName,
-          managementCompanyId: batch.managementCompanyId,
-          siteId: batch.siteId,
-          tenantId: batch.tenantId,
-        },
-      ]),
-    ).values(),
-  );
+  selectedAssetId,
+  siteId,
+}: Omit<InventoryAssignmentViewProps, "canAssign" | "section" | "selectedBatchId">) {
+  const stockAssets = getStockAssets(model);
+  const managedAssets = getManagedAssets(model);
+  const selectedAsset = managedAssets.find((asset) => asset.id === selectedAssetId);
+  const replacements = selectedAsset
+    ? stockAssets.filter((asset) => asset.siteId === selectedAsset.siteId)
+    : [];
 
   return (
-    <>
-      <section aria-labelledby="inventory-receipt-title" className="admin-lifecycle-queue">
-        <header>
-          <h2 id="inventory-receipt-title">{copy.batchReceiveTitle}</h2>
-          <p>{copy.batchReceiveDescription}</p>
-        </header>
-        {canAssign && model.batches.some((batch) => batch.status === "DELIVERED") ? (
-          <div className="admin-approval-list">
-            {model.batches
-              .filter((batch) => batch.status === "DELIVERED")
-              .map((batch) => (
-                <form action={receiveQrBatch} className="admin-approval-card" key={batch.id}>
-                  <ScopeFields item={batch} locale={locale} />
-                  <input aria-label="batch" name="batchId" type="hidden" value={batch.id} />
-                  <input
-                    aria-label="batch version"
-                    name="expectedVersion"
-                    type="hidden"
-                    value={batch.version}
-                  />
-                  <strong>
-                    {batch.siteName} · {batch.batchCode} · {batch.requestedQuantity}
-                  </strong>
-                  <ReasonField copy={copy} id={`receive-reason-${batch.id}`} />
-                  <button className="tt-button" type="submit">
-                    {copy.batchReceive}
-                  </button>
-                </form>
-              ))}
+    <ConsolePanel
+      description={copy.sectionDescriptions.exceptions}
+      title={copy.sectionLabels.exceptions}
+    >
+      <DataTable
+        columns={assetColumns({
+          action: (asset) => (
+            <Link
+              className="tt-row-action"
+              href={sectionHref(locale, siteId, "exceptions", { asset: asset.id })}
+            >
+              {copy.select}
+            </Link>
+          ),
+          actionLabel: copy.action,
+          assignmentCopy,
+        })}
+        empty={<EmptyState description={copy.noExceptions} title={copy.sectionLabels.exceptions} />}
+        getRowKey={(asset) => asset.id}
+        rows={managedAssets}
+      />
+      {canRevoke && selectedAsset ? (
+        <PanelBody className="qr-site-action-workspace qr-site-action-workspace--exceptions">
+          <div className="qr-site-action-workspace__intro">
+            <span>{assignmentCopy.humanCode}</span>
+            <strong>{selectedAsset.humanCode}</strong>
+            <StatusPill tone={getQrAssetStatusTone(selectedAsset.status)}>
+              {assignmentCopy.statusLabels[selectedAsset.status]}
+            </StatusPill>
           </div>
-        ) : (
-          <p className="admin-catalog-read-only">{copy.empty}</p>
-        )}
-      </section>
-
-      {canAssign ? (
-        <section aria-labelledby="inventory-import-title" className="admin-lifecycle-queue">
-          <header>
-            <h2 id="inventory-import-title">{copy.importTitle}</h2>
-            <p>{copy.importDescription}</p>
-          </header>
-          {siteOptions.length > 0 ? (
-            <form action={validateVehicleImport} className="admin-approval-card">
-              <label className="admin-field" htmlFor="vehicle-import-site">
-                <span>{copy.site}</span>
-                <select id="vehicle-import-site" name="siteScope" required>
-                  {siteOptions.map((site) => (
-                    <option
-                      key={site.siteId}
-                      value={`${site.tenantId}|${site.managementCompanyId}|${site.siteId}`}
-                    >
-                      {site.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <input aria-label="locale" name="locale" type="hidden" value={locale} />
-              <label className="admin-field" htmlFor="vehicle-import-file">
-                <span>{copy.csvFile}</span>
+          <div className="qr-site-exception-actions">
+            {replacements.length > 0 ? (
+              <form action={replaceQrAsset} className="qr-site-inline-form">
+                <ScopeFields item={selectedAsset} locale={locale} view="exceptions" />
                 <input
-                  accept=".csv,text/csv"
-                  id="vehicle-import-file"
-                  name="csvFile"
-                  required
-                  type="file"
+                  aria-label="source QR asset"
+                  name="qrAssetId"
+                  type="hidden"
+                  value={selectedAsset.id}
                 />
-              </label>
-              <ReasonField copy={copy} id="vehicle-import-reason" />
-              <p className="admin-catalog-read-only">{copy.securityNote}</p>
-              <button className="tt-button" type="submit">
-                {copy.importTitle}
+                <input
+                  aria-label="source QR asset version"
+                  name="expectedVersion"
+                  type="hidden"
+                  value={selectedAsset.version}
+                />
+                <label className="admin-field" htmlFor={`replacement-${selectedAsset.id}`}>
+                  <span>{assignmentCopy.replacement}</span>
+                  <select id={`replacement-${selectedAsset.id}`} name="replacementScope" required>
+                    {replacements.map((replacement) => (
+                      <option
+                        key={replacement.id}
+                        value={`${replacement.id}|${replacement.version}`}
+                      >
+                        {replacement.humanCode}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <ReasonField copy={assignmentCopy} id={`replace-reason-${selectedAsset.id}`} />
+                <button className="tt-button tt-button--compact" type="submit">
+                  {assignmentCopy.replace}
+                </button>
+              </form>
+            ) : null}
+            <form action={revokeQrAsset} className="qr-site-inline-form">
+              <ScopeFields item={selectedAsset} locale={locale} view="exceptions" />
+              <input
+                aria-label="QR asset"
+                name="qrAssetId"
+                type="hidden"
+                value={selectedAsset.id}
+              />
+              <input
+                aria-label="QR asset version"
+                name="expectedVersion"
+                type="hidden"
+                value={selectedAsset.version}
+              />
+              <ReasonField copy={assignmentCopy} id={`revoke-reason-${selectedAsset.id}`} />
+              <button className="tt-button tt-button--secondary tt-button--compact" type="submit">
+                {assignmentCopy.revoke}
               </button>
             </form>
-          ) : (
-            <p className="admin-catalog-read-only">{copy.empty}</p>
-          )}
-
-          {model.imports
-            .filter((item) => item.status === "VALIDATED")
-            .map((item) => (
-              <form action={commitVehicleImport} className="admin-approval-card" key={item.id}>
-                <ScopeFields item={item} locale={locale} />
-                <input aria-label="import" name="importId" type="hidden" value={item.id} />
-                <input
-                  aria-label="import version"
-                  name="expectedVersion"
-                  type="hidden"
-                  value={item.version}
-                />
-                <strong>
-                  {item.rowCount} · {copy.originalDeleted}
-                </strong>
-                <ReasonField copy={copy} id={`import-commit-reason-${item.id}`} />
-                <button className="tt-button" type="submit">
-                  {copy.commit}
-                </button>
-              </form>
-            ))}
-        </section>
-      ) : null}
-
-      <section aria-labelledby="inventory-assignment-title" className="admin-lifecycle-queue">
-        <header>
-          <h2 id="inventory-assignment-title">{copy.assignTitle}</h2>
-          <p>{copy.assignDescription}</p>
-        </header>
-        {canAssign && stockAssets.length > 0 ? (
-          <div className="admin-approval-list">
-            {stockAssets.map((asset) => (
-              <form action={assignQrAsset} className="admin-approval-card" key={asset.id}>
-                <AssetIdentity asset={asset} copy={copy} />
-                <ScopeFields item={asset} locale={locale} />
-                <input aria-label="QR asset" name="qrAssetId" type="hidden" value={asset.id} />
-                <input
-                  aria-label="QR asset version"
-                  name="expectedVersion"
-                  type="hidden"
-                  value={asset.version}
-                />
-                <label className="admin-field" htmlFor={`vehicle-plate-${asset.id}`}>
-                  <span>{copy.vehiclePlate}</span>
-                  <input
-                    autoComplete="off"
-                    id={`vehicle-plate-${asset.id}`}
-                    maxLength={16}
-                    name="vehiclePlate"
-                    required
-                  />
-                </label>
-                <ReasonField copy={copy} id={`assignment-reason-${asset.id}`} />
-                <button className="tt-button" type="submit">
-                  {copy.assign}
-                </button>
-              </form>
-            ))}
           </div>
-        ) : (
-          <p className="admin-catalog-read-only">{copy.empty}</p>
-        )}
-      </section>
-
-      {canRevoke && assignedAssets.length > 0 ? (
-        <section aria-labelledby="inventory-lifecycle-title" className="admin-lifecycle-queue">
-          <header>
-            <h2 id="inventory-lifecycle-title">{copy.replacement}</h2>
-            <p>{copy.securityNote}</p>
-          </header>
-          <div className="admin-approval-list">
-            {assignedAssets.map((asset) => {
-              const replacements = stockAssets.filter((item) => item.siteId === asset.siteId);
-              return (
-                <article className="admin-approval-card" key={asset.id}>
-                  <AssetIdentity asset={asset} copy={copy} />
-                  {replacements.length > 0 ? (
-                    <form action={replaceQrAsset} className="admin-approval-form">
-                      <ScopeFields item={asset} locale={locale} />
-                      <input
-                        aria-label="source QR asset"
-                        name="qrAssetId"
-                        type="hidden"
-                        value={asset.id}
-                      />
-                      <input
-                        aria-label="source QR asset version"
-                        name="expectedVersion"
-                        type="hidden"
-                        value={asset.version}
-                      />
-                      <label className="admin-field" htmlFor={`replacement-${asset.id}`}>
-                        <span>{copy.replacement}</span>
-                        <select id={`replacement-${asset.id}`} name="replacementScope" required>
-                          {replacements.map((replacement) => (
-                            <option
-                              key={replacement.id}
-                              value={`${replacement.id}|${replacement.version}`}
-                            >
-                              {replacement.humanCode}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <ReasonField copy={copy} id={`replace-reason-${asset.id}`} />
-                      <button className="tt-button" type="submit">
-                        {copy.replace}
-                      </button>
-                    </form>
-                  ) : null}
-                  <form action={revokeQrAsset} className="admin-approval-form">
-                    <ScopeFields item={asset} locale={locale} />
-                    <input aria-label="QR asset" name="qrAssetId" type="hidden" value={asset.id} />
-                    <input
-                      aria-label="QR asset version"
-                      name="expectedVersion"
-                      type="hidden"
-                      value={asset.version}
-                    />
-                    <ReasonField copy={copy} id={`revoke-reason-${asset.id}`} />
-                    <button className="tt-button tt-button--secondary" type="submit">
-                      {copy.revoke}
-                    </button>
-                  </form>
-                </article>
-              );
-            })}
-          </div>
-        </section>
+        </PanelBody>
       ) : null}
-    </>
+    </ConsolePanel>
   );
+}
+
+export function QrInventoryAssignmentView(props: InventoryAssignmentViewProps) {
+  if (props.section === "inventory") return <InventoryWorkspace {...props} />;
+  if (props.section === "assignment") return <AssignmentWorkspace {...props} />;
+  return <ExceptionsWorkspace {...props} />;
 }
