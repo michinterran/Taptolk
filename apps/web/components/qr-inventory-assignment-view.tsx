@@ -21,6 +21,7 @@ import {
   assignQrAsset,
   commitVehicleImport,
   receiveQrBatch,
+  receiveQrBatchQuantity,
   replaceQrAsset,
   revokeQrAsset,
   validateVehicleImport,
@@ -221,7 +222,9 @@ function InventoryWorkspace({
   selectedBatchId,
   siteId,
 }: Omit<InventoryAssignmentViewProps, "canRevoke" | "section" | "selectedAssetId">) {
-  const deliveredBatches = model.batches.filter((batch) => batch.status === "DELIVERED");
+  const deliveredBatches = model.batches.filter(
+    (batch) => batch.status === "DELIVERED" || batch.status === "PARTIALLY_RECEIVED",
+  );
   const selectedBatch = deliveredBatches.find((batch) => batch.id === selectedBatchId);
   const batchColumns: Array<DataTableColumn<QrInventoryAssignmentBatchItem>> = [
     {
@@ -279,37 +282,88 @@ function InventoryWorkspace({
           rows={deliveredBatches}
         />
         {canAssign && selectedBatch ? (
-          <PanelBody className="qr-site-action-workspace">
-            <div className="qr-site-action-workspace__intro">
-              <span>{copy.batchCode}</span>
-              <strong>{selectedBatch.batchCode}</strong>
-              <small>
-                {copy.totalQr} ·{" "}
-                {new Intl.NumberFormat(locale).format(selectedBatch.requestedQuantity)}
-              </small>
+          <PanelBody className="qr-site-receipt-workspace">
+            <div className="qr-site-receipt-summary">
+              <div>
+                <span>{copy.batchCode}</span>
+                <strong>{selectedBatch.batchCode}</strong>
+              </div>
+              <div>
+                <span>{copy.receiptExpectedQuantity}</span>
+                <strong>
+                  {new Intl.NumberFormat(locale).format(selectedBatch.requestedQuantity)}
+                </strong>
+              </div>
+              <div>
+                <span>{assignmentCopy.status}</span>
+                <StatusPill
+                  tone={selectedBatch.status === "PARTIALLY_RECEIVED" ? "warning" : "success"}
+                >
+                  {copy.batchStatusLabels[selectedBatch.status] ?? selectedBatch.status}
+                </StatusPill>
+              </div>
             </div>
-            <form action={receiveQrBatch} className="qr-site-inline-form">
-              <ScopeFields item={selectedBatch} locale={locale} view="inventory" />
-              <input aria-label="batch" name="batchId" type="hidden" value={selectedBatch.id} />
-              <input
-                aria-label="batch version"
-                name="expectedVersion"
-                type="hidden"
-                value={selectedBatch.version}
-              />
-              <ReasonField
-                copy={assignmentCopy}
-                id={`receive-reason-${selectedBatch.id}`}
-                label={copy.receiptReason}
-              />
-              <QrOperationConfirmButton
-                cancelLabel={copy.cancel}
-                confirmLabel={copy.confirmAction}
-                description={copy.confirmDescriptions.receive}
-                label={copy.receiveAll}
-                title={copy.confirmTitles.receive}
-              />
-            </form>
+            <div className="qr-site-receipt-actions">
+              {selectedBatch.status === "DELIVERED" ? (
+                <form action={receiveQrBatch} className="qr-site-inline-form">
+                  <ScopeFields item={selectedBatch} locale={locale} view="inventory" />
+                  <input aria-label="batch" name="batchId" type="hidden" value={selectedBatch.id} />
+                  <input
+                    aria-label="batch version"
+                    name="expectedVersion"
+                    type="hidden"
+                    value={selectedBatch.version}
+                  />
+                  <ReasonField
+                    copy={assignmentCopy}
+                    id={`receive-reason-${selectedBatch.id}`}
+                    label={copy.receiptReason}
+                  />
+                  <QrOperationConfirmButton
+                    cancelLabel={copy.cancel}
+                    confirmLabel={copy.confirmAction}
+                    description={copy.confirmDescriptions.receive}
+                    label={copy.receiveAll}
+                    title={copy.confirmTitles.receive}
+                  />
+                </form>
+              ) : null}
+              <form action={receiveQrBatchQuantity} className="qr-site-inline-form">
+                <ScopeFields item={selectedBatch} locale={locale} view="inventory" />
+                <input aria-label="batch" name="batchId" type="hidden" value={selectedBatch.id} />
+                <input
+                  aria-label="batch version"
+                  name="expectedVersion"
+                  type="hidden"
+                  value={selectedBatch.version}
+                />
+                <label className="admin-field" htmlFor={`receipt-quantity-${selectedBatch.id}`}>
+                  <span>{copy.receiptQuantity}</span>
+                  <input
+                    defaultValue={selectedBatch.requestedQuantity}
+                    id={`receipt-quantity-${selectedBatch.id}`}
+                    max={selectedBatch.requestedQuantity}
+                    min={1}
+                    name="receivedQuantity"
+                    required
+                    type="number"
+                  />
+                </label>
+                <ReasonField
+                  copy={assignmentCopy}
+                  id={`partial-receive-reason-${selectedBatch.id}`}
+                  label={copy.receiptReason}
+                />
+                <QrOperationConfirmButton
+                  cancelLabel={copy.cancel}
+                  confirmLabel={copy.confirmAction}
+                  description={copy.confirmDescriptions.receive}
+                  label={copy.receiptPartial}
+                  title={copy.confirmTitles.receive}
+                  tone="secondary"
+                />
+              </form>
+            </div>
           </PanelBody>
         ) : null}
       </ConsolePanel>
@@ -404,14 +458,17 @@ function AssignmentWorkspace({
       >
         <DataTable
           columns={assetColumns({
-            action: (asset) => (
-              <Link
-                className="tt-button tt-button--secondary tt-button--compact qr-site-table-action"
-                href={sectionHref(locale, siteId, "assignment", { asset: asset.id })}
-              >
-                {copy.assignmentAction}
-              </Link>
-            ),
+            action: (asset) =>
+              asset.status === "IN_STOCK" ? (
+                <Link
+                  className="tt-button tt-button--secondary tt-button--compact qr-site-table-action"
+                  href={sectionHref(locale, siteId, "assignment", { asset: asset.id })}
+                >
+                  {copy.assignmentAction}
+                </Link>
+              ) : (
+                <span className="qr-site-unavailable">{copy.notAvailable}</span>
+              ),
             actionLabel: copy.action,
             assignmentCopy,
             copy,
@@ -427,14 +484,17 @@ function AssignmentWorkspace({
                 </Link>
               }
               className="qr-site-empty-state"
-              description={copy.noStock}
+              description={copy.noInventory}
               title={copy.sectionLabels.assignment}
             />
           }
           getRowKey={(asset) => asset.id}
-          rows={stockAssets}
+          rows={model.assets}
         />
-        {canAssign && selectedAsset ? (
+      </ConsolePanel>
+
+      {canAssign && selectedAsset ? (
+        <ConsolePanel description={copy.preassignmentDescription} title={copy.preassignmentTitle}>
           <PanelBody className="qr-site-action-workspace">
             <div className="qr-site-action-workspace__intro">
               <span>{assignmentCopy.humanCode}</span>
@@ -480,8 +540,8 @@ function AssignmentWorkspace({
               />
             </form>
           </PanelBody>
-        ) : null}
-      </ConsolePanel>
+        </ConsolePanel>
+      ) : null}
 
       {canAssign && site ? (
         <ConsolePanel
@@ -556,6 +616,10 @@ function ExceptionsWorkspace({
       description={copy.sectionDescriptions.exceptions}
       title={copy.sectionLabels.exceptions}
     >
+      <aside className="qr-site-workflow-note">
+        <strong>{copy.exceptionWorkflowTitle}</strong>
+        <p>{copy.exceptionWorkflowDescription}</p>
+      </aside>
       <DataTable
         columns={assetColumns({
           action: (asset) => (

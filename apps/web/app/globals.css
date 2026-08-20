@@ -3193,6 +3193,55 @@ h3,
   grid-template-columns: minmax(0, auto) minmax(0, 1fr);
 }
 
+.qr-site-receipt-workspace {
+  border-top: 1px solid var(--tt-color-border);
+  display: grid;
+  gap: var(--tt-space-5);
+}
+
+.qr-site-receipt-summary {
+  display: grid;
+  gap: var(--tt-space-4);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.qr-site-receipt-summary > div {
+  display: grid;
+  gap: var(--tt-space-1);
+}
+
+.qr-site-receipt-summary span {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-2xs);
+}
+
+.qr-site-receipt-summary strong {
+  overflow-wrap: anywhere;
+}
+
+.qr-site-receipt-actions {
+  border-top: 1px solid var(--tt-color-border);
+  display: grid;
+  gap: var(--tt-space-5);
+  padding-top: var(--tt-space-5);
+}
+
+.qr-site-workflow-note {
+  background: var(--tt-color-surface-subtle);
+  border-left: var(--tt-space-1) solid var(--tt-color-brand);
+  display: grid;
+  gap: var(--tt-space-1);
+  margin: 0;
+  padding: var(--tt-space-4) var(--tt-space-5);
+}
+
+.qr-site-workflow-note p {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-sm);
+  line-height: var(--tt-line-body);
+  margin: 0;
+}
+
 .qr-site-action-workspace__intro {
   align-items: flex-start;
   flex-direction: column;
@@ -3297,10 +3346,13 @@ button.tt-row-action {
 }
 
 .qr-operation-confirm-dialog {
+  margin: auto;
   background: transparent;
   border: 0;
   color: var(--tt-color-text);
   max-width: calc(100vw - var(--tt-space-6));
+  max-height: calc(100vh - var(--tt-space-8));
+  overflow: auto;
   padding: 0;
   width: calc(var(--tt-space-8) * 8);
 }
@@ -3373,6 +3425,7 @@ button.tt-row-action {
   }
 
   .qr-site-action-workspace,
+  .qr-site-receipt-summary,
   .qr-site-inline-form,
   .qr-site-inline-form--two-fields,
   .qr-site-exception-actions {

@@ -29,7 +29,6 @@ import {
   getManagedAssets,
   getNextQrDeliveryStatus,
   getQrActivationSummary,
-  getStockAssets,
   type QrActivationReadiness,
   type QrSiteOperationsSection,
 } from "./qr-site-operations-model";
@@ -91,7 +90,6 @@ export function QrSiteOperationsView({
     dateStyle: "medium",
     timeStyle: "short",
   });
-  const stockAssets = getStockAssets(model);
   const managedAssets = getManagedAssets(model);
   const activationSummary = getQrActivationSummary(model);
   const activationSteps = [
@@ -196,7 +194,7 @@ export function QrSiteOperationsView({
   ] satisfies Array<DataTableColumn<QrOperationsBatch>>;
 
   const sectionCounts: Readonly<Record<QrSiteOperationsSection, number>> = {
-    assignment: stockAssets.length,
+    assignment: model.assets.length,
     exceptions: managedAssets.length,
     inventory: model.assets.length,
     production: batches.length,

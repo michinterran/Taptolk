@@ -233,7 +233,7 @@ export async function receiveQrBatchQuantity(formData: FormData): Promise<never>
         ...scope(formData),
       });
     },
-    "site",
+    "qr-site",
   );
 }
 

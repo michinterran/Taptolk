@@ -506,10 +506,10 @@ export const ko = {
   "admin.qr.sample.preview.mobile": "모바일 미리보기",
   "admin.qr.sample.status": "샘플 상태",
   "admin.qr.securityNote": "고객·사이트 범위 격리 · 요청과 승인 분리 · 변경 기록 보존",
-  "admin.qr.inventory.assign": "차량에 배정",
+  "admin.qr.inventory.assign": "차량 사전 배정",
   "admin.qr.inventory.assign.description":
-    "입고된 QR을 차량에 수동 배정합니다. 차량번호 원문은 로그와 감사 데이터에 남기지 않습니다.",
-  "admin.qr.inventory.assign.title": "IN_STOCK QR 수동 배정",
+    "차주가 스캔하기 전에 차량을 알고 있을 때만 사전 배정합니다. 차량번호 원문은 로그와 감사 데이터에 남기지 않습니다.",
+  "admin.qr.inventory.assign.title": "차량 사전 배정",
   "admin.qr.inventory.batch.receive": "Batch 수령 처리",
   "admin.qr.inventory.batch.receive.description":
     "배송 완료 수량 전체를 한 transaction으로 검증하고 IN_STOCK으로 전환합니다.",
@@ -519,8 +519,8 @@ export const ko = {
   "admin.qr.inventory.empty": "현재 처리할 재고 항목이 없습니다.",
   "admin.qr.inventory.humanCode": "QR 식별 코드",
   "admin.qr.inventory.import.description":
-    "여러 차량을 한 번에 배정할 CSV를 먼저 검증합니다. 원본 파일은 저장하지 않고 즉시 폐기합니다.",
-  "admin.qr.inventory.import.title": "CSV 일괄 배정",
+    "차주 스캔 전에 여러 차량을 한 번에 사전 배정할 CSV를 검증합니다. 원본 파일은 저장하지 않고 즉시 폐기합니다.",
+  "admin.qr.inventory.import.title": "CSV 일괄 사전 배정",
   "admin.qr.inventory.originalDeleted": "원본 CSV 폐기 확인",
   "admin.qr.inventory.replace": "교체 QR로 Binding 이전",
   "admin.qr.inventory.replacement": "교체·폐기",
@@ -1443,10 +1443,10 @@ export const en = {
   "admin.qr.sample.status": "Sample status",
   "admin.qr.securityNote":
     "Customer and site scope isolation · separate request and approval · every change recorded",
-  "admin.qr.inventory.assign": "Assign to vehicle",
+  "admin.qr.inventory.assign": "Preassign vehicle",
   "admin.qr.inventory.assign.description":
-    "Manually assign an received QR. Full vehicle plates are excluded from logs and audit data.",
-  "admin.qr.inventory.assign.title": "Assign IN_STOCK QR assets",
+    "Preassign a vehicle only when the vehicle is known before the owner scans. Full vehicle plates are excluded from logs and audit data.",
+  "admin.qr.inventory.assign.title": "Vehicle preassignment",
   "admin.qr.inventory.batch.receive": "Receive Batch",
   "admin.qr.inventory.batch.receive.description":
     "Verify the full delivered quantity and move every item to IN_STOCK in one transaction.",
@@ -1456,8 +1456,8 @@ export const en = {
   "admin.qr.inventory.empty": "No inventory item currently needs action.",
   "admin.qr.inventory.humanCode": "QR Human Code",
   "admin.qr.inventory.import.description":
-    "Validate a CSV before assigning multiple vehicles at once. The original file is discarded without storage.",
-  "admin.qr.inventory.import.title": "Bulk assignment by CSV",
+    "Validate a CSV to preassign multiple vehicles before owners scan. The original file is discarded without storage.",
+  "admin.qr.inventory.import.title": "Bulk vehicle preassignment by CSV",
   "admin.qr.inventory.originalDeleted": "Original CSV discarded",
   "admin.qr.inventory.replace": "Transfer Binding to replacement",
   "admin.qr.inventory.replacement": "Replacement and revocation",
