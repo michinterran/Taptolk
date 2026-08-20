@@ -66,6 +66,7 @@ export interface InventoryAssignmentCopy {
 
 interface InventoryAssignmentViewProps {
   assignmentCopy: InventoryAssignmentCopy;
+  assetListState: QrSiteAssetListState;
   canAssign: boolean;
   canRevoke: boolean;
   copy: AdminQrSiteOperationsCopy;
@@ -75,6 +76,22 @@ interface InventoryAssignmentViewProps {
   selectedAssetId?: string | undefined;
   selectedBatchId?: string | undefined;
   siteId: string;
+}
+
+type QrSiteAssetSort = "batch" | "code" | "readiness" | "status";
+
+interface QrSiteAssetListState {
+  page: number;
+  pageSize: number;
+  query: string;
+  sort: QrSiteAssetSort;
+}
+
+interface AssetTableState {
+  currentPage: number;
+  pageRows: readonly QrInventoryAssignmentAssetItem[];
+  totalPages: number;
+  totalRows: number;
 }
 
 function ScopeFields({
@@ -152,22 +169,264 @@ function sectionHref(
   siteId: string,
   section: QrSiteOperationsSection,
   selection?: { asset?: string; batch?: string },
+  assetListState?: Partial<QrSiteAssetListState>,
 ): Route {
   const query = new URLSearchParams({ view: section });
   if (selection?.asset) query.set("asset", selection.asset);
   if (selection?.batch) query.set("batch", selection.batch);
+  if (assetListState?.query) query.set("q", assetListState.query);
+  if (assetListState?.sort) query.set("sort", assetListState.sort);
+  if (assetListState?.page) query.set("page", String(assetListState.page));
+  if (assetListState?.pageSize) query.set("pageSize", String(assetListState.pageSize));
   return `/${locale}/admin/qr-inventory/sites/${siteId}?${query.toString()}` as Route;
+}
+
+function siteHref(locale: AppLocale, siteId: string): Route {
+  return `/${locale}/admin/qr-inventory/sites/${siteId}` as Route;
+}
+
+function formatTemplate(template: string, values: Readonly<Record<string, string | number>>) {
+  return Object.entries(values).reduce(
+    (message, [key, value]) => message.replace(`{${key}}`, String(value)),
+    template,
+  );
+}
+
+function getAssetBatchCode(
+  asset: QrInventoryAssignmentAssetItem,
+  batchCodeById: ReadonlyMap<string, string>,
+  fallback: string,
+): string {
+  return batchCodeById.get(asset.batchId) ?? fallback;
+}
+
+function getAssetSearchText({
+  asset,
+  assignmentCopy,
+  batchCode,
+  copy,
+}: {
+  asset: QrInventoryAssignmentAssetItem;
+  assignmentCopy: InventoryAssignmentCopy;
+  batchCode: string;
+  copy: AdminQrSiteOperationsCopy;
+}): string {
+  const readiness = getQrActivationReadiness(asset.status);
+  return [
+    asset.humanCode,
+    batchCode,
+    asset.status,
+    assignmentCopy.statusLabels[asset.status],
+    copy.scanStatusLabels[readiness],
+    asset.currentVehicleLast4 ?? "",
+  ]
+    .join(" ")
+    .toLocaleLowerCase();
+}
+
+function sortAssets({
+  assetListState,
+  assets,
+  assignmentCopy,
+  batchCodeById,
+  copy,
+}: {
+  assetListState: QrSiteAssetListState;
+  assets: readonly QrInventoryAssignmentAssetItem[];
+  assignmentCopy: InventoryAssignmentCopy;
+  batchCodeById: ReadonlyMap<string, string>;
+  copy: AdminQrSiteOperationsCopy;
+}): readonly QrInventoryAssignmentAssetItem[] {
+  const needle = assetListState.query.toLocaleLowerCase();
+  const filtered = assets.filter((asset) => {
+    if (!needle) return true;
+    return getAssetSearchText({
+      asset,
+      assignmentCopy,
+      batchCode: getAssetBatchCode(asset, batchCodeById, copy.notAvailable),
+      copy,
+    }).includes(needle);
+  });
+  return [...filtered].sort((left, right) => {
+    if (assetListState.sort === "batch") {
+      return getAssetBatchCode(left, batchCodeById, "").localeCompare(
+        getAssetBatchCode(right, batchCodeById, ""),
+      );
+    }
+    if (assetListState.sort === "status") {
+      return assignmentCopy.statusLabels[left.status].localeCompare(
+        assignmentCopy.statusLabels[right.status],
+      );
+    }
+    if (assetListState.sort === "readiness") {
+      return copy.scanStatusLabels[getQrActivationReadiness(left.status)].localeCompare(
+        copy.scanStatusLabels[getQrActivationReadiness(right.status)],
+      );
+    }
+    return left.humanCode.localeCompare(right.humanCode);
+  });
+}
+
+function paginateAssets(
+  assets: readonly QrInventoryAssignmentAssetItem[],
+  assetListState: QrSiteAssetListState,
+): AssetTableState {
+  const totalPages = Math.max(1, Math.ceil(assets.length / assetListState.pageSize));
+  const currentPage = Math.min(Math.max(assetListState.page, 1), totalPages);
+  const start = (currentPage - 1) * assetListState.pageSize;
+  return {
+    currentPage,
+    pageRows: assets.slice(start, start + assetListState.pageSize),
+    totalPages,
+    totalRows: assets.length,
+  };
+}
+
+function AssetTableControls({
+  assetListState,
+  copy,
+  locale,
+  section,
+  siteId,
+  tableState,
+}: {
+  assetListState: QrSiteAssetListState;
+  copy: AdminQrSiteOperationsCopy;
+  locale: AppLocale;
+  section: Exclude<QrSiteOperationsSection, "production">;
+  siteId: string;
+  tableState: AssetTableState;
+}) {
+  const number = new Intl.NumberFormat(locale);
+  const shown = tableState.pageRows.length;
+  const summary = formatTemplate(copy.resultsSummary, {
+    page: number.format(tableState.currentPage),
+    pages: number.format(tableState.totalPages),
+    shown: number.format(shown),
+    total: number.format(tableState.totalRows),
+  });
+  return (
+    <>
+      <aside className="qr-site-workflow-note">
+        <strong>{copy.assetCodeTitle}</strong>
+        <p>{copy.assetCodeDescription}</p>
+      </aside>
+      <form action={siteHref(locale, siteId)} className="qr-site-filter" method="get">
+        <input aria-label="work area" name="view" type="hidden" value={section} />
+        <input aria-label="page" name="page" type="hidden" value="1" />
+        <label className="admin-field" htmlFor={`qr-site-search-${section}`}>
+          <span>{copy.filterLabel}</span>
+          <input
+            defaultValue={assetListState.query}
+            id={`qr-site-search-${section}`}
+            name="q"
+            placeholder={copy.filterPlaceholder}
+            type="search"
+          />
+        </label>
+        <label className="admin-field" htmlFor={`qr-site-sort-${section}`}>
+          <span>{copy.sortLabel}</span>
+          <select defaultValue={assetListState.sort} id={`qr-site-sort-${section}`} name="sort">
+            <option value="code">{copy.sortCode}</option>
+            <option value="batch">{copy.sortBatch}</option>
+            <option value="status">{copy.sortStatus}</option>
+            <option value="readiness">{copy.sortReadiness}</option>
+          </select>
+        </label>
+        <label className="admin-field" htmlFor={`qr-site-page-size-${section}`}>
+          <span>{copy.pageSize}</span>
+          <select
+            defaultValue={String(assetListState.pageSize)}
+            id={`qr-site-page-size-${section}`}
+            name="pageSize"
+          >
+            {[20, 50, 100].map((value) => (
+              <option key={value} value={value}>
+                {number.format(value)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="tt-button tt-button--compact" type="submit">
+          {copy.applyFilter}
+        </button>
+        <Link
+          className="tt-button tt-button--secondary tt-button--compact"
+          href={sectionHref(locale, siteId, section)}
+        >
+          {copy.resetFilter}
+        </Link>
+      </form>
+      <div className="qr-site-results-bar">
+        <span>{summary}</span>
+      </div>
+    </>
+  );
+}
+
+function AssetTablePagination({
+  assetListState,
+  copy,
+  locale,
+  section,
+  siteId,
+  tableState,
+}: {
+  assetListState: QrSiteAssetListState;
+  copy: AdminQrSiteOperationsCopy;
+  locale: AppLocale;
+  section: Exclude<QrSiteOperationsSection, "production">;
+  siteId: string;
+  tableState: AssetTableState;
+}) {
+  const number = new Intl.NumberFormat(locale);
+  return (
+    <nav aria-label={copy.pageSize} className="qr-site-pagination">
+      <Link
+        aria-disabled={tableState.currentPage <= 1}
+        className={`tt-button tt-button--secondary tt-button--compact${
+          tableState.currentPage <= 1 ? " tt-button--disabled" : ""
+        }`}
+        href={sectionHref(locale, siteId, section, undefined, {
+          ...assetListState,
+          page: tableState.currentPage <= 1 ? tableState.currentPage : tableState.currentPage - 1,
+        })}
+      >
+        {copy.pagePrevious}
+      </Link>
+      <span aria-current="page">
+        {number.format(tableState.currentPage)} / {number.format(tableState.totalPages)}
+      </span>
+      <Link
+        aria-disabled={tableState.currentPage >= tableState.totalPages}
+        className={`tt-button tt-button--secondary tt-button--compact${
+          tableState.currentPage >= tableState.totalPages ? " tt-button--disabled" : ""
+        }`}
+        href={sectionHref(locale, siteId, section, undefined, {
+          ...assetListState,
+          page:
+            tableState.currentPage >= tableState.totalPages
+              ? tableState.currentPage
+              : tableState.currentPage + 1,
+        })}
+      >
+        {copy.pageNext}
+      </Link>
+    </nav>
+  );
 }
 
 function assetColumns({
   action,
   actionLabel,
   assignmentCopy,
+  batchCodeById,
   copy,
 }: {
   action?: ((asset: QrInventoryAssignmentAssetItem) => ReactNode) | undefined;
   actionLabel: string;
   assignmentCopy: InventoryAssignmentCopy;
+  batchCodeById: ReadonlyMap<string, string>;
   copy: AdminQrSiteOperationsCopy;
 }): Array<DataTableColumn<QrInventoryAssignmentAssetItem>> {
   const columns: Array<DataTableColumn<QrInventoryAssignmentAssetItem>> = [
@@ -184,6 +443,11 @@ function assetColumns({
       ),
       header: assignmentCopy.humanCode,
       key: "asset",
+    },
+    {
+      cell: (asset) => getAssetBatchCode(asset, batchCodeById, copy.notAvailable),
+      header: copy.batchCode,
+      key: "batch",
     },
     {
       cell: (asset) => (
@@ -215,6 +479,7 @@ function assetColumns({
 
 function InventoryWorkspace({
   assignmentCopy,
+  assetListState,
   canAssign,
   copy,
   locale,
@@ -222,6 +487,11 @@ function InventoryWorkspace({
   selectedBatchId,
   siteId,
 }: Omit<InventoryAssignmentViewProps, "canRevoke" | "section" | "selectedAssetId">) {
+  const batchCodeById = new Map(model.batches.map((batch) => [batch.id, batch.batchCode]));
+  const inventoryAssets = paginateAssets(
+    sortAssets({ assetListState, assets: model.assets, assignmentCopy, batchCodeById, copy }),
+    assetListState,
+  );
   const deliveredBatches = model.batches.filter(
     (batch) => batch.status === "DELIVERED" || batch.status === "PARTIALLY_RECEIVED",
   );
@@ -369,8 +639,16 @@ function InventoryWorkspace({
       </ConsolePanel>
 
       <ConsolePanel description={copy.inventoryAssetDescription} title={copy.inventoryAssetTitle}>
+        <AssetTableControls
+          assetListState={assetListState}
+          copy={copy}
+          locale={locale}
+          section="inventory"
+          siteId={siteId}
+          tableState={inventoryAssets}
+        />
         <DataTable
-          columns={assetColumns({ actionLabel: copy.action, assignmentCopy, copy })}
+          columns={assetColumns({ actionLabel: copy.action, assignmentCopy, batchCodeById, copy })}
           empty={
             <EmptyState
               actions={
@@ -387,7 +665,15 @@ function InventoryWorkspace({
             />
           }
           getRowKey={(asset) => asset.id}
-          rows={model.assets}
+          rows={inventoryAssets.pageRows}
+        />
+        <AssetTablePagination
+          assetListState={assetListState}
+          copy={copy}
+          locale={locale}
+          section="inventory"
+          siteId={siteId}
+          tableState={inventoryAssets}
         />
       </ConsolePanel>
     </div>
@@ -396,6 +682,7 @@ function InventoryWorkspace({
 
 function AssignmentWorkspace({
   assignmentCopy,
+  assetListState,
   canAssign,
   copy,
   locale,
@@ -403,6 +690,11 @@ function AssignmentWorkspace({
   selectedAssetId,
   siteId,
 }: Omit<InventoryAssignmentViewProps, "canRevoke" | "section" | "selectedBatchId">) {
+  const batchCodeById = new Map(model.batches.map((batch) => [batch.id, batch.batchCode]));
+  const assignmentAssets = paginateAssets(
+    sortAssets({ assetListState, assets: model.assets, assignmentCopy, batchCodeById, copy }),
+    assetListState,
+  );
   const stockAssets = getStockAssets(model);
   const selectedAsset = stockAssets.find((asset) => asset.id === selectedAssetId);
   const site = model.batches[0] ?? selectedAsset;
@@ -456,13 +748,27 @@ function AssignmentWorkspace({
         description={copy.sectionDescriptions.assignment}
         title={copy.sectionLabels.assignment}
       >
+        <AssetTableControls
+          assetListState={assetListState}
+          copy={copy}
+          locale={locale}
+          section="assignment"
+          siteId={siteId}
+          tableState={assignmentAssets}
+        />
         <DataTable
           columns={assetColumns({
             action: (asset) =>
               asset.status === "IN_STOCK" ? (
                 <Link
                   className="tt-button tt-button--secondary tt-button--compact qr-site-table-action"
-                  href={sectionHref(locale, siteId, "assignment", { asset: asset.id })}
+                  href={sectionHref(
+                    locale,
+                    siteId,
+                    "assignment",
+                    { asset: asset.id },
+                    assetListState,
+                  )}
                 >
                   {copy.assignmentAction}
                 </Link>
@@ -471,6 +777,7 @@ function AssignmentWorkspace({
               ),
             actionLabel: copy.action,
             assignmentCopy,
+            batchCodeById,
             copy,
           })}
           empty={
@@ -489,7 +796,15 @@ function AssignmentWorkspace({
             />
           }
           getRowKey={(asset) => asset.id}
-          rows={model.assets}
+          rows={assignmentAssets.pageRows}
+        />
+        <AssetTablePagination
+          assetListState={assetListState}
+          copy={copy}
+          locale={locale}
+          section="assignment"
+          siteId={siteId}
+          tableState={assignmentAssets}
         />
       </ConsolePanel>
 
@@ -597,6 +912,7 @@ function AssignmentWorkspace({
 
 function ExceptionsWorkspace({
   assignmentCopy,
+  assetListState,
   canRevoke,
   copy,
   locale,
@@ -604,8 +920,13 @@ function ExceptionsWorkspace({
   selectedAssetId,
   siteId,
 }: Omit<InventoryAssignmentViewProps, "canAssign" | "section" | "selectedBatchId">) {
+  const batchCodeById = new Map(model.batches.map((batch) => [batch.id, batch.batchCode]));
   const stockAssets = getStockAssets(model);
   const managedAssets = getManagedAssets(model);
+  const exceptionAssets = paginateAssets(
+    sortAssets({ assetListState, assets: managedAssets, assignmentCopy, batchCodeById, copy }),
+    assetListState,
+  );
   const selectedAsset = managedAssets.find((asset) => asset.id === selectedAssetId);
   const replacements = selectedAsset
     ? stockAssets.filter((asset) => asset.siteId === selectedAsset.siteId)
@@ -620,18 +941,27 @@ function ExceptionsWorkspace({
         <strong>{copy.exceptionWorkflowTitle}</strong>
         <p>{copy.exceptionWorkflowDescription}</p>
       </aside>
+      <AssetTableControls
+        assetListState={assetListState}
+        copy={copy}
+        locale={locale}
+        section="exceptions"
+        siteId={siteId}
+        tableState={exceptionAssets}
+      />
       <DataTable
         columns={assetColumns({
           action: (asset) => (
             <Link
               className="tt-button tt-button--secondary tt-button--compact qr-site-table-action"
-              href={sectionHref(locale, siteId, "exceptions", { asset: asset.id })}
+              href={sectionHref(locale, siteId, "exceptions", { asset: asset.id }, assetListState)}
             >
               {copy.exceptionAction}
             </Link>
           ),
           actionLabel: copy.action,
           assignmentCopy,
+          batchCodeById,
           copy,
         })}
         empty={
@@ -650,7 +980,15 @@ function ExceptionsWorkspace({
           />
         }
         getRowKey={(asset) => asset.id}
-        rows={managedAssets}
+        rows={exceptionAssets.pageRows}
+      />
+      <AssetTablePagination
+        assetListState={assetListState}
+        copy={copy}
+        locale={locale}
+        section="exceptions"
+        siteId={siteId}
+        tableState={exceptionAssets}
       />
       {canRevoke && selectedAsset ? (
         <PanelBody className="qr-site-action-workspace qr-site-action-workspace--exceptions">

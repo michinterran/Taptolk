@@ -13,7 +13,10 @@ import { createAdminServerClient } from "../../../../../../../auth/server-client
 import { AdminPageHeader } from "../../../../../../../components/admin-page-header";
 import type { InventoryAssignmentCopy } from "../../../../../../../components/qr-inventory-assignment-view";
 import { readQrSiteOperationsSection } from "../../../../../../../components/qr-site-operations-model";
-import { QrSiteOperationsView } from "../../../../../../../components/qr-site-operations-view";
+import {
+  type QrSiteAssetSort,
+  QrSiteOperationsView,
+} from "../../../../../../../components/qr-site-operations-view";
 import { ADMIN_QR_SITE_OPERATIONS_COPY } from "../../../../../../../content/admin-qr-site-operations-copy";
 import { getMessages } from "../../../../../../../content/messages";
 import { isAppLocale } from "../../../../../../../i18n/locale";
@@ -28,6 +31,26 @@ function isUnavailable(error: unknown): boolean {
 
 function readValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function readPositiveInteger(value: string | string[] | undefined, fallback: number): number {
+  const candidate = Number(readValue(value));
+  return Number.isInteger(candidate) && candidate > 0 ? candidate : fallback;
+}
+
+function readAssetPageSize(value: string | string[] | undefined): 20 | 50 | 100 {
+  const candidate = readPositiveInteger(value, 20);
+  return candidate === 50 || candidate === 100 ? candidate : 20;
+}
+
+function readAssetSort(value: string | string[] | undefined): QrSiteAssetSort {
+  const candidate = readValue(value);
+  return candidate === "batch" ||
+    candidate === "readiness" ||
+    candidate === "status" ||
+    candidate === "code"
+    ? candidate
+    : "code";
 }
 
 function assignmentCopy(messages: Readonly<Record<string, string>>) {
@@ -117,6 +140,11 @@ export default async function QrSiteOperationsPage({
     asset?: string | string[];
     batch?: string | string[];
     error?: string | string[];
+    page?: string | string[];
+    pageSize?: string | string[];
+    q?: string | string[];
+    refreshed?: string | string[];
+    sort?: string | string[];
     status?: string | string[];
     view?: string | string[];
   }>;
@@ -153,6 +181,12 @@ export default async function QrSiteOperationsPage({
     const error = readValue(query.error);
     const status = readValue(query.status);
     const section = readQrSiteOperationsSection(readValue(query.view));
+    const assetListState = {
+      page: readPositiveInteger(query.page, 1),
+      pageSize: readAssetPageSize(query.pageSize),
+      query: (readValue(query.q) ?? "").trim().slice(0, 64),
+      sort: readAssetSort(query.sort),
+    };
     const errorMessages: Readonly<Record<string, string>> = {
       blocked: messages["admin.qr.error.blocked"],
       conflict: messages["admin.qr.error.conflict"],
@@ -176,6 +210,7 @@ export default async function QrSiteOperationsPage({
           assignmentCopy={
             assignmentCopy(messages as Readonly<Record<string, string>>) as InventoryAssignmentCopy
           }
+          assetListState={assetListState}
           canAdvanceDelivery={roleHasPermission(
             context.decision.membership.role,
             "qr-batch:delivery-advance",

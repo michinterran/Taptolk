@@ -39,7 +39,7 @@ export function percent(done: number, total: number): number {
 }
 
 export function clampQuantity(value: number): number {
-  if (!Number.isInteger(value)) return 100;
+  if (!Number.isInteger(value)) return QR_DIRECT_GENERATION_QUANTITY_MIN;
   return Math.min(
     QR_DIRECT_GENERATION_QUANTITY_MAX,
     Math.max(QR_DIRECT_GENERATION_QUANTITY_MIN, value),

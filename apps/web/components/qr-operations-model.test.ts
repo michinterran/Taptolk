@@ -43,7 +43,7 @@ describe("QR operations view model", () => {
   it("clamps generation quantity and calculates the server split plan", () => {
     expect(clampQuantity(0)).toBe(1);
     expect(clampQuantity(10_001)).toBe(10_000);
-    expect(clampQuantity(Number.NaN)).toBe(100);
+    expect(clampQuantity(Number.NaN)).toBe(1);
     expect(quantityPlan(101)).toEqual({ batches: 2, last: 1 });
     expect(quantityPlan(200)).toEqual({ batches: 2, last: 100 });
   });

@@ -18,7 +18,7 @@ function readValue(value: string | string[] | undefined): string | undefined {
 
 function readQuantity(value: string | string[] | undefined): number {
   const candidate = Number(readValue(value));
-  return Number.isInteger(candidate) && candidate > 0 ? candidate : 100;
+  return Number.isInteger(candidate) && candidate > 0 ? candidate : 1;
 }
 
 function readPositiveInteger(value: string | string[] | undefined, fallback: number): number {

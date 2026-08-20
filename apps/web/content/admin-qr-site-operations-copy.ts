@@ -7,6 +7,7 @@ import type { AppLocale } from "../i18n/config";
 
 export interface AdminQrSiteOperationsCopy {
   action: string;
+  applyFilter: string;
   activationGuideDescription: string;
   activationGuideTitle: string;
   activationStepDescriptions: Readonly<Record<QrActivationReadiness, string>>;
@@ -50,6 +51,8 @@ export interface AdminQrSiteOperationsCopy {
   deliveryDescription: string;
   deliveryReason: string;
   assignmentAction: string;
+  assetCodeDescription: string;
+  assetCodeTitle: string;
   preassignmentDescription: string;
   preassignmentTitle: string;
   cancel: string;
@@ -69,15 +72,29 @@ export interface AdminQrSiteOperationsCopy {
   goToInventory: string;
   goToProduction: string;
   notAvailable: string;
+  pageNext: string;
+  pagePrevious: string;
+  pageSize: string;
   receiptAction: string;
+  refresh: string;
+  resetFilter: string;
+  resultsSummary: string;
   scanReadiness: string;
   scanStatusLabels: Readonly<Record<QrActivationReadiness, string>>;
+  filterLabel: string;
+  filterPlaceholder: string;
+  sortBatch: string;
+  sortCode: string;
+  sortLabel: string;
+  sortReadiness: string;
+  sortStatus: string;
 }
 
 export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSiteOperationsCopy>> =
   Object.freeze({
     en: {
       action: "Action",
+      applyFilter: "Apply",
       activationGuideDescription:
         "Admins confirm physical production, delivery, and site receipt. After receipt, an owner scan opens registration; the QR becomes usable only when the owner completes registration.",
       activationGuideTitle: "Path to a usable QR",
@@ -96,6 +113,9 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
         WAITING_FOR_RECEIPT: "Production or receipt pending",
       },
       assignmentAction: "Preassign vehicle",
+      assetCodeDescription:
+        "A generation batch is the printable bundle and shipment unit. QR identifier is the code for one physical sticker, so a downloaded bundle expands into multiple sticker rows.",
+      assetCodeTitle: "Batch and sticker code map",
       activeQr: "Active QR",
       back: "Back to QR operations",
       batchCode: "Batch",
@@ -165,6 +185,8 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
       exceptionWorkflowDescription:
         "Use this area after a site or owner reports a lost, damaged, or replacement-needed sticker. Review the reason first; replacement preserves history and revocation makes the QR unusable.",
       exceptionWorkflowTitle: "Exception handling",
+      filterLabel: "Search QR inventory",
+      filterPlaceholder: "Search batch, QR identifier, status, or vehicle suffix",
       generate: "Generate additional QR",
       goToAssignment: "Go to vehicle assignment",
       goToInventory: "Go to receipt and inventory",
@@ -180,6 +202,9 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
       noInventory: "No QR assets have been issued to this site.",
       noStock: "There are no in-stock QR assets ready for vehicle assignment.",
       notAvailable: "Not available",
+      pageNext: "Next",
+      pagePrevious: "Previous",
+      pageSize: "Rows per page",
       pendingActivation: "Activation pending",
       receiptDescription:
         "Select a delivered batch, compare the expected quantity with the shipment, and record a full or partial receipt. Only received QR assets move into site stock.",
@@ -187,6 +212,9 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
       receiptPartial: "Partial receipt",
       receiptReason: "Receipt reason",
       receiptAction: "Confirm receipt",
+      refresh: "Refresh",
+      resetFilter: "Reset",
+      resultsSummary: "{shown} of {total} shown · page {page}/{pages}",
       receiptTitle: "Delivery receipt",
       receiptQuantity: "Quantity received now",
       receiveAll: "Record full receipt",
@@ -208,6 +236,11 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
         production: "Production and delivery",
       },
       select: "Open",
+      sortBatch: "Batch",
+      sortCode: "QR identifier",
+      sortLabel: "Sort by",
+      sortReadiness: "Scan readiness",
+      sortStatus: "Inventory status",
       preassignmentDescription:
         "Use only when the site already knows the vehicle before the owner scans. The normal path is owner scan → vehicle registration; this operation is recorded as an ADMIN or CSV preassignment.",
       preassignmentTitle: "Advanced operations · vehicle preassignment",
@@ -231,6 +264,7 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
     },
     ko: {
       action: "작업",
+      applyFilter: "적용",
       activationGuideDescription:
         "관리자는 실제 제작·배송·사이트 입고까지만 확인합니다. 입고 후 차주가 QR을 스캔하면 등록을 시작할 수 있고, 차주 등록을 완료하면 QR이 사용 가능 상태가 됩니다.",
       activationGuideTitle: "QR 사용 가능 경로",
@@ -249,6 +283,9 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
         WAITING_FOR_RECEIPT: "제작·입고 대기",
       },
       assignmentAction: "차량 사전 배정",
+      assetCodeDescription:
+        "생성 묶음은 SVG 번들·출력·배송 단위이고, QR 식별 코드는 실제 스티커 1장 단위입니다. 다운로드한 묶음 파일은 이 표의 여러 개별 스티커 코드로 펼쳐집니다.",
+      assetCodeTitle: "생성 묶음과 개별 스티커 코드",
       activeQr: "활성 QR",
       back: "QR 운영으로 돌아가기",
       batchCode: "생성 묶음",
@@ -314,6 +351,8 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
       exceptionWorkflowDescription:
         "사이트 또는 차주가 분실·파손·교체 필요를 알린 뒤 이 영역에서 처리합니다. 사유를 먼저 확인하고, 교체는 이력을 보존하며 폐기는 QR을 사용할 수 없게 합니다.",
       exceptionWorkflowTitle: "예외 요청 처리",
+      filterLabel: "QR 재고 검색",
+      filterPlaceholder: "생성 묶음, QR 식별 코드, 상태, 차량 끝자리 검색",
       generate: "QR 추가 생성",
       goToAssignment: "차량 배정으로 이동",
       goToInventory: "입고·재고로 이동",
@@ -329,6 +368,9 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
       noInventory: "이 사이트에 발행된 QR이 없습니다.",
       noStock: "차량에 배정할 입고 QR이 없습니다.",
       notAvailable: "해당 없음",
+      pageNext: "다음",
+      pagePrevious: "이전",
+      pageSize: "페이지당 표시",
       pendingActivation: "활성화 대기",
       receiptDescription:
         "배송 완료 묶음을 선택하고 기대 수량과 실제 도착 수량을 비교해 전량 또는 일부 입고를 기록합니다. 입력한 수량만 사이트 재고로 전환됩니다.",
@@ -336,6 +378,9 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
       receiptPartial: "부분 입고",
       receiptReason: "입고 사유",
       receiptAction: "입고 확인",
+      refresh: "새로고침",
+      resetFilter: "초기화",
+      resultsSummary: "총 {total}개 중 {shown}개 표시 · {page}/{pages}페이지",
       receiptTitle: "배송 묶음 입고",
       receiptQuantity: "이번 입고 수량",
       receiveAll: "전량 입고 확인",
@@ -354,6 +399,11 @@ export const ADMIN_QR_SITE_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrSi
         production: "제작·배송",
       },
       select: "열기",
+      sortBatch: "생성 묶음순",
+      sortCode: "QR 식별 코드순",
+      sortLabel: "정렬",
+      sortReadiness: "스캔 준비 상태순",
+      sortStatus: "재고 상태순",
       preassignmentDescription:
         "차주가 스캔하기 전에 사이트가 차량을 알고 있을 때만 사용합니다. 기본 경로는 차주 스캔 → 차량 등록이며, 이 작업은 관리자 또는 CSV 사전 배정으로 기록됩니다.",
       preassignmentTitle: "고급 운영 · 차량 사전 배정",

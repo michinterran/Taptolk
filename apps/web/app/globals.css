@@ -3346,10 +3346,11 @@ button.tt-row-action {
 }
 
 .qr-operation-confirm-dialog {
-  margin: auto;
   background: transparent;
   border: 0;
   color: var(--tt-color-text);
+  inset: 0;
+  margin: auto;
   max-width: calc(100vw - var(--tt-space-6));
   max-height: calc(100vh - var(--tt-space-8));
   overflow: auto;

@@ -34,6 +34,7 @@ import {
 } from "./qr-site-operations-model";
 
 interface QrSiteOperationsViewProps {
+  assetListState: QrSiteAssetListState;
   assignmentCopy: InventoryAssignmentCopy;
   canAdvanceDelivery: boolean;
   canAssign: boolean;
@@ -53,6 +54,15 @@ interface QrSiteOperationsViewProps {
   statusMessage?: string | undefined;
 }
 
+export type QrSiteAssetSort = "batch" | "code" | "readiness" | "status";
+
+export interface QrSiteAssetListState {
+  page: number;
+  pageSize: number;
+  query: string;
+  sort: QrSiteAssetSort;
+}
+
 function statusTone(status: string): "neutral" | "info" | "success" | "warning" | "danger" {
   if (status === "FAILED" || status === "CANCELLED") return "danger";
   if (status === "COMPLETED" || status === "DELIVERED" || status === "GENERATED") {
@@ -66,7 +76,25 @@ function sectionHref(locale: AppLocale, siteId: string, section: QrSiteOperation
   return `/${locale}/admin/qr-inventory/sites/${siteId}?view=${section}` as Route;
 }
 
+function refreshHref(
+  locale: AppLocale,
+  siteId: string,
+  section: QrSiteOperationsSection,
+  assetListState: QrSiteAssetListState,
+): Route {
+  const query = new URLSearchParams({
+    page: String(assetListState.page),
+    pageSize: String(assetListState.pageSize),
+    refreshed: String(Date.now()),
+    sort: assetListState.sort,
+    view: section,
+  });
+  if (assetListState.query) query.set("q", assetListState.query);
+  return `/${locale}/admin/qr-inventory/sites/${siteId}?${query.toString()}` as Route;
+}
+
 export function QrSiteOperationsView({
+  assetListState,
   assignmentCopy,
   canAdvanceDelivery,
   canAssign,
@@ -228,9 +256,16 @@ export function QrSiteOperationsView({
                 {copy.siteStatusLabels[site.status] ?? site.status}
               </StatusPill>
               <Link
+                className="tt-button tt-button--secondary tt-button--compact"
+                href={refreshHref(locale, site.id, section, assetListState)}
+                prefetch={false}
+              >
+                {copy.refresh}
+              </Link>
+              <Link
                 className="tt-button tt-button--compact"
                 href={
-                  `/${locale}/admin/qr-inventory?company=${site.managementCompanyId}&confirmed=1&quantity=100&site=${site.id}` as Route
+                  `/${locale}/admin/qr-inventory?company=${site.managementCompanyId}&confirmed=1&quantity=1&site=${site.id}` as Route
                 }
               >
                 {copy.generate}
@@ -336,6 +371,7 @@ export function QrSiteOperationsView({
         ) : (
           <QrInventoryAssignmentView
             assignmentCopy={assignmentCopy}
+            assetListState={assetListState}
             canAssign={canAssign}
             canRevoke={canRevoke}
             copy={copy}
