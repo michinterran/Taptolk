@@ -14496,3 +14496,696 @@ html[data-console-theme="light"] body:has(.admin-dashboard-shell) {
     justify-self: center;
   }
 }
+
+/* ============================================================================
+   Taptolk Console Design System v3
+
+   Reference-driven 2026-08-20 layer. Keep this as the final authority after v2
+   debt: the admin console becomes an operations-room cockpit with black canvas,
+   large Korean display type, card navigation and hot-pink action accents.
+   ========================================================================== */
+
+.admin-dashboard-shell {
+  --tt-console-v2-sidebar-width: var(--tt-console-v3-sidebar-width);
+  --tt-console-v2-topbar-height: var(--tt-console-v3-topbar-height);
+  --tt-console-v2-content-gutter: var(--tt-console-v3-content-gutter);
+  --tt-console-v2-page-gap: var(--tt-console-v3-page-gap);
+  --tt-console-v2-workbench-gap: var(--tt-console-v3-workbench-gap);
+  --tt-console-v2-panel-radius: var(--tt-console-v3-panel-radius);
+  --tt-console-v2-panel-padding: var(--tt-console-v3-panel-padding);
+  --tt-console-v2-panel-padding-compact: var(--tt-console-v3-panel-padding-compact);
+  --tt-console-v2-toolbar-height: var(--tt-console-v3-toolbar-height);
+  --tt-console-v2-control-height: var(--tt-console-v3-control-height);
+  --tt-console-v2-icon-button-size: var(--tt-console-v3-icon-button-size);
+  --tt-console-v2-tab-height: var(--tt-console-v3-tab-height);
+  --tt-console-v2-tab-underline: var(--tt-console-v3-tab-underline);
+  --tt-console-v2-chip-height: var(--tt-console-v3-chip-height);
+  --tt-console-v2-chip-padding-inline: var(--tt-console-v3-chip-padding-inline);
+  --tt-console-v2-rail-width: var(--tt-console-v3-rail-width);
+  --tt-console-v2-row-min-height: var(--tt-console-v3-row-min-height);
+  --tt-console-v2-progress-height: var(--tt-console-v3-progress-height);
+  --tt-console-v2-search-width: var(--tt-console-v3-search-width);
+  --tt-color-background: var(--tt-console-v3-canvas);
+  --tt-color-surface: var(--tt-console-v3-surface);
+  --tt-color-surface-subtle: var(--tt-console-v3-surface-raised);
+  --tt-color-surface-muted: var(--tt-console-v3-surface-muted);
+  --tt-color-border: var(--tt-console-v3-border);
+  --tt-color-border-strong: var(--tt-console-v3-border-strong);
+  --tt-color-text: var(--tt-console-v3-text);
+  --tt-color-text-muted: var(--tt-console-v3-text-muted);
+  --tt-color-text-subtle: var(--tt-console-v3-text-subtle);
+  --tt-color-brand: var(--tt-console-v3-accent);
+  --tt-color-brand-strong: var(--tt-console-v3-accent-strong);
+  --tt-color-brand-surface: var(--tt-console-v3-accent-surface);
+  --tt-color-brand-fg: var(--tt-console-v3-accent-strong);
+  --tt-color-focus: var(--tt-console-v3-focus);
+  --tt-color-on-brand: var(--tt-console-v3-on-accent);
+  --tt-color-success: var(--tt-console-v3-success);
+  --tt-color-success-surface: var(--tt-console-v3-success-surface);
+  --tt-color-success-fg: var(--tt-console-v3-success-fg);
+  --tt-color-warning: var(--tt-console-v3-warning);
+  --tt-color-warning-surface: var(--tt-console-v3-warning-surface);
+  --tt-color-warning-fg: var(--tt-console-v3-warning-fg);
+  --tt-color-danger: var(--tt-console-v3-danger);
+  --tt-color-danger-surface: var(--tt-console-v3-danger-surface);
+  --tt-color-danger-fg: var(--tt-console-v3-danger-fg);
+  --tt-color-info: var(--tt-console-v3-info);
+  --tt-color-info-surface: var(--tt-console-v3-info-surface);
+  --tt-color-info-fg: var(--tt-console-v3-info-fg);
+  --tt-color-neutral-surface: var(--tt-console-v3-neutral-surface);
+  --tt-color-neutral-fg: var(--tt-console-v3-neutral-fg);
+  --tt-heading-1-size: var(--tt-console-v3-display-size);
+  --tt-heading-1-weight: var(--tt-console-v3-display-weight);
+  --tt-heading-line-height: var(--tt-console-v3-display-line-height);
+  --tt-stat-value-size: var(--tt-console-v3-stat-value-size);
+  --tt-sidebar-item-active-surface: var(--tt-color-surface-muted);
+  --tt-sidebar-item-active-color: var(--tt-color-text);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--tt-color-brand) 7%, transparent),
+      transparent 32rem
+    ),
+    var(--tt-color-background);
+  font-family:
+    "Pretendard Variable", Pretendard, SUIT, "Noto Sans KR", Inter, system-ui, sans-serif;
+  letter-spacing: -0.012em;
+  padding: calc(var(--tt-console-v2-topbar-height) + var(--tt-space-7))
+    var(--tt-console-v2-content-gutter) var(--tt-space-8)
+    calc(var(--tt-console-v2-sidebar-width) + var(--tt-space-7));
+}
+
+body:has(.admin-dashboard-shell) {
+  background: var(--tt-console-v3-canvas);
+}
+
+.admin-console-sidebar {
+  background: linear-gradient(180deg, var(--tt-console-v3-sidebar), var(--tt-console-v3-canvas));
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-console-v2-panel-radius);
+  bottom: var(--tt-space-5);
+  box-shadow: none;
+  left: var(--tt-space-5);
+  padding: var(--tt-space-4);
+  top: calc(var(--tt-console-v2-topbar-height) + var(--tt-space-5));
+  width: calc(var(--tt-console-v2-sidebar-width) - var(--tt-space-6));
+}
+
+.admin-console-brand {
+  border-bottom: 1px solid var(--tt-color-border);
+  min-height: auto;
+  padding: var(--tt-space-3) 0 var(--tt-space-5);
+}
+
+.admin-console-brand img {
+  width: 7.5rem;
+}
+
+.admin-console-brand span {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-xs);
+}
+
+.admin-console-identity {
+  border-bottom: 1px solid var(--tt-color-border);
+  display: grid;
+  margin-bottom: var(--tt-space-4);
+  padding: var(--tt-space-7) 0 var(--tt-space-5);
+  position: relative;
+}
+
+.admin-console-identity::before {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tt-color-info) 82%, var(--tt-color-text)),
+      var(--tt-color-warning)
+    ),
+    var(--tt-color-surface-muted);
+  border-radius: var(--tt-radius-pill);
+  content: "";
+  display: block;
+  height: var(--tt-space-8);
+  margin-bottom: var(--tt-space-4);
+  width: var(--tt-space-8);
+}
+
+.admin-console-identity span,
+.admin-console-nav__section > p,
+.admin-console-session dt {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-xs);
+  font-weight: var(--tt-font-weight-semibold);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.admin-console-identity strong {
+  color: var(--tt-color-text);
+  font-size: var(--tt-font-size-lg);
+  font-weight: var(--tt-font-weight-bold);
+  letter-spacing: -0.035em;
+}
+
+.admin-console-nav {
+  gap: var(--tt-space-3);
+  padding: 0;
+}
+
+.admin-console-nav__section {
+  gap: var(--tt-space-2);
+}
+
+.admin-console-nav__section + .admin-console-nav__section {
+  margin-top: var(--tt-space-4);
+}
+
+.admin-console-nav__section > p {
+  padding-inline: 0;
+}
+
+.admin-console-nav__item,
+.admin-console-profile-link {
+  background: var(--tt-color-surface-raised);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-radius-sm);
+  color: var(--tt-color-text);
+  font-size: var(--tt-font-size-base);
+  font-weight: var(--tt-font-weight-bold);
+  min-height: 4rem;
+  padding: var(--tt-space-3);
+}
+
+.admin-console-nav__item > svg,
+.admin-console-profile-link > svg {
+  background: var(--tt-color-surface-muted);
+  border-radius: var(--tt-radius-xs);
+  color: var(--tt-color-text-muted);
+  height: 2.25rem;
+  padding: var(--tt-space-2);
+  width: 2.25rem;
+}
+
+.admin-console-nav__item:is(:hover, :focus-visible),
+.admin-console-profile-link:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--tt-color-surface-raised) 88%, var(--tt-color-brand));
+  border-color: var(--tt-color-border-strong);
+  color: var(--tt-color-text);
+}
+
+.admin-console-nav__item[aria-current="page"],
+.admin-console-profile-link[aria-current="page"] {
+  background: var(--tt-color-surface-muted);
+  border-color: var(--tt-color-brand);
+  box-shadow: inset 0 0 0 1px var(--tt-color-brand);
+  color: var(--tt-color-text);
+}
+
+.admin-console-nav__item[aria-current="page"] > svg,
+.admin-console-profile-link[aria-current="page"] > svg {
+  color: var(--tt-color-brand);
+}
+
+.admin-console-profile-link {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  margin-top: var(--tt-space-4);
+  padding-top: var(--tt-space-3);
+}
+
+.admin-console-session {
+  border-top: 1px solid var(--tt-color-border);
+  margin-top: var(--tt-space-4);
+  padding-top: var(--tt-space-4);
+}
+
+.admin-console-session dd {
+  color: var(--tt-color-text);
+  font-weight: var(--tt-font-weight-bold);
+}
+
+.admin-console-topbar {
+  background: color-mix(in srgb, var(--tt-console-v3-topbar) 92%, transparent);
+  border-bottom: 1px solid var(--tt-color-border);
+  grid-template-columns:
+    minmax(11rem, 0.75fr)
+    minmax(18rem, var(--tt-console-v2-search-width))
+    minmax(12rem, 0.75fr);
+  inset-inline-start: 0;
+  min-height: var(--tt-console-v2-topbar-height);
+}
+
+.admin-console-scope {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--tt-color-text);
+  font-weight: var(--tt-font-weight-bold);
+}
+
+.admin-console-search {
+  background: var(--tt-color-surface);
+  border-color: var(--tt-color-border);
+  min-height: var(--tt-console-v2-control-height);
+}
+
+.admin-console-account-actions :is(button, a, summary),
+.admin-dashboard-shell .locale-switcher,
+.admin-dashboard-shell .console-theme-toggle,
+.admin-console-account-menu > summary {
+  border-color: var(--tt-color-border);
+}
+
+.tt-page-header,
+.admin-compact-heading,
+.qr-console-v2-page-heading.admin-compact-heading {
+  align-items: flex-start;
+  border: 1px solid transparent;
+  display: flex;
+  gap: var(--tt-space-5);
+  justify-content: space-between;
+  margin: 0 0 var(--tt-console-v2-page-gap);
+  min-height: 11rem;
+  padding: var(--tt-space-2) 0 var(--tt-space-5);
+}
+
+.tt-page-header__copy,
+.admin-compact-heading > div:first-child {
+  max-width: 62rem;
+}
+
+.tt-page-header__eyebrow,
+.admin-compact-heading .eyebrow,
+.qr-console-v2-page-heading .tt-page-header__eyebrow {
+  color: var(--tt-color-warning-fg);
+  font-size: var(--tt-font-size-sm);
+  font-weight: var(--tt-font-weight-bold);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--tt-space-3);
+}
+
+.tt-page-header h1,
+.tt-page-header__title,
+.admin-compact-heading h1,
+.qr-console-v2-page-heading .tt-page-header__title {
+  color: var(--tt-color-text);
+  font-size: var(--tt-console-v3-display-size);
+  font-weight: var(--tt-console-v3-display-weight);
+  letter-spacing: var(--tt-console-v3-display-tracking);
+  line-height: var(--tt-console-v3-display-line-height);
+  max-width: 12ch;
+}
+
+.tt-page-header__description,
+.admin-compact-heading p:not(.eyebrow),
+.qr-console-v2-page-heading .tt-page-header__description {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-md);
+  line-height: var(--tt-line-body);
+  max-width: 62rem;
+}
+
+.tt-page-header__actions {
+  align-items: center;
+  display: flex;
+  gap: var(--tt-space-2);
+  padding-top: var(--tt-space-7);
+}
+
+.admin-dashboard-refresh,
+.qr-console-v2-tabbar__actions {
+  align-self: center;
+  justify-self: end;
+}
+
+.admin-dashboard-refresh {
+  min-height: var(--tt-console-v2-control-height);
+  padding-inline: var(--tt-button-padding-inline);
+}
+
+.tt-console-tabs,
+.qr-console-v2-tabs {
+  border-bottom: 1px solid var(--tt-color-border);
+  gap: var(--tt-space-5);
+}
+
+.tt-console-tabs a,
+.tt-console-tabs span,
+.qr-console-v2-tabs a,
+.qr-console-v2-tabs span {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-font-size-base);
+  font-weight: var(--tt-font-weight-bold);
+  min-height: var(--tt-console-v2-tab-height);
+}
+
+.tt-console-tabs [aria-current="page"],
+.qr-console-v2-tabs [aria-current="page"],
+.qr-console-v2-tabs span[aria-current="page"] {
+  color: var(--tt-color-text);
+  box-shadow: inset 0 calc(var(--tt-console-v2-tab-underline) * -1) 0 var(--tt-color-brand);
+}
+
+.console-dashboard-grid {
+  gap: var(--tt-console-v2-workbench-gap);
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.7fr) minmax(18rem, 0.7fr);
+  max-width: none;
+}
+
+.console-dashboard-widget,
+.console-analytics-frame,
+.operations-live-rail,
+.admin-dashboard-shell .console-analytics-frame,
+.admin-dashboard-shell .admin-tenant-create,
+.admin-dashboard-shell .admin-assignment-panel,
+.admin-dashboard-shell .admin-approval-card,
+.admin-dashboard-shell .admin-permission-matrix,
+.qr-console-v2-workbench,
+.qr-console-v2-table-panel,
+.admin-workspace-card,
+.admin-workspace-command-card {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-console-v2-panel-radius);
+  box-shadow: none;
+}
+
+.console-dashboard-widget > header,
+.console-dashboard-widget--table > header,
+.console-list-surface > header,
+.qr-console-v2-table-panel > header,
+.admin-workspace-card > header {
+  border-bottom: 1px solid var(--tt-color-border);
+  margin: 0;
+  padding: var(--tt-console-v2-panel-padding);
+}
+
+.console-dashboard-widget > header h2,
+.console-section-heading h2,
+.admin-workspace-card h2,
+.qr-console-v2-table-panel h2 {
+  color: var(--tt-color-text);
+  font-size: var(--tt-font-size-lg);
+  font-weight: var(--tt-font-weight-bold);
+  letter-spacing: -0.035em;
+}
+
+.console-dashboard-widget > header p,
+.console-section-heading p,
+.admin-workspace-card p,
+.qr-console-v2-table-panel p {
+  color: var(--tt-color-text-muted);
+}
+
+.console-dashboard-widget {
+  padding: 0;
+}
+
+.console-dashboard-widget > :not(header),
+.console-dashboard-widget--metrics > dl {
+  padding: var(--tt-console-v2-panel-padding);
+}
+
+.console-dashboard-metrics {
+  gap: 0;
+  padding: 0;
+}
+
+.console-dashboard-metrics > div {
+  border-color: var(--tt-color-border);
+  padding: var(--tt-space-4);
+}
+
+.console-dashboard-metrics dd,
+.tt-stat-tile__value,
+.admin-stat-strip strong,
+.admin-revenue-kpis strong {
+  color: var(--tt-color-text);
+  font-size: var(--tt-stat-value-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--tt-font-weight-bold);
+}
+
+.console-list-surface,
+.admin-dashboard-shell .console-list-surface,
+.admin-table-scroll,
+.tt-data-table-wrap {
+  background: var(--tt-color-surface);
+  border: 1px solid var(--tt-color-border);
+  border-radius: var(--tt-console-v2-panel-radius);
+  overflow: hidden;
+}
+
+.console-list-toolbar,
+.admin-catalog-toolbar,
+.qr-console-v2-toolbar {
+  background: var(--tt-color-surface);
+  border-bottom: 1px solid var(--tt-color-border);
+  min-height: var(--tt-console-v2-toolbar-height);
+  padding: var(--tt-space-3) var(--tt-console-v2-panel-padding);
+}
+
+.console-list-surface :is(.tt-data-table-wrap, .admin-table-scroll),
+.admin-directory-panel .tt-data-table-wrap,
+.admin-revenue-company-panel .tt-data-table-wrap,
+.operations-site-panel .tt-data-table-wrap,
+.admin-report-detail .tt-data-table-wrap,
+.console-dashboard-widget--table .tt-data-table-wrap,
+.qr-console-v2-table-panel .admin-table-scroll {
+  border: 0;
+  border-radius: 0;
+}
+
+.tt-data-table thead,
+.admin-table-scroll thead {
+  background: var(--tt-color-surface);
+}
+
+.admin-dashboard-shell .tt-data-table th,
+.admin-dashboard-shell .admin-table-scroll th {
+  color: var(--tt-color-text-muted);
+  font-size: var(--tt-table-header-font-size);
+  font-weight: var(--tt-font-weight-bold);
+}
+
+.tt-data-table tbody tr,
+.admin-table-scroll tbody tr {
+  min-height: var(--tt-console-v2-row-min-height);
+}
+
+.tt-data-table tbody tr:hover,
+.admin-table-scroll tbody tr:hover {
+  background: var(--tt-color-surface-raised);
+}
+
+.admin-catalog-layout,
+.admin-workspace-grid,
+.admin-command-grid,
+.admin-analytics-grid,
+.admin-revenue-grid,
+.qr-console-v2-workbench {
+  gap: var(--tt-console-v2-workbench-gap);
+}
+
+.admin-catalog-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--tt-console-v2-rail-width);
+}
+
+.admin-catalog-layout > aside {
+  display: block;
+}
+
+.qr-console-v2-tabbar {
+  align-items: center;
+  display: grid;
+  gap: var(--tt-space-4);
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: var(--tt-console-v2-page-gap);
+}
+
+.qr-console-v2-workbench {
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, var(--tt-console-v2-rail-width));
+  overflow: hidden;
+}
+
+.qr-console-v2-step,
+.qr-console-v2-step.is-active,
+.qr-console-v2-step.is-complete,
+.qr-console-v2-step.is-locked {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  min-height: var(--tt-console-v2-row-min-height);
+}
+
+.qr-console-v2-step + .qr-console-v2-step {
+  border-top: 1px solid var(--tt-color-border);
+}
+
+.qr-console-v2-step.is-active {
+  box-shadow: inset var(--tt-console-v2-tab-underline) 0 0 var(--tt-color-brand);
+}
+
+.qr-console-v2-step__marker {
+  background: var(--tt-color-surface-raised);
+  color: var(--tt-color-text-muted);
+}
+
+.qr-console-v2-step.is-active .qr-console-v2-step__marker {
+  background: var(--tt-color-brand);
+  color: var(--tt-color-on-brand);
+}
+
+.qr-console-v2-step.is-complete .qr-console-v2-step__marker {
+  background: var(--tt-color-success-surface);
+  color: var(--tt-color-success-fg);
+}
+
+.qr-console-v2-rail {
+  background: var(--tt-color-surface);
+  border-left: 1px solid var(--tt-color-border);
+  border-radius: 0;
+  position: sticky;
+  top: calc(var(--tt-console-v2-topbar-height) + var(--tt-space-5));
+}
+
+.qr-console-v2-chip,
+.tt-badge,
+.tt-status-pill {
+  border-radius: var(--tt-radius-pill);
+  font-weight: var(--tt-font-weight-bold);
+}
+
+.admin-dashboard-shell :is(.tt-button--primary, .admin-toolbar-create > summary) {
+  background: var(--tt-color-brand);
+  border-color: var(--tt-color-brand);
+  color: var(--tt-color-on-brand);
+}
+
+.admin-dashboard-shell
+  :is(.tt-button--secondary, .admin-dashboard-refresh, .admin-workspace-actions a) {
+  background: var(--tt-color-surface-raised);
+  border-color: var(--tt-color-border);
+  color: var(--tt-color-text);
+}
+
+.admin-dashboard-shell :is(input, select, textarea) {
+  background: var(--tt-color-surface);
+  border-color: var(--tt-color-border);
+  color: var(--tt-color-text);
+}
+
+.admin-dashboard-shell :is(input, select, textarea)::placeholder {
+  color: var(--tt-color-text-subtle);
+}
+
+html[data-console-theme="light"] .admin-dashboard-shell {
+  --tt-color-background: var(--tt-console-light-canvas);
+  --tt-color-surface: var(--tt-console-light-surface);
+  --tt-color-surface-subtle: var(--tt-console-light-surface-raised);
+  --tt-color-surface-muted: var(--tt-console-light-surface-muted);
+  --tt-color-border: var(--tt-console-light-border);
+  --tt-color-border-strong: var(--tt-console-light-border-strong);
+  --tt-color-text: var(--tt-console-light-text);
+  --tt-color-text-muted: var(--tt-console-light-text-muted);
+  --tt-color-text-subtle: var(--tt-console-light-text-subtle);
+  --tt-color-brand: var(--tt-console-v3-accent);
+  --tt-color-brand-strong: var(--tt-console-v3-accent-strong);
+  --tt-color-brand-surface: color-mix(
+    in srgb,
+    var(--tt-console-v3-accent) 10%,
+    var(--tt-console-light-surface)
+  );
+  background: var(--tt-color-background);
+}
+
+html[data-console-theme="light"] .admin-console-sidebar,
+html[data-console-theme="light"] .admin-console-topbar {
+  background: var(--tt-color-surface);
+}
+
+@media (max-width: 86rem) {
+  .admin-dashboard-shell {
+    --tt-console-v2-sidebar-width: 18rem;
+  }
+
+  .console-dashboard-grid,
+  .admin-catalog-layout,
+  .qr-console-v2-workbench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-catalog-layout > aside,
+  .qr-console-v2-rail {
+    position: static;
+  }
+
+  .qr-console-v2-rail {
+    border-left: 0;
+    border-top: 1px solid var(--tt-color-border);
+  }
+}
+
+@media (max-width: 64rem) {
+  .admin-dashboard-shell {
+    --tt-console-v2-sidebar-width: 4.75rem;
+    padding-left: calc(var(--tt-console-v2-sidebar-width) + var(--tt-space-5));
+  }
+
+  .admin-console-sidebar {
+    border-radius: 0;
+    bottom: 0;
+    left: 0;
+    padding-inline: var(--tt-space-2);
+    top: var(--tt-console-v2-topbar-height);
+    width: var(--tt-console-v2-sidebar-width);
+  }
+
+  .admin-console-identity,
+  .admin-console-session,
+  .admin-console-profile-link {
+    display: none;
+  }
+
+  .admin-console-nav__item {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .admin-console-nav__item > svg {
+    margin: 0;
+  }
+}
+
+@media (max-width: 48rem) {
+  .admin-dashboard-shell {
+    --tt-console-v2-sidebar-width: 0rem;
+    padding-inline: var(--tt-space-4);
+    padding-top: calc(var(--tt-console-v2-topbar-height) + var(--tt-space-5));
+  }
+
+  .admin-console-sidebar {
+    display: none;
+  }
+
+  .tt-page-header,
+  .admin-compact-heading,
+  .qr-console-v2-page-heading.admin-compact-heading,
+  .qr-console-v2-tabbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tt-page-header h1,
+  .tt-page-header__title,
+  .admin-compact-heading h1,
+  .qr-console-v2-page-heading .tt-page-header__title {
+    font-size: clamp(2.5rem, 16vw, 4rem);
+  }
+
+  .tt-page-header__actions,
+  .qr-console-v2-tabbar__actions {
+    justify-self: start;
+    padding-top: 0;
+  }
+}

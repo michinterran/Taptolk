@@ -284,6 +284,67 @@
   --tt-console-v2-rail-surface: var(--tt-console-dark-surface);
   --tt-console-v2-active-band: var(--tt-console-dark-surface-muted);
 
+  /* Console v3, approved 2026-08-20. This layer keeps the existing admin data
+     contracts but moves the surface toward the operator-provided reference:
+     an operations-room black canvas, oversized Korean display type, card-like
+     sidebar work navigation and hot-pink action accents. Public/PWA surfaces do
+     not consume these values directly. */
+  --tt-console-v3-canvas: #050505;
+  --tt-console-v3-sidebar: #080808;
+  --tt-console-v3-topbar: #050505;
+  --tt-console-v3-surface: #111112;
+  --tt-console-v3-surface-raised: #202020;
+  --tt-console-v3-surface-muted: #2a2a2a;
+  --tt-console-v3-border: #3b3b3d;
+  --tt-console-v3-border-strong: #5a5a5f;
+  --tt-console-v3-divider: #2e2e31;
+  --tt-console-v3-text: #f7f7f2;
+  --tt-console-v3-text-muted: #b9babd;
+  --tt-console-v3-text-subtle: #7c7d82;
+  --tt-console-v3-accent: #ff0a4f;
+  --tt-console-v3-accent-strong: #ff3f72;
+  --tt-console-v3-accent-surface: #370817;
+  --tt-console-v3-focus: #ff7aa0;
+  --tt-console-v3-on-accent: #ffffff;
+  --tt-console-v3-success: #66ef9b;
+  --tt-console-v3-success-surface: #0f3a28;
+  --tt-console-v3-success-fg: #82f5ad;
+  --tt-console-v3-warning: #f5c542;
+  --tt-console-v3-warning-surface: #33270a;
+  --tt-console-v3-warning-fg: #ffd85c;
+  --tt-console-v3-danger: #ff4d64;
+  --tt-console-v3-danger-surface: #3f0d18;
+  --tt-console-v3-danger-fg: #ff8b9a;
+  --tt-console-v3-info: #4cc9ff;
+  --tt-console-v3-info-surface: #0d2733;
+  --tt-console-v3-info-fg: #8adeff;
+  --tt-console-v3-neutral-surface: #242426;
+  --tt-console-v3-neutral-fg: #d8d8d8;
+  --tt-console-v3-sidebar-width: 21rem;
+  --tt-console-v3-topbar-height: 3.75rem;
+  --tt-console-v3-content-gutter: clamp(1.5rem, 2.4vw, 2.75rem);
+  --tt-console-v3-page-gap: 2rem;
+  --tt-console-v3-workbench-gap: 1.5rem;
+  --tt-console-v3-panel-radius: 1rem;
+  --tt-console-v3-panel-padding: 1.5rem;
+  --tt-console-v3-panel-padding-compact: 1rem;
+  --tt-console-v3-toolbar-height: 3.5rem;
+  --tt-console-v3-control-height: 2.75rem;
+  --tt-console-v3-icon-button-size: 2.625rem;
+  --tt-console-v3-tab-height: 3.5rem;
+  --tt-console-v3-tab-underline: 0.1875rem;
+  --tt-console-v3-chip-height: 2.25rem;
+  --tt-console-v3-chip-padding-inline: 0.9rem;
+  --tt-console-v3-rail-width: 21.25rem;
+  --tt-console-v3-row-min-height: 4.5rem;
+  --tt-console-v3-progress-height: 0.42rem;
+  --tt-console-v3-search-width: 32rem;
+  --tt-console-v3-display-size: clamp(3.25rem, 5.8vw, 5.75rem);
+  --tt-console-v3-display-line-height: 0.95;
+  --tt-console-v3-display-weight: 900;
+  --tt-console-v3-display-tracking: -0.055em;
+  --tt-console-v3-stat-value-size: 2rem;
+
   /* ---------------------------------------------------------------------------
      Mobile metrics (owner + caller), measured from docs/design-canon/pwa/*.png.
 
