@@ -60,6 +60,7 @@ export interface AdminQrOperationsCopy {
   reviewAndGenerate: string;
   reviewSummary: string;
   next: string;
+  refreshPage: string;
   refreshProgress: string;
   readyDownload: string;
   scopePanel: string;
@@ -164,6 +165,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       reviewAndGenerate: "Review and generate",
       reviewSummary: "Request summary",
       next: "Next",
+      refreshPage: "Refresh",
       refreshProgress: "Refresh progress",
       readyDownload: "Download ready",
       scopePanel: "Company and site selection",
@@ -289,6 +291,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       reviewAndGenerate: "최종 확인 후 생성",
       reviewSummary: "요청 요약",
       next: "다음",
+      refreshPage: "새로고침",
       refreshProgress: "진행률 새로고침",
       readyDownload: "다운로드 준비 완료",
       scopePanel: "관리회사와 사이트 선택",
