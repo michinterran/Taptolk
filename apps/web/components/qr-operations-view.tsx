@@ -134,28 +134,27 @@ export function QrOperationsView({
 
       <div className="admin-catalog-canvas qr-console-v2-canvas console-page">
         <PageHeader
+          actions={
+            <Link
+              className="tt-button tt-button--secondary tt-button--compact"
+              href={withQuery(locale, {
+                ...batchQueryBase,
+                page: currentBatchPage,
+                pageSize,
+                refreshed: Date.now(),
+                sitePage,
+                sitePageSize,
+              })}
+              prefetch={false}
+            >
+              {copy.refreshPage}
+            </Link>
+          }
           className="admin-compact-heading admin-catalog-heading qr-console-v2-page-heading"
           description={copy.description}
           eyebrow={copy.eyebrow}
           lines={headingLine(copy.title)}
         />
-        <div className="qr-console-v2-progress-actions">
-          <span className="qr-console-v2-help">{copy.siteOperationsDescription}</span>
-          <Link
-            className="tt-button tt-button--secondary tt-button--compact"
-            href={withQuery(locale, {
-              ...batchQueryBase,
-              page: currentBatchPage,
-              pageSize,
-              refreshed: Date.now(),
-              sitePage,
-              sitePageSize,
-            })}
-            prefetch={false}
-          >
-            {copy.refreshPage}
-          </Link>
-        </div>
 
         {statusMessage ? (
           <aside aria-live="polite" className="admin-notice admin-notice--success">
