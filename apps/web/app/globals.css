@@ -7649,6 +7649,30 @@ button.tt-row-action {
   margin-top: var(--tt-space-4);
 }
 
+.qr-console-v2-tabbar {
+  align-items: center;
+  border-bottom: 1px solid var(--tt-color-border);
+  display: flex;
+  gap: var(--tt-space-4);
+  justify-content: space-between;
+  margin-top: var(--tt-space-4);
+}
+
+.qr-console-v2-tabbar .qr-console-v2-tabs {
+  border-bottom: 0;
+  flex: 1 1 auto;
+  margin: 0;
+  min-width: 0;
+}
+
+.qr-console-v2-tabbar__actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  padding-block: var(--tt-space-1);
+}
+
 .qr-console-v2-tabs span {
   align-items: center;
   background: transparent;
@@ -8071,6 +8095,17 @@ button.tt-row-action {
 }
 
 @media (max-width: 48rem) {
+  .qr-console-v2-tabbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--tt-space-2);
+  }
+
+  .qr-console-v2-tabbar__actions {
+    justify-content: flex-start;
+    padding-block-start: 0;
+  }
+
   .qr-console-v2-quantity-control,
   .qr-console-v2-progress-grid {
     grid-template-columns: minmax(0, 1fr);

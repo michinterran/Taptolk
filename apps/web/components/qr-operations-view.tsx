@@ -121,6 +121,14 @@ export function QrOperationsView({
     request: activeRequestId,
     site: siteHref,
   };
+  const refreshHref = withQuery(locale, {
+    ...batchQueryBase,
+    page: currentBatchPage,
+    pageSize,
+    refreshed: Date.now(),
+    sitePage,
+    sitePageSize,
+  });
 
   return (
     <>
@@ -134,22 +142,6 @@ export function QrOperationsView({
 
       <div className="admin-catalog-canvas qr-console-v2-canvas console-page">
         <PageHeader
-          actions={
-            <Link
-              className="tt-button tt-button--secondary tt-button--compact"
-              href={withQuery(locale, {
-                ...batchQueryBase,
-                page: currentBatchPage,
-                pageSize,
-                refreshed: Date.now(),
-                sitePage,
-                sitePageSize,
-              })}
-              prefetch={false}
-            >
-              {copy.refreshPage}
-            </Link>
-          }
           className="admin-compact-heading admin-catalog-heading qr-console-v2-page-heading"
           description={copy.description}
           eyebrow={copy.eyebrow}
@@ -167,26 +159,37 @@ export function QrOperationsView({
           </aside>
         ) : null}
 
-        <ConsoleTabs
-          ariaLabel={copy.operationsPanel}
-          className="qr-console-v2-tabs"
-          items={[
-            { current: true, href: "#qr-generation", id: "generation", label: copy.issue },
-            {
-              count: operationsModel.totals.totalBatches,
-              href: "#qr-batches",
-              id: "batches",
-              label: copy.batchOperations,
-            },
-            {
-              count: operationsModel.totals.completedBatches,
-              href: "#qr-batches",
-              id: "download",
-              label: copy.downloadSvg,
-            },
-            { href: "#qr-batches", id: "failed", label: copy.progressFailed },
-          ]}
-        />
+        <div className="qr-console-v2-tabbar">
+          <ConsoleTabs
+            ariaLabel={copy.operationsPanel}
+            className="qr-console-v2-tabs"
+            items={[
+              { current: true, href: "#qr-generation", id: "generation", label: copy.issue },
+              {
+                count: operationsModel.totals.totalBatches,
+                href: "#qr-batches",
+                id: "batches",
+                label: copy.batchOperations,
+              },
+              {
+                count: operationsModel.totals.completedBatches,
+                href: "#qr-batches",
+                id: "download",
+                label: copy.downloadSvg,
+              },
+              { href: "#qr-batches", id: "failed", label: copy.progressFailed },
+            ]}
+          />
+          <div className="qr-console-v2-tabbar__actions">
+            <Link
+              className="tt-button tt-button--secondary tt-button--compact"
+              href={refreshHref}
+              prefetch={false}
+            >
+              {copy.refreshPage}
+            </Link>
+          </div>
+        </div>
 
         <section className="qr-console-v2-workbench" id="qr-generation">
           <div className="qr-console-v2-workbench__main">
