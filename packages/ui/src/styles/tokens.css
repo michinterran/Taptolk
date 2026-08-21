@@ -31,6 +31,7 @@
      block must not restate them, which is how the console drifted apart. */
   --tt-card-padding: 1.5rem;
   --tt-card-padding-compact: 1rem;
+  --tt-radius-none: 0;
   --tt-card-radius: 0.875rem;
   --tt-card-gap: 1.5rem;
   /* The console fills its column like the reference; only the gutter is reserved. */
@@ -320,6 +321,9 @@
   --tt-console-v3-info-fg: #8adeff;
   --tt-console-v3-neutral-surface: #242426;
   --tt-console-v3-neutral-fg: #d8d8d8;
+  --tt-console-v3-sidebar-icon-surface: #3a3a3d;
+  --tt-console-v3-sidebar-icon-fg: #c9c9cf;
+  --tt-console-v3-profile-gradient: linear-gradient(135deg, #29e58a, #3f80ff 52%, #d5be52);
   --tt-console-v3-sidebar-width: 21rem;
   --tt-console-v3-topbar-height: 3.75rem;
   --tt-console-v3-content-gutter: clamp(1.5rem, 2.4vw, 2.75rem);
@@ -344,6 +348,78 @@
   --tt-console-v3-display-weight: 900;
   --tt-console-v3-display-tracking: -0.055em;
   --tt-console-v3-stat-value-size: 2rem;
+  --tt-console-v3-shell-padding: calc(var(--tt-console-v2-topbar-height) + 4.5rem)
+    clamp(2rem, 4vw, 4.75rem) 5rem
+    calc(var(--tt-console-v2-sidebar-width) + clamp(2rem, 3vw, 3.25rem));
+  --tt-console-v3-shell-padding-tablet-left: calc(
+    var(--tt-console-v2-sidebar-width) +
+    var(--tt-space-5)
+  );
+  --tt-console-v3-shell-padding-mobile-inline: 1rem;
+  --tt-console-v3-sidebar-radius: 1.35rem;
+  --tt-console-v3-sidebar-padding: 1rem;
+  --tt-console-v3-sidebar-brand-padding: 0.35rem 0.25rem 1.15rem;
+  --tt-console-v3-sidebar-brand-label-size: 0.72rem;
+  --tt-console-v3-sidebar-identity-padding: 2.15rem 0 1.25rem;
+  --tt-console-v3-sidebar-avatar-radius: var(--tt-radius-pill);
+  --tt-console-v3-sidebar-meta-size: 0.74rem;
+  --tt-console-v3-sidebar-title-size: 1.02rem;
+  --tt-console-v3-sidebar-nav-label-padding-inline: 0.2rem;
+  --tt-console-v3-sidebar-nav-item-radius: 0.55rem;
+  --tt-console-v3-sidebar-nav-item-font-size: 1rem;
+  --tt-console-v3-sidebar-nav-item-padding: 0.7rem 0.85rem;
+  --tt-console-v3-sidebar-nav-icon-radius: 0.35rem;
+  --tt-console-v3-signout-radius: var(--tt-console-v3-sidebar-nav-item-radius);
+  --tt-console-v3-signout-font-size: 0.78rem;
+  --tt-console-v3-signout-padding: 0 0.8rem;
+  --tt-console-v3-session-padding-top: 1rem;
+  --tt-console-v3-profile-radius: 0.65rem;
+  --tt-console-v3-board-radius: 1.2rem;
+  --tt-console-v3-board-padding: clamp(1.5rem, 3vw, 2.8rem);
+  --tt-console-v3-board-padding-mobile: 1.1rem;
+  --tt-console-v3-hero-title-size: clamp(3.25rem, 5.1vw, 5.25rem);
+  --tt-console-v3-hero-title-size-mobile: clamp(2.55rem, 15vw, 3.8rem);
+  --tt-console-v3-hero-body-size: 0.98rem;
+  --tt-console-v3-kicker-size: 0.8rem;
+  --tt-console-v3-hero-meta-padding-top: 0.75rem;
+  --tt-console-v3-refresh-radius: var(--tt-radius-pill);
+  --tt-console-v3-refresh-font-size: 0.85rem;
+  --tt-console-v3-refresh-padding: 0 1.1rem;
+  --tt-console-v3-metrics-radius: 0.85rem;
+  --tt-console-v3-metrics-padding: 1rem;
+  --tt-console-v3-metrics-label-size: 0.78rem;
+  --tt-console-v3-metrics-value-size: var(--tt-console-v3-stat-value-size);
+  --tt-console-v3-reference-panel-radius: 0.85rem;
+  --tt-console-v3-panel-header-padding: 1.25rem 1.35rem;
+  --tt-console-v3-panel-title-size: 1.18rem;
+  --tt-console-v3-panel-body-size: 0.85rem;
+  --tt-console-v3-panel-time-size: 0.78rem;
+  --tt-console-v3-queue-padding: 1.15rem;
+  --tt-console-v3-queue-label-size: 0.82rem;
+  --tt-console-v3-queue-value-size: var(--tt-console-v3-stat-value-size);
+  --tt-console-v3-queue-note-size: 0.73rem;
+  --tt-console-v3-flow-padding: var(--tt-console-v3-panel-header-padding);
+  --tt-console-v3-flow-label-size: 0.78rem;
+  --tt-console-v3-inline-action-radius: 0.45rem;
+  --tt-console-v3-inline-action-font-size: 0.8rem;
+  --tt-console-v3-inline-action-padding: 0 0.75rem;
+  --tt-console-v3-list-padding: 1rem 1.15rem;
+  --tt-console-v3-list-title-size: 0.92rem;
+  --tt-console-v3-action-list-padding: var(--tt-console-v3-list-padding);
+  --tt-console-v3-action-note-size: 0.74rem;
+  --tt-console-v3-filter-padding: 0 0 1.35rem;
+  --tt-console-v3-workbench-radius: var(--tt-console-v3-reference-panel-radius);
+  --tt-console-v3-customer-list-padding: 1rem;
+  --tt-console-v3-customer-scope-padding: 1.1rem;
+  --tt-console-v3-detail-title-padding: 1.35rem;
+  --tt-console-v3-detail-title-size: 1.25rem;
+  --tt-console-v3-detail-body-size: 0.85rem;
+  --tt-console-v3-detail-grid-padding: 1rem 1.35rem;
+  --tt-console-v3-detail-value-size: 0.9rem;
+  --tt-console-v3-detail-actions-padding: 1.25rem 1.35rem;
+  --tt-console-v3-footer-padding-top: 1.25rem;
+  --tt-console-v3-empty-padding: 1.2rem 1.35rem;
+  --tt-console-v3-empty-font-size: 0.85rem;
 
   /* ---------------------------------------------------------------------------
      Mobile metrics (owner + caller), measured from docs/design-canon/pwa/*.png.

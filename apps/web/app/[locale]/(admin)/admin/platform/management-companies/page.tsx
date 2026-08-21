@@ -1,8 +1,13 @@
-import { ManagementCompanyCatalogService, type OrganizationStatus } from "@taptolk/application";
+import {
+  ManagementCompanyCatalogService,
+  type OrganizationStatus,
+  SiteCatalogService,
+} from "@taptolk/application";
 import { getAdminLandingArea } from "@taptolk/auth";
 import { roleHasPermission } from "@taptolk/domain";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseManagementCompanyCatalogRepository } from "../../../../../../admin/supabase-management-company-catalog-repository";
+import { createSupabaseSiteCatalogRepository } from "../../../../../../admin/supabase-site-catalog-repository";
 import { getLocalizedAdminPath } from "../../../../../../auth/admin-routing";
 import { requireReadyAdminContext } from "../../../../../../auth/page-guard";
 import { createAdminServerClient } from "../../../../../../auth/server-client";
@@ -32,6 +37,7 @@ export default async function ManagementCompaniesPage({
   params: Promise<{ locale: string }>;
   searchParams: Promise<{
     error?: string | string[];
+    company?: string | string[];
     page?: string | string[];
     q?: string | string[];
     state?: string | string[];
@@ -54,6 +60,7 @@ export default async function ManagementCompaniesPage({
 
   const membership = context.decision.membership;
   const search = readValue(query.q);
+  const requestedCompanyId = readValue(query.company);
   const stateFilter = readCompanyState(query.state);
   const catalog = await new ManagementCompanyCatalogService(
     createSupabaseManagementCompanyCatalogRepository(client),
@@ -67,6 +74,28 @@ export default async function ManagementCompaniesPage({
     ...(search ? { search } : {}),
     ...(stateFilter ? { status: stateFilter } : {}),
   });
+  const selectedCompany =
+    catalog.items.find((company) => company.id === requestedCompanyId) ?? catalog.items[0];
+  const selectedSites = selectedCompany
+    ? await new SiteCatalogService(createSupabaseSiteCatalogRepository(client))
+        .list({
+          actor: {
+            mfaVerified: context.mfaLevel === "aal2",
+            role: membership.role,
+            scope: { type: "PLATFORM" },
+          },
+          query: {
+            direction: "asc",
+            managementCompanyId: selectedCompany.id,
+            page: 1,
+            pageSize: 10,
+            sort: "name",
+            status: "ACTIVE",
+          },
+        })
+        .then((siteCatalog) => siteCatalog.items)
+        .catch(() => [])
+    : [];
   const copy = getMessages(locale);
   const errorMessages: Readonly<Record<string, string>> = {
     blocked: copy["admin.companies.error.blocked"],
@@ -142,6 +171,8 @@ export default async function ManagementCompaniesPage({
         locale={locale}
         portfolioCopy={ADMIN_COMPANY_PORTFOLIO_COPY[locale]}
         search={search}
+        selectedCompanyId={selectedCompany?.id}
+        selectedSites={selectedSites}
         stateFilter={stateFilter}
         statusMessage={status ? statusMessages[status] : undefined}
       />

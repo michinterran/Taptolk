@@ -1,15 +1,10 @@
 import { ArrowRight, Funnel, MagnifyingGlass, Plus } from "@phosphor-icons/react/dist/ssr";
-import type { ManagementCompanyCatalogPage, OrganizationStatus } from "@taptolk/application";
-import {
-  ConsoleTabs,
-  DataTable,
-  type DataTableColumn,
-  EmptyState,
-  MeterBar,
-  PageHeader,
-  Pagination,
-  StatusPill,
-} from "@taptolk/ui";
+import type {
+  ManagementCompanyCatalogPage,
+  OrganizationStatus,
+  SiteCatalogItem,
+} from "@taptolk/application";
+import { ConsoleTabs, MeterBar, Pagination, StatusPill } from "@taptolk/ui";
 import type { AdminCompanyPortfolioCopy } from "../content/admin-company-portfolio-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -66,6 +61,8 @@ interface ManagementCompanyCatalogViewProps {
   locale: AppLocale;
   portfolioCopy: AdminCompanyPortfolioCopy;
   search?: string | undefined;
+  selectedCompanyId?: string | undefined;
+  selectedSites: readonly SiteCatalogItem[];
   stateFilter?: OrganizationStatus | undefined;
   statusMessage?: string | undefined;
 }
@@ -74,24 +71,39 @@ type CompanyRow = ManagementCompanyCatalogPage["items"][number];
 type RiskLevel = CompanyRow["riskLevel"];
 type ResponseQuality = CompanyRow["responseQuality"];
 
-function getPageHref(
-  locale: AppLocale,
-  page: number,
-  search?: string,
-  stateFilter?: OrganizationStatus,
-): string {
-  const params = new URLSearchParams({ page: String(page) });
-  if (search) params.set("q", search);
-  if (stateFilter) params.set("state", stateFilter);
-  return `/${locale}/admin/platform/management-companies?${params.toString()}`;
+function getPageHref(input: {
+  companyId?: string | undefined;
+  locale: AppLocale;
+  page: number;
+  search?: string | undefined;
+  stateFilter?: OrganizationStatus | undefined;
+}): string {
+  const params = new URLSearchParams({ page: String(input.page) });
+  if (input.search) params.set("q", input.search);
+  if (input.stateFilter) params.set("state", input.stateFilter);
+  if (input.companyId) params.set("company", input.companyId);
+  return `/${input.locale}/admin/platform/management-companies?${params.toString()}`;
 }
 
-function headingLine(value: string): readonly [string] {
-  return [value];
+function getCompanyHref(input: {
+  companyId: string;
+  locale: AppLocale;
+  page: number;
+  search?: string | undefined;
+  stateFilter?: OrganizationStatus | undefined;
+}): string {
+  return getPageHref(input);
 }
 
 function percent(value: number, locale: AppLocale): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
+}
+
+function formatDate(locale: AppLocale, value: string | null): string {
+  if (!value) {
+    return "—";
+  }
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value));
 }
 
 function riskTone(riskLevel: RiskLevel): "danger" | "muted" | "success" | "warning" {
@@ -159,10 +171,6 @@ function contractStatusLabel(company: CompanyRow, copy: AdminCompanyPortfolioCop
             : copy.noContract;
 }
 
-function companySubline(company: CompanyRow, copy: ManagementCompanyCopy): string {
-  return company.address ? `${copy.address} ${company.address}` : "";
-}
-
 function shouldShowPlatformDirectBadge(company: CompanyRow, copy: ManagementCompanyCopy): boolean {
   return company.isPlatformDirect && !company.name.includes(copy.platformDirect);
 }
@@ -175,6 +183,8 @@ export function ManagementCompanyCatalogView({
   locale,
   portfolioCopy,
   search,
+  selectedCompanyId,
+  selectedSites,
   stateFilter,
   statusMessage,
 }: ManagementCompanyCatalogViewProps) {
@@ -182,98 +192,14 @@ export function ManagementCompanyCatalogView({
   const number = new Intl.NumberFormat(locale);
   const hasPrevious = catalog.page > 1;
   const hasNext = catalog.page < totalPages;
-  const columns = [
-    {
-      cell: (company) => (
-        <span className="tt-table-entity admin-catalog-company-cell">
-          <strong>
-            <a href={`/${locale}/admin/platform/management-companies/${company.id}`}>
-              {company.name}
-            </a>
-            {shouldShowPlatformDirectBadge(company, copy) ? (
-              <span className="tt-direct-badge">{copy.platformDirect}</span>
-            ) : null}
-          </strong>
-          {companySubline(company, copy) ? <small>{companySubline(company, copy)}</small> : null}
-        </span>
-      ),
-      header: copy.name,
-      key: "name",
-    },
-    {
-      align: "right",
-      cell: (company) => number.format(company.siteCount),
-      header: portfolioCopy.sites,
-      key: "sites",
-    },
-    {
-      cell: (company) => (
-        <span className="admin-plan-cell">
-          <strong>{planLabel(company, portfolioCopy)}</strong>
-          <small>{contractStatusLabel(company, portfolioCopy)}</small>
-        </span>
-      ),
-      header: portfolioCopy.planStatus,
-      key: "plan",
-    },
-    {
-      cell: (company) => (
-        <div className="admin-meter-cell">
-          <strong>{percent(company.capacityUsagePercent, locale)}%</strong>
-          <MeterBar
-            tone={
-              company.capacityUsagePercent >= 90
-                ? "danger"
-                : company.capacityUsagePercent >= 75
-                  ? "warning"
-                  : "success"
-            }
-            value={company.capacityUsagePercent}
-          />
-        </div>
-      ),
-      header: portfolioCopy.capacityUsage,
-      key: "capacityUsage",
-    },
-    {
-      align: "right",
-      cell: (company) => `${percent(company.qrActivationPercent, locale)}%`,
-      header: portfolioCopy.qrActivationRate,
-      key: "qrActivation",
-    },
-    {
-      cell: (company) => (
-        <StatusPill tone={responseTone(company.responseQuality)}>
-          {responseLabel(company.responseQuality, portfolioCopy)}
-        </StatusPill>
-      ),
-      header: portfolioCopy.responseQuality,
-      key: "responseQuality",
-    },
-    {
-      cell: (company) => (
-        <StatusPill tone={riskTone(company.riskLevel)}>
-          {riskLabel(company.riskLevel, portfolioCopy)}
-        </StatusPill>
-      ),
-      header: portfolioCopy.contractHealth,
-      key: "riskLevel",
-    },
-    {
-      align: "right",
-      cell: (company) => (
-        <a
-          className="admin-catalog-detail-link"
-          href={`/${locale}/admin/platform/management-companies/${company.id}`}
-        >
-          {portfolioCopy.details}
-          <ArrowRight aria-hidden="true" size={14} />
-        </a>
-      ),
-      header: copy.actions,
-      key: "actions",
-    },
-  ] satisfies Array<DataTableColumn<CompanyRow>>;
+  const selectedCompany =
+    catalog.items.find((company) => company.id === selectedCompanyId) ?? catalog.items[0];
+  const currentPageActive = catalog.items.filter((company) => company.status === "ACTIVE").length;
+  const currentPageSites = catalog.items.reduce((total, company) => total + company.siteCount, 0);
+  const currentPageQr = catalog.items.reduce((total, company) => total + company.activeQrCount, 0);
+  const reviewItems = catalog.items.filter(
+    (company) => company.status !== "ACTIVE" || company.riskLevel === "RISK",
+  );
 
   return (
     <>
@@ -285,11 +211,16 @@ export function ManagementCompanyCatalogView({
         pathname={`/${locale}/admin/platform/management-companies`}
       />
 
-      <div className="admin-catalog-canvas console-page console-list-page">
-        <div className="admin-catalog-main">
-          <PageHeader
-            actions={
-              canManage ? (
+      <div className="admin-reference-page admin-reference-page--customers">
+        <section className="admin-reference-board" aria-labelledby="admin-customer-title">
+          <header className="admin-reference-hero">
+            <div>
+              <p className="admin-reference-kicker">{copy.eyebrow}</p>
+              <h1 id="admin-customer-title">{portfolioCopy.portfolioTitle}</h1>
+              <p>{portfolioCopy.portfolioDescription}</p>
+            </div>
+            <div className="admin-reference-hero__meta">
+              {canManage ? (
                 <a
                   className="tt-button tt-button--compact"
                   href={`/${locale}/admin/platform/management-companies/new`}
@@ -297,13 +228,28 @@ export function ManagementCompanyCatalogView({
                   <Plus aria-hidden="true" size={16} />
                   {copy.createTitle}
                 </a>
-              ) : null
-            }
-            className="admin-compact-heading admin-catalog-heading"
-            description={portfolioCopy.portfolioDescription}
-            eyebrow={copy.eyebrow}
-            lines={headingLine(portfolioCopy.portfolioTitle)}
-          />
+              ) : null}
+            </div>
+          </header>
+
+          <section className="admin-reference-metrics" aria-label={portfolioCopy.companyPortfolio}>
+            <article>
+              <span>{portfolioCopy.totalCompanies}</span>
+              <strong>{number.format(catalog.total)}</strong>
+            </article>
+            <article>
+              <span>{portfolioCopy.activeCompanies}</span>
+              <strong>{number.format(catalog.activeContractCount)}</strong>
+            </article>
+            <article>
+              <span>{portfolioCopy.sites}</span>
+              <strong>{number.format(catalog.siteTotal)}</strong>
+            </article>
+            <article>
+              <span>{portfolioCopy.contractExpiring}</span>
+              <strong>{number.format(catalog.expiringContractCount)}</strong>
+            </article>
+          </section>
 
           <ConsoleTabs
             ariaLabel={portfolioCopy.companyPortfolio}
@@ -335,110 +281,302 @@ export function ManagementCompanyCatalogView({
             </aside>
           ) : null}
 
-          <section className="console-list-surface">
-            <form method="get">
-              <div className="admin-catalog-filter-bar console-list-toolbar">
-                <div className="admin-search-control admin-search-control--catalog">
-                  <MagnifyingGlass aria-hidden="true" size={17} />
-                  <label className="sr-only" htmlFor="company-search">
-                    {portfolioCopy.companySearch}
-                  </label>
-                  <input
-                    defaultValue={search}
-                    id="company-search"
-                    name="q"
-                    placeholder={portfolioCopy.companySearch}
-                    type="search"
-                  />
-                </div>
-                <label className="admin-filter-select" htmlFor="company-state-filter">
-                  <Funnel aria-hidden="true" size={16} />
-                  <span className="sr-only">{portfolioCopy.statusFilter}</span>
-                  <select defaultValue={stateFilter ?? ""} id="company-state-filter" name="state">
-                    <option value="">{portfolioCopy.allStatuses}</option>
-                    <option value="ACTIVE">{copy.statusLabels.ACTIVE}</option>
-                    <option value="SUSPENDED">{copy.statusLabels.SUSPENDED}</option>
-                    <option value="CLOSED">{copy.statusLabels.CLOSED}</option>
-                  </select>
-                </label>
-                <button className="tt-button tt-button--compact" type="submit">
-                  {portfolioCopy.applyFilters}
-                </button>
-                <a
-                  className="tt-button tt-button--secondary tt-button--compact"
-                  href={`/${locale}/admin/platform/management-companies`}
-                >
-                  {portfolioCopy.clearFilters}
-                </a>
-              </div>
-            </form>
-
-            <DataTable
-              className="admin-table-scroll admin-table-scroll--catalog"
-              columns={columns}
-              empty={
-                <EmptyState
-                  className="admin-catalog-empty admin-catalog-empty--compact"
-                  description={copy.emptyDescription}
-                  title={copy.emptyTitle}
-                />
-              }
-              getRowKey={(company) => company.id}
-              rows={catalog.items}
-            />
-
-            <footer className="admin-catalog-footer">
-              <span>{copy.total.replace("{count}", number.format(catalog.total))}</span>
-              <Pagination
-                aria-label={copy.paginationLabel}
-                className="admin-pagination admin-pagination--compact"
-                next={
-                  hasNext ? (
-                    <a
-                      className="tt-button tt-button--secondary tt-button--compact"
-                      href={getPageHref(locale, catalog.page + 1, search, stateFilter)}
-                    >
-                      {copy.next}
-                    </a>
-                  ) : (
-                    <button
-                      className="tt-button tt-button--secondary tt-button--compact"
-                      disabled
-                      type="button"
-                    >
-                      {copy.next}
-                    </button>
-                  )
-                }
-                previous={
-                  hasPrevious ? (
-                    <a
-                      className="tt-button tt-button--secondary tt-button--compact"
-                      href={getPageHref(locale, catalog.page - 1, search, stateFilter)}
-                    >
-                      {copy.previous}
-                    </a>
-                  ) : (
-                    <button
-                      className="tt-button tt-button--secondary tt-button--compact"
-                      disabled
-                      type="button"
-                    >
-                      {copy.previous}
-                    </button>
-                  )
-                }
-                summary={copy.page
-                  .replace("{current}", String(catalog.page))
-                  .replace("{total}", String(totalPages))}
+          <form className="admin-reference-filter" method="get">
+            <div className="admin-search-control admin-search-control--catalog">
+              <MagnifyingGlass aria-hidden="true" size={17} />
+              <label className="sr-only" htmlFor="company-search">
+                {portfolioCopy.companySearch}
+              </label>
+              <input
+                defaultValue={search}
+                id="company-search"
+                name="q"
+                placeholder={portfolioCopy.companySearch}
+                type="search"
               />
-              <span className="admin-catalog-page-size">{portfolioCopy.pageSize}</span>
-            </footer>
+            </div>
+            <label className="admin-filter-select" htmlFor="company-state-filter">
+              <Funnel aria-hidden="true" size={16} />
+              <span className="sr-only">{portfolioCopy.statusFilter}</span>
+              <select defaultValue={stateFilter ?? ""} id="company-state-filter" name="state">
+                <option value="">{portfolioCopy.allStatuses}</option>
+                <option value="ACTIVE">{copy.statusLabels.ACTIVE}</option>
+                <option value="SUSPENDED">{copy.statusLabels.SUSPENDED}</option>
+                <option value="CLOSED">{copy.statusLabels.CLOSED}</option>
+              </select>
+            </label>
+            <button className="tt-button tt-button--compact" type="submit">
+              {portfolioCopy.applyFilters}
+            </button>
+            <a
+              className="tt-button tt-button--secondary tt-button--compact"
+              href={`/${locale}/admin/platform/management-companies`}
+            >
+              {portfolioCopy.clearFilters}
+            </a>
+          </form>
+
+          <section className="admin-customer-workbench" aria-label={portfolioCopy.companyPortfolio}>
+            <article className="admin-customer-column">
+              <header>
+                <span>{portfolioCopy.resultCompanies}</span>
+                <strong>{portfolioCopy.companyColumnTitle}</strong>
+              </header>
+              <div className="admin-customer-list">
+                {catalog.items.length > 0 ? (
+                  catalog.items.map((company) => {
+                    const isSelected = selectedCompany?.id === company.id;
+                    return (
+                      <a
+                        aria-current={isSelected ? "true" : undefined}
+                        href={getCompanyHref({
+                          companyId: company.id,
+                          locale,
+                          page: catalog.page,
+                          search,
+                          stateFilter,
+                        })}
+                        key={company.id}
+                      >
+                        <strong>{company.name}</strong>
+                        <small>
+                          {portfolioCopy.sites} {number.format(company.siteCount)} ·{" "}
+                          {planLabel(company, portfolioCopy)}
+                        </small>
+                        <span>
+                          <StatusPill tone={riskTone(company.riskLevel)}>
+                            {riskLabel(company.riskLevel, portfolioCopy)}
+                          </StatusPill>
+                          {shouldShowPlatformDirectBadge(company, copy) ? (
+                            <small>{portfolioCopy.directOperation}</small>
+                          ) : null}
+                        </span>
+                      </a>
+                    );
+                  })
+                ) : (
+                  <p className="admin-reference-empty">{copy.emptyDescription}</p>
+                )}
+              </div>
+            </article>
+
+            <article className="admin-customer-column">
+              <header>
+                <span>{portfolioCopy.hierarchyLabel}</span>
+                <strong>{portfolioCopy.siteColumnTitle}</strong>
+              </header>
+              {selectedCompany ? (
+                <>
+                  <div className="admin-customer-scope-card">
+                    <strong>{selectedCompany.name}</strong>
+                    <span>
+                      {portfolioCopy.sites} {number.format(selectedCompany.siteCount)} ·{" "}
+                      {portfolioCopy.activeQr} {number.format(selectedCompany.activeQrCount)}
+                    </span>
+                    <MeterBar
+                      tone={selectedCompany.qrActivationPercent >= 80 ? "success" : "warning"}
+                      value={selectedCompany.qrActivationPercent}
+                    />
+                  </div>
+                  <div className="admin-customer-site-list">
+                    {selectedSites.length > 0 ? (
+                      selectedSites.map((site) => (
+                        <a
+                          href={`/${locale}/admin/sites?company=${site.managementCompanyId}`}
+                          key={site.id}
+                        >
+                          <span>
+                            <strong>{site.name}</strong>
+                            <small>{site.address ?? site.type}</small>
+                          </span>
+                          <span>
+                            <StatusPill tone={site.status === "ACTIVE" ? "success" : "warning"}>
+                              {copy.statusLabels[site.status]}
+                            </StatusPill>
+                            <small>
+                              {portfolioCopy.siteCapacity}{" "}
+                              {number.format(site.contractVehicleLimit)}
+                            </small>
+                          </span>
+                        </a>
+                      ))
+                    ) : (
+                      <p className="admin-reference-empty">{copy.emptyTitle}</p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="admin-reference-empty">{portfolioCopy.selectedCompanyEmpty}</p>
+              )}
+            </article>
+
+            <article className="admin-customer-detail">
+              <header>
+                <span>{portfolioCopy.scopePanelTitle}</span>
+                <strong>{portfolioCopy.detailColumnTitle}</strong>
+              </header>
+              {selectedCompany ? (
+                <>
+                  <div className="admin-customer-detail__title">
+                    <StatusPill tone={selectedCompany.status === "ACTIVE" ? "success" : "warning"}>
+                      {copy.statusLabels[selectedCompany.status]}
+                    </StatusPill>
+                    <h2>{selectedCompany.name}</h2>
+                    <p>{selectedCompany.address ?? selectedCompany.tenantName}</p>
+                  </div>
+                  <dl className="admin-customer-detail__grid">
+                    <div>
+                      <dt>{portfolioCopy.planStatus}</dt>
+                      <dd>
+                        {planLabel(selectedCompany, portfolioCopy)} ·{" "}
+                        {contractStatusLabel(selectedCompany, portfolioCopy)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{portfolioCopy.contractEnd}</dt>
+                      <dd>{formatDate(locale, selectedCompany.contractEndsAt)}</dd>
+                    </div>
+                    <div>
+                      <dt>{portfolioCopy.capacityUsage}</dt>
+                      <dd>{percent(selectedCompany.capacityUsagePercent, locale)}%</dd>
+                    </div>
+                    <div>
+                      <dt>{portfolioCopy.responseQuality}</dt>
+                      <dd>
+                        <StatusPill tone={responseTone(selectedCompany.responseQuality)}>
+                          {responseLabel(selectedCompany.responseQuality, portfolioCopy)}
+                        </StatusPill>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{portfolioCopy.contractHealth}</dt>
+                      <dd>
+                        <StatusPill tone={riskTone(selectedCompany.riskLevel)}>
+                          {riskLabel(selectedCompany.riskLevel, portfolioCopy)}
+                        </StatusPill>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{portfolioCopy.unresolved}</dt>
+                      <dd>{number.format(selectedCompany.unresolvedContactCount)}</dd>
+                    </div>
+                  </dl>
+                  <div className="admin-customer-detail__actions">
+                    <a
+                      href={`/${locale}/admin/platform/management-companies/${selectedCompany.id}`}
+                    >
+                      {portfolioCopy.details}
+                      <ArrowRight aria-hidden="true" size={14} />
+                    </a>
+                    <a href={`/${locale}/admin/sites?company=${selectedCompany.id}`}>
+                      {portfolioCopy.siteDetailAction}
+                      <ArrowRight aria-hidden="true" size={14} />
+                    </a>
+                  </div>
+                </>
+              ) : (
+                <p className="admin-reference-empty">{portfolioCopy.selectedCompanyEmpty}</p>
+              )}
+            </article>
           </section>
 
+          <section className="admin-reference-monitor admin-reference-monitor--compact">
+            <header>
+              <div>
+                <h2>{portfolioCopy.decisionQueue}</h2>
+                <p>{portfolioCopy.decisionQueueDescription}</p>
+              </div>
+              <strong>{number.format(reviewItems.length)}</strong>
+            </header>
+            {reviewItems.length > 0 ? (
+              <div className="admin-reference-list admin-reference-list--compact">
+                {reviewItems.slice(0, 4).map((company) => (
+                  <a
+                    href={`/${locale}/admin/platform/management-companies/${company.id}`}
+                    key={company.id}
+                  >
+                    <span>
+                      <strong>{company.name}</strong>
+                      <small>{portfolioCopy.reviewItemLabel}</small>
+                    </span>
+                    <StatusPill tone={riskTone(company.riskLevel)}>
+                      {riskLabel(company.riskLevel, portfolioCopy)}
+                    </StatusPill>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="admin-reference-empty">{portfolioCopy.decisionQueueEmptyDescription}</p>
+            )}
+          </section>
+
+          <footer className="admin-catalog-footer admin-catalog-footer--reference">
+            <span>{copy.total.replace("{count}", number.format(catalog.total))}</span>
+            <span>
+              {portfolioCopy.currentPageActive} {number.format(currentPageActive)} ·{" "}
+              {portfolioCopy.currentPageSites} {number.format(currentPageSites)} ·{" "}
+              {portfolioCopy.currentPageQr} {number.format(currentPageQr)}
+            </span>
+            <Pagination
+              aria-label={copy.paginationLabel}
+              className="admin-pagination admin-pagination--compact"
+              next={
+                hasNext ? (
+                  <a
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    href={getPageHref({
+                      companyId: selectedCompany?.id,
+                      locale,
+                      page: catalog.page + 1,
+                      search,
+                      stateFilter,
+                    })}
+                  >
+                    {copy.next}
+                  </a>
+                ) : (
+                  <button
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    disabled
+                    type="button"
+                  >
+                    {copy.next}
+                  </button>
+                )
+              }
+              previous={
+                hasPrevious ? (
+                  <a
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    href={getPageHref({
+                      companyId: selectedCompany?.id,
+                      locale,
+                      page: catalog.page - 1,
+                      search,
+                      stateFilter,
+                    })}
+                  >
+                    {copy.previous}
+                  </a>
+                ) : (
+                  <button
+                    className="tt-button tt-button--secondary tt-button--compact"
+                    disabled
+                    type="button"
+                  >
+                    {copy.previous}
+                  </button>
+                )
+              }
+              summary={copy.page
+                .replace("{current}", String(catalog.page))
+                .replace("{total}", String(totalPages))}
+            />
+          </footer>
+
           {!canManage ? <p className="admin-catalog-read-only">{copy.readOnly}</p> : null}
-          <p className="admin-overview-scope-note">{copy.securityNote}</p>
-        </div>
+          <p className="admin-reference-scope-note">{copy.securityNote}</p>
+        </section>
       </div>
     </>
   );

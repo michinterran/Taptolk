@@ -9,7 +9,6 @@ import {
   QrCodeIcon,
   ShieldCheckIcon,
   SignOutIcon,
-  UserCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Route } from "next";
 import Link from "next/link";
@@ -283,6 +282,8 @@ export async function AdminPageHeader({
                   ? copy["admin.company.eyebrow"]
                   : copy["admin.dashboard.eyebrow"]}
             </strong>
+            <small>{getAdminRoleLabel(copy, membership.role)}</small>
+            <small title={context.email ?? undefined}>{context.email ?? "-"}</small>
           </div>
 
           <nav aria-label={copy["admin.nav.label"]} className="admin-console-nav">
@@ -298,8 +299,8 @@ export async function AdminPageHeader({
                       href={item.href}
                       key={item.href}
                     >
-                      {item.icon}
-                      {item.label}
+                      <span className="admin-console-nav__icon">{item.icon}</span>
+                      <span className="admin-console-nav__label">{item.label}</span>
                     </Link>
                   );
                 })}
@@ -312,9 +313,19 @@ export async function AdminPageHeader({
             className="admin-console-profile-link"
             href={profileHref}
           >
-            <IdentificationCardIcon aria-hidden="true" weight="duotone" />
-            {copy["admin.shared.account"]}
+            <span className="admin-console-nav__icon">
+              <IdentificationCardIcon aria-hidden="true" weight="duotone" />
+            </span>
+            <span className="admin-console-nav__label">{copy["admin.shared.account"]}</span>
           </Link>
+
+          <form action={signOutAdmin} className="admin-console-signout">
+            <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
+            <button type="submit">
+              <SignOutIcon aria-hidden="true" weight="duotone" />
+              {copy["admin.shared.signOut"]}
+            </button>
+          </form>
 
           <dl className="admin-console-session">
             <div>
@@ -365,32 +376,10 @@ export async function AdminPageHeader({
               pathname={pathname}
               title={localeTitle}
             />
-            <details className="admin-console-account-menu">
-              <summary aria-label={copy["admin.shared.account"]}>
-                <UserCircleIcon aria-hidden="true" weight="duotone" />
-                <span>
-                  <strong>{getAdminRoleLabel(copy, membership.role)}</strong>
-                  <small title={context.email ?? undefined}>{context.email ?? "-"}</small>
-                </span>
-              </summary>
-              <div>
-                <div className="admin-console-account-menu__identity">
-                  <strong>{getAdminRoleLabel(copy, membership.role)}</strong>
-                  <small title={context.email ?? undefined}>{context.email ?? "-"}</small>
-                </div>
-                <Link href={`/${locale}/admin/profile` as Route}>
-                  <IdentificationCardIcon aria-hidden="true" weight="duotone" />
-                  {copy["admin.shared.account"]}
-                </Link>
-                <form action={signOutAdmin}>
-                  <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
-                  <button type="submit">
-                    <SignOutIcon aria-hidden="true" weight="duotone" />
-                    {copy["admin.shared.signOut"]}
-                  </button>
-                </form>
-              </div>
-            </details>
+            <Link className="admin-console-topbar-profile" href={profileHref}>
+              <IdentificationCardIcon aria-hidden="true" weight="duotone" />
+              <span className="sr-only">{copy["admin.shared.account"]}</span>
+            </Link>
           </div>
         </header>
       </>

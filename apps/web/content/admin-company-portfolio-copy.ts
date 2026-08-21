@@ -9,6 +9,7 @@ export interface AdminCompanyPortfolioCopy {
   capacity: string;
   capacityUsage: string;
   clearFilters: string;
+  companyColumnTitle: string;
   companyPortfolio: string;
   companyPortfolioDescription: string;
   companySearch: string;
@@ -32,7 +33,9 @@ export interface AdminCompanyPortfolioCopy {
   decisionQueueDescription: string;
   decisionQueueEmptyDescription: string;
   decisionQueueEmptyTitle: string;
+  detailColumnTitle: string;
   details: string;
+  directOperation: string;
   healthGood: string;
   healthNeedsAttention: string;
   hierarchyLabel: string;
@@ -60,6 +63,10 @@ export interface AdminCompanyPortfolioCopy {
   scopeManageRange: string;
   scopePanelTitle: string;
   scopeSearch: string;
+  selectedCompanyEmpty: string;
+  siteColumnTitle: string;
+  siteCapacity: string;
+  siteDetailAction: string;
   sites: string;
   statusFilter: string;
   totalCompanies: string;
@@ -77,6 +84,7 @@ export const ADMIN_COMPANY_PORTFOLIO_COPY: Readonly<Record<AppLocale, AdminCompa
       capacity: "Vehicle capacity",
       capacityUsage: "Capacity usage",
       clearFilters: "Reset",
+      companyColumnTitle: "Management companies",
       companyPortfolio: "Customer management",
       companyPortfolioDescription:
         "Review each management company, its managed locations, QR activation, and approved operating capacity.",
@@ -103,7 +111,9 @@ export const ADMIN_COMPANY_PORTFOLIO_COPY: Readonly<Record<AppLocale, AdminCompa
       decisionQueueEmptyDescription:
         "No suspended or closed management companies appear in the current result.",
       decisionQueueEmptyTitle: "No company needs status review",
+      detailColumnTitle: "Operating detail",
       details: "View details",
+      directOperation: "Direct Taptolk operation",
       healthGood: "Good",
       healthNeedsAttention: "Attention",
       hierarchyLabel: "Management company > Site",
@@ -132,6 +142,10 @@ export const ADMIN_COMPANY_PORTFOLIO_COPY: Readonly<Record<AppLocale, AdminCompa
       scopeManageRange: "Manage scope",
       scopePanelTitle: "Management company dashboard",
       scopeSearch: "Search company and site",
+      selectedCompanyEmpty: "Select a management company to review its sites and operating detail.",
+      siteColumnTitle: "Site scope",
+      siteCapacity: "Site vehicle capacity",
+      siteDetailAction: "Open site catalog",
       sites: "Sites",
       statusFilter: "Filter by operating status",
       totalCompanies: "Companies",
@@ -146,6 +160,7 @@ export const ADMIN_COMPANY_PORTFOLIO_COPY: Readonly<Record<AppLocale, AdminCompa
       capacity: "계약 차량 규모",
       capacityUsage: "차량 용량 사용률",
       clearFilters: "초기화",
+      companyColumnTitle: "관리회사",
       companyPortfolio: "고객관리",
       companyPortfolioDescription:
         "관리회사별 사이트, 용량 사용률, 응답 품질, 계약 리스크를 한 표에서 확인합니다.",
@@ -171,7 +186,9 @@ export const ADMIN_COMPANY_PORTFOLIO_COPY: Readonly<Record<AppLocale, AdminCompa
       decisionQueueEmptyDescription:
         "현재 조회 결과에는 일시 중지 또는 종료 상태의 관리회사가 없습니다.",
       decisionQueueEmptyTitle: "상태 검토가 필요한 회사가 없습니다",
+      detailColumnTitle: "운영 상세",
       details: "상세 보기",
+      directOperation: "Taptolk 직접 운영",
       healthGood: "양호",
       healthNeedsAttention: "주의",
       hierarchyLabel: "관리회사 > 사이트",
@@ -200,6 +217,10 @@ export const ADMIN_COMPANY_PORTFOLIO_COPY: Readonly<Record<AppLocale, AdminCompa
       scopeManageRange: "현재 범위 관리·수정",
       scopePanelTitle: "관리회사 대시보드",
       scopeSearch: "관리회사·사이트 검색",
+      selectedCompanyEmpty: "관리회사를 선택하면 사이트와 운영 상세를 확인할 수 있습니다.",
+      siteColumnTitle: "사이트 운영 범위",
+      siteCapacity: "사이트 차량 용량",
+      siteDetailAction: "사이트 목록 열기",
       sites: "사이트",
       statusFilter: "운영 상태 필터",
       totalCompanies: "관리사",

@@ -1,13 +1,6 @@
-import {
-  BuildingsIcon,
-  CarIcon,
-  CheckCircleIcon,
-  MapPinAreaIcon,
-  QrCodeIcon,
-  WarningCircleIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ManagementCompanyCatalogItem, OperationsDashboardModel } from "@taptolk/application";
-import { DataTable, MeterBar, PageHeader, StatusPill } from "@taptolk/ui";
+import { MeterBar, StatusPill } from "@taptolk/ui";
 import type { AdminOverviewCopy } from "../content/admin-overview-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
@@ -27,10 +20,6 @@ interface AdminDashboardViewProps {
   variant: DashboardVariant;
 }
 
-const EMPTY_VALUE = "—";
-
-/** Returns null when there is no basis to divide by, so callers render an em dash
-    rather than a manufactured 0% or 100%. */
 function percent(part: number, total: number): number | null {
   if (total <= 0) {
     return null;
@@ -38,8 +27,16 @@ function percent(part: number, total: number): number | null {
   return Math.max(0, Math.min(100, Math.round((part / total) * 100)));
 }
 
+function formatFreshAt(locale: AppLocale, value: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
 export function AdminDashboardView({
   canApproveAccounts,
+  companyPortfolio = [],
   copy,
   locale,
   localeLabels,
@@ -47,20 +44,15 @@ export function AdminDashboardView({
   logoAlt,
   model,
   pathname,
-  companyPortfolio = [],
   variant,
 }: AdminDashboardViewProps) {
   const number = new Intl.NumberFormat(locale);
   const decimal = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const prefix = `/${locale}/admin`;
-  const titleLines =
-    variant === "platform" ? ([copy.platformLine1] as const) : ([copy.workspaceLine1] as const);
-  const attentionItems = [
-    { count: model.unresolvedCount, label: copy.unresolved },
-    { count: model.escalatedCount, label: copy.escalated },
-    { count: model.notificationFailedCount, label: copy.failedNotifications },
-    { count: model.openReportCount, label: copy.openReports },
-  ].filter((item) => item.count > 0);
+  const isPlatform = variant === "platform";
+  const title = isPlatform ? copy.platformLine1 : copy.workspaceLine1;
+  const description = isPlatform ? copy.platformDescription : copy.workspaceDescription;
+  const eyebrow = isPlatform ? copy.platformEyebrow : copy.workspaceEyebrow;
   const responseValue =
     model.medianOwnerResponseMs === null
       ? copy.noResponseData
@@ -74,169 +66,102 @@ export function AdminDashboardView({
     (total, company) => total + company.contractVehicleLimit,
     0,
   );
-  const metrics =
-    variant === "platform"
-      ? [
-          {
-            icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
-            label: copy.company,
-            value: number.format(companyPortfolio.length),
-          },
-          {
-            icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
-            label: copy.siteCount,
-            value: number.format(model.siteCount),
-          },
-          {
-            icon: <CarIcon aria-hidden="true" weight="duotone" />,
-            label: copy.contractCapacity,
-            value: number.format(platformVehicleCapacity),
-          },
-          {
-            icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
-            label: copy.activeQr,
-            value: number.format(model.activeQrCount),
-          },
-          {
-            icon: <WarningCircleIcon aria-hidden="true" weight="duotone" />,
-            label: copy.unresolved,
-            value: number.format(model.unresolvedCount),
-          },
-          {
-            icon: <CheckCircleIcon aria-hidden="true" weight="duotone" />,
-            label: copy.deliveryHealth,
-            value: deliverySuccessRate === null ? EMPTY_VALUE : `${deliverySuccessRate}%`,
-          },
-        ]
-      : [
-          {
-            icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
-            label: copy.siteCount,
-            value: number.format(model.siteCount),
-          },
-          {
-            icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
-            label: copy.activeQr,
-            value: number.format(model.activeQrCount),
-          },
-          {
-            icon: <CarIcon aria-hidden="true" weight="duotone" />,
-            label: copy.contactCount,
-            value: number.format(model.contactCount),
-          },
-          {
-            icon: <WarningCircleIcon aria-hidden="true" weight="duotone" />,
-            label: copy.unresolved,
-            value: number.format(model.unresolvedCount),
-          },
-          {
-            icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
-            label: copy.batches,
-            value: number.format(model.completedBatchCount),
-          },
-          {
-            icon: <CheckCircleIcon aria-hidden="true" weight="duotone" />,
-            label: copy.medianResponse,
-            value: responseValue,
-          },
-        ];
-  const customerRows = model.sitePerformance.map((site) => ({
-    activeQr: site.activeQrCount,
-    contactCount: site.contactCount,
-    href: `${prefix}/sites/${site.siteId}`,
-    name: site.siteName,
-    unresolvedCount: site.unresolvedCount,
-  }));
-  const platformColumns = [
+  const overviewMetrics = isPlatform
+    ? [
+        { label: copy.company, value: number.format(companyPortfolio.length) },
+        { label: copy.siteCount, value: number.format(model.siteCount) },
+        { label: copy.contractCapacity, value: number.format(platformVehicleCapacity) },
+        { label: copy.activeQr, value: number.format(model.activeQrCount) },
+      ]
+    : [
+        { label: copy.siteCount, value: number.format(model.siteCount) },
+        { label: copy.activeQr, value: number.format(model.activeQrCount) },
+        { label: copy.contactCount, value: number.format(model.contactCount) },
+        { label: copy.medianResponse, value: responseValue },
+      ];
+  const attentionItems = [
     {
-      cell: (company: ManagementCompanyCatalogItem) => company.name,
-      header: copy.company,
-      key: "company",
+      count: model.unresolvedCount,
+      description: copy.actionOperationsDescription,
+      href: `${prefix}/operations`,
+      label: copy.unresolved,
     },
     {
-      align: "right" as const,
-      cell: (company: ManagementCompanyCatalogItem) => number.format(company.siteCount),
-      header: copy.tableLocations,
-      key: "locations",
+      count: model.escalatedCount,
+      description: copy.attentionDescription,
+      href: `${prefix}/operations`,
+      label: copy.escalated,
     },
     {
-      align: "right" as const,
-      cell: (company: ManagementCompanyCatalogItem) => number.format(company.contractVehicleLimit),
-      header: copy.contractCapacity,
-      key: "capacity",
+      count: model.notificationFailedCount,
+      description: copy.deliveryHealthDescription,
+      href: `${prefix}/operations`,
+      label: copy.failedNotifications,
     },
     {
-      align: "right" as const,
-      cell: (company: ManagementCompanyCatalogItem) => number.format(company.activeQrCount),
-      header: copy.activeQr,
-      key: "activeQr",
-    },
-    {
-      cell: (company: ManagementCompanyCatalogItem) => {
-        const rate = percent(company.activeQrCount, company.contractVehicleLimit);
-        if (rate === null) {
-          return EMPTY_VALUE;
-        }
-        return (
-          <div className="admin-command-meter">
-            <div>
-              <span>{copy.activationRate}</span>
-              <strong>{rate}%</strong>
-            </div>
-            <MeterBar value={rate} />
-          </div>
-        );
-      },
-      header: copy.activationRate,
-      key: "activation",
-    },
-    {
-      cell: (company: ManagementCompanyCatalogItem) => (
-        <StatusPill tone={company.status === "ACTIVE" ? "success" : "warning"}>
-          {company.status === "ACTIVE" ? copy.statusHealthy : copy.statusAttention}
-        </StatusPill>
-      ),
-      header: copy.tableHealth,
-      key: "status",
-    },
-    {
-      cell: (company: ManagementCompanyCatalogItem) => (
-        <a href={`${prefix}/platform/management-companies/${company.id}`}>{copy.viewDetails}</a>
-      ),
-      header: copy.tableAction,
-      key: "action",
+      count: model.openReportCount,
+      description: copy.actionReportsDescription,
+      href: `${prefix}/reports`,
+      label: copy.openReports,
     },
   ];
-  const customerColumns = [
+  const quickActions = [
     {
-      cell: (row: (typeof customerRows)[number]) => row.name,
-      header: copy.tableName,
-      key: "name",
+      description: copy.actionManagementCompaniesDescription,
+      href: `${prefix}/platform/management-companies`,
+      label: copy.actionManagementCompanies,
     },
     {
-      align: "right" as const,
-      cell: (row: (typeof customerRows)[number]) => number.format(row.contactCount),
-      header: copy.tableRequests,
-      key: "requests",
+      description: copy.actionSitesDescription,
+      href: `${prefix}/sites`,
+      label: copy.actionSites,
     },
     {
-      align: "right" as const,
-      cell: (row: (typeof customerRows)[number]) => number.format(row.activeQr),
-      header: copy.activeQr,
-      key: "activeQr",
+      description: copy.actionQrDescription,
+      href: `${prefix}/qr-inventory`,
+      label: copy.actionQr,
     },
     {
-      align: "right" as const,
-      cell: (row: (typeof customerRows)[number]) => number.format(row.unresolvedCount),
-      header: copy.tableOpenIssues,
-      key: "openIssues",
+      description: copy.actionOperationsDescription,
+      href: `${prefix}/operations`,
+      label: copy.actionOperations,
     },
     {
-      cell: (row: (typeof customerRows)[number]) => <a href={row.href}>{copy.viewDetails}</a>,
-      header: copy.tableAction,
-      key: "action",
+      description: copy.actionReportsDescription,
+      href: `${prefix}/reports`,
+      label: copy.actionReports,
     },
   ];
+  if (canApproveAccounts) {
+    quickActions.push({
+      description: copy.actionApprovalsDescription,
+      href: `${prefix}/platform/access`,
+      label: copy.actionApprovals,
+    });
+  }
+  const customerRows = isPlatform
+    ? companyPortfolio.slice(0, 7).map((company) => ({
+        activeQr: company.activeQrCount,
+        href: `${prefix}/platform/management-companies/${company.id}`,
+        name: company.name,
+        progress: percent(company.activeQrCount, company.contractVehicleLimit),
+        secondary: `${copy.tableLocations} ${number.format(company.siteCount)} · ${
+          copy.contractCapacity
+        } ${number.format(company.contractVehicleLimit)}`,
+        status: company.status === "ACTIVE" ? copy.statusHealthy : copy.statusAttention,
+        tone: company.status === "ACTIVE" ? ("success" as const) : ("warning" as const),
+      }))
+    : model.sitePerformance.slice(0, 7).map((site) => ({
+        activeQr: site.activeQrCount,
+        href: `${prefix}/sites/${site.siteId}`,
+        name: site.siteName,
+        progress: percent(site.activeQrCount, Math.max(site.activeQrCount, site.contactCount)),
+        secondary: `${copy.tableRequests} ${number.format(site.contactCount)} · ${
+          copy.tableOpenIssues
+        } ${number.format(site.unresolvedCount)}`,
+        status: site.unresolvedCount > 0 ? copy.statusAttention : copy.statusHealthy,
+        tone: site.unresolvedCount > 0 ? ("warning" as const) : ("success" as const),
+      }));
 
   return (
     <>
@@ -248,122 +173,145 @@ export function AdminDashboardView({
         pathname={pathname}
       />
 
-      <PageHeader
-        actions={
-          <a className="admin-dashboard-refresh" href={pathname}>
-            {copy.refreshData}
-          </a>
-        }
-        description={variant === "platform" ? copy.platformDescription : copy.workspaceDescription}
-        eyebrow={variant === "platform" ? copy.platformEyebrow : copy.workspaceEyebrow}
-        lines={titleLines}
-      />
-
-      <p className="admin-overview-freshness">
-        {copy.freshAt}:{" "}
-        <time dateTime={model.freshAt}>
-          {new Intl.DateTimeFormat(locale, {
-            dateStyle: "medium",
-            timeStyle: "short",
-          }).format(new Date(model.freshAt))}
-        </time>
-      </p>
-
-      <section className="console-dashboard-grid" aria-label={copy.overviewTitle}>
-        <article className="console-dashboard-widget console-dashboard-widget--metrics">
-          <header>
-            <h2>{copy.overviewTitle}</h2>
-            <p>{copy.overviewDescription}</p>
+      <div className="admin-reference-page admin-reference-page--dashboard">
+        <section className="admin-reference-board" aria-labelledby="admin-dashboard-title">
+          <header className="admin-reference-hero">
+            <div>
+              <p className="admin-reference-kicker">{eyebrow}</p>
+              <h1 id="admin-dashboard-title">{title}</h1>
+              <p>{description}</p>
+            </div>
+            <div className="admin-reference-hero__meta">
+              <StatusPill
+                tone={
+                  deliverySuccessRate === null || deliverySuccessRate >= 95 ? "success" : "warning"
+                }
+              >
+                {deliverySuccessRate === null
+                  ? copy.statusHealthy
+                  : `${copy.deliveryHealth} ${deliverySuccessRate}%`}
+              </StatusPill>
+              <a className="admin-reference-refresh" href={pathname}>
+                {copy.refreshData}
+              </a>
+            </div>
           </header>
-          <dl className="console-dashboard-metrics">
-            {metrics.map((metric) => (
-              <div key={metric.label}>
-                <dt>
-                  {metric.icon}
-                  {metric.label}
-                </dt>
-                <dd>{metric.value}</dd>
-              </div>
+
+          <section className="admin-reference-metrics" aria-label={copy.overviewTitle}>
+            {overviewMetrics.map((metric) => (
+              <article key={metric.label}>
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+              </article>
             ))}
-          </dl>
-        </article>
+          </section>
 
-        <article className="console-dashboard-widget">
-          <header>
-            <h2>{copy.approvalQueue}</h2>
-            <p>{copy.attentionDescription}</p>
-          </header>
-          <div className="admin-command-queue">
-            {attentionItems.length > 0 ? (
-              attentionItems.map((item) => (
-                <a href={`${prefix}/operations`} key={item.label}>
+          <section className="admin-reference-monitor" aria-labelledby="admin-monitor-title">
+            <header>
+              <div>
+                <h2 id="admin-monitor-title">{copy.attentionTitle}</h2>
+                <p>{copy.actionsDescription}</p>
+              </div>
+              <time dateTime={model.freshAt}>
+                {copy.freshAt}: {formatFreshAt(locale, model.freshAt)}
+              </time>
+            </header>
+            <div className="admin-reference-queue">
+              {attentionItems.map((item) => (
+                <a href={item.href} key={item.label}>
                   <span>{item.label}</span>
                   <strong>{number.format(item.count)}</strong>
+                  <small>{item.description}</small>
                 </a>
-              ))
-            ) : (
-              <article className="admin-command-queue__empty">
-                <strong>{copy.healthyTitle}</strong>
-                <p>{copy.healthyDescription}</p>
-              </article>
-            )}
-            {canApproveAccounts ? (
-              <a href={`${prefix}/platform/access`}>
-                <span>{copy.actionApprovals}</span>
-                <strong>→</strong>
-              </a>
+              ))}
+            </div>
+            {attentionItems.every((item) => item.count === 0) ? (
+              <p className="admin-reference-empty">{copy.healthyDescription}</p>
             ) : null}
-          </div>
-        </article>
+          </section>
 
-        <article className="console-dashboard-widget">
-          <header>
-            <h2>{copy.operationFlow}</h2>
-            <p>{copy.operationFlowDescription}</p>
-          </header>
-          <div className="admin-command-bars">
+          <section className="admin-reference-flow" aria-labelledby="admin-flow-title">
             <div>
-              <span>{copy.unresolved}</span>
-              <MeterBar value={percent(model.unresolvedCount, model.contactCount) ?? 0} />
+              <h2 id="admin-flow-title">{copy.operationFlow}</h2>
+              <p>{copy.operationFlowDescription}</p>
             </div>
-            <div>
-              <span>{copy.escalated}</span>
-              <MeterBar
-                tone="warning"
-                value={percent(model.escalatedCount, model.contactCount) ?? 0}
-              />
+            <div className="admin-reference-flow__bars">
+              <div>
+                <span>{copy.unresolved}</span>
+                <MeterBar value={percent(model.unresolvedCount, model.contactCount) ?? 0} />
+              </div>
+              <div>
+                <span>{copy.escalated}</span>
+                <MeterBar
+                  tone="warning"
+                  value={percent(model.escalatedCount, model.contactCount) ?? 0}
+                />
+              </div>
+              <div>
+                <span>{copy.deliveryHealth}</span>
+                <MeterBar tone="success" value={deliverySuccessRate ?? 0} />
+              </div>
             </div>
-            <div>
-              <span>{copy.deliveryHealth}</span>
-              <MeterBar tone="success" value={deliverySuccessRate ?? 0} />
-            </div>
-          </div>
-          <p className="console-dashboard-widget__note">{copy.scopeNotice}</p>
-        </article>
-      </section>
+          </section>
 
-      <section
-        className="console-dashboard-widget console-dashboard-widget--table console-dashboard-table"
-        aria-label={copy.customerPortfolio}
-      >
-        <header>
-          <h2>{copy.customerPortfolio}</h2>
-          <p>{copy.customerPortfolioDescription}</p>
-        </header>
-        {variant === "platform" ? (
-          <DataTable
-            columns={platformColumns}
-            getRowKey={(company) => company.id}
-            rows={companyPortfolio.slice(0, 5)}
-          />
-        ) : (
-          <DataTable
-            columns={customerColumns}
-            getRowKey={(row) => row.name}
-            rows={customerRows.slice(0, 5)}
-          />
-        )}
-      </section>
+          <section className="admin-reference-columns">
+            <article className="admin-reference-panel admin-reference-panel--wide">
+              <header>
+                <div>
+                  <h2>{copy.customerPortfolio}</h2>
+                  <p>{copy.customerPortfolioDescription}</p>
+                </div>
+                <a
+                  href={isPlatform ? `${prefix}/platform/management-companies` : `${prefix}/sites`}
+                >
+                  {copy.viewDetails}
+                  <ArrowRightIcon aria-hidden="true" weight="bold" />
+                </a>
+              </header>
+              <div className="admin-reference-list">
+                {customerRows.length > 0 ? (
+                  customerRows.map((row) => (
+                    <a href={row.href} key={row.href}>
+                      <span>
+                        <strong>{row.name}</strong>
+                        <small>{row.secondary}</small>
+                      </span>
+                      <span>
+                        <StatusPill tone={row.tone}>{row.status}</StatusPill>
+                        <small>
+                          {copy.activeQr} {number.format(row.activeQr)}
+                        </small>
+                      </span>
+                      <MeterBar value={row.progress ?? 0} />
+                    </a>
+                  ))
+                ) : (
+                  <p className="admin-reference-empty">{copy.noResponseData}</p>
+                )}
+              </div>
+            </article>
+
+            <article className="admin-reference-panel">
+              <header>
+                <div>
+                  <h2>{copy.actionsTitle}</h2>
+                  <p>{copy.actionsDescription}</p>
+                </div>
+              </header>
+              <div className="admin-reference-action-list">
+                {quickActions.map((action) => (
+                  <a href={action.href} key={action.href}>
+                    <span>{action.label}</span>
+                    <small>{action.description}</small>
+                  </a>
+                ))}
+              </div>
+            </article>
+          </section>
+
+          <p className="admin-reference-scope-note">{copy.scopeNotice}</p>
+        </section>
+      </div>
     </>
   );
 }
