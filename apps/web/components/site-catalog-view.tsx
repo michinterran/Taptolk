@@ -18,6 +18,8 @@ import {
   Pagination,
   StatusPill,
 } from "@taptolk/ui";
+import type { Route } from "next";
+import Link from "next/link";
 import { createSite } from "../admin/site-actions";
 import {
   approveSiteLifecycleRequest,
@@ -25,6 +27,7 @@ import {
 } from "../admin/site-lifecycle-request-actions";
 import { DAUM_POSTCODE_SCRIPT_SRC } from "../config/address-search";
 import type { AppLocale } from "../i18n/config";
+import { AdminAsyncActionForm } from "./admin-async-action-form";
 import { AdminPageHeader } from "./admin-page-header";
 import { ConsoleQueryForm } from "./console-query-form";
 import { ManagementCompanyAddressSearchField } from "./management-company-address-search-field";
@@ -136,9 +139,11 @@ interface SiteCatalogViewProps {
   contractVehicleLimitMax: number;
   copy: SiteCatalogCopy;
   defaultTimezone: string;
+  errorMessages: Readonly<Record<string, string>>;
   errorMessage?: string | undefined;
   lifecycleRequests: SiteLifecycleRequestReadModel;
   locale: AppLocale;
+  successMessages: Readonly<Record<string, string>>;
   statusMessage?: string | undefined;
 }
 
@@ -302,9 +307,9 @@ function SiteRowActions({
 }) {
   return (
     <div className="admin-site-row-actions">
-      <a className="admin-row-action" href={`/${locale}/admin/sites/${site.id}`}>
+      <Link className="admin-row-action" href={`/${locale}/admin/sites/${site.id}` as Route}>
         {copy.view}
-      </a>
+      </Link>
     </div>
   );
 }
@@ -315,14 +320,18 @@ function SiteRegistrationMenu({
   contractVehicleLimitMax,
   copy,
   defaultTimezone,
+  errorMessages,
   locale,
+  successLabel,
 }: {
   catalog: SiteCatalogPage;
   contractVehicleLimitMin: number;
   contractVehicleLimitMax: number;
   copy: SiteCatalogCopy;
   defaultTimezone: string;
+  errorMessages: Readonly<Record<string, string>>;
   locale: AppLocale;
+  successLabel: string;
 }) {
   return (
     <details className="admin-site-create-menu">
@@ -333,7 +342,12 @@ function SiteRegistrationMenu({
           <p>{copy.createDescription}</p>
         </header>
         {catalog.parentOptions.length > 0 ? (
-          <form action={createSite} className="admin-tenant-form">
+          <AdminAsyncActionForm
+            action={createSite}
+            className="admin-tenant-form"
+            errorMessages={errorMessages}
+            successLabel={successLabel}
+          >
             <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
             <input
               aria-label={copy.timezone}
@@ -432,7 +446,7 @@ function SiteRegistrationMenu({
             <button className="tt-button" type="submit">
               {copy.create}
             </button>
-          </form>
+          </AdminAsyncActionForm>
         ) : (
           <p className="admin-catalog-read-only">{copy.noActiveParent}</p>
         )}
@@ -448,9 +462,11 @@ export function SiteCatalogView({
   contractVehicleLimitMax,
   copy,
   defaultTimezone,
+  errorMessages,
   errorMessage,
   lifecycleRequests,
   locale,
+  successMessages,
   statusMessage,
 }: SiteCatalogViewProps) {
   const totalPages = Math.max(1, Math.ceil(catalog.total / catalog.pageSize));
@@ -465,9 +481,9 @@ export function SiteCatalogView({
     {
       cell: (site) => (
         <div className="tt-table-entity">
-          <a className="admin-row-primary" href={`/${locale}/admin/sites/${site.id}`}>
+          <Link className="admin-row-primary" href={`/${locale}/admin/sites/${site.id}` as Route}>
             {site.name}
-          </a>
+          </Link>
           <small>
             {site.address ?? copy.notAvailable} · {site.timezone}
           </small>
@@ -542,7 +558,9 @@ export function SiteCatalogView({
               contractVehicleLimitMax={contractVehicleLimitMax}
               copy={copy}
               defaultTimezone={defaultTimezone}
+              errorMessages={errorMessages}
               locale={locale}
+              successLabel={successMessages.created ?? ""}
             />
           ) : null
         }
@@ -591,7 +609,12 @@ export function SiteCatalogView({
                       <dd>{request.reason}</dd>
                     </div>
                   </dl>
-                  <form action={approveSiteLifecycleRequest} className="admin-approval-form">
+                  <AdminAsyncActionForm
+                    action={approveSiteLifecycleRequest}
+                    className="admin-approval-form"
+                    errorMessages={errorMessages}
+                    successLabel={successMessages.requestApproved ?? ""}
+                  >
                     <LifecycleRequestHiddenFields copy={copy} locale={locale} request={request} />
                     <label className="admin-field" htmlFor={`${prefix}-approve-reason`}>
                       <span>{copy.reason}</span>
@@ -607,10 +630,15 @@ export function SiteCatalogView({
                     <button className="tt-button" type="submit">
                       {copy.lifecycleApprovalApprove}
                     </button>
-                  </form>
+                  </AdminAsyncActionForm>
                   <details className="admin-rejection-panel">
                     <summary>{copy.lifecycleApprovalRejectSummary}</summary>
-                    <form action={rejectSiteLifecycleRequest} className="admin-rejection-form">
+                    <AdminAsyncActionForm
+                      action={rejectSiteLifecycleRequest}
+                      className="admin-rejection-form"
+                      errorMessages={errorMessages}
+                      successLabel={successMessages.requestRejected ?? ""}
+                    >
                       <LifecycleRequestHiddenFields copy={copy} locale={locale} request={request} />
                       <label className="admin-field" htmlFor={`${prefix}-reject-reason`}>
                         <span>{copy.reason}</span>
@@ -626,7 +654,7 @@ export function SiteCatalogView({
                       <button className="tt-button tt-button--danger" type="submit">
                         {copy.lifecycleApprovalReject}
                       </button>
-                    </form>
+                    </AdminAsyncActionForm>
                   </details>
                 </article>
               );
@@ -729,12 +757,12 @@ export function SiteCatalogView({
               </select>
             </label>
           </div>
-          <a
+          <Link
             className="tt-button tt-button--secondary tt-button--compact admin-site-catalog-reset"
-            href={`/${locale}/admin/sites`}
+            href={`/${locale}/admin/sites` as Route}
           >
             {copy.clearFilters}
-          </a>
+          </Link>
         </div>
       </ConsoleQueryForm>
 
@@ -758,7 +786,9 @@ export function SiteCatalogView({
             className="admin-pagination--compact"
             next={
               hasNext ? (
-                <a href={getPageHref(locale, catalog.page + 1, catalog.query)}>{copy.next}</a>
+                <Link href={getPageHref(locale, catalog.page + 1, catalog.query) as Route}>
+                  {copy.next}
+                </Link>
               ) : null
             }
             pages={getPageNumbers(catalog.page, totalPages).map((page) =>
@@ -767,18 +797,20 @@ export function SiteCatalogView({
                   …
                 </span>
               ) : (
-                <a
+                <Link
                   aria-current={page === catalog.page ? "page" : undefined}
-                  href={getPageHref(locale, page, catalog.query)}
+                  href={getPageHref(locale, page, catalog.query) as Route}
                   key={page}
                 >
                   {page}
-                </a>
+                </Link>
               ),
             )}
             previous={
               hasPrevious ? (
-                <a href={getPageHref(locale, catalog.page - 1, catalog.query)}>{copy.previous}</a>
+                <Link href={getPageHref(locale, catalog.page - 1, catalog.query) as Route}>
+                  {copy.previous}
+                </Link>
               ) : null
             }
             summary={pageSummary}

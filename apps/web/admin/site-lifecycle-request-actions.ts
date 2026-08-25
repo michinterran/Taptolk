@@ -5,10 +5,7 @@ import {
   SiteLifecycleRequestError,
   SiteLifecycleRequestService,
 } from "@taptolk/application";
-import type { Route } from "next";
-import { redirect } from "next/navigation";
 import { toAdminAuthorizationContext } from "../auth/admin-authorization";
-import { getLocalizedAdminPath } from "../auth/admin-routing";
 import { requireReadyAdminContext } from "../auth/page-guard";
 import { createAdminServerClient } from "../auth/server-client";
 import type { AppLocale } from "../i18n/config";
@@ -18,12 +15,20 @@ import {
   SiteLifecycleRequestRepositoryError,
 } from "./supabase-site-lifecycle-request-repository";
 
-type LifecycleActionError = "blocked" | "conflict" | "forbidden" | "unavailable" | "validation";
-type LifecycleActionStatus =
+export type LifecycleActionError =
+  | "blocked"
+  | "conflict"
+  | "forbidden"
+  | "unavailable"
+  | "validation";
+export type LifecycleActionStatus =
   | "requestApproved"
   | "requestCancelled"
   | "requestCreated"
   | "requestRejected";
+export type LifecycleActionResult =
+  | { error: LifecycleActionError; status: "error" }
+  | { status: LifecycleActionStatus };
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -33,18 +38,6 @@ function readString(formData: FormData, key: string): string {
 function readLocale(formData: FormData): AppLocale {
   const value = readString(formData, "locale");
   return isAppLocale(value) ? value : "en";
-}
-
-function path(
-  locale: AppLocale,
-  kind: "error" | "status",
-  value: LifecycleActionError | LifecycleActionStatus,
-  siteId?: string,
-): Route {
-  return getLocalizedAdminPath(
-    locale,
-    siteId ? `/sites/${siteId}?${kind}=${value}` : `/sites?${kind}=${value}`,
-  ) as Route;
 }
 
 function mapError(error: unknown): LifecycleActionError {
@@ -72,7 +65,7 @@ async function context(locale: AppLocale) {
   const admin = await requireReadyAdminContext(locale);
   const client = await createAdminServerClient();
   if (!client) {
-    redirect(path(locale, "error", "unavailable"));
+    return null;
   }
   return {
     actor: {
@@ -100,11 +93,12 @@ function reviewInput(formData: FormData) {
   };
 }
 
-export async function requestSiteLifecycle(formData: FormData): Promise<never> {
+export async function requestSiteLifecycle(formData: FormData): Promise<LifecycleActionResult> {
   const locale = readLocale(formData);
-  const siteId = readString(formData, "siteId");
   try {
-    const { actor, service } = await context(locale);
+    const serviceContext = await context(locale);
+    if (!serviceContext) return { error: "unavailable", status: "error" };
+    const { actor, service } = serviceContext;
     await service.request({
       action: readString(formData, "action"),
       actor,
@@ -117,41 +111,52 @@ export async function requestSiteLifecycle(formData: FormData): Promise<never> {
       tenantId: readString(formData, "tenantId"),
     });
   } catch (error) {
-    redirect(path(locale, "error", mapError(error), siteId));
+    return { error: mapError(error), status: "error" };
   }
-  redirect(path(locale, "status", "requestCreated", siteId));
+  return { status: "requestCreated" };
 }
 
-export async function approveSiteLifecycleRequest(formData: FormData): Promise<never> {
+export async function approveSiteLifecycleRequest(
+  formData: FormData,
+): Promise<LifecycleActionResult> {
   const locale = readLocale(formData);
   try {
-    const { actor, service } = await context(locale);
+    const serviceContext = await context(locale);
+    if (!serviceContext) return { error: "unavailable", status: "error" };
+    const { actor, service } = serviceContext;
     await service.approve({ actor, ...reviewInput(formData) });
   } catch (error) {
-    redirect(path(locale, "error", mapError(error)));
+    return { error: mapError(error), status: "error" };
   }
-  redirect(path(locale, "status", "requestApproved"));
+  return { status: "requestApproved" };
 }
 
-export async function rejectSiteLifecycleRequest(formData: FormData): Promise<never> {
+export async function rejectSiteLifecycleRequest(
+  formData: FormData,
+): Promise<LifecycleActionResult> {
   const locale = readLocale(formData);
   try {
-    const { actor, service } = await context(locale);
+    const serviceContext = await context(locale);
+    if (!serviceContext) return { error: "unavailable", status: "error" };
+    const { actor, service } = serviceContext;
     await service.reject({ actor, ...reviewInput(formData) });
   } catch (error) {
-    redirect(path(locale, "error", mapError(error)));
+    return { error: mapError(error), status: "error" };
   }
-  redirect(path(locale, "status", "requestRejected"));
+  return { status: "requestRejected" };
 }
 
-export async function cancelSiteLifecycleRequest(formData: FormData): Promise<never> {
+export async function cancelSiteLifecycleRequest(
+  formData: FormData,
+): Promise<LifecycleActionResult> {
   const locale = readLocale(formData);
-  const siteId = readString(formData, "siteId");
   try {
-    const { actor, service } = await context(locale);
+    const serviceContext = await context(locale);
+    if (!serviceContext) return { error: "unavailable", status: "error" };
+    const { actor, service } = serviceContext;
     await service.cancel({ actor, ...reviewInput(formData) });
   } catch (error) {
-    redirect(path(locale, "error", mapError(error), siteId));
+    return { error: mapError(error), status: "error" };
   }
-  redirect(path(locale, "status", "requestCancelled", siteId));
+  return { status: "requestCancelled" };
 }

@@ -17,6 +17,8 @@ import {
   StatTile,
   StatusPill,
 } from "@taptolk/ui";
+import type { Route } from "next";
+import Link from "next/link";
 import { receiveQrBatchQuantity } from "../admin/qr-inventory-assignment-actions";
 import type { QrOperationsScopeSummary } from "../admin/qr-operations-scope-summary";
 import { changeSiteStatus, updateSiteContract, updateSiteOperational } from "../admin/site-actions";
@@ -27,6 +29,7 @@ import {
 import { DAUM_POSTCODE_SCRIPT_SRC } from "../config/address-search";
 import type { AdminSiteWorkspaceCopy } from "../content/admin-site-workspace-copy";
 import type { AppLocale } from "../i18n/config";
+import { AdminAsyncActionForm } from "./admin-async-action-form";
 import { AdminPageHeader } from "./admin-page-header";
 import { ManagementCompanyAddressSearchField } from "./management-company-address-search-field";
 
@@ -49,6 +52,7 @@ interface SiteWorkspaceViewProps {
   canUpdateContract: boolean;
   canUpdateOperational: boolean;
   contractVehicleLimitMax: number;
+  errorMessages: Readonly<Record<string, string>>;
   errorMessage?: string | undefined;
   lifecycleRequests: SiteLifecycleRequestReadModel;
   locale: AppLocale;
@@ -58,6 +62,7 @@ interface SiteWorkspaceViewProps {
   model: SiteWorkspace;
   qrOperations: QrOperationsScopeSummary;
   siteTypeLabels: Readonly<Record<SiteType, string>>;
+  successMessages: Readonly<Record<string, string>>;
   statusLabels: Readonly<Record<OrganizationStatus, string>>;
   statusMessage?: string | undefined;
 }
@@ -168,6 +173,7 @@ export function SiteWorkspaceView({
   canUpdateOperational,
   copy,
   contractVehicleLimitMax,
+  errorMessages,
   errorMessage,
   lifecycleRequests,
   locale,
@@ -177,6 +183,7 @@ export function SiteWorkspaceView({
   model,
   qrOperations,
   siteTypeLabels,
+  successMessages,
   statusLabels,
   statusMessage,
 }: SiteWorkspaceViewProps) {
@@ -260,10 +267,10 @@ export function SiteWorkspaceView({
         pathname={`${prefix}/sites`}
       />
       <div className="admin-workspace-canvas">
-        <a className="admin-inline-back" href={`${prefix}/sites`}>
+        <Link className="admin-inline-back" href={`${prefix}/sites` as Route}>
           <ArrowLeft aria-hidden="true" size={15} />
           {copy.allLocations}
-        </a>
+        </Link>
         <PageHeader
           className="admin-compact-heading admin-compact-heading--workspace"
           description={`${model.managementCompanyName} · ${copy.workspaceDescription}`}
@@ -335,9 +342,11 @@ export function SiteWorkspaceView({
                     <p>{copy.managementCompanyHelp}</p>
                   </div>
                   {canUpdateOperational ? (
-                    <form
+                    <AdminAsyncActionForm
                       action={updateSiteOperational}
                       className="admin-workspace-form admin-workspace-form--operational"
+                      errorMessages={errorMessages}
+                      successLabel={successMessages.operationalUpdated ?? ""}
                     >
                       <WorkspaceHiddenFields copy={copy} locale={locale} model={model} />
                       <input
@@ -415,12 +424,14 @@ export function SiteWorkspaceView({
                       <button className="tt-button tt-button--compact" type="submit">
                         {copy.saveOperational}
                       </button>
-                    </form>
+                    </AdminAsyncActionForm>
                   ) : null}
                   {canUpdateContract ? (
-                    <form
+                    <AdminAsyncActionForm
                       action={updateSiteContract}
                       className="admin-workspace-form admin-workspace-form--contract"
+                      errorMessages={errorMessages}
+                      successLabel={successMessages.contractUpdated ?? ""}
                     >
                       <WorkspaceHiddenFields copy={copy} locale={locale} model={model} />
                       <h3>{copy.contractTitle}</h3>
@@ -457,7 +468,7 @@ export function SiteWorkspaceView({
                       <button className="tt-button tt-button--compact" type="submit">
                         {copy.saveContract}
                       </button>
-                    </form>
+                    </AdminAsyncActionForm>
                   ) : null}
                   {lifecycleRequests.pendingBySiteId.get(model.id) ? (
                     <section
@@ -479,9 +490,11 @@ export function SiteWorkspaceView({
                         if (!request || !lifecycleRequests.cancellableRequestIds.has(request.id))
                           return null;
                         return (
-                          <form
+                          <AdminAsyncActionForm
                             action={cancelSiteLifecycleRequest}
                             className="admin-workspace-status-form"
+                            errorMessages={errorMessages}
+                            successLabel={successMessages.requestCancelled ?? ""}
                           >
                             <LifecycleRequestFields copy={copy} locale={locale} request={request} />
                             <label className="admin-field" htmlFor="site-workspace-cancel-reason">
@@ -501,7 +514,7 @@ export function SiteWorkspaceView({
                             >
                               {copy.lifecycleCancel}
                             </button>
-                          </form>
+                          </AdminAsyncActionForm>
                         );
                       })()}
                     </section>
@@ -509,7 +522,12 @@ export function SiteWorkspaceView({
                   {model.status !== "CLOSED" &&
                   !lifecycleRequests.pendingBySiteId.has(model.id) &&
                   (canRequestStatus || canRequestClose) ? (
-                    <form action={requestSiteLifecycle} className="admin-workspace-form">
+                    <AdminAsyncActionForm
+                      action={requestSiteLifecycle}
+                      className="admin-workspace-form"
+                      errorMessages={errorMessages}
+                      successLabel={successMessages.requestCreated ?? ""}
+                    >
                       <WorkspaceHiddenFields copy={copy} locale={locale} model={model} />
                       <input
                         aria-label={copy.status}
@@ -560,10 +578,15 @@ export function SiteWorkspaceView({
                           </button>
                         ) : null}
                       </div>
-                    </form>
+                    </AdminAsyncActionForm>
                   ) : null}
                   {model.status !== "CLOSED" && (canChangeStatus || canClose) ? (
-                    <form action={changeSiteStatus} className="admin-workspace-form">
+                    <AdminAsyncActionForm
+                      action={changeSiteStatus}
+                      className="admin-workspace-form"
+                      errorMessages={errorMessages}
+                      successLabel={successMessages.statusChanged ?? ""}
+                    >
                       <WorkspaceHiddenFields copy={copy} locale={locale} model={model} />
                       <input
                         aria-label={copy.status}
@@ -608,7 +631,7 @@ export function SiteWorkspaceView({
                           </button>
                         ) : null}
                       </div>
-                    </form>
+                    </AdminAsyncActionForm>
                   ) : null}
                 </section>
               </details>

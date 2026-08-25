@@ -6,6 +6,8 @@ import {
 } from "@taptolk/application";
 import { roleHasPermission } from "@taptolk/domain";
 import { PageHeader } from "@taptolk/ui";
+import type { Route } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { summarizeQrOperationsScope } from "../../../../../../admin/qr-operations-scope-summary";
 import { createSupabaseQrOperationsReadModelRepository } from "../../../../../../admin/supabase-qr-operations-read-model-repository";
@@ -92,9 +94,9 @@ export default async function SiteWorkspacePage({
           pathname={`/${locale}/admin/sites/${siteId}`}
         />
         <div className="admin-workspace-canvas">
-          <a className="admin-inline-back" href={`/${locale}/admin/sites`}>
+          <Link className="admin-inline-back" href={`/${locale}/admin/sites` as Route}>
             {copy.allLocations}
-          </a>
+          </Link>
           <PageHeader
             className="admin-compact-heading admin-compact-heading--workspace"
             description={copy.workspaceDescription}
@@ -110,9 +112,12 @@ export default async function SiteWorkspacePage({
               {messages["admin.sites.error.unavailable"]}
             </h2>
             <p>{messages["shared.error.description"]}</p>
-            <a className="tt-button tt-button--secondary" href={`/${locale}/admin/sites/${siteId}`}>
+            <Link
+              className="tt-button tt-button--secondary"
+              href={`/${locale}/admin/sites/${siteId}` as Route}
+            >
               {messages["shared.error.retry"]}
-            </a>
+            </Link>
           </section>
         </div>
       </main>
@@ -201,6 +206,7 @@ export default async function SiteWorkspacePage({
         )}
         contractVehicleLimitMax={SITE_CONTRACT_VEHICLE_LIMIT_MAX}
         copy={ADMIN_SITE_WORKSPACE_COPY[locale]}
+        errorMessages={errorMessages}
         errorMessage={
           readQueryValue(query.error) ? errorMessages[readQueryValue(query.error) ?? ""] : undefined
         }
@@ -222,6 +228,7 @@ export default async function SiteWorkspacePage({
           CLOSED: messages["admin.sites.status.closed"],
           SUSPENDED: messages["admin.sites.status.suspended"],
         }}
+        successMessages={statusMessages}
         statusMessage={
           readQueryValue(query.status)
             ? statusMessages[readQueryValue(query.status) ?? ""]

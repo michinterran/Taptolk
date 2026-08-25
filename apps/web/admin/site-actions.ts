@@ -6,10 +6,7 @@ import {
   SiteApplicationService,
   SiteManagementError,
 } from "@taptolk/application";
-import type { Route } from "next";
-import { redirect } from "next/navigation";
 import { toAdminAuthorizationContext } from "../auth/admin-authorization";
-import { getLocalizedAdminPath } from "../auth/admin-routing";
 import { requireReadyAdminContext } from "../auth/page-guard";
 import { createAdminServerClient } from "../auth/server-client";
 import type { AppLocale } from "../i18n/config";
@@ -19,8 +16,15 @@ import {
   SiteRepositoryError,
 } from "./supabase-site-management-repository";
 
-type SiteActionError = "blocked" | "conflict" | "forbidden" | "unavailable" | "validation";
-type SiteActionStatus = "contractUpdated" | "created" | "operationalUpdated" | "statusChanged";
+export type SiteActionError = "blocked" | "conflict" | "forbidden" | "unavailable" | "validation";
+export type SiteActionStatus =
+  | "contractUpdated"
+  | "created"
+  | "operationalUpdated"
+  | "statusChanged";
+export type SiteActionResult =
+  | { error: SiteActionError; status: "error" }
+  | { status: SiteActionStatus };
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -43,25 +47,6 @@ function readParentScope(formData: FormData): {
 } {
   const [tenantId = "", managementCompanyId = ""] = readString(formData, "parentScope").split("|");
   return { managementCompanyId, tenantId };
-}
-
-function siteCatalogPath(
-  locale: AppLocale,
-  kind: "error" | "status",
-  value: SiteActionError | SiteActionStatus,
-): Route {
-  return getLocalizedAdminPath(locale, `/sites?${kind}=${value}`) as Route;
-}
-
-function siteActionPath(
-  locale: AppLocale,
-  siteId: string,
-  kind: "error" | "status",
-  value: SiteActionError | SiteActionStatus,
-): Route {
-  return siteId
-    ? (getLocalizedAdminPath(locale, `/sites/${siteId}?${kind}=${value}`) as Route)
-    : siteCatalogPath(locale, kind, value);
 }
 
 function mapError(error: unknown): SiteActionError {
@@ -89,7 +74,7 @@ async function createService(locale: AppLocale) {
   const context = await requireReadyAdminContext(locale);
   const client = await createAdminServerClient();
   if (!client) {
-    redirect(siteCatalogPath(locale, "error", "unavailable"));
+    return null;
   }
   const membership = context.decision.membership;
   return {
@@ -101,11 +86,13 @@ async function createService(locale: AppLocale) {
   };
 }
 
-export async function createSite(formData: FormData): Promise<never> {
+export async function createSite(formData: FormData): Promise<SiteActionResult> {
   const locale = readLocale(formData);
   const parent = readParentScope(formData);
   try {
-    const { actor, service } = await createService(locale);
+    const serviceContext = await createService(locale);
+    if (!serviceContext) return { error: "unavailable", status: "error" };
+    const { actor, service } = serviceContext;
     await service.create({
       actor,
       address: readString(formData, "address"),
@@ -119,16 +106,17 @@ export async function createSite(formData: FormData): Promise<never> {
       type: readString(formData, "siteType"),
     });
   } catch (error) {
-    redirect(siteCatalogPath(locale, "error", mapError(error)));
+    return { error: mapError(error), status: "error" };
   }
-  redirect(siteCatalogPath(locale, "status", "created"));
+  return { status: "created" };
 }
 
-export async function updateSiteOperational(formData: FormData): Promise<never> {
+export async function updateSiteOperational(formData: FormData): Promise<SiteActionResult> {
   const locale = readLocale(formData);
-  const siteId = readString(formData, "siteId");
   try {
-    const { actor, service } = await createService(locale);
+    const serviceContext = await createService(locale);
+    if (!serviceContext) return { error: "unavailable", status: "error" };
+    const { actor, service } = serviceContext;
     await service.updateOperational({
       actor,
       address: readString(formData, "address"),
@@ -143,16 +131,17 @@ export async function updateSiteOperational(formData: FormData): Promise<never> 
       type: readString(formData, "siteType"),
     });
   } catch (error) {
-    redirect(siteActionPath(locale, siteId, "error", mapError(error)));
+    return { error: mapError(error), status: "error" };
   }
-  redirect(siteActionPath(locale, siteId, "status", "operationalUpdated"));
+  return { status: "operationalUpdated" };
 }
 
-export async function updateSiteContract(formData: FormData): Promise<never> {
+export async function updateSiteContract(formData: FormData): Promise<SiteActionResult> {
   const locale = readLocale(formData);
-  const siteId = readString(formData, "siteId");
   try {
-    const { actor, service } = await createService(locale);
+    const serviceContext = await createService(locale);
+    if (!serviceContext) return { error: "unavailable", status: "error" };
+    const { actor, service } = serviceContext;
     await service.updateContract({
       actor,
       contractVehicleLimit: Number(readString(formData, "contractVehicleLimit")),
@@ -164,21 +153,22 @@ export async function updateSiteContract(formData: FormData): Promise<never> {
       tenantId: readString(formData, "tenantId"),
     });
   } catch (error) {
-    redirect(siteActionPath(locale, siteId, "error", mapError(error)));
+    return { error: mapError(error), status: "error" };
   }
-  redirect(siteActionPath(locale, siteId, "status", "contractUpdated"));
+  return { status: "contractUpdated" };
 }
 
-export async function changeSiteStatus(formData: FormData): Promise<never> {
+export async function changeSiteStatus(formData: FormData): Promise<SiteActionResult> {
   const locale = readLocale(formData);
-  const siteId = readString(formData, "siteId");
   const currentStatus = readStatus(formData, "currentStatus");
   const nextStatus = readStatus(formData, "nextStatus");
   if (!currentStatus || !nextStatus) {
-    redirect(siteActionPath(locale, siteId, "error", "validation"));
+    return { error: "validation", status: "error" };
   }
   try {
-    const { actor, service } = await createService(locale);
+    const serviceContext = await createService(locale);
+    if (!serviceContext) return { error: "unavailable", status: "error" };
+    const { actor, service } = serviceContext;
     await service.changeStatus({
       actor,
       currentStatus,
@@ -191,7 +181,7 @@ export async function changeSiteStatus(formData: FormData): Promise<never> {
       tenantId: readString(formData, "tenantId"),
     });
   } catch (error) {
-    redirect(siteActionPath(locale, siteId, "error", mapError(error)));
+    return { error: mapError(error), status: "error" };
   }
-  redirect(siteActionPath(locale, siteId, "status", "statusChanged"));
+  return { status: "statusChanged" };
 }

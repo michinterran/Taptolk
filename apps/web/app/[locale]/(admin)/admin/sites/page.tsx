@@ -11,6 +11,8 @@ import {
 } from "@taptolk/application";
 import { roleHasPermission } from "@taptolk/domain";
 import { PageHeader } from "@taptolk/ui";
+import type { Route } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseSiteCatalogRepository } from "../../../../../admin/supabase-site-catalog-repository";
 import { createSupabaseSiteLifecycleRequestRepository } from "../../../../../admin/supabase-site-lifecycle-request-repository";
@@ -162,9 +164,12 @@ export default async function SitesPage({
           >
             <h2 id="admin-sites-unavailable-title">{copy["admin.sites.error.unavailable"]}</h2>
             <p>{copy["shared.error.description"]}</p>
-            <a className="tt-button tt-button--secondary" href={`/${locale}/admin/sites`}>
+            <Link
+              className="tt-button tt-button--secondary"
+              href={`/${locale}/admin/sites` as Route}
+            >
               {copy["shared.error.retry"]}
-            </a>
+            </Link>
           </section>
         </div>
       </main>
@@ -315,10 +320,12 @@ export default async function SitesPage({
           view: copy["admin.sites.view"],
         }}
         defaultTimezone={DEFAULT_SITE_TIMEZONE}
+        errorMessages={errorMessages}
         errorMessage={error ? errorMessages[error] : undefined}
         lifecycleRequests={lifecycleRequests}
         locale={locale}
         statusMessage={status ? statusMessages[status] : undefined}
+        successMessages={statusMessages}
       />
     </main>
   );
