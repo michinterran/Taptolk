@@ -42,6 +42,7 @@ export interface AdminQrOperationsCopy {
   progressEmpty: string;
   progressAutoRefresh: string;
   progressPending: string;
+  requestPending: string;
   progressFailed: string;
   progressOutput: string;
   progressQuality: string;
@@ -111,7 +112,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       confirmSelection: "Continue with this location",
       description:
         "Generate unique dynamic QR codes by management company and site, then monitor generation, SVG output, activation, and operating status.",
-      directQuantity: "Direct quantity",
+      directQuantity: "Quantity",
       downloadPending: "Preparing",
       downloadPendingDescription:
         "SVG downloads become available here after every batch output is ready.",
@@ -121,16 +122,16 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       emptyCompany: "No management company",
       emptySite: "No site",
       eyebrow: "Admin-only QR operations",
-      finalReview: "Final request",
+      finalReview: "Approval request",
       finalReviewDescription:
-        "Review the confirmed company, site, quantity, and server batch split before creating QR codes.",
+        "Review the confirmed company, site, quantity, and server batch split before requesting independent generation approval.",
       flowDescription:
         "Confirm the management company and site first. After the scope is fixed, choose a quantity and create QR batches without using a design wizard.",
       flowEyebrow: "QR creation flow",
       flowTitle: "Create QR codes by confirmed company and site",
       generatedQr: "Generated QR",
-      generationPolicy: "Admin direct generation",
-      hiddenReason: "Admin direct QR generation request",
+      generationPolicy: "QR-only · independent approval",
+      hiddenReason: "QR-only generation approval request",
       issue: "Generate QR",
       operationsPanel: "QR operations",
       operationsPanelDescription:
@@ -145,6 +146,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       progressAutoRefresh: "Updating automatically while generation is in progress.",
       progressPending:
         "The generation request was accepted. Progress will appear when the batch record is ready.",
+      requestPending: "Submitting approval request…",
       progressFailed: "Failed",
       progressOutput: "SVG output",
       progressQuality: "Quality passed",
@@ -161,7 +163,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       quantityMin: "Min",
       quantityPresets: "Quantity presets",
       requestQuantity: "{count} QR codes will be requested.",
-      reviewAndGenerate: "Review and generate",
+      reviewAndGenerate: "Request generation approval",
       reviewSummary: "Request summary",
       next: "Next",
       refreshProgress: "Refresh progress",
@@ -214,7 +216,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       stepProgress: "Progress",
       stepQuantity: "Quantity",
       stepScope: "Scope",
-      steps: ["Select scope", "Confirm and generate", "Progress", "Download"],
+      steps: ["Select scope", "Request approval", "Progress", "Download"],
       tableRange: "{start}-{end} of {total} batches",
       tableSummary: "Batch table summary",
       title: "QR operations",
@@ -238,7 +240,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       confirmSelection: "이 현장으로 계속",
       description:
         "관리회사와 사이트 기준으로 중복 없는 동적 QR을 생성하고, SVG 출력·활성화·운영 상태를 한 화면에서 관리합니다.",
-      directQuantity: "직접 수량",
+      directQuantity: "생성 수량",
       downloadPending: "준비 중",
       downloadPendingDescription:
         "모든 발행 묶음의 SVG 출력이 준비되면 이 단계에서 다운로드할 수 있습니다.",
@@ -248,16 +250,16 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       emptyCompany: "관리회사 없음",
       emptySite: "사이트 없음",
       eyebrow: "어드민 전용 QR 운영",
-      finalReview: "최종 요청",
+      finalReview: "승인 요청",
       finalReviewDescription:
-        "확정한 관리회사, 사이트, 생성 수량과 서버 분할 묶음을 확인한 뒤 QR 생성을 요청합니다.",
+        "확정한 관리회사, 사이트, 생성 수량과 서버 분할 묶음을 확인한 뒤 독립 생성 승인을 요청합니다.",
       flowDescription:
         "먼저 관리회사와 사이트를 확인합니다. 범위가 확정된 뒤 수량을 정하고 디자인 위자드 없이 QR 발행 묶음을 생성합니다.",
       flowEyebrow: "QR 생성 플로우",
       flowTitle: "확정된 관리회사와 사이트 기준으로 QR을 생성합니다",
       generatedQr: "생성된 QR",
-      generationPolicy: "어드민 직접 생성",
-      hiddenReason: "어드민 QR 직접 발행 요청",
+      generationPolicy: "QR-only · 독립 승인",
+      hiddenReason: "QR-only 생성 승인 요청",
       issue: "QR 생성",
       operationsPanel: "QR 운영",
       operationsPanelDescription:
@@ -270,6 +272,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       progressEmpty: "아직 이 화면에서 추적 중인 생성 요청이 없습니다.",
       progressAutoRefresh: "생성이 진행되는 동안 진행률을 자동으로 갱신합니다.",
       progressPending: "생성 요청을 접수했습니다. 발행 묶음이 준비되면 진행률을 표시합니다.",
+      requestPending: "승인 요청을 전송하는 중…",
       progressFailed: "실패",
       progressOutput: "SVG 출력",
       progressQuality: "품질 통과",
@@ -286,7 +289,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       quantityMin: "최소",
       quantityPresets: "수량 프리셋",
       requestQuantity: "{count}개의 QR 생성을 요청합니다.",
-      reviewAndGenerate: "최종 확인 후 생성",
+      reviewAndGenerate: "생성 승인 요청",
       reviewSummary: "요청 요약",
       next: "다음",
       refreshProgress: "진행률 새로고침",
@@ -339,7 +342,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       stepProgress: "진행",
       stepQuantity: "수량",
       stepScope: "범위",
-      steps: ["범위 선택", "확인 후 생성", "진행률", "다운로드"],
+      steps: ["범위 선택", "승인 요청", "진행률", "다운로드"],
       tableRange: "총 {total}묶음 중 {start}-{end}",
       tableSummary: "발행 묶음 표 요약",
       title: "QR 운영 관리",

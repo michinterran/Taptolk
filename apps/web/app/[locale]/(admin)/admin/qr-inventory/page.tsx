@@ -16,11 +16,24 @@ export default async function QrInventoryPage({
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isAppLocale(locale)) notFound();
 
-  const next = new URLSearchParams({ step: readValue(query.step) ?? "site" });
-  for (const key of ["error", "site", "status"]) {
+  const next = new URLSearchParams();
+  for (const key of [
+    "batches",
+    "company",
+    "confirmed",
+    "error",
+    "page",
+    "pageSize",
+    "quantity",
+    "request",
+    "site",
+    "sitePage",
+    "sitePageSize",
+    "status",
+  ]) {
     const value = readValue(query[key]);
     if (value) next.set(key, value);
   }
-  redirect(getLocalizedAdminPath(locale, `/qr-inventory/approval?${next.toString()}`));
+  redirect(getLocalizedAdminPath(locale, `/qr-inventory/operations?${next.toString()}`));
   return <main aria-hidden="true" className="admin-dashboard-shell" />;
 }

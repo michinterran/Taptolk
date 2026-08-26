@@ -166,16 +166,6 @@ export {
   QrBatchProgressService,
 } from "./qr-batch-progress-service.js";
 export {
-  QR_DIRECT_GENERATION_QUANTITY_MAX,
-  QR_DIRECT_GENERATION_QUANTITY_MIN,
-  type QrDirectGenerationActor,
-  type QrDirectGenerationBatchResult,
-  QrDirectGenerationError,
-  type QrDirectGenerationRepository,
-  type QrDirectGenerationResult,
-  QrDirectGenerationService,
-} from "./qr-direct-generation-service.js";
-export {
   QR_GENERATION_JOB_STATUSES,
   QR_GENERATION_MAX_EXECUTION_ATTEMPTS,
   type QrFinalApprovalBatchItem,
@@ -274,6 +264,16 @@ export {
   type StickerDesignVersionItem,
   type StickerTemplateCode,
 } from "./qr-inventory-sample-service.js";
+export {
+  QR_ONLY_GENERATION_QUANTITY_MAX,
+  QR_ONLY_GENERATION_QUANTITY_MIN,
+  type QrOnlyGenerationActor,
+  type QrOnlyGenerationBatchResult,
+  QrOnlyGenerationError,
+  type QrOnlyGenerationRepository,
+  type QrOnlyGenerationResult,
+  QrOnlyGenerationService,
+} from "./qr-only-generation-service.js";
 export {
   type QrOperationsActor,
   type QrOperationsBatch,

@@ -37,7 +37,10 @@ function path(
   kind: "error" | "status",
   value: ActionError | ActionStatus,
 ): Route {
-  return getLocalizedAdminPath(locale, `/qr-inventory?${kind}=${value}`) as Route;
+  return getLocalizedAdminPath(
+    locale,
+    `/qr-inventory/approval?${kind}=${value}&step=review`,
+  ) as Route;
 }
 
 function mapError(error: unknown): ActionError {
@@ -134,13 +137,13 @@ export async function requestQrBatchFinalApproval(formData: FormData): Promise<n
 
 export async function approveQrBatchFinalGeneration(formData: FormData): Promise<never> {
   return run(formData, "finalGenerationApproved", async ({ actor, service }) => {
-    await enqueueQrGenerationPipelineWake({
-      batchId: readString(formData, "batchId"),
-      requestId: readString(formData, "requestId"),
-    });
     await service.approveFinalGeneration({
       actor,
       ...commandInput(formData),
+    });
+    await enqueueQrGenerationPipelineWake({
+      batchId: readString(formData, "batchId"),
+      requestId: readString(formData, "requestId"),
     });
   });
 }

@@ -447,6 +447,19 @@ export const ko = {
     "샘플이 승인된 Batch의 원 요청자만 Super Admin 최종 검토를 요청할 수 있습니다.",
   "admin.qr.finalApprovalNotice":
     "샘플 승인과 최종 승인은 서로 다른 단계입니다. 최종 승인은 안전한 생성 작업을 준비하며, 제작 대기열 전달과 QR 생성은 다음 단계에서 시작됩니다.",
+  "admin.qr.only.approval.eyebrow": "QR-only 생성 승인",
+  "admin.qr.only.approval.title": "QR 생성 승인 대기",
+  "admin.qr.only.approval.description":
+    "디자인 선택 없이 생성 요청을 검토하고, 요청자와 다른 Super Admin이 승인한 뒤에만 Queue와 QR 자산 생성이 시작됩니다.",
+  "admin.qr.only.approval.pending": "승인 대기 요청",
+  "admin.qr.only.approval.requestedByYou": "내 요청 · 다른 Super Admin 승인 대기",
+  "admin.qr.only.approval.approve": "승인하고 생성 시작",
+  "admin.qr.only.approval.pendingAction": "처리 중…",
+  "admin.qr.only.approval.reason": "승인 사유",
+  "admin.qr.only.approval.reasonPlaceholder": "생성 승인 근거를 3자 이상 입력해 주세요.",
+  "admin.qr.only.approval.empty": "현재 승인 대기 중인 QR-only 요청이 없습니다.",
+  "admin.qr.only.approval.requested":
+    "QR-only 생성 요청이 접수되었습니다. 다른 Super Admin의 승인을 기다립니다.",
   "admin.qr.invalidate": "샘플 무효화",
   "admin.qr.line1": "디자인부터 제작 요청까지,",
   "admin.qr.line2": "QR 스티커를 한 흐름으로 만듭니다.",
@@ -1382,6 +1395,20 @@ export const en = {
     "Only the original requester of a sample-approved Batch can request final Super Admin review.",
   "admin.qr.finalApprovalNotice":
     "Sample approval and final approval are separate steps. Final approval safely prepares the generation job; queue delivery and QR generation begin in the next step.",
+  "admin.qr.only.approval.eyebrow": "QR-only generation approval",
+  "admin.qr.only.approval.title": "QR generation approval queue",
+  "admin.qr.only.approval.description":
+    "Review a generation request without design selection. Queue delivery and QR asset generation begin only after a different Super Admin approves it.",
+  "admin.qr.only.approval.pending": "Pending approval requests",
+  "admin.qr.only.approval.requestedByYou": "Requested by you · waiting for another Super Admin",
+  "admin.qr.only.approval.approve": "Approve and start generation",
+  "admin.qr.only.approval.pendingAction": "Processing…",
+  "admin.qr.only.approval.reason": "Approval reason",
+  "admin.qr.only.approval.reasonPlaceholder":
+    "Enter at least 3 characters explaining the approval.",
+  "admin.qr.only.approval.empty": "There are no QR-only requests waiting for approval.",
+  "admin.qr.only.approval.requested":
+    "The QR-only generation request was submitted and is waiting for another Super Admin.",
   "admin.qr.invalidate": "Invalidate sample",
   "admin.qr.line1": "Move from design to production",
   "admin.qr.line2": "in one clear QR sticker flow.",

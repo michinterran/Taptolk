@@ -133,6 +133,7 @@ export default async function QrOperationsPage({
         batchPageSize={readPositiveInteger(query.pageSize, 10)}
         confirmed={readValue(query.confirmed) === "1"}
         copy={ADMIN_QR_OPERATIONS_COPY[locale]}
+        directGenerationEnabled
         errorMessage={error ? errorMessages[error] : undefined}
         locale={locale}
         localeLabels={{ en: copy["locale.english"], ko: copy["locale.korean"] }}

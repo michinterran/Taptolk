@@ -10,8 +10,8 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { QrBatchStatus, QrOperationsBatch, QrOperationsReadModel } from "@taptolk/application";
 import {
-  QR_DIRECT_GENERATION_QUANTITY_MAX,
-  QR_DIRECT_GENERATION_QUANTITY_MIN,
+  QR_ONLY_GENERATION_QUANTITY_MAX,
+  QR_ONLY_GENERATION_QUANTITY_MIN,
 } from "@taptolk/application";
 import {
   ConsoleTabs,
@@ -24,12 +24,12 @@ import {
 } from "@taptolk/ui";
 import type { Route } from "next";
 import Link from "next/link";
-import { requestAdminDirectQrGeneration } from "../admin/qr-direct-generation-actions";
 import type { AdminQrOperationsCopy } from "../content/admin-qr-operations-copy";
 import type { AppLocale } from "../i18n/config";
 import { AdminPageHeader } from "./admin-page-header";
 import { ConsoleQueryForm } from "./console-query-form";
 import { QrGenerationProgressPoller } from "./qr-generation-progress-poller";
+import { QrOnlyGenerationRequestForm } from "./qr-only-generation-request-form";
 import { QrScopeSelector } from "./qr-scope-selector";
 
 interface QrOperationsViewProps {
@@ -73,8 +73,8 @@ function percent(done: number, total: number): number {
 function clampQuantity(value: number): number {
   if (!Number.isInteger(value)) return 100;
   return Math.min(
-    QR_DIRECT_GENERATION_QUANTITY_MAX,
-    Math.max(QR_DIRECT_GENERATION_QUANTITY_MIN, value),
+    QR_ONLY_GENERATION_QUANTITY_MAX,
+    Math.max(QR_ONLY_GENERATION_QUANTITY_MIN, value),
   );
 }
 
@@ -87,7 +87,7 @@ function withQuery(locale: AppLocale, params: Record<string, string | number | u
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== "") search.set(key, String(value));
   }
-  return `/${locale}/admin/qr-inventory?${search.toString()}` as Route;
+  return `/${locale}/admin/qr-inventory/operations?${search.toString()}` as Route;
 }
 
 function batchProgress(batch: QrOperationsBatch): number {
@@ -463,8 +463,8 @@ export function QrOperationsView({
             <header className="qr-console-v2-toolbar">
               <span className="qr-console-v2-chip is-active">{copy.flowEyebrow}</span>
               <span className="qr-console-v2-chip">
-                {copy.quantityLimit} {number.format(QR_DIRECT_GENERATION_QUANTITY_MIN)}-
-                {number.format(QR_DIRECT_GENERATION_QUANTITY_MAX)}
+                {copy.quantityLimit} {number.format(QR_ONLY_GENERATION_QUANTITY_MIN)}-
+                {number.format(QR_ONLY_GENERATION_QUANTITY_MAX)}
               </span>
               <span className="qr-console-v2-chip">{copy.generationPolicy}</span>
             </header>
@@ -597,8 +597,8 @@ export function QrOperationsView({
                               defaultValue={quantity}
                               id="qr-quantity"
                               key={`qr-quantity-${quantity}`}
-                              max={QR_DIRECT_GENERATION_QUANTITY_MAX}
-                              min={QR_DIRECT_GENERATION_QUANTITY_MIN}
+                              max={QR_ONLY_GENERATION_QUANTITY_MAX}
+                              min={QR_ONLY_GENERATION_QUANTITY_MIN}
                               name="quantity"
                               type="number"
                             />
@@ -620,12 +620,12 @@ export function QrOperationsView({
                         <fieldset className="qr-console-v2-adjustments">
                           <legend>{copy.quantityFastAdjust}</legend>
                           {[
-                            { label: copy.quantityMin, value: QR_DIRECT_GENERATION_QUANTITY_MIN },
+                            { label: copy.quantityMin, value: QR_ONLY_GENERATION_QUANTITY_MIN },
                             { label: "-1,000", value: quantity - 1000 },
                             { label: "-100", value: quantity - 100 },
                             { label: "+100", value: quantity + 100 },
                             { label: "+1,000", value: quantity + 1000 },
-                            { label: copy.quantityMax, value: QR_DIRECT_GENERATION_QUANTITY_MAX },
+                            { label: copy.quantityMax, value: QR_ONLY_GENERATION_QUANTITY_MAX },
                           ].map((item) => (
                             <Link
                               className="tt-button tt-button--secondary tt-button--compact"
@@ -653,47 +653,17 @@ export function QrOperationsView({
                       </ConsoleQueryForm>
 
                       {directGenerationEnabled ? (
-                        <form
-                          action={requestAdminDirectQrGeneration}
-                          className="qr-console-v2-review"
+                        <QrOnlyGenerationRequestForm
+                          companyId={company?.id ?? ""}
+                          expectedSiteVersion={selectedSite?.version ?? 0}
+                          idempotencyKey={idempotencyKey}
+                          locale={locale}
+                          pendingLabel={copy.requestPending}
+                          quantity={quantity}
+                          reason={copy.hiddenReason}
+                          siteId={selectedSite?.id ?? ""}
+                          title={copy.title}
                         >
-                          <input aria-label="locale" name="locale" type="hidden" value={locale} />
-                          <input
-                            aria-label="company"
-                            name="companyId"
-                            type="hidden"
-                            value={company?.id ?? ""}
-                          />
-                          <input
-                            aria-label="site"
-                            name="siteId"
-                            type="hidden"
-                            value={selectedSite?.id ?? ""}
-                          />
-                          <input
-                            aria-label="site version"
-                            name="expectedSiteVersion"
-                            type="hidden"
-                            value={selectedSite?.version ?? 0}
-                          />
-                          <input
-                            aria-label="idempotency key"
-                            name="idempotencyKey"
-                            type="hidden"
-                            value={idempotencyKey}
-                          />
-                          <input
-                            aria-label="quantity"
-                            name="quantity"
-                            type="hidden"
-                            value={quantity}
-                          />
-                          <input
-                            aria-label="reason"
-                            name="reason"
-                            type="hidden"
-                            value={copy.hiddenReason}
-                          />
                           <div className="qr-console-v2-review-summary">
                             <span>{copy.finalReview}</span>
                             <strong>
@@ -716,7 +686,7 @@ export function QrOperationsView({
                           <button className="tt-button" disabled={!scopeConfirmed} type="submit">
                             {copy.reviewAndGenerate}
                           </button>
-                        </form>
+                        </QrOnlyGenerationRequestForm>
                       ) : (
                         <div className="qr-console-v2-review">
                           <div className="qr-console-v2-review-summary">

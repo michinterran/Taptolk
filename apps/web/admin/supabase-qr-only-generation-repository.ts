@@ -1,63 +1,68 @@
 import "server-only";
 
 import type {
-  QrDirectGenerationBatchResult,
-  QrDirectGenerationRepository,
-  QrDirectGenerationResult,
+  QrBatchStatus,
+  QrOnlyGenerationBatchResult,
+  QrOnlyGenerationRepository,
+  QrOnlyGenerationResult,
 } from "@taptolk/application";
 import type { createAdminServerClient } from "../auth/server-client";
 
 type AdminServerClient = NonNullable<Awaited<ReturnType<typeof createAdminServerClient>>>;
 
-export class QrDirectGenerationRepositoryError extends Error {
+export class QrOnlyGenerationRepositoryError extends Error {
   readonly code: "BLOCKED" | "CONFLICT" | "FORBIDDEN" | "UNAVAILABLE";
 
-  constructor(code: QrDirectGenerationRepositoryError["code"]) {
-    super(`QR direct generation repository failed: ${code}`);
-    this.name = "QrDirectGenerationRepositoryError";
+  constructor(code: QrOnlyGenerationRepositoryError["code"]) {
+    super(`QR-only generation repository failed: ${code}`);
+    this.name = "QrOnlyGenerationRepositoryError";
     this.code = code;
   }
 }
 
-function mapErrorCode(code?: string): QrDirectGenerationRepositoryError["code"] {
+function isBatchStatus(value: unknown): value is QrBatchStatus {
+  return ["FINAL_APPROVAL_PENDING", "SAMPLE_APPROVED"].includes(String(value));
+}
+
+function mapErrorCode(code?: string): QrOnlyGenerationRepositoryError["code"] {
   if (code === "40001") return "CONFLICT";
   if (code === "42501") return "FORBIDDEN";
   if (code === "P0001" || code === "23514") return "BLOCKED";
   return "UNAVAILABLE";
 }
 
-function mapBatch(value: unknown): QrDirectGenerationBatchResult {
-  if (!value || typeof value !== "object") {
-    throw new QrDirectGenerationRepositoryError("UNAVAILABLE");
+function mapBatch(value: unknown): QrOnlyGenerationBatchResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new QrOnlyGenerationRepositoryError("UNAVAILABLE");
   }
   const row = value as Record<string, unknown>;
   if (
     typeof row.batchId !== "string" ||
     typeof row.batchCode !== "string" ||
-    typeof row.batchStatus !== "string" ||
+    !isBatchStatus(row.batchStatus) ||
     typeof row.batchVersion !== "number" ||
-    typeof row.generationRevision !== "number" ||
-    typeof row.jobId !== "string" ||
-    typeof row.jobStatus !== "string" ||
+    row.generationRevision !== null ||
+    row.jobId !== null ||
+    row.jobStatus !== null ||
     typeof row.requestedQuantity !== "number"
   ) {
-    throw new QrDirectGenerationRepositoryError("UNAVAILABLE");
+    throw new QrOnlyGenerationRepositoryError("UNAVAILABLE");
   }
   return {
     batchCode: row.batchCode,
     batchId: row.batchId,
     batchStatus: row.batchStatus,
     batchVersion: row.batchVersion,
-    generationRevision: row.generationRevision,
-    jobId: row.jobId,
-    jobStatus: row.jobStatus,
+    generationRevision: null,
+    jobId: null,
+    jobStatus: null,
     requestedQuantity: row.requestedQuantity,
   };
 }
 
-function mapResult(value: unknown): QrDirectGenerationResult {
-  if (!value || typeof value !== "object") {
-    throw new QrDirectGenerationRepositoryError("UNAVAILABLE");
+function mapResult(value: unknown): QrOnlyGenerationResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new QrOnlyGenerationRepositoryError("UNAVAILABLE");
   }
   const row = value as Record<string, unknown>;
   if (
@@ -66,7 +71,7 @@ function mapResult(value: unknown): QrDirectGenerationResult {
     typeof row.totalQuantity !== "number" ||
     !Array.isArray(row.batches)
   ) {
-    throw new QrDirectGenerationRepositoryError("UNAVAILABLE");
+    throw new QrOnlyGenerationRepositoryError("UNAVAILABLE");
   }
   return {
     batches: row.batches.map(mapBatch),
@@ -76,12 +81,12 @@ function mapResult(value: unknown): QrDirectGenerationResult {
   };
 }
 
-export function createSupabaseQrDirectGenerationRepository(
+export function createSupabaseQrOnlyGenerationRepository(
   client: AdminServerClient,
-): QrDirectGenerationRepository {
+): QrOnlyGenerationRepository {
   return {
     async request(input) {
-      const { data, error } = await client.rpc("request_admin_direct_qr_generation", {
+      const { data, error } = await client.rpc("request_admin_qr_only_generation", {
         p_expected_site_version: input.expectedSiteVersion,
         p_idempotency_key: input.idempotencyKey,
         p_reason: input.reason,
@@ -89,7 +94,7 @@ export function createSupabaseQrDirectGenerationRepository(
         p_total_quantity: input.quantity,
       });
       if (error) {
-        throw new QrDirectGenerationRepositoryError(mapErrorCode(error.code));
+        throw new QrOnlyGenerationRepositoryError(mapErrorCode(error.code));
       }
       return mapResult(data);
     },
