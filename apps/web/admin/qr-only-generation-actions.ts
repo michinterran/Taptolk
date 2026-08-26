@@ -13,6 +13,7 @@ import { requireReadyAdminContext } from "../auth/page-guard";
 import { createAdminServerClient } from "../auth/server-client";
 import type { AppLocale } from "../i18n/config";
 import { isAppLocale } from "../i18n/locale";
+import { enqueueQrGenerationPipelineWake } from "../internal/qr-generation-pipeline-wake";
 import {
   createSupabaseQrOnlyGenerationRepository,
   QrOnlyGenerationRepositoryError,
@@ -104,6 +105,18 @@ export async function requestQrOnlyGeneration(formData: FormData): Promise<never
     });
   } catch (error) {
     redirect(destination(locale, "error", mapError(error), formData));
+  }
+  try {
+    await Promise.all(
+      result.batches.map((batch) =>
+        enqueueQrGenerationPipelineWake({
+          batchId: batch.batchId,
+          requestId: result.requestId,
+        }),
+      ),
+    );
+  } catch {
+    redirect(destination(locale, "error", "unavailable", formData));
   }
   redirect(
     operationsDestination(
