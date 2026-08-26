@@ -359,6 +359,20 @@ export {
   SiteWorkspaceService,
 } from "./site-workspace-service.js";
 export {
+  type SolapiAccountBalance,
+  type SolapiAccountBalanceProvider,
+  type SolapiAccountHealthRepository,
+  type SolapiAccountHealthResult,
+  SolapiAccountHealthService,
+  type SolapiAccountHealthSource,
+  type SolapiDeliveryOutcome,
+  type SolapiDeliveryReport,
+  type SolapiDeliveryReportBatchResult,
+  type SolapiDeliveryReportRecord,
+  type SolapiDeliveryReportRepository,
+  SolapiDeliveryReportService,
+} from "./solapi-operations-service.js";
+export {
   type ListTenantCatalogCommand,
   TENANT_CATALOG_MAX_PAGE_SIZE,
   TENANT_CATALOG_PAGE_SIZE,
