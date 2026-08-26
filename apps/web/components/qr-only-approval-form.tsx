@@ -47,7 +47,6 @@ export function QrOnlyApprovalForm({
       <label className="admin-field" htmlFor={`qr-approval-reason-${batch.id}`}>
         <span>{reason}</span>
         <input
-          defaultValue={reasonPlaceholder}
           id={`qr-approval-reason-${batch.id}`}
           maxLength={500}
           minLength={3}

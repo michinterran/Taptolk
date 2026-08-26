@@ -11,14 +11,21 @@ import { QrOnlyApprovalForm } from "./qr-only-approval-form";
 
 interface QrOnlyApprovalViewProps {
   errorMessage?: string | undefined;
+  companyNames: Readonly<Record<string, string>>;
   locale: AppLocale;
   localeLabels: Readonly<Record<AppLocale, string>>;
   localeTitle: string;
   logoAlt: string;
   model: QrFinalGenerationApprovalReadModel;
   statusMessage?: string | undefined;
+  scope?: {
+    companyId?: string | undefined;
+    quantity?: number | undefined;
+    siteId?: string | undefined;
+  };
   copy: {
     approve: string;
+    company: string;
     description: string;
     empty: string;
     eyebrow: string;
@@ -26,8 +33,9 @@ interface QrOnlyApprovalViewProps {
     pendingAction: string;
     requestedByYou: string;
     reason: string;
-    reasonDefault: string;
     reasonPlaceholder: string;
+    quantity: string;
+    site: string;
     title: string;
     status: string;
     back: string;
@@ -40,17 +48,25 @@ function statusTone(batch: QrFinalApprovalBatchItem): "info" | "warning" {
 
 export function QrOnlyApprovalView({
   copy,
+  companyNames,
   errorMessage,
   locale,
   localeLabels,
   localeTitle,
   logoAlt,
   model,
+  scope,
   statusMessage,
 }: QrOnlyApprovalViewProps) {
   const number = new Intl.NumberFormat(locale);
   const pending = model.batches.filter((batch) => batch.status === "FINAL_APPROVAL_PENDING");
   const approvable = new Set(model.finalApprovalQueue.map((batch) => batch.id));
+  const backSearch = new URLSearchParams();
+  if (scope?.companyId) backSearch.set("company", scope.companyId);
+  if (scope?.siteId) backSearch.set("site", scope.siteId);
+  if (scope?.quantity) backSearch.set("quantity", String(scope.quantity));
+  if (scope?.companyId && scope.siteId) backSearch.set("confirmed", "1");
+  const backHref = `/${locale}/admin/qr-inventory/operations?${backSearch.toString()}` as Route;
 
   return (
     <>
@@ -83,10 +99,7 @@ export function QrOnlyApprovalView({
         <div className="admin-catalog-toolbar">
           <strong>{copy.pending}</strong>
           <span>{number.format(pending.length)}</span>
-          <Link
-            className="tt-button tt-button--secondary"
-            href={`/${locale}/admin/qr-inventory/operations` as Route}
-          >
+          <Link className="tt-button tt-button--secondary" href={backHref}>
             {copy.back}
           </Link>
         </div>
@@ -95,11 +108,15 @@ export function QrOnlyApprovalView({
           <div className="admin-catalog-grid">
             {pending.map((batch) => {
               const canApprove = approvable.has(batch.id);
+              const companyName =
+                companyNames[batch.managementCompanyId] ?? batch.managementCompanyId;
               return (
                 <article className="admin-catalog-card" key={batch.id}>
                   <header className="admin-catalog-card__header">
                     <div>
-                      <span className="admin-hierarchy-label">{batch.siteName}</span>
+                      <span className="admin-hierarchy-label">
+                        {companyName} · {batch.siteName}
+                      </span>
                       <h2>{batch.batchCode}</h2>
                     </div>
                     <StatusPill tone={statusTone(batch)}>
@@ -108,12 +125,16 @@ export function QrOnlyApprovalView({
                   </header>
                   <dl className="admin-definition-list">
                     <div>
-                      <dt>{copy.pending}</dt>
-                      <dd>{number.format(batch.requestedQuantity)}</dd>
+                      <dt>{copy.company}</dt>
+                      <dd>{companyName}</dd>
                     </div>
                     <div>
-                      <dt>{copy.status}</dt>
+                      <dt>{copy.site}</dt>
                       <dd>{batch.siteName}</dd>
+                    </div>
+                    <div>
+                      <dt>{copy.quantity}</dt>
+                      <dd>{number.format(batch.requestedQuantity)}</dd>
                     </div>
                   </dl>
                   {canApprove ? (
@@ -123,7 +144,7 @@ export function QrOnlyApprovalView({
                       locale={locale}
                       pendingLabel={copy.pendingAction}
                       reason={copy.reason}
-                      reasonPlaceholder={copy.reasonDefault}
+                      reasonPlaceholder={copy.reasonPlaceholder}
                       title={copy.title}
                     />
                   ) : null}

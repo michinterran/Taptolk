@@ -453,7 +453,7 @@ export const ko = {
     "디자인 선택 없이 생성 요청을 검토하고, 요청자와 다른 Super Admin이 승인한 뒤에만 Queue와 QR 자산 생성이 시작됩니다.",
   "admin.qr.only.approval.pending": "승인 대기 요청",
   "admin.qr.only.approval.requestedByYou": "내 요청 · 다른 Super Admin 승인 대기",
-  "admin.qr.only.approval.approve": "승인하고 생성 시작",
+  "admin.qr.only.approval.approve": "승인 후 생성 대기열 등록",
   "admin.qr.only.approval.pendingAction": "처리 중…",
   "admin.qr.only.approval.reason": "승인 사유",
   "admin.qr.only.approval.reasonPlaceholder": "생성 승인 근거를 3자 이상 입력해 주세요.",
@@ -1401,7 +1401,7 @@ export const en = {
     "Review a generation request without design selection. Queue delivery and QR asset generation begin only after a different Super Admin approves it.",
   "admin.qr.only.approval.pending": "Pending approval requests",
   "admin.qr.only.approval.requestedByYou": "Requested by you · waiting for another Super Admin",
-  "admin.qr.only.approval.approve": "Approve and start generation",
+  "admin.qr.only.approval.approve": "Approve and add to generation queue",
   "admin.qr.only.approval.pendingAction": "Processing…",
   "admin.qr.only.approval.reason": "Approval reason",
   "admin.qr.only.approval.reasonPlaceholder":

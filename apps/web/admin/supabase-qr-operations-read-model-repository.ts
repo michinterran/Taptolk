@@ -328,14 +328,22 @@ async function readAssets(client: AdminServerClient): Promise<readonly AssetRow[
 }
 
 async function readBatches(client: AdminServerClient): Promise<readonly QrOperationsBatch[]> {
-  const result = await client.rpc("list_qr_batch_progress_read_model");
-  if (result.error || !Array.isArray(result.data)) {
+  const [progressResult, pendingResult] = await Promise.all([
+    client.rpc("list_qr_batch_progress_read_model"),
+    client.rpc("list_qr_pending_batch_progress_read_model"),
+  ]);
+  if (
+    progressResult.error ||
+    pendingResult.error ||
+    !Array.isArray(progressResult.data) ||
+    !Array.isArray(pendingResult.data)
+  ) {
     logger.error("admin.qr_operations.batches_failed", {
-      errorCode: result.error?.code ?? null,
+      errorCode: progressResult.error?.code ?? pendingResult.error?.code ?? null,
     });
     throw new Error("QR_OPERATIONS_UNAVAILABLE");
   }
-  return result.data.map(mapBatch);
+  return [...progressResult.data, ...pendingResult.data].map(mapBatch);
 }
 
 export function createSupabaseQrOperationsReadModelRepository(

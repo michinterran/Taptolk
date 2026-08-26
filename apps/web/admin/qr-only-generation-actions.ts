@@ -33,7 +33,7 @@ function readLocale(formData: FormData): AppLocale {
 function destination(
   locale: AppLocale,
   kind: "error" | "status",
-  value: ActionError | "qrOnlyApprovalRequested",
+  value: ActionError,
   formData: FormData,
 ): Route {
   const search = new URLSearchParams({ [kind]: value });
@@ -42,6 +42,24 @@ function destination(
     if (valueFromForm) search.set(key === "companyId" ? "company" : key, valueFromForm);
   }
   return getLocalizedAdminPath(locale, `/qr-inventory/approval?${search.toString()}`) as Route;
+}
+
+function operationsDestination(
+  locale: AppLocale,
+  requestId: string,
+  batchIds: readonly string[],
+  formData: FormData,
+): Route {
+  const search = new URLSearchParams({
+    status: "qrOnlyApprovalRequested",
+    request: requestId,
+    batches: batchIds.join(","),
+  });
+  for (const key of ["companyId", "siteId", "quantity"]) {
+    const value = readString(formData, key);
+    if (value) search.set(key === "companyId" ? "company" : key, value);
+  }
+  return getLocalizedAdminPath(locale, `/qr-inventory/operations?${search.toString()}`) as Route;
 }
 
 function mapError(error: unknown): ActionError {
@@ -64,8 +82,11 @@ export async function requestQrOnlyGeneration(formData: FormData): Promise<never
   const client = await createAdminServerClient();
   if (!client) redirect(destination(locale, "error", "unavailable", formData));
   const context = await requireReadyAdminContext(locale);
+  let result: Awaited<ReturnType<QrOnlyGenerationService["request"]>>;
   try {
-    await new QrOnlyGenerationService(createSupabaseQrOnlyGenerationRepository(client)).request({
+    result = await new QrOnlyGenerationService(
+      createSupabaseQrOnlyGenerationRepository(client),
+    ).request({
       actor: {
         authorization: toAdminAuthorizationContext(
           context.decision.membership,
@@ -82,5 +103,12 @@ export async function requestQrOnlyGeneration(formData: FormData): Promise<never
   } catch (error) {
     redirect(destination(locale, "error", mapError(error), formData));
   }
-  redirect(destination(locale, "status", "qrOnlyApprovalRequested", formData));
+  redirect(
+    operationsDestination(
+      locale,
+      result.requestId,
+      result.batches.map((batch) => batch.batchId),
+      formData,
+    ),
+  );
 }
