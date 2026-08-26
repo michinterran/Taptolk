@@ -39,6 +39,7 @@ interface QrOperationsViewProps {
   batchPageSize: number;
   confirmed: boolean;
   copy: AdminQrOperationsCopy;
+  directGenerationEnabled?: boolean;
   errorMessage?: string | undefined;
   locale: AppLocale;
   localeLabels: Readonly<Record<AppLocale, string>>;
@@ -171,6 +172,7 @@ export function QrOperationsView({
   batchPageSize,
   confirmed,
   copy,
+  directGenerationEnabled = false,
   errorMessage,
   locale,
   localeLabels,
@@ -650,70 +652,88 @@ export function QrOperationsView({
                         <p className="qr-console-v2-help">{copy.quantityHelp}</p>
                       </ConsoleQueryForm>
 
-                      <form
-                        action={requestAdminDirectQrGeneration}
-                        className="qr-console-v2-review"
-                      >
-                        <input aria-label="locale" name="locale" type="hidden" value={locale} />
-                        <input
-                          aria-label="company"
-                          name="companyId"
-                          type="hidden"
-                          value={company?.id ?? ""}
-                        />
-                        <input
-                          aria-label="site"
-                          name="siteId"
-                          type="hidden"
-                          value={selectedSite?.id ?? ""}
-                        />
-                        <input
-                          aria-label="site version"
-                          name="expectedSiteVersion"
-                          type="hidden"
-                          value={selectedSite?.version ?? 0}
-                        />
-                        <input
-                          aria-label="idempotency key"
-                          name="idempotencyKey"
-                          type="hidden"
-                          value={idempotencyKey}
-                        />
-                        <input
-                          aria-label="quantity"
-                          name="quantity"
-                          type="hidden"
-                          value={quantity}
-                        />
-                        <input
-                          aria-label="reason"
-                          name="reason"
-                          type="hidden"
-                          value={copy.hiddenReason}
-                        />
-                        <div className="qr-console-v2-review-summary">
-                          <span>{copy.finalReview}</span>
-                          <strong>
-                            {company?.name ?? copy.emptyCompany} ·{" "}
-                            {selectedSite?.name ?? copy.emptySite}
-                          </strong>
-                          <small>
-                            {formatTemplate(copy.requestQuantity, {
-                              count: number.format(quantity),
-                            })}
-                          </small>
-                          <small>
-                            {formatTemplate(copy.splitPlan, {
-                              batches: number.format(plan.batches),
-                              count: number.format(quantity),
-                              last: number.format(plan.last),
-                            })}
-                          </small>
+                      {directGenerationEnabled ? (
+                        <form
+                          action={requestAdminDirectQrGeneration}
+                          className="qr-console-v2-review"
+                        >
+                          <input aria-label="locale" name="locale" type="hidden" value={locale} />
+                          <input
+                            aria-label="company"
+                            name="companyId"
+                            type="hidden"
+                            value={company?.id ?? ""}
+                          />
+                          <input
+                            aria-label="site"
+                            name="siteId"
+                            type="hidden"
+                            value={selectedSite?.id ?? ""}
+                          />
+                          <input
+                            aria-label="site version"
+                            name="expectedSiteVersion"
+                            type="hidden"
+                            value={selectedSite?.version ?? 0}
+                          />
+                          <input
+                            aria-label="idempotency key"
+                            name="idempotencyKey"
+                            type="hidden"
+                            value={idempotencyKey}
+                          />
+                          <input
+                            aria-label="quantity"
+                            name="quantity"
+                            type="hidden"
+                            value={quantity}
+                          />
+                          <input
+                            aria-label="reason"
+                            name="reason"
+                            type="hidden"
+                            value={copy.hiddenReason}
+                          />
+                          <div className="qr-console-v2-review-summary">
+                            <span>{copy.finalReview}</span>
+                            <strong>
+                              {company?.name ?? copy.emptyCompany} ·{" "}
+                              {selectedSite?.name ?? copy.emptySite}
+                            </strong>
+                            <small>
+                              {formatTemplate(copy.requestQuantity, {
+                                count: number.format(quantity),
+                              })}
+                            </small>
+                            <small>
+                              {formatTemplate(copy.splitPlan, {
+                                batches: number.format(plan.batches),
+                                count: number.format(quantity),
+                                last: number.format(plan.last),
+                              })}
+                            </small>
+                          </div>
+                          <button className="tt-button" disabled={!scopeConfirmed} type="submit">
+                            {copy.reviewAndGenerate}
+                          </button>
+                        </form>
+                      ) : (
+                        <div className="qr-console-v2-review">
+                          <div className="qr-console-v2-review-summary">
+                            <span>{copy.finalReview}</span>
+                            <strong>{copy.generationPolicy}</strong>
+                            <small>{copy.finalReviewDescription}</small>
+                          </div>
+                          <Link
+                            className="tt-button"
+                            href={
+                              `/${locale}/admin/qr-inventory?step=quantity&site=${encodeURIComponent(siteHref ?? "")}` as Route
+                            }
+                          >
+                            {copy.reviewAndGenerate}
+                          </Link>
                         </div>
-                        <button className="tt-button" disabled={!scopeConfirmed} type="submit">
-                          {copy.reviewAndGenerate}
-                        </button>
-                      </form>
+                      )}
                     </>
                   ) : (
                     <div className="qr-console-v2-compact-summary">

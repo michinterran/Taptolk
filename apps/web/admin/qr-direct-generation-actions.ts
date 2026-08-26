@@ -51,6 +51,7 @@ function path(
 function mapError(error: unknown): ActionError {
   if (error instanceof AdminAuthorizationError) return "forbidden";
   if (error instanceof QrDirectGenerationError) {
+    if (error.code === "APPROVAL_REQUIRED") return "blocked";
     // A missing or stale site version is a concurrency conflict. The page can
     // recover by reloading the site snapshot while preserving the scope.
     return error.code === "INVALID_VERSION" ? "conflict" : "validation";

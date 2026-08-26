@@ -43,25 +43,20 @@ function repository(): QrDirectGenerationRepository {
 }
 
 describe("QrDirectGenerationService", () => {
-  it("accepts canonical UUIDs for the site, idempotency key, and actor", async () => {
+  it("rejects the legacy direct path until the independent approval flow is used", async () => {
     const repo = repository();
 
-    const result = await new QrDirectGenerationService(repo).request({
-      actor: { authorization, userId: IDS.actor },
-      expectedSiteVersion: 1,
-      idempotencyKey: IDS.idempotencyKey,
-      quantity: 10,
-      reason: "Admin direct generation request",
-      siteId: IDS.site,
-    });
+    await expect(
+      new QrDirectGenerationService(repo).request({
+        actor: { authorization, userId: IDS.actor },
+        expectedSiteVersion: 1,
+        idempotencyKey: IDS.idempotencyKey,
+        quantity: 10,
+        reason: "Admin direct generation request",
+        siteId: IDS.site,
+      }),
+    ).rejects.toMatchObject({ code: "APPROVAL_REQUIRED" });
 
-    expect(result.requestId).toBe(IDS.request);
-    expect(repo.request).toHaveBeenCalledWith({
-      expectedSiteVersion: 1,
-      idempotencyKey: IDS.idempotencyKey,
-      quantity: 10,
-      reason: "Admin direct generation request",
-      siteId: IDS.site,
-    });
+    expect(repo.request).not.toHaveBeenCalled();
   });
 });

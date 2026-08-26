@@ -94,7 +94,7 @@ beforeEach(() => {
 });
 
 describe("QR direct generation server action", () => {
-  it("wakes the Vercel pipeline once for every created batch", async () => {
+  it("redirects legacy direct requests to the approval-required state", async () => {
     const formData = new FormData();
     formData.set("locale", "ko");
     formData.set("companyId", managementCompanyId);
@@ -105,24 +105,10 @@ describe("QR direct generation server action", () => {
     formData.set("reason", "운영자 직접 생성");
 
     await expect(requestAdminDirectQrGeneration(formData)).rejects.toThrow(
-      "REDIRECT:/ko/admin/qr-inventory?",
+      "REDIRECT:/ko/admin/qr-inventory?error=blocked",
     );
 
-    expect(mocks.request).toHaveBeenCalledWith(
-      expect.objectContaining({
-        expectedSiteVersion: 7,
-        quantity: 101,
-        siteId,
-      }),
-    );
-    expect(mocks.enqueueWake).toHaveBeenCalledTimes(2);
-    expect(mocks.enqueueWake).toHaveBeenNthCalledWith(1, {
-      batchId: id("10"),
-      requestId,
-    });
-    expect(mocks.enqueueWake).toHaveBeenNthCalledWith(2, {
-      batchId: id("11"),
-      requestId,
-    });
+    expect(mocks.request).not.toHaveBeenCalled();
+    expect(mocks.enqueueWake).not.toHaveBeenCalled();
   });
 });
