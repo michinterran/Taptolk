@@ -676,40 +676,58 @@ export function QrOperationsView({
                       </ConsoleQueryForm>
 
                       {directGenerationEnabled ? (
-                        <QrOnlyGenerationRequestForm
-                          companyId={company?.id ?? ""}
-                          expectedSiteVersion={selectedSite?.version ?? 0}
-                          idempotencyKey={idempotencyKey}
-                          locale={locale}
-                          pendingLabel={copy.requestPending}
-                          quantity={quantity}
-                          reason={copy.hiddenReason}
-                          siteId={selectedSite?.id ?? ""}
-                          title={copy.title}
-                        >
-                          <div className="qr-console-v2-review-summary">
-                            <span>{copy.finalReview}</span>
-                            <strong>
-                              {company?.name ?? copy.emptyCompany} ·{" "}
-                              {selectedSite?.name ?? copy.emptySite}
-                            </strong>
-                            <small>
-                              {formatTemplate(copy.requestQuantity, {
-                                count: number.format(quantity),
-                              })}
-                            </small>
-                            <small>
-                              {formatTemplate(copy.splitPlan, {
-                                batches: number.format(plan.batches),
-                                count: number.format(quantity),
-                                last: number.format(plan.last),
-                              })}
-                            </small>
+                        approvalPending ? (
+                          <div className="qr-console-v2-review">
+                            <div className="qr-console-v2-review-summary">
+                              <span>{copy.finalReview}</span>
+                              <strong>{copy.approvalPendingLabel}</strong>
+                              <small>{copy.progressApprovalPending}</small>
+                            </div>
+                            {companyHref && siteHref ? (
+                              <Link
+                                className="tt-button"
+                                href={approvalHref(locale, companyHref, siteHref, quantity)}
+                              >
+                                {copy.openApprovalQueue}
+                              </Link>
+                            ) : null}
                           </div>
-                          <button className="tt-button" disabled={!scopeConfirmed} type="submit">
-                            {copy.reviewAndGenerate}
-                          </button>
-                        </QrOnlyGenerationRequestForm>
+                        ) : (
+                          <QrOnlyGenerationRequestForm
+                            companyId={company?.id ?? ""}
+                            expectedSiteVersion={selectedSite?.version ?? 0}
+                            idempotencyKey={idempotencyKey}
+                            locale={locale}
+                            pendingLabel={copy.requestPending}
+                            quantity={quantity}
+                            reason={copy.hiddenReason}
+                            siteId={selectedSite?.id ?? ""}
+                            title={copy.title}
+                          >
+                            <div className="qr-console-v2-review-summary">
+                              <span>{copy.finalReview}</span>
+                              <strong>
+                                {company?.name ?? copy.emptyCompany} ·{" "}
+                                {selectedSite?.name ?? copy.emptySite}
+                              </strong>
+                              <small>
+                                {formatTemplate(copy.requestQuantity, {
+                                  count: number.format(quantity),
+                                })}
+                              </small>
+                              <small>
+                                {formatTemplate(copy.splitPlan, {
+                                  batches: number.format(plan.batches),
+                                  count: number.format(quantity),
+                                  last: number.format(plan.last),
+                                })}
+                              </small>
+                            </div>
+                            <button className="tt-button" disabled={!scopeConfirmed} type="submit">
+                              {copy.reviewAndGenerate}
+                            </button>
+                          </QrOnlyGenerationRequestForm>
+                        )
                       ) : (
                         <div className="qr-console-v2-review">
                           <div className="qr-console-v2-review-summary">
@@ -758,9 +776,11 @@ export function QrOperationsView({
                     >
                       {downloadReady
                         ? copy.readyDownload
-                        : hasTrackedRequest
-                          ? copy.stepProgress
-                          : copy.stepLocked}
+                        : approvalPending
+                          ? copy.approvalPendingLabel
+                          : hasTrackedRequest
+                            ? copy.stepProgress
+                            : copy.stepLocked}
                     </StatusPill>
                   </div>
                   <div className="qr-console-v2-progress">

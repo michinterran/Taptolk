@@ -41,6 +41,7 @@ export interface AdminQrOperationsCopy {
   progressDescription: string;
   progressEmpty: string;
   progressAutoRefresh: string;
+  approvalPendingLabel: string;
   progressApprovalPending: string;
   progressPending: string;
   requestPending: string;
@@ -146,6 +147,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
         "The generation worker updates this progress as unique QR assets and SVG output are produced.",
       progressEmpty: "No generation request is being tracked on this screen yet.",
       progressAutoRefresh: "Updating automatically while generation is in progress.",
+      approvalPendingLabel: "Approval pending",
       progressApprovalPending:
         "The request is waiting for an independent Super Admin approval before generation starts.",
       progressPending:
@@ -276,6 +278,7 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       progressDescription: "worker가 고유 QR 자산과 SVG 출력을 만들면서 진행률이 갱신됩니다.",
       progressEmpty: "아직 이 화면에서 추적 중인 생성 요청이 없습니다.",
       progressAutoRefresh: "생성이 진행되는 동안 진행률을 자동으로 갱신합니다.",
+      approvalPendingLabel: "승인 대기",
       progressApprovalPending: "다른 Super Admin의 승인이 끝나면 QR 생성이 시작됩니다.",
       progressPending: "생성 요청을 접수했습니다. 발행 묶음이 준비되면 진행률을 표시합니다.",
       requestPending: "승인 요청을 전송하는 중…",
