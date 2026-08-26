@@ -21,7 +21,22 @@ export class QrOnlyGenerationRepositoryError extends Error {
 }
 
 function isBatchStatus(value: unknown): value is QrBatchStatus {
-  return ["FINAL_APPROVAL_PENDING", "SAMPLE_APPROVED"].includes(String(value));
+  return [
+    "GENERATION_APPROVED",
+    "GENERATION_QUEUED",
+    "GENERATING",
+    "GENERATED",
+    "QUALITY_CHECKED",
+    "PRINT_FILE_READY",
+    "SENT_TO_PRINTER",
+    "PRINTED",
+    "SHIPPED",
+    "DELIVERED",
+    "DISTRIBUTING",
+    "COMPLETED",
+    "FAILED",
+    "PARTIALLY_COMPLETED",
+  ].includes(String(value));
 }
 
 function mapErrorCode(code?: string): QrOnlyGenerationRepositoryError["code"] {
@@ -41,9 +56,9 @@ function mapBatch(value: unknown): QrOnlyGenerationBatchResult {
     typeof row.batchCode !== "string" ||
     !isBatchStatus(row.batchStatus) ||
     typeof row.batchVersion !== "number" ||
-    row.generationRevision !== null ||
-    row.jobId !== null ||
-    row.jobStatus !== null ||
+    typeof row.generationRevision !== "number" ||
+    typeof row.jobId !== "string" ||
+    typeof row.jobStatus !== "string" ||
     typeof row.requestedQuantity !== "number"
   ) {
     throw new QrOnlyGenerationRepositoryError("UNAVAILABLE");
@@ -53,9 +68,9 @@ function mapBatch(value: unknown): QrOnlyGenerationBatchResult {
     batchId: row.batchId,
     batchStatus: row.batchStatus,
     batchVersion: row.batchVersion,
-    generationRevision: null,
-    jobId: null,
-    jobStatus: null,
+    generationRevision: row.generationRevision,
+    jobId: row.jobId,
+    jobStatus: row.jobStatus,
     requestedQuantity: row.requestedQuantity,
   };
 }

@@ -10,8 +10,10 @@ The master specification requires Supabase Queues/pgmq, a separate Worker, resum
 generation, and duplicate-safe jobs. `apps/worker` currently owns only Queue payload validation,
 handler registration, structured logging, health, and graceful shutdown contracts.
 
-Final generation approval adds the first durable handoff into Phase 3. Approval, Queue publish,
-and generation cannot be treated as one distributed transaction:
+Legacy STANDARD final generation approval and QR-only Super Admin direct generation both require
+a durable handoff into Phase 3. The QR-only command creates the Batch and job in one database
+transaction; legacy approval, Queue publish, and generation cannot be treated as one distributed
+transaction:
 
 - PostgreSQL approval may commit while provider publish fails.
 - Provider publish may succeed while the acknowledgement write fails.
@@ -25,8 +27,8 @@ and generation cannot be treated as one distributed transaction:
 ### 2.1 Queue and durable source of truth
 
 - Use Supabase Queues/pgmq as required by `TAPTOLK_MASTER_DEVELOPMENT_SPEC.md`.
-- Store a durable `qr_generation_jobs` intent in the same PostgreSQL transaction as final approval
-  and audit.
+- Store a durable `qr_generation_jobs` intent in the same PostgreSQL transaction as the QR-only
+  Super Admin generation command or the legacy STANDARD final approval and audit.
 - Treat the database job ledger as business truth. Queue messages are delivery signals, not the
   only record that work exists.
 - Publish a stable, minimal `jobId` payload. Expect duplicate publish/delivery and make claims and
@@ -43,10 +45,10 @@ and generation cannot be treated as one distributed transaction:
 
 - Keep Supabase Queues/pgmq as the required durable work queue and database job ledger as business
   truth.
-- In staging, enqueue a redacted Vercel Queue pipeline trigger before the final approval mutation.
-  The trigger uses the approval request ID as an idempotency key and a short delivery delay. A
-  rejected approval therefore leaves only a bounded no-op trigger, while an accepted approval
-  cannot commit without an already-durable wake signal.
+- In staging, enqueue a redacted Vercel Queue pipeline trigger for the durable job handoff. The
+  trigger uses the job's idempotency key and a short delivery delay. A rejected legacy approval
+  leaves only a bounded no-op trigger, while an accepted approval or QR-only command has already
+  committed the durable job before delivery proceeds.
 - A Vercel Queue push Function runs the bounded dispatcher and then consumes at most one Supabase
   Queue message. It validates the versioned pgmq payload, loads authoritative scope/state by
   `jobId`, invokes Application Services, persists 50-item checkpoints, and archives pgmq only
@@ -81,7 +83,7 @@ cannot satisfy the acceptance gates and the operator approves that provider.
 
 ```text
 Vercel Queue pipeline trigger (delayed, idempotent)
-→ approval transaction
+→ QR-only Super Admin request or legacy approval transaction
 → job PENDING_DELIVERY
 → dispatcher lease
 → Supabase Queue publish

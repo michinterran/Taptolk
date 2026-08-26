@@ -458,8 +458,7 @@ export const ko = {
   "admin.qr.only.approval.reason": "승인 사유",
   "admin.qr.only.approval.reasonPlaceholder": "생성 승인 근거를 3자 이상 입력해 주세요.",
   "admin.qr.only.approval.empty": "현재 승인 대기 중인 QR-only 요청이 없습니다.",
-  "admin.qr.only.approval.requested":
-    "QR-only 생성 요청이 접수되었습니다. 다른 Super Admin의 승인을 기다립니다.",
+  "admin.qr.only.approval.requested": "QR-only 생성 요청이 접수되어 즉시 생성 큐에 등록되었습니다.",
   "admin.qr.invalidate": "샘플 무효화",
   "admin.qr.line1": "디자인부터 제작 요청까지,",
   "admin.qr.line2": "QR 스티커를 한 흐름으로 만듭니다.",
@@ -1408,7 +1407,7 @@ export const en = {
     "Enter at least 3 characters explaining the approval.",
   "admin.qr.only.approval.empty": "There are no QR-only requests waiting for approval.",
   "admin.qr.only.approval.requested":
-    "The QR-only generation request was submitted and is waiting for another Super Admin.",
+    "The QR-only generation request was submitted and placed in the generation queue.",
   "admin.qr.invalidate": "Invalidate sample",
   "admin.qr.line1": "Move from design to production",
   "admin.qr.line2": "in one clear QR sticker flow.",

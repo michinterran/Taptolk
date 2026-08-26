@@ -115,7 +115,7 @@ export default async function QrOperationsPage({
   };
   const statusMessages: Readonly<Record<string, string>> = {
     batchRequested: copy["admin.qr.status.batchRequested"],
-    qrOnlyApprovalRequested: copy["admin.qr.only.approval.requested"],
+    qrOnlyGenerationStarted: copy["admin.qr.only.approval.requested"],
   };
   const error = readValue(query.error);
   const status = readValue(query.status);

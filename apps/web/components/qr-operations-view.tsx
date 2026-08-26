@@ -90,19 +90,6 @@ function withQuery(locale: AppLocale, params: Record<string, string | number | u
   return `/${locale}/admin/qr-inventory/operations?${search.toString()}` as Route;
 }
 
-function approvalHref(
-  locale: AppLocale,
-  company: string | undefined,
-  site: string | undefined,
-  quantity: number,
-): Route {
-  const search = new URLSearchParams();
-  if (company) search.set("company", company);
-  if (site) search.set("site", site);
-  search.set("quantity", String(quantity));
-  return `/${locale}/admin/qr-inventory/approval?${search.toString()}` as Route;
-}
-
 function batchProgress(batch: QrOperationsBatch): number {
   return percent(batch.generatedQuantity, batch.requestedQuantity);
 }
@@ -226,23 +213,13 @@ export function QrOperationsView({
   const trackedProgress = aggregateProgress(trackedBatches);
   const hasTrackedRequest = Boolean(activeRequestId || activeBatchIds.length > 0);
   const hasTrackedBatches = trackedBatches.length > 0;
-  const approvalPending = trackedBatches.some((batch) => batch.status === "FINAL_APPROVAL_PENDING");
   const progressRequested = trackedProgress.requested || (hasTrackedRequest ? quantity : 0);
   const trackedProgressPercent = percent(trackedProgress.generated, progressRequested);
   const downloadReady = hasTrackedBatches && trackedProgress.ready;
   const allTrackedBatchesTerminal =
     hasTrackedBatches && trackedBatches.every((batch) => isTerminalBatchStatus(batch.status));
-  const shouldPollProgress =
-    hasTrackedRequest && !approvalPending && !downloadReady && !allTrackedBatchesTerminal;
-  const activeStep = hasTrackedRequest
-    ? approvalPending
-      ? 1
-      : downloadReady
-        ? 3
-        : 2
-    : scopeConfirmed
-      ? 1
-      : 0;
+  const shouldPollProgress = hasTrackedRequest && !downloadReady && !allTrackedBatchesTerminal;
+  const activeStep = hasTrackedRequest ? (downloadReady ? 3 : 2) : scopeConfirmed ? 1 : 0;
   const plan = quantityPlan(quantity);
   const idempotencyKey = crypto.randomUUID();
   const companyById = new Map(operationsModel.companies.map((item) => [item.id, item]));
@@ -676,21 +653,13 @@ export function QrOperationsView({
                       </ConsoleQueryForm>
 
                       {directGenerationEnabled ? (
-                        approvalPending ? (
+                        hasTrackedRequest ? (
                           <div className="qr-console-v2-review">
                             <div className="qr-console-v2-review-summary">
                               <span>{copy.finalReview}</span>
-                              <strong>{copy.approvalPendingLabel}</strong>
-                              <small>{copy.progressApprovalPending}</small>
+                              <strong>{copy.generationPolicy}</strong>
+                              <small>{copy.progressPending}</small>
                             </div>
-                            {companyHref && siteHref ? (
-                              <Link
-                                className="tt-button"
-                                href={approvalHref(locale, companyHref, siteHref, quantity)}
-                              >
-                                {copy.openApprovalQueue}
-                              </Link>
-                            ) : null}
                           </div>
                         ) : (
                           <QrOnlyGenerationRequestForm
@@ -776,22 +745,18 @@ export function QrOperationsView({
                     >
                       {downloadReady
                         ? copy.readyDownload
-                        : approvalPending
-                          ? copy.approvalPendingLabel
-                          : hasTrackedRequest
-                            ? copy.stepProgress
-                            : copy.stepLocked}
+                        : hasTrackedRequest
+                          ? copy.stepProgress
+                          : copy.stepLocked}
                     </StatusPill>
                   </div>
                   <div className="qr-console-v2-progress">
                     <p className="qr-console-v2-help">
-                      {approvalPending
-                        ? copy.progressApprovalPending
-                        : hasTrackedBatches
-                          ? copy.progressDescription
-                          : hasTrackedRequest
-                            ? copy.progressPending
-                            : copy.progressEmpty}
+                      {hasTrackedBatches
+                        ? copy.progressDescription
+                        : hasTrackedRequest
+                          ? copy.progressPending
+                          : copy.progressEmpty}
                     </p>
                     {hasTrackedRequest ? (
                       <>
@@ -828,14 +793,6 @@ export function QrOperationsView({
                           label={copy.progressAutoRefresh}
                         />
                         <div className="qr-console-v2-progress-actions">
-                          {approvalPending && companyHref && siteHref ? (
-                            <Link
-                              className="tt-button tt-button--secondary tt-button--compact"
-                              href={approvalHref(locale, companyHref, siteHref, quantity)}
-                            >
-                              {copy.openApprovalQueue}
-                            </Link>
-                          ) : null}
                           <Link
                             className="tt-button tt-button--secondary tt-button--compact"
                             href={withQuery(locale, {

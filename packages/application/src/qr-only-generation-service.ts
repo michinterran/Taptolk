@@ -16,9 +16,9 @@ export interface QrOnlyGenerationBatchResult {
   batchId: string;
   batchStatus: QrBatchStatus;
   batchVersion: number;
-  generationRevision: null;
-  jobId: null;
-  jobStatus: null;
+  generationRevision: number;
+  jobId: string;
+  jobStatus: string;
   requestedQuantity: number;
 }
 
@@ -40,7 +40,12 @@ export interface QrOnlyGenerationRepository {
 }
 
 export class QrOnlyGenerationError extends Error {
-  readonly code: "INVALID_ID" | "INVALID_QUANTITY" | "INVALID_REASON" | "INVALID_VERSION";
+  readonly code:
+    | "FORBIDDEN"
+    | "INVALID_ID"
+    | "INVALID_QUANTITY"
+    | "INVALID_REASON"
+    | "INVALID_VERSION";
 
   constructor(code: QrOnlyGenerationError["code"]) {
     super(`QR-only generation rejected: ${code}`);
@@ -67,6 +72,9 @@ export class QrOnlyGenerationService {
     siteId: string;
   }): Promise<QrOnlyGenerationResult> {
     assertUuid(input.actor.userId);
+    if (input.actor.authorization.role !== "SUPER_ADMIN") {
+      throw new QrOnlyGenerationError("FORBIDDEN");
+    }
     assertUuid(input.siteId);
     assertUuid(input.idempotencyKey);
     if (!Number.isInteger(input.expectedSiteVersion) || input.expectedSiteVersion < 1) {

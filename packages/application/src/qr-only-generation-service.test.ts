@@ -29,7 +29,7 @@ function repository(): QrOnlyGenerationRepository {
 }
 
 describe("QrOnlyGenerationService", () => {
-  it("validates the QR-only request and delegates without creating a job", async () => {
+  it("validates the QR-only request and delegates direct generation", async () => {
     const repo = repository();
     const result = await new QrOnlyGenerationService(repo).request({
       actor: { authorization, userId: IDS.actor },
@@ -48,6 +48,28 @@ describe("QrOnlyGenerationService", () => {
       reason: "신규 사이트 QR 발행",
       siteId: IDS.site,
     });
+  });
+
+  it("rejects non-Super Admin actors before repository access", async () => {
+    const repo = repository();
+    await expect(
+      new QrOnlyGenerationService(repo).request({
+        actor: {
+          authorization: {
+            mfaVerified: true,
+            role: "PLATFORM_OPERATOR",
+            scope: { type: "PLATFORM" },
+          },
+          userId: IDS.actor,
+        },
+        expectedSiteVersion: 2,
+        idempotencyKey: IDS.idempotencyKey,
+        quantity: 10,
+        reason: "신규 사이트 QR 발행",
+        siteId: IDS.site,
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(repo.request).not.toHaveBeenCalled();
   });
 
   it.each<[string, Partial<{ expectedSiteVersion: number; quantity: number; reason: string }>]>([

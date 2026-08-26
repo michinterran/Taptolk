@@ -1,6 +1,6 @@
 begin;
 
-select plan(30);
+select plan(34);
 
 select enum_has_labels(
   'public',
@@ -49,6 +49,42 @@ select has_function(
   'request_qr_batch_final_approval',
   array['uuid', 'integer', 'text', 'uuid'],
   'requester final approval command exists'
+);
+
+select has_function(
+  'public',
+  'request_admin_qr_only_generation',
+  array['uuid', 'integer', 'integer', 'text', 'uuid'],
+  'Super Admin QR-only direct generation command exists'
+);
+
+select is_definer(
+  'public',
+  'request_admin_qr_only_generation',
+  array['uuid', 'integer', 'integer', 'text', 'uuid'],
+  'QR-only direct generation is server-reviewed'
+);
+
+select function_privs_are(
+  'public',
+  'request_admin_qr_only_generation',
+  array['uuid', 'integer', 'integer', 'text', 'uuid'],
+  'authenticated',
+  array['EXECUTE'],
+  'authenticated sessions enter QR-only generation through the RPC boundary'
+);
+
+select ok(
+  pg_get_functiondef(
+    'public.request_admin_qr_only_generation(uuid,integer,integer,text,uuid)'::regprocedure
+  ) like '%array[''SUPER_ADMIN'']%'
+  and pg_get_functiondef(
+    'public.request_admin_qr_only_generation(uuid,integer,integer,text,uuid)'::regprocedure
+  ) like '%qr_generation_jobs%'
+  and pg_get_functiondef(
+    'public.request_admin_qr_only_generation(uuid,integer,integer,text,uuid)'::regprocedure
+  ) not like '%request_qr_batch_final_approval%',
+  'QR-only request creates the durable job without a second approval call'
 );
 
 select has_function(

@@ -41,7 +41,7 @@ function destination(
     const valueFromForm = readString(formData, key);
     if (valueFromForm) search.set(key === "companyId" ? "company" : key, valueFromForm);
   }
-  return getLocalizedAdminPath(locale, `/qr-inventory/approval?${search.toString()}`) as Route;
+  return getLocalizedAdminPath(locale, `/qr-inventory/operations?${search.toString()}`) as Route;
 }
 
 function operationsDestination(
@@ -51,7 +51,7 @@ function operationsDestination(
   formData: FormData,
 ): Route {
   const search = new URLSearchParams({
-    status: "qrOnlyApprovalRequested",
+    status: "qrOnlyGenerationStarted",
     request: requestId,
     batches: batchIds.join(","),
   });
@@ -64,7 +64,9 @@ function operationsDestination(
 
 function mapError(error: unknown): ActionError {
   if (error instanceof AdminAuthorizationError) return "forbidden";
-  if (error instanceof QrOnlyGenerationError) return "validation";
+  if (error instanceof QrOnlyGenerationError) {
+    return error.code === "FORBIDDEN" ? "forbidden" : "validation";
+  }
   if (error instanceof QrOnlyGenerationRepositoryError) {
     return error.code === "BLOCKED"
       ? "blocked"

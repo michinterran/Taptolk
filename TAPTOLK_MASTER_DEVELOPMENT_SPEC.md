@@ -1387,7 +1387,8 @@ Activation Code 검증
 | Site 생성 요청 | O | X | O | X | X | X |
 | QR Batch 요청 | O | O | O | O | X | X |
 | QR 샘플 승인 | O | O | O | O | X | X |
-| 대량 생성 최종 승인 | O | X | X | X | X | X |
+| 대량 생성 최종 승인 (STANDARD 레거시) | O | X | X | X | X | X |
+| QR-only 직접 생성·운영 | O | X | X | X | X | X |
 | 실패 Batch 재처리 | O | O | 요청 | 요청 | X | X |
 | 차량 배정 | O | O | O | O | O | X |
 | QR 폐기 | O | 요청 | 승인 | 요청 | X | X |
@@ -1400,16 +1401,19 @@ Activation Code 검증
 
 - QR 생성 엔진은 플랫폼에 하나만 두며 역할별 Dashboard가 별도 엔진을 소유하지 않는다.
 - Management Admin과 Site Admin은 허용 scope에서 QR Batch를 요청하고 샘플을 승인한다.
-- MVP의 실제 대량 생성 시작은 Super Admin의 최종 승인을 요구한다.
-- Platform Operator는 발행 상태와 실패 작업을 운영하지만 대량 생성 최종 승인과 최종
-  폐기는 수행하지 않는다.
+- QR-only 발행은 Super Admin이 생성부터 운영까지 직접 관리한다. Super Admin의 생성
+  명령이 곧 durable generation job을 만들며, 별도의 2차 생성 승인 단계는 두지 않는다.
+- 기존 STANDARD Batch의 maker-checker 승인 기록과 상태는 하위 호환을 위해 보존한다.
+- Platform Operator는 발행 상태와 실패 작업을 운영하지만 STANDARD 레거시 대량 생성
+  최종 승인과 최종 폐기는 수행하지 않는다.
 - Site Operator는 입고·배포·차량 배정을 수행하며 QR Batch 발행과 폐기는 수행하지
   않는다.
 - 운영 안정화 후 계약 잔여 수량, 활성 Site, 승인된 Design Version과 발행 임계치를
   모두 만족하는 표준 Batch에 한해 Management Admin 자동 승인을 별도 정책으로
   도입할 수 있다.
-- 요청자와 최종 승인자가 같을 수 없는 작업은 Application Policy와 Audit Log에서
-  maker-checker 규칙으로 강제한다.
+- STANDARD Batch에서 요청자와 최종 승인자가 같을 수 없는 작업은 Application Policy와
+  Audit Log에서 maker-checker 규칙으로 강제한다. QR-only Super Admin 직접 생성에는
+  이 규칙을 적용하지 않고, 생성 명령·job·감사 기록을 한 트랜잭션으로 남긴다.
 
 ---
 
