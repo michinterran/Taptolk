@@ -58,6 +58,7 @@ function listMissingVariables(input: NodeJS.ProcessEnv): readonly QrQueueWorkerR
 export async function createQrQueueWorkerRuntime(
   input: NodeJS.ProcessEnv = process.env,
   options: {
+    queuePollSeconds?: number;
     taptolkLogoDataUri?: string;
     visibilityTimeoutSeconds?: number;
   } = {},
@@ -112,6 +113,7 @@ export async function createQrQueueWorkerRuntime(
     client as unknown as SupabasePgmqClient,
     environment.QR_GENERATION_QUEUE_NAME,
     options.visibilityTimeoutSeconds ?? environment.QR_GENERATION_QUEUE_VISIBILITY_TIMEOUT_SECONDS,
+    options.queuePollSeconds,
   );
 
   return {

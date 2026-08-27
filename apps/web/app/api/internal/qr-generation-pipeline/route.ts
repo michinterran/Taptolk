@@ -34,6 +34,7 @@ export const POST = handleCallback(
       async createWorkerRuntime() {
         const worker = await createQrQueueWorkerRuntime(process.env, {
           taptolkLogoDataUri: await logoDataUri,
+          queuePollSeconds: 0,
           visibilityTimeoutSeconds: QR_GENERATION_VERCEL_FUNCTION_VISIBILITY_TIMEOUT_SECONDS,
         });
         if (worker.ready) {

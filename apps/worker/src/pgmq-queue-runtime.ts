@@ -123,14 +123,15 @@ export class SupabasePgmqQueue implements PgmqQueue {
   constructor(
     private readonly client: SupabasePgmqClient,
     private readonly queueName: string,
-    private readonly visibilityTimeoutSeconds: number,
+    visibilityTimeoutSeconds: number,
+    private readonly pollSeconds = visibilityTimeoutSeconds,
   ) {}
 
   async read(): Promise<PgmqQueueEnvelope | null> {
     const result = await this.client.schema("pgmq_public").rpc("read", {
       n: 1,
       queue_name: this.queueName,
-      sleep_seconds: this.visibilityTimeoutSeconds,
+      sleep_seconds: this.pollSeconds,
     });
     if (result.error) {
       throw new Error("QUEUE_READ_UNAVAILABLE");

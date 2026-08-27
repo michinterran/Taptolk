@@ -51,8 +51,7 @@ export async function handleQrGenerationPipelineMessage(
   let sawCompleted = false;
   let sawRejected = false;
   let sawEmpty = false;
-  const workerIterations = Math.max(dispatch.claimedCount, 1);
-  for (let index = 0; index < workerIterations; index += 1) {
+  while (true) {
     const iteration = await worker.runOnce();
     if (iteration.status === "RETRY") {
       throw new QrGenerationPipelineRetryError("WORKER_RETRY");

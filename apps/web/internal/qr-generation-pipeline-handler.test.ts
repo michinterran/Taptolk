@@ -113,7 +113,10 @@ describe("Vercel QR generation pipeline handler", () => {
           claimedCount: 1,
           worker: {
             ready: true,
-            runOnce: vi.fn(async () => ({ messageId: "1", status: "COMPLETED" as const })),
+            runOnce: vi
+              .fn()
+              .mockResolvedValueOnce({ messageId: "1", status: "COMPLETED" as const })
+              .mockResolvedValueOnce({ status: "EMPTY" as const }),
           },
         }),
       ),
@@ -125,7 +128,8 @@ describe("Vercel QR generation pipeline handler", () => {
       .fn()
       .mockResolvedValueOnce({ messageId: "1", status: "COMPLETED" as const })
       .mockResolvedValueOnce({ messageId: "2", status: "COMPLETED" as const })
-      .mockResolvedValueOnce({ messageId: "3", status: "COMPLETED" as const });
+      .mockResolvedValueOnce({ messageId: "3", status: "COMPLETED" as const })
+      .mockResolvedValueOnce({ status: "EMPTY" as const });
 
     await expect(
       handleQrGenerationPipelineMessage(
@@ -137,6 +141,6 @@ describe("Vercel QR generation pipeline handler", () => {
         }),
       ),
     ).resolves.toEqual({ dispatchClaimedCount: 3, workerStatus: "COMPLETED" });
-    expect(runOnce).toHaveBeenCalledTimes(3);
+    expect(runOnce).toHaveBeenCalledTimes(4);
   });
 });
