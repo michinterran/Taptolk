@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Taptolk detail prototype</title>
+<style>
+:root{
+  --tt-color-brand:#8066ff;--tt-color-brand-strong:#5c42da;
+  --tt-color-background:#f7f8fc;--tt-color-surface:#ffffff;--tt-color-text:#171a24;--tt-color-text-muted:#60697a;
+  --tt-color-border:#dfe3ec;--tt-color-surface-subtle:#f2f4fa;--tt-color-surface-muted:#eaedf6;
+  --tt-color-brand-surface:#eeeaff;--tt-color-brand-fg:#5540c9;
+  --tt-color-info-surface:#e6edff;--tt-color-info-fg:#2a4fd6;
+  --tt-color-success-surface:#e4f5ed;--tt-color-success-fg:#0f7a4f;
+  --tt-color-neutral-surface:#eef0f6;--tt-color-neutral-fg:#4a5468;
+  --tt-radius-xs:.5rem;--tt-radius-sm:.75rem;--tt-radius-md:1.25rem;--tt-radius-pill:999px;
+  --tt-shadow-sm:0 1px 2px rgba(23,26,36,.06),0 1px 3px rgba(23,26,36,.04);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--tt-color-background);color:var(--tt-color-text);
+  font:400 .875rem/1.6 "Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;padding:2rem;}
+.wrap{max-width:960px;margin:0 auto;display:grid;gap:1.25rem}
+h1.pt{font-size:.8rem;color:var(--tt-color-text-muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0}
+.back{color:var(--tt-color-text-muted);text-decoration:none;font-size:.8rem;font-weight:600}
+.pg-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem}
+.pg-head .crumb{font-size:.75rem;color:var(--tt-color-brand-strong);font-weight:600;margin:0 0 .3rem}
+.pg-head h2{font-size:1.5rem;margin:0;display:flex;align-items:center;gap:.6rem}
+.code-chip{font-size:.72rem;font-weight:700;background:var(--tt-color-neutral-surface);color:var(--tt-color-neutral-fg);padding:.2rem .6rem;border-radius:var(--tt-radius-pill)}
+.pill{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:600;padding:.24rem .6rem;border-radius:var(--tt-radius-pill);background:var(--tt-color-success-surface);color:var(--tt-color-success-fg)}
+.pill::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:#1a9b68}
+.btn{border:0;border-radius:var(--tt-radius-pill);font-weight:600;font-size:.85rem;padding:.6rem 1.1rem;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none}
+.btn--primary{background:var(--tt-color-brand);color:#fff;box-shadow:var(--tt-shadow-sm)}
+.btn--ghost{background:var(--tt-color-surface);color:var(--tt-color-text);border:1px solid var(--tt-color-border)}
+.card{background:var(--tt-color-surface);border:1px solid var(--tt-color-border);border-radius:var(--tt-radius-md);box-shadow:var(--tt-shadow-sm);padding:1.4rem 1.5rem}
+.card h3{margin:0 0 .3rem;font-size:1.02rem}
+.card>p.desc{margin:0 0 1.2rem;font-size:.8rem;color:var(--tt-color-text-muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.25rem}
+.field{display:grid;gap:.35rem}
+.field.full{grid-column:1/-1}
+.field label{font-size:.78rem;font-weight:600;color:var(--tt-color-text)}
+.field .hint{font-size:.72rem;color:var(--tt-color-text-muted)}
+.field input{border:1px solid var(--tt-color-border);border-radius:var(--tt-radius-sm);padding:.6rem .75rem;font:inherit;color:inherit;background:var(--tt-color-surface)}
+.field input:focus{outline:0;border-color:var(--tt-color-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--tt-color-brand) 22%,transparent)}
+.field input[readonly]{background:var(--tt-color-surface-subtle);color:var(--tt-color-text-muted)}
+.addr-row{display:flex;gap:.5rem}
+.addr-row input{flex:1}
+.actions{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1.3rem}
+.note{font-size:.75rem;color:var(--tt-color-text-muted);margin-top:.4rem}
+.modal{position:fixed;inset:0;background:rgba(23,26,36,.45);display:none;place-items:center;z-index:60;padding:1rem}
+.modal.on{display:grid}
+.modal__panel{background:var(--tt-color-surface);border-radius:var(--tt-radius-md);box-shadow:0 1.5rem 4rem rgba(23,26,36,.28);width:min(480px,100%);overflow:hidden}
+.modal__head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem;border-bottom:1px solid var(--tt-color-border)}
+.modal__head strong{font-size:.92rem}
+.modal__close{border:0;background:transparent;font-size:1.2rem;cursor:pointer;color:var(--tt-color-text-muted);line-height:1}
+#postcode-embed{height:460px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="pt">Taptolk detail prototype — 관리회사 상세/관리 (수정 + Daum 주소검색)</h1>
+  <a class="back" href="/_design-prototype.html">← 관리회사 목록</a>
+
+  <div class="pg-head">
+    <div>
+      <p class="crumb">관리회사 › 상세</p>
+      <h2>한빛종합관리(주) <span class="code-chip">관리코드 MC-1024</span> <span class="pill">양호</span></h2>
+    </div>
+    <button class="btn btn--ghost">통합 현황</button>
+  </div>
+
+  <form class="card" onsubmit="event.preventDefault();alert('프로토타입: 저장 동작은 실제 구현에서 서버 액션으로 처리');">
+    <h3>기본 정보 수정</h3>
+    <p class="desc">관리사명·관리코드·주소를 관리합니다. 목록에는 <strong>관리사명</strong>만 노출되고 관리코드는 이 페이지에서만 관리됩니다.</p>
+    <div class="grid">
+      <div class="field">
+        <label for="name">관리사명</label>
+        <input id="name" value="한빛종합관리(주)" />
+        <span class="hint">목록·상단에 표시되는 실제 이름</span>
+      </div>
+      <div class="field">
+        <label for="code">관리코드</label>
+        <input id="code" value="MC-1024" />
+        <span class="hint">내부 식별자 — 목록 이름 자리에는 노출하지 않음</span>
+      </div>
+      <div class="field">
+        <label for="biz">사업자등록번호</label>
+        <input id="biz" value="214-88-01234" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label for="zip">우편번호</label>
+        <div class="addr-row">
+          <input id="zip" readonly placeholder="주소 검색을 눌러 자동 입력" />
+          <button type="button" class="btn btn--ghost" onclick="openPostcode()">주소 검색</button>
+        </div>
+      </div>
+      <div class="field full">
+        <label for="addr">주소</label>
+        <input id="addr" readonly placeholder="주소 검색을 눌러 자동 입력" />
+      </div>
+      <div class="field full">
+        <label for="addr2">상세 주소</label>
+        <input id="addr2" placeholder="동/호수 등 상세 주소 입력" />
+      </div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn btn--ghost">취소</button>
+      <button type="submit" class="btn btn--primary">저장</button>
+    </div>
+    <p class="note">주소 검색: Daum(카카오) 우편번호 서비스 — 무료·API키 불필요·클라이언트 임베드. 좌표는 저장하지 않고 도로명/지번 주소 문자열만 저장.</p>
+  </form>
+</div>
+
+<div class="modal" id="pc-modal" onclick="if(event.target===this)closePostcode()">
+  <div class="modal__panel">
+    <div class="modal__head"><strong>주소 검색</strong><button class="modal__close" type="button" onclick="closePostcode()" aria-label="닫기">×</button></div>
+    <div id="postcode-embed"></div>
+  </div>
+</div>
+
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+function closePostcode(){ document.getElementById('pc-modal').classList.remove('on'); }
+function openPostcode(){
+  if(!window.daum || !daum.Postcode){ alert('우편번호 스크립트 로드 실패(네트워크). 실제 앱에서는 로드 실패 시 수동 입력 폴백을 제공합니다.'); return; }
+  var box = document.getElementById('postcode-embed');
+  box.innerHTML = '';
+  document.getElementById('pc-modal').classList.add('on');
+  new daum.Postcode({
+    width:'100%', height:'100%',
+    oncomplete:function(data){
+      document.getElementById('zip').value = data.zonecode;
+      document.getElementById('addr').value = data.roadAddress || data.jibunAddress;
+      closePostcode();
+      document.getElementById('addr2').focus();
+    }
+  }).embed(box);
+}
+</script>
+</body>
+</html>

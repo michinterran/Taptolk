@@ -1,0 +1,936 @@
+import {
+  type QrBatchItem,
+  type QrBatchStatus,
+  type QrFinalApprovalBatchItem,
+  type QrFinalGenerationApprovalReadModel,
+  type QrInventorySampleReadModel,
+  STICKER_TEMPLATE_CODES,
+  type StickerDesignStatus,
+  type StickerDesignVersionItem,
+} from "@taptolk/application";
+import { StatusPill } from "@taptolk/ui";
+import type { ReactNode } from "react";
+import { approveQrBatchFinalGeneration } from "../admin/qr-final-generation-approval-actions";
+import {
+  approveQrBatchSample,
+  approveStickerDesignVersion,
+  createStickerDesignVersion,
+  requestQrBatch,
+} from "../admin/qr-inventory-sample-actions";
+import type { AdminQrWorkflowCopy } from "../content/admin-qr-workflow-copy";
+import type { AppLocale } from "../i18n/config";
+import { AdminPageHeader } from "./admin-page-header";
+import { QrQuantityControl, type QrQuantityLabels } from "./qr-quantity-control";
+import {
+  getQrWizardStepHref,
+  QR_WIZARD_STEPS,
+  type QrWizardStep,
+  QrWizardStepper,
+} from "./qr-wizard-stepper";
+
+interface QrInventoryCopy {
+  actions: string;
+  approvalsCount: string;
+  approvalsSummary: string;
+  approve: string;
+  archive: string;
+  artifact: string;
+  back: string;
+  batchCancel: string;
+  batchCode: string;
+  batchEmpty: string;
+  batchPurpose: string;
+  batchQuantity: string;
+  batchRequest: string;
+  batchRequestDescription: string;
+  batchRequestTitle: string;
+  batchSplitNotice: string;
+  batchStatusLabels: Readonly<Record<QrBatchStatus, string>>;
+  batchTitle: string;
+  byteSize: string;
+  checksum: string;
+  company: string;
+  contrast: string;
+  createdAt: string;
+  decode: string;
+  description: string;
+  designApproveDescription: string;
+  designApproveTitle: string;
+  designConfig: string;
+  designLogo: string;
+  designLogoNone: string;
+  designCreate: string;
+  designCreateDescription: string;
+  designCreateTitle: string;
+  designEmpty: string;
+  designStatusLabels: Readonly<Record<StickerDesignStatus, string>>;
+  designTitle: string;
+  emptyQueue: string;
+  eyebrow: string;
+  finalApprovalBlocked: string;
+  finalApprovalNotice: string;
+  finalApprovalSuperAdminOnly: string;
+  finalApprovalApprove: string;
+  finalApprovalDescription: string;
+  finalApprovalRequest: string;
+  finalApprovalRequestDescription: string;
+  finalApprovalTitle: string;
+  invalidate: string;
+  localeLabels: Readonly<Record<AppLocale, string>>;
+  localeTitle: string;
+  logoAlt: string;
+  mimeType: string;
+  noApprovedDesign: string;
+  noSite: string;
+  purposePlaceholder: string;
+  qaEvidence: string;
+  quantity: QrQuantityLabels;
+  stepBack: string;
+  stepBackDesign: string;
+  stepNavLabel: string;
+  stepNext: string;
+  stepNextQuantity: string;
+  specBottom: string;
+  specBottomValue: string;
+  specSize: string;
+  specSizeValue: string;
+  quietZone: string;
+  reason: string;
+  reasonPlaceholder: string;
+  sampleApprove: string;
+  sampleApproveDescription: string;
+  sampleApproveTitle: string;
+  sampleAttach: string;
+  sampleAttachDescription: string;
+  sampleReady: string;
+  samplePreviewAlt: string;
+  samplePreviewDesktop: string;
+  samplePreviewMobile: string;
+  sampleStatus: string;
+  securityNote: string;
+  signOut: string;
+  site: string;
+  siteRequired: string;
+  storageBucket: string;
+  storagePath: string;
+  templateCode: string;
+  wizardBrand: string;
+  wizardBrandDescription: string;
+  wizardPreview: string;
+  wizardQuantityHint: string;
+  wizardStep1: string;
+  wizardStep1Description: string;
+  wizardStep2: string;
+  wizardStep2Description: string;
+  wizardStep3: string;
+  wizardStep3Description: string;
+  wizardTemplate: string;
+  wizardTemplateDescription: string;
+  wizardTitle: string;
+  tenant: string;
+  titleLines: readonly [string, ...string[]];
+  waitingDesign: string;
+  waitingFinal: string;
+  waitingSample: string;
+}
+
+/** Kept as the query contract only; the flow itself is the five wizard steps. */
+export type QrInventorySection = never;
+
+/**
+ * Ordering is paged. Steps 1-2 (location + design) are one server action and steps
+ * 3-4 (quantity + submit) are another, so the flow pages at that seam rather than
+ * pretending each of the four steps is an independent screen.
+ */
+export type QrOrderStep = QrWizardStep;
+
+interface QrInventorySampleViewProps {
+  backHref: string;
+  canApproveDesign: boolean;
+  canApproveFinalGeneration: boolean;
+  canonicalQrHostReady: boolean;
+  /** Site chosen on step one and carried in the query, so the flow keeps one page. */
+  selectedSiteId?: string | undefined;
+  canCreateDesign: boolean;
+  canOperateSample: boolean;
+  canRequestBatch: boolean;
+  copy: QrInventoryCopy;
+  errorMessage?: string | undefined;
+  finalApprovalModel: QrFinalGenerationApprovalReadModel;
+  locale: AppLocale;
+  model: QrInventorySampleReadModel;
+  statusMessage?: string | undefined;
+  step: QrOrderStep;
+  brandAssetUpload?: ReactNode;
+  workflowCopy: AdminQrWorkflowCopy;
+}
+
+function formatDate(locale: AppLocale, value: string): string {
+  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function getQrBatchStatusTone(
+  status: QrBatchStatus,
+): "neutral" | "info" | "success" | "warning" | "danger" {
+  if (status === "FAILED" || status === "CANCELLED") {
+    return "danger";
+  }
+
+  if (status === "COMPLETED" || status === "DELIVERED") {
+    return "success";
+  }
+
+  if (status === "DRAFT") {
+    return "neutral";
+  }
+
+  if (
+    status === "PARTIALLY_COMPLETED" ||
+    status === "SAMPLE_READY" ||
+    status === "FINAL_APPROVAL_PENDING"
+  ) {
+    return "warning";
+  }
+
+  return "info";
+}
+
+function _getStickerDesignStatusTone(
+  status: StickerDesignStatus,
+): "neutral" | "success" | "warning" {
+  if (status === "APPROVED") {
+    return "success";
+  }
+
+  if (status === "ARCHIVED") {
+    return "neutral";
+  }
+
+  return "warning";
+}
+
+function ScopeFields({
+  copy,
+  item,
+  locale,
+}: {
+  copy: QrInventoryCopy;
+  item: { managementCompanyId: string; siteId: string; tenantId: string };
+  locale: AppLocale;
+}) {
+  return (
+    <>
+      <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+      <input aria-label={copy.tenant} name="tenantId" type="hidden" value={item.tenantId} />
+      <input
+        aria-label={copy.company}
+        name="managementCompanyId"
+        type="hidden"
+        value={item.managementCompanyId}
+      />
+      <input aria-label={copy.site} name="siteId" type="hidden" value={item.siteId} />
+    </>
+  );
+}
+
+function DesignFields({
+  copy,
+  design,
+  locale,
+}: {
+  copy: QrInventoryCopy;
+  design: StickerDesignVersionItem;
+  locale: AppLocale;
+}) {
+  return (
+    <>
+      <ScopeFields copy={copy} item={design} locale={locale} />
+      <input aria-label={copy.designTitle} name="designId" type="hidden" value={design.id} />
+      <input
+        aria-label={copy.actions}
+        name="expectedVersion"
+        type="hidden"
+        value={design.version}
+      />
+      <input
+        aria-label={copy.designTitle}
+        name="designStatus"
+        type="hidden"
+        value={design.status}
+      />
+      <input
+        aria-label={copy.actions}
+        name="createdByCurrentActor"
+        type="hidden"
+        value={design.createdByCurrentActor ? "on" : "off"}
+      />
+    </>
+  );
+}
+
+function BatchFields({
+  batch,
+  copy,
+  locale,
+}: {
+  batch: QrBatchItem;
+  copy: QrInventoryCopy;
+  locale: AppLocale;
+}) {
+  return (
+    <>
+      <ScopeFields copy={copy} item={batch} locale={locale} />
+      <input aria-label={copy.batchCode} name="batchId" type="hidden" value={batch.id} />
+      <input
+        aria-label={copy.actions}
+        name="expectedBatchVersion"
+        type="hidden"
+        value={batch.version}
+      />
+      <input aria-label={copy.batchTitle} name="batchStatus" type="hidden" value={batch.status} />
+      <input
+        aria-label={copy.actions}
+        name="requestedByCurrentActor"
+        type="hidden"
+        value={batch.requestedByCurrentActor ? "on" : "off"}
+      />
+      {batch.sample ? (
+        <>
+          <input aria-label={copy.artifact} name="sampleId" type="hidden" value={batch.sample.id} />
+          <input
+            aria-label={copy.actions}
+            name="expectedSampleVersion"
+            type="hidden"
+            value={batch.sample.version}
+          />
+          <input
+            aria-label={copy.sampleStatus}
+            name="sampleStatus"
+            type="hidden"
+            value={batch.sample.status}
+          />
+        </>
+      ) : null}
+    </>
+  );
+}
+
+function FinalApprovalFields({
+  batch,
+  copy,
+  locale,
+}: {
+  batch: Pick<QrFinalApprovalBatchItem, "id" | "version">;
+  copy: QrInventoryCopy;
+  locale: AppLocale;
+}) {
+  return (
+    <>
+      <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+      <input aria-label={copy.batchCode} name="batchId" type="hidden" value={batch.id} />
+      <input
+        aria-label={copy.actions}
+        name="expectedBatchVersion"
+        type="hidden"
+        value={batch.version}
+      />
+      <input aria-label={copy.actions} name="requestId" type="hidden" value={crypto.randomUUID()} />
+    </>
+  );
+}
+
+function ReasonField({ copy, id }: { copy: QrInventoryCopy; id: string }) {
+  return (
+    <label className="admin-field" htmlFor={id}>
+      <span>{copy.reason}</span>
+      <textarea
+        id={id}
+        maxLength={500}
+        minLength={3}
+        name="reason"
+        placeholder={copy.reasonPlaceholder}
+        required
+      />
+    </label>
+  );
+}
+
+function SampleApprovalCard({
+  batch,
+  copy,
+  locale,
+}: {
+  batch: QrBatchItem;
+  copy: QrInventoryCopy;
+  locale: AppLocale;
+}) {
+  if (!batch.sample) {
+    return null;
+  }
+  return (
+    <article className="qr-review-card">
+      <header className="qr-track-batch__header">
+        <div>
+          <span className="qr-track-batch__code">{batch.batchCode}</span>
+          <h3>{batch.siteName}</h3>
+        </div>
+        <StatusPill tone="warning">{copy.sampleReady}</StatusPill>
+      </header>
+      <dl className="qr-spec">
+        <div>
+          <dt>{copy.batchQuantity}</dt>
+          <dd>{batch.requestedQuantity.toLocaleString(locale === "ko" ? "ko-KR" : "en")}</dd>
+        </div>
+        <div>
+          <dt>{copy.templateCode}</dt>
+          <dd>{batch.templateCode}</dd>
+        </div>
+        <div>
+          <dt>{copy.qaEvidence}</dt>
+          <dd>
+            {copy.decode} ✓ · {copy.quietZone} ✓ · {copy.contrast} ✓
+          </dd>
+        </div>
+      </dl>
+      <form action={approveQrBatchSample} className="qr-review-card__form">
+        <BatchFields batch={batch} copy={copy} locale={locale} />
+        <input aria-label={copy.decode} name="decodePassed" type="hidden" value="on" />
+        <input aria-label={copy.quietZone} name="quietZonePassed" type="hidden" value="on" />
+        <input aria-label={copy.contrast} name="contrastPassed" type="hidden" value="on" />
+        <ReasonField copy={copy} id={`sample-approve-${batch.id}`} />
+        <button className="tt-button" type="submit">
+          {copy.sampleApprove}
+        </button>
+      </form>
+    </article>
+  );
+}
+
+function FinalGenerationApprovalCard({
+  batch,
+  canonicalQrHostReady,
+  copy,
+  locale,
+  templateCode,
+}: {
+  batch: QrFinalApprovalBatchItem;
+  canonicalQrHostReady: boolean;
+  copy: QrInventoryCopy;
+  locale: AppLocale;
+  templateCode: string;
+}) {
+  return (
+    <article className="qr-review-card">
+      <header className="qr-track-batch__header">
+        <div>
+          <span className="qr-track-batch__code">{batch.batchCode}</span>
+          <h3>{batch.siteName}</h3>
+        </div>
+        <StatusPill tone={getQrBatchStatusTone(batch.status)}>
+          {copy.batchStatusLabels[batch.status]}
+        </StatusPill>
+      </header>
+      <dl className="qr-spec">
+        <div>
+          <dt>{copy.batchQuantity}</dt>
+          <dd>{batch.requestedQuantity.toLocaleString(locale === "ko" ? "ko-KR" : "en")}</dd>
+        </div>
+        <div>
+          <dt>{copy.templateCode}</dt>
+          <dd>{templateCode}</dd>
+        </div>
+        <div>
+          <dt>{copy.createdAt}</dt>
+          <dd>
+            <time dateTime={batch.createdAt}>{formatDate(locale, batch.createdAt)}</time>
+          </dd>
+        </div>
+      </dl>
+      <form action={approveQrBatchFinalGeneration} className="qr-review-card__form">
+        <FinalApprovalFields batch={batch} copy={copy} locale={locale} />
+        <ReasonField copy={copy} id={`final-approve-${batch.id}`} />
+        <button className="tt-button" disabled={!canonicalQrHostReady} type="submit">
+          {copy.finalApprovalApprove}
+        </button>
+      </form>
+    </article>
+  );
+}
+
+export function QrInventorySampleView({
+  canApproveDesign,
+  canApproveFinalGeneration,
+  canonicalQrHostReady,
+  selectedSiteId,
+  canCreateDesign,
+  canOperateSample,
+  canRequestBatch,
+  copy,
+  errorMessage,
+  finalApprovalModel,
+  brandAssetUpload,
+  locale,
+  model,
+  statusMessage,
+  step,
+  workflowCopy,
+}: QrInventorySampleViewProps) {
+  const selectedSite = model.siteOptions.find((site) => site.id === selectedSiteId);
+  const stepIndex = QR_WIZARD_STEPS.indexOf(step);
+  const previousStep = stepIndex > 0 ? QR_WIZARD_STEPS[stepIndex - 1] : undefined;
+  const nextStep =
+    stepIndex >= 0 && stepIndex < QR_WIZARD_STEPS.length - 1
+      ? QR_WIZARD_STEPS[stepIndex + 1]
+      : undefined;
+  /* A step the role cannot act on stays visible and dimmed. Splitting the flow by
+     permission is what broke the approved design before. */
+  const lockedSteps = new Set<QrWizardStep>([
+    ...(canCreateDesign ? [] : (["design"] as const)),
+    ...(canRequestBatch ? [] : (["quantity"] as const)),
+    ...(canOperateSample || canApproveFinalGeneration ? [] : (["review"] as const)),
+  ]);
+
+  const stepFooter = (
+    <nav aria-label={copy.stepNavLabel} className="qr-wizard__footer">
+      {previousStep ? (
+        <a
+          className="tt-button tt-button--secondary"
+          href={getQrWizardStepHref(locale, previousStep, selectedSiteId)}
+        >
+          {copy.stepBack} · {workflowCopy.steps[stepIndex - 1]?.title}
+        </a>
+      ) : (
+        <span />
+      )}
+      {nextStep ? (
+        <a className="tt-button" href={getQrWizardStepHref(locale, nextStep, selectedSiteId)}>
+          {copy.stepNext} · {workflowCopy.steps[stepIndex + 1]?.title}
+        </a>
+      ) : null}
+    </nav>
+  );
+
+  return (
+    <>
+      <AdminPageHeader
+        locale={locale}
+        localeLabels={copy.localeLabels}
+        localeTitle={copy.localeTitle}
+        logoAlt={copy.logoAlt}
+        pathname={`/${locale}/admin/qr-inventory`}
+      />
+
+      <section className="admin-compact-heading">
+        <div>
+          <p className="eyebrow">{copy.eyebrow}</p>
+          <h1>{workflowCopy.title}</h1>
+          <p>{workflowCopy.description}</p>
+        </div>
+      </section>
+
+      {statusMessage ? (
+        <aside aria-live="polite" className="admin-notice admin-notice--success">
+          <strong>{statusMessage}</strong>
+        </aside>
+      ) : null}
+      {errorMessage ? (
+        <aside aria-live="assertive" className="admin-notice admin-notice--danger">
+          <strong>{errorMessage}</strong>
+        </aside>
+      ) : null}
+      <aside className="admin-notice">
+        <strong>{copy.finalApprovalNotice}</strong>
+      </aside>
+
+      <QrWizardStepper
+        current={step}
+        label={copy.stepNavLabel}
+        locale={locale}
+        lockedSteps={lockedSteps}
+        siteId={selectedSiteId}
+        steps={workflowCopy.steps}
+      />
+
+      {step === "site" ? (
+        <section aria-labelledby="qr-site-title" className="qr-wizard__panel">
+          <h2 id="qr-site-title">{workflowCopy.steps[0]?.title}</h2>
+          <p>{workflowCopy.steps[0]?.description}</p>
+          {model.siteOptions.length > 0 ? (
+            <div className="qr-choice-rows">
+              {model.siteOptions.map((site) => (
+                <a
+                  aria-current={site.id === selectedSiteId ? "true" : undefined}
+                  className="qr-choice-rows__link"
+                  href={`${getQrWizardStepHref(locale, "design")}&site=${encodeURIComponent(site.id)}`}
+                  key={site.id}
+                >
+                  <span className="qr-choice-rows__meta">
+                    <strong>{site.name}</strong>
+                    <small>
+                      {site.tenantName} · {site.managementCompanyName}
+                    </small>
+                  </span>
+                  <StatusPill tone="info">{copy.site}</StatusPill>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.noSite}</p>
+          )}
+          {stepFooter}
+        </section>
+      ) : null}
+
+      {step === "design" && canCreateDesign ? (
+        <section aria-labelledby="qr-design-title" className="qr-wizard__columns">
+          <div className="qr-wizard__panel">
+            <h2 id="qr-design-title">{copy.designCreateTitle}</h2>
+            <p>{copy.designCreateDescription}</p>
+            {selectedSite ? (
+              <form action={createStickerDesignVersion} className="qr-design-form">
+                <input aria-label={copy.localeTitle} name="locale" type="hidden" value={locale} />
+                <input
+                  id="design-site-scope"
+                  name="siteScope"
+                  type="hidden"
+                  value={`${selectedSite.tenantId}|${selectedSite.managementCompanyId}|${selectedSite.id}|${selectedSite.version}|${selectedSite.status}`}
+                />
+
+                <p className="qr-wizard__context">
+                  <span>{copy.site}</span>
+                  <strong>{selectedSite.name}</strong>
+                  <small>{selectedSite.managementCompanyName}</small>
+                </p>
+
+                <fieldset className="qr-choice-cards">
+                  <legend>{workflowCopy.templateLegend}</legend>
+                  {STICKER_TEMPLATE_CODES.map((templateCode, index) => (
+                    <label key={templateCode}>
+                      <input
+                        aria-label={workflowCopy.templateLabels[templateCode]}
+                        defaultChecked={index === 0}
+                        name="templateCode"
+                        required
+                        type="radio"
+                        value={templateCode}
+                      />
+                      {/* biome-ignore lint/performance/noImgElement: protected route returns a generated production renderer preview */}
+                      <img
+                        alt={`${workflowCopy.templateLabels[templateCode]} · ${workflowCopy.previewAlt}`}
+                        src={`/api/admin/qr-preview?template=${templateCode}`}
+                      />
+                      <strong>{workflowCopy.templateLabels[templateCode]}</strong>
+                      <small>{workflowCopy.templateDescriptions[templateCode]}</small>
+                    </label>
+                  ))}
+                </fieldset>
+
+                <fieldset className="qr-choice-rows">
+                  <legend>{copy.designLogo}</legend>
+                  <label>
+                    <input
+                      aria-label={copy.designLogoNone}
+                      defaultChecked
+                      name="brandAssetId"
+                      type="radio"
+                      value=""
+                    />
+                    <span className="qr-choice-rows__meta">
+                      <strong>{copy.designLogoNone}</strong>
+                    </span>
+                  </label>
+                  {model.brandAssetOptions.map((asset) => (
+                    <label key={asset.id}>
+                      <input
+                        aria-label={asset.name}
+                        name="brandAssetId"
+                        type="radio"
+                        value={`${asset.tenantId}|${asset.managementCompanyId}|${asset.siteId}|${asset.id}`}
+                      />
+                      <span className="qr-choice-rows__meta">
+                        <strong>{asset.name}</strong>
+                        <small>{asset.mimeType}</small>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+
+                <p className="qr-note qr-note--ok">
+                  <span>{copy.specBottomValue}</span>
+                </p>
+                <ReasonField copy={copy} id="design-create-reason" />
+                <div className="qr-wizard__footer">
+                  <a
+                    className="tt-button tt-button--secondary"
+                    href={getQrWizardStepHref(locale, "site")}
+                  >
+                    {copy.stepBack} · {workflowCopy.steps[0]?.title}
+                  </a>
+                  <button className="tt-button" type="submit">
+                    {copy.designCreate}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <p className="qr-note qr-note--warn">
+                <a href={getQrWizardStepHref(locale, "site")}>
+                  {model.siteOptions.length > 0 ? copy.siteRequired : copy.noSite}
+                </a>
+              </p>
+            )}
+          </div>
+
+          {/* The rail renders every template and CSS reveals the checked one, so the
+              preview tracks the selection without turning this into a client component. */}
+          <aside className="qr-wizard__rail">
+            <h3>{copy.wizardPreview}</h3>
+            {STICKER_TEMPLATE_CODES.map((templateCode) => (
+              <figure
+                className="qr-wizard__preview"
+                data-template={templateCode}
+                key={templateCode}
+              >
+                {/* biome-ignore lint/performance/noImgElement: protected route returns a generated production renderer preview */}
+                <img
+                  alt={`${workflowCopy.templateLabels[templateCode]} · ${workflowCopy.previewAlt}`}
+                  src={`/api/admin/qr-preview?template=${templateCode}`}
+                />
+              </figure>
+            ))}
+            <p className="qr-wizard__rail-caption">{copy.decode}</p>
+            <dl className="qr-wizard__rail-spec">
+              <div>
+                <dt>{workflowCopy.templateLegend}</dt>
+                <dd>
+                  {STICKER_TEMPLATE_CODES.map((templateCode) => (
+                    <span data-template={templateCode} key={templateCode}>
+                      {workflowCopy.templateLabels[templateCode]}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+              <div>
+                <dt>{copy.specSize}</dt>
+                <dd>{copy.specSizeValue}</dd>
+              </div>
+              <div>
+                <dt>{copy.specBottom}</dt>
+                <dd>{copy.specBottomValue}</dd>
+              </div>
+              <div>
+                <dt>{copy.site}</dt>
+                <dd>{selectedSite ? selectedSite.name : "—"}</dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+      ) : null}
+
+      {/* BrandAssetUploadView already renders its own titled section; wrapping it again
+          produced a card inside a card with two headings. */}
+      {step === "design" ? brandAssetUpload : null}
+
+      {step === "review" ? (
+        <section aria-label={copy.approvalsSummary} className="tt-stat-strip tt-stat-strip--3">
+          {[
+            {
+              count: canApproveDesign ? model.designApprovalQueue.length : null,
+              label: copy.designApproveTitle,
+            },
+            {
+              count: canOperateSample ? model.sampleApprovalQueue.length : null,
+              label: copy.sampleApproveTitle,
+            },
+            {
+              count: canApproveFinalGeneration
+                ? finalApprovalModel.finalApprovalQueue.length
+                : null,
+              label: copy.finalApprovalTitle,
+            },
+          ].map((entry) => (
+            <article className="tt-stat-tile" key={entry.label}>
+              <span className="tt-stat-tile__label">{entry.label}</span>
+              <span className="tt-stat-tile__value">
+                {entry.count === null ? "—" : entry.count.toLocaleString()}
+              </span>
+              <span className="tt-stat-tile__meta">{copy.approvalsCount}</span>
+            </article>
+          ))}
+        </section>
+      ) : null}
+
+      {step === "review" && canApproveDesign ? (
+        <section aria-labelledby="design-approval-title" className="qr-wizard__panel">
+          <header>
+            <h2 id="design-approval-title">{copy.designApproveTitle}</h2>
+            <p>{copy.designApproveDescription}</p>
+          </header>
+          {model.designApprovalQueue.length > 0 ? (
+            <div className="qr-review-list">
+              {model.designApprovalQueue.map((design) => (
+                <article className="qr-review-card" key={design.id}>
+                  <header className="qr-track-batch__header">
+                    <div>
+                      <span className="qr-track-batch__code">{design.templateCode}</span>
+                      <h3>{design.siteName}</h3>
+                    </div>
+                    <StatusPill tone="warning">{copy.waitingDesign}</StatusPill>
+                  </header>
+                  <form action={approveStickerDesignVersion} className="qr-review-card__form">
+                    <DesignFields copy={copy} design={design} locale={locale} />
+                    <ReasonField copy={copy} id={`design-approve-${design.id}`} />
+                    <button className="tt-button" type="submit">
+                      {copy.approve}
+                    </button>
+                  </form>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.emptyQueue}</p>
+          )}
+        </section>
+      ) : null}
+
+      {step === "quantity" && canRequestBatch ? (
+        <section
+          aria-labelledby="batch-request-title"
+          className="admin-lifecycle-queue admin-qr-wizard-panel"
+        >
+          <header>
+            <h2 id="batch-request-title">{copy.batchRequestTitle}</h2>
+            <p>{copy.batchRequestDescription}</p>
+            <p className="admin-catalog-read-only">{copy.batchSplitNotice}</p>
+          </header>
+          {model.approvedDesignOptions.length > 0 ? (
+            <div className="qr-review-list">
+              {model.approvedDesignOptions.map((design) => {
+                const site = model.siteOptions.find((item) => item.id === design.siteId);
+                if (!site) {
+                  return null;
+                }
+                return (
+                  <form action={requestQrBatch} className="qr-review-card" key={design.id}>
+                    <div className="qr-review-card__form">
+                      <ScopeFields copy={copy} item={design} locale={locale} />
+                      <input
+                        aria-label={copy.designTitle}
+                        name="designId"
+                        type="hidden"
+                        value={design.id}
+                      />
+                      <input
+                        aria-label={copy.designTitle}
+                        name="designStatus"
+                        type="hidden"
+                        value={design.status}
+                      />
+                      <input
+                        aria-label={copy.actions}
+                        name="expectedDesignVersion"
+                        type="hidden"
+                        value={design.version}
+                      />
+                      <input
+                        aria-label={copy.actions}
+                        name="expectedSiteVersion"
+                        type="hidden"
+                        value={site.version}
+                      />
+                      <input
+                        aria-label={copy.site}
+                        name="siteStatus"
+                        type="hidden"
+                        value={site.status}
+                      />
+                      <strong>
+                        {design.siteName} · {design.templateCode}
+                      </strong>
+                      <div className="admin-approval-field-grid">
+                        <QrQuantityControl labels={copy.quantity} locale={locale} />
+                        <label className="admin-field" htmlFor={`purpose-${design.id}`}>
+                          <span>{copy.batchPurpose}</span>
+                          <input
+                            id={`purpose-${design.id}`}
+                            maxLength={200}
+                            minLength={3}
+                            name="purpose"
+                            placeholder={copy.purposePlaceholder}
+                            required
+                          />
+                        </label>
+                      </div>
+                      <ReasonField copy={copy} id={`batch-request-reason-${design.id}`} />
+                      <button className="tt-button" type="submit">
+                        {copy.batchRequest}
+                      </button>
+                    </div>
+                  </form>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.noApprovedDesign}</p>
+          )}
+        </section>
+      ) : null}
+
+      {step === "review" && canOperateSample ? (
+        <section aria-labelledby="sample-approval-title" className="qr-wizard__panel">
+          <header>
+            <h2 id="sample-approval-title">{copy.sampleApproveTitle}</h2>
+            <p>{copy.sampleApproveDescription}</p>
+          </header>
+          {model.sampleApprovalQueue.length > 0 ? (
+            <div className="qr-review-list">
+              {model.sampleApprovalQueue.map((batch) => (
+                <SampleApprovalCard batch={batch} copy={copy} key={batch.id} locale={locale} />
+              ))}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.emptyQueue}</p>
+          )}
+        </section>
+      ) : null}
+
+      {step === "review" && canApproveFinalGeneration ? (
+        <section aria-labelledby="final-approval-title" className="qr-wizard__panel">
+          <header>
+            <h2 id="final-approval-title">
+              {copy.finalApprovalTitle}{" "}
+              <StatusPill tone="info">{copy.finalApprovalSuperAdminOnly}</StatusPill>
+            </h2>
+            <p>{copy.finalApprovalDescription}</p>
+          </header>
+          {canonicalQrHostReady ? null : (
+            <p className="qr-note qr-note--warn" role="status">
+              <span>{copy.finalApprovalBlocked}</span>
+            </p>
+          )}
+          {finalApprovalModel.finalApprovalQueue.length > 0 ? (
+            <div className="qr-review-list">
+              {finalApprovalModel.finalApprovalQueue.map((batch) => {
+                const inventoryBatch = model.batches.find((item) => item.id === batch.id);
+                return inventoryBatch ? (
+                  <FinalGenerationApprovalCard
+                    batch={batch}
+                    canonicalQrHostReady={canonicalQrHostReady}
+                    copy={copy}
+                    key={batch.id}
+                    locale={locale}
+                    templateCode={inventoryBatch.templateCode}
+                  />
+                ) : null;
+              })}
+            </div>
+          ) : (
+            <p className="admin-catalog-read-only">{copy.emptyQueue}</p>
+          )}
+        </section>
+      ) : null}
+    </>
+  );
+}

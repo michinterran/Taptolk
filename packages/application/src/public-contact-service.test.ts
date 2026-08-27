@@ -1,0 +1,188 @@
+import { describe, expect, it, vi } from "vitest";
+import type {
+  PublicContactCaptchaVerifier,
+  PublicContactHasher,
+  PublicContactRepository,
+  PublicContactSecretFactory,
+} from "./public-contact-service.js";
+import { PublicContactService, PublicContactServiceError } from "./public-contact-service.js";
+
+function createHarness(captcha?: PublicContactCaptchaVerifier) {
+  const repository: PublicContactRepository = {
+    create: vi.fn(async () => ({
+      callerMessageCount: 1,
+      expiresAt: "2026-07-20T03:00:00.000Z",
+      merged: false,
+      ownerMessages: [],
+      reasonCode: "MOVE_REQUEST" as const,
+      status: "NOTIFICATION_QUEUED" as const,
+      version: 1,
+    })),
+    escalation: vi.fn(async () => ({
+      elapsedSeconds: 180,
+      officeAvailable: true,
+      stage: "OFFICE_AVAILABLE" as const,
+    })),
+    inspect: vi.fn(async () => ({
+      contactEnabled: true as const,
+      qrStatus: "ACTIVE" as const,
+      siteDisplayName: "Test Site",
+      vehicle: {
+        color: null,
+        plateLast4: "7098",
+        type: null,
+      },
+    })),
+    officeAlert: vi.fn(async () => ({ status: "ESCALATED" as const })),
+    read: vi.fn(async () => ({
+      callerMessageCount: 1,
+      expiresAt: "2026-07-20T03:00:00.000Z",
+      ownerMessages: [],
+      reasonCode: "MOVE_REQUEST" as const,
+      status: "NOTIFICATION_QUEUED" as const,
+      version: 1,
+    })),
+    recordAbuse: vi.fn(async () => undefined),
+    report: vi.fn(async () => ({
+      reportId: "11111111-1111-4111-8111-111111111111",
+      status: "OPEN" as const,
+    })),
+    resolve: vi.fn(async () => ({ status: "RESOLVED" as const })),
+  };
+  const hasher: PublicContactHasher = {
+    hash: vi.fn(async (_value, purpose) => purpose.padEnd(64, "0").slice(0, 64)),
+  };
+  const secrets: PublicContactSecretFactory = {
+    createSessionToken: () => "session_12345678901234567890",
+  };
+  return {
+    hasher,
+    repository,
+    service: new PublicContactService(repository, hasher, secrets, undefined, captcha),
+  };
+}
+
+describe("PublicContactService", () => {
+  it("returns only the approved public QR DTO", async () => {
+    const { repository, service } = createHarness();
+    await expect(service.inspect({ publicToken: "public_token_1234567890" })).resolves.toEqual({
+      contactEnabled: true,
+      qrStatus: "ACTIVE",
+      siteDisplayName: "Test Site",
+      vehicle: {
+        color: null,
+        plateLast4: "7098",
+        type: null,
+      },
+    });
+    expect(repository.inspect).toHaveBeenCalledWith({ publicTokenHash: expect.any(String) });
+  });
+
+  it("normalizes input and sends only hashes plus bounded message to the repository", async () => {
+    const { repository, service } = createHarness();
+    await expect(
+      service.create({
+        anonymousToken: "anonymous_12345678901234567890",
+        message: "  차량 이동을  부탁드립니다. ",
+        messageMode: "TEMPLATE",
+        networkFingerprint: "network",
+        plateLast4: "7098",
+        publicToken: "public_token_1234567890",
+        reasonCode: "MOVE_REQUEST",
+        userAgent: "browser",
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        sessionToken: "session_12345678901234567890",
+        status: "NOTIFICATION_QUEUED",
+      }),
+    );
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        anonymousTokenHash: expect.any(String),
+        message: "차량 이동을 부탁드립니다.",
+        messageHash: expect.any(String),
+        publicTokenHash: expect.any(String),
+        sessionTokenHash: expect.any(String),
+      }),
+    );
+    const persisted = vi.mocked(repository.create).mock.calls[0]?.[0];
+    expect(JSON.stringify(persisted)).not.toContain("anonymous_12345678901234567890");
+    expect(JSON.stringify(persisted)).not.toContain("public_token_1234567890");
+    expect(JSON.stringify(persisted)).not.toContain("session_12345678901234567890");
+  });
+
+  it("hashes both recovery tokens before session read", async () => {
+    const { repository, service } = createHarness();
+    await service.read({
+      anonymousToken: "anonymous_12345678901234567890",
+      sessionToken: "session_12345678901234567890",
+    });
+    expect(repository.read).toHaveBeenCalledWith({
+      anonymousTokenHash: expect.any(String),
+      sessionTokenHash: expect.any(String),
+    });
+  });
+
+  it("hashes both recovery tokens before resolving the temporary session", async () => {
+    const { repository, service } = createHarness();
+    await expect(
+      service.resolve({
+        anonymousToken: "anonymous_12345678901234567890",
+        sessionToken: "session_12345678901234567890",
+      }),
+    ).resolves.toEqual({ status: "RESOLVED" });
+    expect(repository.resolve).toHaveBeenCalledWith({
+      anonymousTokenHash: expect.any(String),
+      sessionTokenHash: expect.any(String),
+    });
+  });
+
+  it("rejects short secrets and oversized fingerprints", async () => {
+    const { service } = createHarness();
+    await expect(service.inspect({ publicToken: "short" })).rejects.toEqual(
+      new PublicContactServiceError("INVALID_SECRET"),
+    );
+    await expect(
+      service.create({
+        anonymousToken: "anonymous_12345678901234567890",
+        message: "차량 이동을 부탁드립니다.",
+        messageMode: "TEMPLATE",
+        networkFingerprint: "n".repeat(501),
+        plateLast4: "7098",
+        publicToken: "public_token_1234567890",
+        reasonCode: "MOVE_REQUEST",
+        userAgent: "browser",
+      }),
+    ).rejects.toEqual(new PublicContactServiceError("INVALID_FINGERPRINT"));
+  });
+
+  it("fails closed before persistence when the CAPTCHA hook rejects", async () => {
+    const captcha: PublicContactCaptchaVerifier = {
+      verify: vi.fn(async () => false),
+    };
+    const { repository, service } = createHarness(captcha);
+    await expect(
+      service.create({
+        anonymousToken: "anonymous_12345678901234567890",
+        captchaToken: "transient-captcha-token",
+        message: "차량 이동을 부탁드립니다.",
+        messageMode: "TEMPLATE",
+        networkFingerprint: "network",
+        plateLast4: "7098",
+        publicToken: "public_token_1234567890",
+        reasonCode: "MOVE_REQUEST",
+        userAgent: "browser",
+      }),
+    ).rejects.toEqual(new PublicContactServiceError("CAPTCHA_REQUIRED"));
+    expect(repository.create).not.toHaveBeenCalled();
+    expect(repository.recordAbuse).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: "CAPTCHA_FAILED" }),
+    );
+    expect(captcha.verify).toHaveBeenCalledWith({
+      anonymousTokenHash: expect.any(String),
+      captchaToken: "transient-captcha-token",
+      networkHash: expect.any(String),
+    });
+  });
+});

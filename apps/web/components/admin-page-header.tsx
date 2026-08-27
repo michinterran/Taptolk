@@ -1,0 +1,420 @@
+import {
+  BuildingsIcon,
+  ChartBarIcon,
+  ChartLineUpIcon,
+  CirclesFourIcon,
+  HouseIcon,
+  IdentificationCardIcon,
+  MapPinAreaIcon,
+  QrCodeIcon,
+  ShieldCheckIcon,
+  SignOutIcon,
+  UserCircleIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import type { Route } from "next";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { signOutAdmin } from "../auth/actions";
+import { loadAdminContext } from "../auth/admin-context";
+import { getAdminConsoleArea } from "../auth/admin-routing";
+import { getAdminRoleLabel, getAdminScopeLabel } from "../content/admin-copy";
+import { getMessages } from "../content/messages";
+import type { AppLocale } from "../i18n/config";
+import { ConsoleSearch, type ConsoleSearchItem } from "./console-search";
+import { ConsoleThemeControl } from "./console-theme-control";
+import { LocaleSwitcher } from "./locale-switcher";
+
+interface AdminPageHeaderProps {
+  locale: AppLocale;
+  localeLabels: Readonly<Record<AppLocale, string>>;
+  localeTitle: string;
+  logoAlt: string;
+  pathname: string;
+}
+
+interface AdminNavigationItem {
+  href: Route;
+  icon: ReactNode;
+  label: string;
+}
+
+interface AdminNavigationSection {
+  label: string;
+  items: readonly AdminNavigationItem[];
+}
+
+export async function AdminPageHeader({
+  locale,
+  localeLabels,
+  localeTitle,
+  logoAlt,
+  pathname,
+}: AdminPageHeaderProps) {
+  const context = await loadAdminContext();
+
+  if (context.status === "AVAILABLE" && context.decision.state === "READY") {
+    const copy = getMessages(locale);
+    const { membership } = context.decision;
+    const area = getAdminConsoleArea(membership);
+    const isPlatform = area === "platform";
+    const isCompany = area === "company";
+    const workspaceHref = `/${locale}/admin/${
+      isPlatform ? "platform" : isCompany ? "company" : "dashboard"
+    }` as Route;
+    const navigationSections: readonly AdminNavigationSection[] = isPlatform
+      ? [
+          {
+            label: copy["admin.nav.group.overview"],
+            items: [
+              {
+                href: `/${locale}/admin/platform` as Route,
+                icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.overview"],
+              },
+            ],
+          },
+          {
+            label: copy["admin.nav.group.customers"],
+            items: [
+              {
+                href: `/${locale}/admin/platform/management-companies` as Route,
+                icon: <BuildingsIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.managementCompanies"],
+              },
+              {
+                href: `/${locale}/admin/sites` as Route,
+                icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.sites"],
+              },
+            ],
+          },
+          {
+            label: copy["admin.nav.group.service"],
+            items: [
+              {
+                href: `/${locale}/admin/qr-inventory` as Route,
+                icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.qr"],
+              },
+              {
+                href: `/${locale}/admin/operations` as Route,
+                icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.operations"],
+              },
+              {
+                href: `/${locale}/admin/reports` as Route,
+                icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.reports"],
+              },
+              {
+                href: `/${locale}/admin/platform/revenue` as Route,
+                icon: <CirclesFourIcon aria-hidden="true" weight="duotone" />,
+                label: copy["admin.nav.revenue"],
+              },
+            ],
+          },
+          ...(membership.role === "SUPER_ADMIN"
+            ? [
+                {
+                  label: copy["admin.nav.group.administration"],
+                  items: [
+                    {
+                      href: `/${locale}/admin/accounts` as Route,
+                      icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
+                      label: copy["admin.nav.access"],
+                    },
+                  ],
+                },
+              ]
+            : []),
+        ]
+      : isCompany
+        ? [
+            {
+              label: copy["admin.nav.group.overview"],
+              items: [
+                {
+                  href: `/${locale}/admin/company` as Route,
+                  icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.overview"],
+                },
+              ],
+            },
+            {
+              label: copy["admin.nav.group.customers"],
+              items: [
+                {
+                  href: `/${locale}/admin/sites` as Route,
+                  icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.sites"],
+                },
+              ],
+            },
+            {
+              label: copy["admin.nav.group.service"],
+              items: [
+                {
+                  href: `/${locale}/admin/qr-inventory` as Route,
+                  icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.qr"],
+                },
+                {
+                  href: `/${locale}/admin/operations` as Route,
+                  icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.operations"],
+                },
+                {
+                  href: `/${locale}/admin/reports` as Route,
+                  icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.reports"],
+                },
+              ],
+            },
+            ...(membership.role === "MANAGEMENT_ADMIN"
+              ? [
+                  {
+                    label: copy["admin.nav.group.administration"],
+                    items: [
+                      {
+                        href: `/${locale}/admin/accounts` as Route,
+                        icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
+                        label: copy["admin.nav.access"],
+                      },
+                    ],
+                  },
+                ]
+              : []),
+          ]
+        : [
+            {
+              label: copy["admin.nav.group.overview"],
+              items: [
+                {
+                  href: `/${locale}/admin/dashboard` as Route,
+                  icon: <HouseIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.overview"],
+                },
+              ],
+            },
+            {
+              label: copy["admin.nav.group.customers"],
+              items: [
+                {
+                  href: `/${locale}/admin/sites` as Route,
+                  icon: <MapPinAreaIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.sites"],
+                },
+              ],
+            },
+            {
+              label: copy["admin.nav.group.service"],
+              items: [
+                {
+                  href: `/${locale}/admin/qr-inventory` as Route,
+                  icon: <QrCodeIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.qr"],
+                },
+                {
+                  href: `/${locale}/admin/operations` as Route,
+                  icon: <ChartLineUpIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.operations"],
+                },
+                {
+                  href: `/${locale}/admin/reports` as Route,
+                  icon: <ChartBarIcon aria-hidden="true" weight="duotone" />,
+                  label: copy["admin.nav.reports"],
+                },
+              ],
+            },
+            ...(["MANAGEMENT_ADMIN", "SITE_ADMIN"].includes(membership.role)
+              ? [
+                  {
+                    label: copy["admin.nav.group.administration"],
+                    items: [
+                      {
+                        href: `/${locale}/admin/accounts` as Route,
+                        icon: <ShieldCheckIcon aria-hidden="true" weight="duotone" />,
+                        label: copy["admin.nav.access"],
+                      },
+                    ],
+                  },
+                ]
+              : []),
+          ];
+    const navigation = navigationSections.flatMap((section) => section.items);
+    const searchItems: readonly ConsoleSearchItem[] = navigationSections.flatMap((section) =>
+      section.items.map((item) => ({
+        group: section.label,
+        href: item.href,
+        label: item.label,
+      })),
+    );
+    const profileHref = `/${locale}/admin/profile` as Route;
+    const isProfile = pathname === profileHref;
+    const isAccountApproval = pathname === `/${locale}/admin/platform/access`;
+    const accountHref = `/${locale}/admin/accounts` as Route;
+    const currentItem = isAccountApproval
+      ? navigation.find((item) => item.href === accountHref)
+      : (navigation.find((item) => pathname === item.href) ??
+        navigation.find(
+          (item) => item.href !== workspaceHref && pathname.startsWith(`${item.href}/`),
+        ) ??
+        (isProfile ? undefined : navigation[0]));
+    const currentLabel = isAccountApproval
+      ? copy["admin.nav.access"]
+      : isProfile
+        ? copy["admin.shared.account"]
+        : (currentItem?.label ?? copy["admin.nav.overview"]);
+    return (
+      <>
+        <aside aria-label={copy["admin.nav.sidebar"]} className="admin-console-sidebar">
+          <Link className="admin-console-brand" href={workspaceHref}>
+            {/* biome-ignore lint/performance/noImgElement: approved logo must bypass image transformation */}
+            <img alt={logoAlt} height="405" src="/brand/taptolk-logo.png" width="1000" />
+            <span>{copy["admin.nav.consoleLabel"]}</span>
+          </Link>
+
+          <div className="admin-console-identity">
+            <span>{copy["admin.nav.workspace"]}</span>
+            <strong>
+              {isPlatform
+                ? copy["admin.platform.eyebrow"]
+                : isCompany
+                  ? copy["admin.company.eyebrow"]
+                  : copy["admin.dashboard.eyebrow"]}
+            </strong>
+          </div>
+
+          <nav aria-label={copy["admin.nav.label"]} className="admin-console-nav">
+            {navigationSections.map((section) => (
+              <section className="admin-console-nav__section" key={section.label}>
+                <p>{section.label}</p>
+                {section.items.map((item) => {
+                  const isCurrent = currentItem?.href === item.href;
+                  return (
+                    <Link
+                      aria-current={isCurrent ? "page" : undefined}
+                      className="admin-console-nav__item"
+                      href={item.href}
+                      key={item.href}
+                    >
+                      {item.icon}
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </section>
+            ))}
+          </nav>
+
+          <Link
+            aria-current={isProfile ? "page" : undefined}
+            className="admin-console-profile-link"
+            href={profileHref}
+          >
+            <IdentificationCardIcon aria-hidden="true" weight="duotone" />
+            {copy["admin.shared.account"]}
+          </Link>
+
+          <dl className="admin-console-session">
+            <div>
+              <dt>{copy["admin.dashboard.context"]}</dt>
+              <dd>{getAdminScopeLabel(copy, membership.scopeType)}</dd>
+            </div>
+            <div>
+              <dt>{copy["admin.dashboard.session"]}</dt>
+              <dd>{copy["admin.dashboard.session.aal1"]}</dd>
+            </div>
+          </dl>
+        </aside>
+
+        <header className="admin-console-topbar">
+          <div className="admin-console-topbar__leading">
+            <Link
+              aria-label={copy["admin.nav.scopeHome"]}
+              className="admin-console-scope"
+              href={workspaceHref}
+              title={copy["admin.nav.scopeHome"]}
+            >
+              {isPlatform || isCompany ? (
+                <CirclesFourIcon aria-hidden="true" weight="duotone" />
+              ) : (
+                <MapPinAreaIcon aria-hidden="true" weight="duotone" />
+              )}
+              <span>{getAdminScopeLabel(copy, membership.scopeType)}</span>
+            </Link>
+            <div className="admin-console-location">
+              <span>{copy["admin.nav.current"]}</span>
+              <strong>{isProfile ? copy["admin.shared.account"] : currentLabel}</strong>
+            </div>
+          </div>
+          <ConsoleSearch
+            emptyLabel={copy["admin.search.empty"]}
+            items={searchItems}
+            label={copy["admin.search.label"]}
+            placeholder={copy["admin.search.placeholder"]}
+          />
+          <div className="admin-console-account-actions">
+            <ConsoleThemeControl
+              darkLabel={copy["admin.theme.dark"]}
+              lightLabel={copy["admin.theme.light"]}
+            />
+            <LocaleSwitcher
+              currentLocale={locale}
+              labels={localeLabels}
+              pathname={pathname}
+              title={localeTitle}
+            />
+            <details className="admin-console-account-menu">
+              <summary aria-label={copy["admin.shared.account"]}>
+                <UserCircleIcon aria-hidden="true" weight="duotone" />
+                <span>
+                  <strong>{getAdminRoleLabel(copy, membership.role)}</strong>
+                  <small title={context.email ?? undefined}>{context.email ?? "-"}</small>
+                </span>
+              </summary>
+              <div>
+                <div className="admin-console-account-menu__identity">
+                  <strong>{getAdminRoleLabel(copy, membership.role)}</strong>
+                  <small title={context.email ?? undefined}>{context.email ?? "-"}</small>
+                </div>
+                <Link href={`/${locale}/admin/profile` as Route}>
+                  <IdentificationCardIcon aria-hidden="true" weight="duotone" />
+                  {copy["admin.shared.account"]}
+                </Link>
+                <form action={signOutAdmin}>
+                  <input aria-label={localeTitle} name="locale" type="hidden" value={locale} />
+                  <button type="submit">
+                    <SignOutIcon aria-hidden="true" weight="duotone" />
+                    {copy["admin.shared.signOut"]}
+                  </button>
+                </form>
+              </div>
+            </details>
+          </div>
+        </header>
+      </>
+    );
+  }
+
+  return (
+    <header className="admin-page-header">
+      <a className="admin-brand-link" href={`/${locale}`}>
+        {/* biome-ignore lint/performance/noImgElement: approved logo must bypass image transformation */}
+        <img
+          alt={logoAlt}
+          className="admin-brand-logo"
+          height="405"
+          src="/brand/taptolk-logo.png"
+          width="1000"
+        />
+      </a>
+      <LocaleSwitcher
+        currentLocale={locale}
+        labels={localeLabels}
+        pathname={pathname}
+        title={localeTitle}
+      />
+    </header>
+  );
+}

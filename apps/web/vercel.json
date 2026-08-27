@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app/api/internal/qr-generation-pipeline/route.ts": {
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "qr-generation-pipeline-v1",
+          "retryAfterSeconds": 30,
+          "initialDelaySeconds": 0
+        }
+      ],
+      "maxDuration": 300
+    }
+  }
+}

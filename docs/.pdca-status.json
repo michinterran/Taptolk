@@ -1,0 +1,1594 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-07-21T03:32:15.524Z",
+  "activeFeatures": [
+    "i18n-foundation",
+    "tenant-admin-foundation",
+    "admin-console-architecture",
+    "site-lifecycle-maker-checker",
+    "qr-inventory-sample-foundation",
+    "qr-final-generation-approval",
+    "qr-generation-queue-dispatch-runtime",
+    "qr-generation-staging-queue-live-proof",
+    "owner-activation",
+    "public-contact",
+    "notification-reply",
+    "escalation-abuse",
+    "analytics-hardening",
+    "production-privacy-cleanup-cron",
+    "public-landing-onboarding",
+    "kakao-alimtalk-ephemeral-contact"
+  ],
+  "primaryFeature": "i18n-foundation",
+  "features": {
+    "i18n-foundation": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:16:47.609Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:18:56.879Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:43:31.950Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:45:30.888Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.797Z",
+          "completedAt": "2026-07-18T09:46:22.269Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-18T09:15:44.797Z",
+        "lastUpdated": "2026-07-18T09:46:22.269Z"
+      },
+      "completedAt": "2026-07-18T09:46:22.268Z"
+    },
+    "tenant-admin-foundation": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:16:47.753Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:18:56.948Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:43:31.965Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:45:30.899Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-18T09:15:44.889Z",
+          "completedAt": "2026-07-18T09:46:22.320Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-18T09:15:44.890Z",
+        "lastUpdated": "2026-07-18T09:46:22.320Z"
+      },
+      "completedAt": "2026-07-18T09:46:22.319Z"
+    },
+    "admin-console-architecture": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 0,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-18T10:11:00.887Z",
+          "completedAt": "2026-07-18T10:11:58.615Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-18T10:11:00.887Z",
+          "completedAt": "2026-07-18T10:16:49.159Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-18T10:11:00.887Z",
+          "completedAt": "2026-07-19T21:53:59.868Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-18T10:11:00.887Z",
+          "completedAt": "2026-07-19T21:54:03.434Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-18T10:11:00.887Z",
+          "completedAt": "2026-07-19T21:54:07.254Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-18T10:11:00.887Z",
+        "lastUpdated": "2026-07-19T21:54:07.254Z"
+      },
+      "completedAt": "2026-07-19T21:54:07.249Z"
+    },
+    "site-lifecycle-maker-checker": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-19T02:50:56.173Z",
+          "completedAt": "2026-07-19T02:52:22.178Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-19T02:50:56.173Z",
+          "completedAt": "2026-07-19T02:53:39.175Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-19T02:50:56.173Z",
+          "completedAt": "2026-07-19T03:24:38.018Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-19T02:50:56.173Z",
+          "completedAt": "2026-07-19T03:25:35.448Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-19T02:50:56.173Z",
+          "completedAt": "2026-07-19T03:26:23.881Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-19T02:50:56.174Z",
+        "lastUpdated": "2026-07-19T03:26:23.881Z"
+      },
+      "completedAt": "2026-07-19T03:26:23.878Z"
+    },
+    "qr-inventory-sample-foundation": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-19T03:31:05.122Z",
+          "completedAt": "2026-07-19T03:33:40.445Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-19T03:31:05.122Z",
+          "completedAt": "2026-07-19T03:35:56.286Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-19T03:31:05.122Z",
+          "completedAt": "2026-07-19T04:29:17.813Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-19T03:31:05.122Z",
+          "completedAt": "2026-07-19T04:29:51.574Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-19T03:31:05.122Z",
+          "completedAt": "2026-07-19T04:30:59.375Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-19T03:31:05.123Z",
+        "lastUpdated": "2026-07-19T04:30:59.375Z"
+      },
+      "completedAt": "2026-07-19T04:30:59.372Z"
+    },
+    "qr-final-generation-approval": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 0,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-19T04:38:04.882Z",
+          "completedAt": "2026-07-19T04:40:12.057Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-19T04:38:04.882Z",
+          "completedAt": "2026-07-19T04:44:41.440Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-19T04:38:04.882Z",
+          "completedAt": "2026-07-19T21:53:59.891Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-19T04:38:04.882Z",
+          "completedAt": "2026-07-19T21:54:03.524Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-19T04:38:04.882Z",
+          "completedAt": "2026-07-19T21:54:07.303Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-19T04:38:04.884Z",
+        "lastUpdated": "2026-07-19T21:54:07.303Z"
+      },
+      "completedAt": "2026-07-19T21:54:07.295Z"
+    },
+    "qr-generation-queue-dispatch-runtime": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:16:48.711Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:20:27.239Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:29:22.196Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:33:49.022Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:14:54.960Z",
+          "completedAt": "2026-07-19T08:34:42.278Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-19T08:14:54.960Z",
+        "lastUpdated": "2026-07-19T08:34:42.278Z"
+      },
+      "completedAt": "2026-07-19T08:34:42.276Z"
+    },
+    "qr-generation-staging-queue-live-proof": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 0,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:37:47.526Z",
+          "completedAt": "2026-07-19T08:39:01.085Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:37:47.526Z",
+          "completedAt": "2026-07-19T08:39:56.425Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:37:47.526Z",
+          "completedAt": "2026-07-19T21:54:00.052Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:37:47.526Z",
+          "completedAt": "2026-07-19T21:54:03.611Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-19T08:37:47.526Z",
+          "completedAt": "2026-07-19T21:54:07.345Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-19T08:37:47.527Z",
+        "lastUpdated": "2026-07-19T21:54:07.345Z"
+      },
+      "completedAt": "2026-07-19T21:54:07.334Z"
+    },
+    "owner-activation": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 0,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-19T15:40:13.985Z",
+          "completedAt": "2026-07-19T15:42:00.326Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-19T15:40:13.985Z",
+          "completedAt": "2026-07-19T15:45:51.072Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-19T15:40:13.985Z",
+          "completedAt": "2026-07-19T16:47:26.165Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-19T15:40:13.985Z",
+          "completedAt": "2026-07-19T16:47:28.458Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-19T15:40:13.985Z",
+          "completedAt": "2026-07-19T16:47:31.424Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-19T15:40:13.986Z",
+        "lastUpdated": "2026-07-19T16:47:31.424Z"
+      },
+      "completedAt": "2026-07-19T16:47:31.420Z"
+    },
+    "public-contact": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 0,
+      "documents": {},
+      "completedAt": "2026-07-19T17:28:26.124Z"
+    },
+    "notification-reply": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 0,
+      "documents": {},
+      "completedAt": "2026-07-19T17:56:29.343Z"
+    },
+    "escalation-abuse": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "completedAt": "2026-07-19T18:11:38.248Z"
+    },
+    "analytics-hardening": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "completedAt": "2026-07-19T19:51:53.963Z"
+    },
+    "production-privacy-cleanup-cron": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 0,
+      "documents": {},
+      "completedAt": "2026-07-19T20:13:38.739Z"
+    },
+    "public-landing-onboarding": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-20T03:07:07.571Z",
+          "completedAt": "2026-07-20T03:07:33.029Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-20T03:07:07.571Z",
+          "completedAt": "2026-07-20T03:08:32.181Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-20T03:07:07.571Z",
+          "completedAt": "2026-07-20T03:25:12.565Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-20T03:07:07.571Z",
+          "completedAt": "2026-07-20T04:07:17.508Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-20T03:07:07.571Z",
+          "completedAt": "2026-07-20T04:07:20.508Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-20T03:07:07.572Z",
+        "lastUpdated": "2026-07-20T04:07:20.508Z"
+      },
+      "completedAt": "2026-07-20T04:07:20.475Z"
+    },
+    "kakao-alimtalk-ephemeral-contact": {
+      "phase": "completed",
+      "matchRate": null,
+      "iterationCount": 1,
+      "documents": {},
+      "taskChain": [
+        {
+          "phase": "plan",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:11:04.522Z"
+        },
+        {
+          "phase": "design",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:11:04.546Z"
+        },
+        {
+          "phase": "do",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:30:15.711Z"
+        },
+        {
+          "phase": "check",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:32:15.509Z"
+        },
+        {
+          "phase": "report",
+          "status": "completed",
+          "createdAt": "2026-07-21T03:07:35.704Z",
+          "completedAt": "2026-07-21T03:32:15.524Z"
+        }
+      ],
+      "timestamps": {
+        "started": "2026-07-21T03:07:35.705Z",
+        "lastUpdated": "2026-07-21T03:32:15.524Z"
+      },
+      "completedAt": "2026-07-21T03:32:15.522Z"
+    }
+  },
+  "pipeline": {
+    "currentPhase": 1,
+    "level": "Starter",
+    "phaseHistory": []
+  },
+  "session": {
+    "startedAt": "2026-07-18T09:15:44.795Z",
+    "onboardingCompleted": false,
+    "lastActivity": "2026-07-21T03:32:15.524Z"
+  },
+  "history": [
+    {
+      "feature": "i18n-foundation",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-18T09:16:47.607Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-18T09:16:47.608Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-18T09:16:47.752Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-18T09:16:47.752Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-18T09:16:54.178Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-18T09:16:54.305Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-18T09:18:56.878Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-18T09:18:56.878Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-18T09:18:56.947Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-18T09:18:56.947Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-18T09:43:31.946Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-18T09:43:31.949Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-18T09:43:31.962Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-18T09:43:31.964Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-18T09:45:30.887Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-18T09:45:30.887Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-18T09:45:30.898Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-18T09:45:30.899Z"
+    },
+    {
+      "feature": "i18n-foundation",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-18T09:46:22.269Z"
+    },
+    {
+      "feature": "tenant-admin-foundation",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-18T09:46:22.319Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-18T10:11:58.614Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-18T10:11:58.614Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-18T10:12:02.189Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-18T10:16:49.141Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-18T10:16:49.150Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T02:52:22.176Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T02:52:22.176Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-19T02:52:28.022Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T02:53:39.173Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T02:53:39.174Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T03:24:38.012Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T03:24:38.016Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T03:25:35.442Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T03:25:35.444Z"
+    },
+    {
+      "feature": "site-lifecycle-maker-checker",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T03:26:23.879Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T03:33:40.442Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T03:33:40.443Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-19T03:33:42.930Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T03:35:56.284Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T03:35:56.285Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T04:29:17.810Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T04:29:17.812Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T04:29:51.572Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T04:29:51.573Z"
+    },
+    {
+      "feature": "qr-inventory-sample-foundation",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T04:30:59.373Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T04:40:12.054Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T04:40:12.055Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-19T04:40:17.517Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T04:44:41.432Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T04:44:41.436Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T08:16:48.707Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T08:16:48.710Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-19T08:16:54.556Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T08:20:27.237Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T08:20:27.238Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T08:29:22.194Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T08:29:22.195Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T08:33:49.019Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T08:33:49.020Z"
+    },
+    {
+      "feature": "qr-generation-queue-dispatch-runtime",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T08:34:42.277Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T08:39:01.084Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T08:39:01.084Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-19T08:39:06.374Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T08:39:56.423Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T08:39:56.424Z"
+    },
+    {
+      "feature": "owner-activation",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T15:42:00.324Z"
+    },
+    {
+      "feature": "owner-activation",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T15:42:00.325Z"
+    },
+    {
+      "feature": "owner-activation",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-19T15:42:11.230Z"
+    },
+    {
+      "feature": "owner-activation",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T15:45:51.071Z"
+    },
+    {
+      "feature": "owner-activation",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T15:45:51.071Z"
+    },
+    {
+      "feature": "owner-activation",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T16:47:26.153Z"
+    },
+    {
+      "feature": "owner-activation",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T16:47:26.164Z"
+    },
+    {
+      "feature": "owner-activation",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T16:47:28.432Z"
+    },
+    {
+      "feature": "owner-activation",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T16:47:28.449Z"
+    },
+    {
+      "feature": "owner-activation",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T16:47:31.422Z"
+    },
+    {
+      "feature": "public-contact",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T16:51:01.412Z"
+    },
+    {
+      "feature": "public-contact",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T16:51:01.413Z"
+    },
+    {
+      "feature": "public-contact",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T16:51:05.900Z"
+    },
+    {
+      "feature": "public-contact",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T16:51:05.901Z"
+    },
+    {
+      "feature": "public-contact",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T17:28:15.409Z"
+    },
+    {
+      "feature": "public-contact",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T17:28:15.415Z"
+    },
+    {
+      "feature": "public-contact",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T17:28:18.102Z"
+    },
+    {
+      "feature": "public-contact",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T17:28:18.103Z"
+    },
+    {
+      "feature": "public-contact",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T17:28:26.125Z"
+    },
+    {
+      "feature": "notification-reply",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T17:30:35.070Z"
+    },
+    {
+      "feature": "notification-reply",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T17:30:35.070Z"
+    },
+    {
+      "feature": "notification-reply",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T17:30:40.655Z"
+    },
+    {
+      "feature": "notification-reply",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T17:30:40.655Z"
+    },
+    {
+      "feature": "notification-reply",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T17:56:22.551Z"
+    },
+    {
+      "feature": "notification-reply",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T17:56:22.555Z"
+    },
+    {
+      "feature": "notification-reply",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T17:56:26.482Z"
+    },
+    {
+      "feature": "notification-reply",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T17:56:26.483Z"
+    },
+    {
+      "feature": "notification-reply",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T17:56:29.344Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T17:57:39.317Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T17:57:39.318Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T17:57:41.988Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T17:57:41.989Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T18:10:10.231Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T18:10:10.240Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T18:11:18.832Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T18:11:18.834Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "from": "act",
+      "to": "report",
+      "timestamp": "2026-07-19T18:11:32.699Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "action": "phase_complete",
+      "phase": "act",
+      "nextPhase": "report",
+      "timestamp": "2026-07-19T18:11:32.700Z"
+    },
+    {
+      "feature": "escalation-abuse",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T18:11:38.249Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T18:14:30.213Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T18:14:30.213Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T18:14:33.122Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T18:14:33.123Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T18:48:51.210Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T18:48:51.215Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T19:51:48.386Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T19:51:48.393Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "from": "act",
+      "to": "report",
+      "timestamp": "2026-07-19T19:51:51.035Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "action": "phase_complete",
+      "phase": "act",
+      "nextPhase": "report",
+      "timestamp": "2026-07-19T19:51:51.036Z"
+    },
+    {
+      "feature": "analytics-hardening",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T19:51:53.966Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-19T19:58:31.509Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-19T19:58:31.512Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-19T19:59:19.203Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-19T19:59:19.204Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T20:12:34.537Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T20:12:34.538Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T20:12:58.742Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T20:12:58.744Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "from": "act",
+      "to": "report",
+      "timestamp": "2026-07-19T20:13:02.534Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "action": "phase_complete",
+      "phase": "act",
+      "nextPhase": "report",
+      "timestamp": "2026-07-19T20:13:02.536Z"
+    },
+    {
+      "feature": "production-privacy-cleanup-cron",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T20:13:38.756Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T21:53:59.863Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T21:53:59.865Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T21:53:59.887Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T21:53:59.888Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-19T21:54:00.050Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-19T21:54:00.051Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T21:54:03.430Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T21:54:03.432Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T21:54:03.520Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T21:54:03.521Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-19T21:54:03.607Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-19T21:54:03.608Z"
+    },
+    {
+      "feature": "admin-console-architecture",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T21:54:07.251Z"
+    },
+    {
+      "feature": "qr-final-generation-approval",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T21:54:07.300Z"
+    },
+    {
+      "feature": "qr-generation-staging-queue-live-proof",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-19T21:54:07.340Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-20T03:07:33.027Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-20T03:07:33.028Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-20T03:07:36.289Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-20T03:08:32.178Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-20T03:08:32.179Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-20T03:25:12.559Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-20T03:25:12.564Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-20T04:07:17.479Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-20T04:07:17.498Z"
+    },
+    {
+      "feature": "public-landing-onboarding",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-20T04:07:20.496Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "plan",
+      "to": "design",
+      "timestamp": "2026-07-21T03:11:04.516Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "plan",
+      "nextPhase": "design",
+      "timestamp": "2026-07-21T03:11:04.517Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "design",
+      "to": "design",
+      "timestamp": "2026-07-21T03:11:04.534Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "design",
+      "to": "do",
+      "timestamp": "2026-07-21T03:11:04.543Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "design",
+      "nextPhase": "do",
+      "timestamp": "2026-07-21T03:11:04.545Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "do",
+      "to": "check",
+      "timestamp": "2026-07-21T03:30:15.709Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "do",
+      "nextPhase": "check",
+      "timestamp": "2026-07-21T03:30:15.711Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "from": "check",
+      "to": "act",
+      "timestamp": "2026-07-21T03:32:15.506Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "check",
+      "nextPhase": "act",
+      "timestamp": "2026-07-21T03:32:15.508Z"
+    },
+    {
+      "feature": "kakao-alimtalk-ephemeral-contact",
+      "action": "phase_complete",
+      "phase": "report",
+      "nextPhase": "completed",
+      "timestamp": "2026-07-21T03:32:15.523Z"
+    }
+  ]
+}

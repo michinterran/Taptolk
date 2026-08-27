@@ -1,0 +1,2 @@
+-- Phase 0 intentionally has no domain seed data.
+-- Tenant, user, vehicle, QR, and message fixtures begin only after their schemas exist.

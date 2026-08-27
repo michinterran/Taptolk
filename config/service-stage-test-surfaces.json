@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "surfaces": [
+    {
+      "kind": "provider",
+      "path": "apps/web/notification-reply/notification-staging-provider.ts",
+      "serviceBehavior": "NOT_FOUND"
+    },
+    {
+      "kind": "route",
+      "path": "apps/web/app/api/internal/notification-staging/route.ts",
+      "serviceBehavior": "NOT_FOUND"
+    }
+  ]
+}

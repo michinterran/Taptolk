@@ -1,0 +1,39 @@
+{
+  "name": "@taptolk/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "clean": "node ../../scripts/clean-next-output.mjs .",
+    "dev": "next dev",
+    "start": "next start",
+    "typecheck": "node ../../scripts/clean-next-output.mjs . && next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "2.1.10",
+    "@taptolk/application": "workspace:*",
+    "@taptolk/auth": "workspace:*",
+    "@taptolk/config": "workspace:*",
+    "@taptolk/db": "workspace:*",
+    "@taptolk/domain": "workspace:*",
+    "@taptolk/observability": "workspace:*",
+    "@taptolk/qr-engine": "workspace:*",
+    "@taptolk/ui": "workspace:*",
+    "@taptolk/worker": "workspace:*",
+    "@vercel/queue": "0.1.3",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "server-only": "0.0.1",
+    "solapi": "5.5.1",
+    "web-push": "3.6.7",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@types/web-push": "3.6.4",
+    "tailwindcss": "4.3.3"
+  }
+}

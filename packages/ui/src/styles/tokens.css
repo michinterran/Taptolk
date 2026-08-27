@@ -1,0 +1,429 @@
+:root {
+  /* Brand + core palette (existing — do not rename; admin CSS depends on these) */
+  --tt-color-brand: #8066ff;
+  --tt-color-brand-strong: #5c42da;
+  --tt-color-logo-purple: #8a6eff;
+  --tt-color-logo-orange: #ff8500;
+  --tt-color-accent: #ff7a00;
+  --tt-color-background: #f7f8fc;
+  --tt-color-surface: #ffffff;
+  --tt-color-text: #171a24;
+  --tt-color-text-muted: #60697a;
+  --tt-color-border: #dfe3ec;
+  --tt-color-success: #1a9b68;
+  --tt-color-warning: #d98a00;
+  --tt-color-danger: #d64553;
+  --tt-color-focus: #2b59ff;
+
+  /* Surface + border levels (new) */
+  --tt-color-surface-subtle: #f2f4fa;
+  --tt-color-surface-muted: #eaedf6;
+  --tt-color-border-strong: #c9cfdd;
+
+  /* Informational accent (new) */
+  --tt-color-info: #2f6bff;
+
+  /* Foreground for filled brand/state surfaces (new) */
+  --tt-color-on-brand: #ffffff;
+
+  /* Layout scale, measured from the reference console mockup. Every admin surface
+     card resolves its padding, corner and spacing from these — a screen-specific
+     block must not restate them, which is how the console drifted apart. */
+  --tt-card-padding: 1.5rem;
+  --tt-card-padding-compact: 1rem;
+  --tt-card-radius: 0.875rem;
+  --tt-card-gap: 1.5rem;
+  /* The console fills its column like the reference; only the gutter is reserved. */
+  --tt-console-max-width: none;
+  --tt-console-gutter: clamp(1.25rem, 2.5vw, 2.5rem);
+  --tt-section-gap: 1.5rem;
+
+  /* Button metrics (new). Every button in the product resolves its size, shape and
+     type from these. Do not restate the values in a component stylesheet — change
+     them here so the whole product moves together. */
+  --tt-button-height: 2.5rem;
+  --tt-button-height-compact: 2.1rem;
+  --tt-button-padding-block: 0.6rem;
+  --tt-button-padding-inline: 1.15rem;
+  --tt-button-padding-inline-compact: 0.85rem;
+  --tt-button-font-size: 0.85rem;
+  --tt-button-font-size-compact: 0.79rem;
+  --tt-button-font-weight: 600;
+  --tt-button-radius: var(--tt-radius-pill);
+  --tt-button-gap: 0.4rem;
+
+  /* Table metrics, measured from the reference console at 1487 CSS px.
+     Three separate table definitions had drifted apart (padding 0.55/0.8/1rem,
+     header weight 850/900, header size 0.72/0.74/0.78rem), so no screen matched the
+     reference. Every console table now resolves from these.
+
+     The reference header is not a shrunken uppercase caption: it is body size, muted,
+     semibold, on a light band. Korean has no uppercase, so the transform only broke
+     the letter rhythm. */
+  --tt-table-font-size: 0.875rem;
+  --tt-table-meta-font-size: 0.75rem;
+  --tt-table-row-min-height: 4rem;
+  --tt-table-cell-padding-block: 0.75rem;
+  --tt-table-cell-padding-inline: 1rem;
+  --tt-table-header-min-height: 2.75rem;
+  --tt-table-header-font-size: 0.75rem;
+  --tt-table-header-font-weight: 500;
+  --tt-table-header-letter-spacing: 0;
+  --tt-table-header-transform: none;
+  --tt-table-header-surface: #f7f8fa;
+  --tt-table-header-color: var(--tt-color-text-muted);
+  /* Lighter than --tt-color-border on purpose: the reference separates rows inside a
+     card with a hairline that is softer than the card edge. */
+  --tt-table-divider-color: #f0f1f4;
+  --tt-table-row-hover-surface: color-mix(in srgb, var(--tt-color-brand) 4%, transparent);
+
+  /* Console type scale, measured from the reference. Screens had been setting their
+     own heading and label sizes, so the same rank read differently per page. */
+  --tt-heading-1-size: 1.5rem;
+  --tt-heading-1-weight: 700;
+  --tt-heading-2-size: 1.125rem;
+  --tt-heading-2-weight: 600;
+  --tt-heading-3-size: 1rem;
+  --tt-heading-3-weight: 600;
+  --tt-heading-line-height: 1.333;
+  --tt-body-size: 0.875rem;
+  --tt-label-size: 0.75rem;
+  --tt-label-weight: 500;
+  --tt-label-letter-spacing: 0;
+  --tt-label-transform: none;
+  /* Figures line up in columns and stop jittering as they count. */
+  --tt-numeric-font-variant: tabular-nums;
+  --tt-stat-value-size: 2.125rem;
+  --tt-stat-value-weight: 700;
+
+  /* ---------------------------------------------------------------------------
+     Public type scale (landing, auth). The public pages had grown a marketing
+     language of their own — a 116px hero with section titles at 64px, almost as
+     large, and body copy scattered across ten one-off sizes. That is not a
+     hierarchy; it is noise (operator, 2026-07-24).
+
+     One controlled ladder, so the hero is clearly the largest and each rank
+     below is clearly smaller. Brand colour and spacing still come from the
+     existing tokens; only the type sizes are set here. Sizes are responsive but
+     capped so a wide viewport cannot re-inflate the hero.
+     --------------------------------------------------------------------------- */
+  --tt-pub-display-size: clamp(2.5rem, 5vw, 3.5rem);
+  --tt-pub-display-weight: 800;
+  --tt-pub-display-line: 1.08;
+  --tt-pub-display-tracking: -0.03em;
+  --tt-pub-title-size: clamp(1.6rem, 3vw, 2.125rem);
+  --tt-pub-title-weight: 700;
+  --tt-pub-title-line: 1.15;
+  --tt-pub-subtitle-size: 1.375rem;
+  --tt-pub-subtitle-weight: 700;
+  --tt-pub-lead-size: 1.125rem;
+  --tt-pub-body-size: 1rem;
+  --tt-pub-caption-size: 0.875rem;
+  --tt-pub-eyebrow-size: 0.8125rem;
+
+  /* List-page metrics, taken from the approved canon
+     (docs/design-canon/console-pages.html) and the measured reference. A list page
+     is a header, a metric strip, then a panel beside a rail — every admin list
+     resolves its spacing from here instead of inventing its own. */
+  --tt-page-rail-width: 21.25rem;
+  --tt-page-column-gap: 1.25rem;
+  --tt-panel-head-padding-block: 1rem;
+  --tt-panel-head-padding-inline: 1.15rem;
+  --tt-panel-body-padding: 1.15rem;
+  --tt-panel-edge-inline: 1.15rem;
+  --tt-filter-bar-padding-block: 0.85rem;
+  --tt-filter-bar-gap: 0.6rem;
+  --tt-filter-field-min-width: 11.25rem;
+  --tt-filter-select-min-width: 9.5rem;
+  --tt-metric-tile-padding-block: 1rem;
+  --tt-metric-tile-padding-inline: 1.1rem;
+  --tt-metric-tile-gap: 0.5rem;
+  --tt-metric-icon-size: 2.1rem;
+  --tt-metric-value-size: 1.55rem;
+  --tt-pager-size: 2rem;
+  --tt-pager-gap: 0.3rem;
+  --tt-queue-row-gap: 0.6rem;
+  --tt-queue-icon-size: 1.9rem;
+  --tt-meter-track-height: 0.42rem;
+  --tt-meter-min-width: 6rem;
+
+  /* Wizard metrics, taken from the approved canon (docs/design-canon/console-qr-wizard.html).
+     The canon writes these as literals; they live here so a screen never restates
+     them and so the whole wizard moves together. */
+  --tt-wizard-rail-width: 21.25rem;
+  --tt-wizard-column-gap: 1.25rem;
+  --tt-wizard-step-min-width: 8.25rem;
+  --tt-wizard-step-gap: 0.4rem;
+  --tt-wizard-step-padding-block: 0.55rem;
+  --tt-wizard-step-padding-inline: 0.6rem;
+  --tt-wizard-step-marker-size: 1.65rem;
+  --tt-wizard-preview-max-width: 15.625rem;
+  --tt-wizard-track-dot-size: 1.4rem;
+  --tt-wizard-rail-top: 5rem;
+
+  /* Choice surfaces: template cards and option rows. Selected state is a brand
+     border plus a tint, never a second card. */
+  --tt-choice-padding-block: 0.7rem;
+  --tt-choice-padding-inline: 0.85rem;
+  --tt-choice-radius: var(--tt-radius-sm);
+  --tt-choice-gap: 0.5rem;
+  --tt-choice-ring: 0 0 0 2px color-mix(in srgb, var(--tt-color-brand) 25%, transparent);
+
+  /* Inline notice inside a panel (success / warning / danger). */
+  --tt-note-padding-block: 0.7rem;
+  --tt-note-padding-inline: 0.85rem;
+  --tt-note-radius: var(--tt-radius-sm);
+
+  /* Console rail measured from the operator-approved YouTube Studio reference. */
+  --tt-sidebar-width: 12.5rem;
+  --tt-sidebar-padding-block: 1.15rem;
+  --tt-sidebar-padding-inline: 0.625rem;
+  --tt-sidebar-item-height: 2.5rem;
+  --tt-sidebar-item-gap: 0.625rem;
+  --tt-sidebar-item-radius: 0.5rem;
+  --tt-sidebar-item-padding-inline: 0.7rem;
+  --tt-sidebar-item-font-size: 0.8125rem;
+  --tt-sidebar-item-font-weight: 600;
+  --tt-sidebar-group-gap: 1.25rem;
+  --tt-sidebar-item-hover-surface: #f7f8fa;
+  --tt-sidebar-item-active-surface: color-mix(in srgb, var(--tt-color-brand) 8%, #ffffff);
+  --tt-sidebar-item-active-color: var(--tt-color-brand-strong);
+
+  /* Console v2, approved 2026-07-30. The console is dark by default and maps the
+     same semantic roles to a light palette when the operator changes theme.
+     Public, auth and owner surfaces do not consume this palette. */
+  --tt-console-dark-canvas: #0f0f0f;
+  --tt-console-dark-sidebar: #0f0f0f;
+  --tt-console-dark-topbar: #111111;
+  --tt-console-dark-surface: #181818;
+  --tt-console-dark-surface-raised: #212121;
+  --tt-console-dark-surface-muted: #272727;
+  --tt-console-dark-border: #3f3f3f;
+  --tt-console-dark-border-strong: #555555;
+  --tt-console-dark-divider: #303030;
+  --tt-console-dark-text: #f1f1f1;
+  --tt-console-dark-text-muted: #aaaaaa;
+  --tt-console-dark-text-subtle: #717171;
+  --tt-console-dark-brand: #8a6eff;
+  --tt-console-dark-brand-strong: #a892ff;
+  --tt-console-dark-brand-surface: #2c2548;
+  --tt-console-dark-focus: #b7a8ff;
+  --tt-console-dark-on-brand: #ffffff;
+  --tt-console-dark-success: #49c58b;
+  --tt-console-dark-success-surface: #16372b;
+  --tt-console-dark-success-fg: #76dcae;
+  --tt-console-dark-warning: #e9a93f;
+  --tt-console-dark-warning-surface: #3d2c12;
+  --tt-console-dark-warning-fg: #f8bd62;
+  --tt-console-dark-danger: #ef6376;
+  --tt-console-dark-danger-surface: #411b24;
+  --tt-console-dark-danger-fg: #ff95a3;
+  --tt-console-dark-info: #7da2ff;
+  --tt-console-dark-info-surface: #1c2b4d;
+  --tt-console-dark-info-fg: #9db8ff;
+  --tt-console-dark-neutral-surface: #2a2a2a;
+  --tt-console-dark-neutral-fg: #d0d0d0;
+
+  --tt-console-light-canvas: #f6f7f9;
+  --tt-console-light-sidebar: #ffffff;
+  --tt-console-light-topbar: #ffffff;
+  --tt-console-light-surface: #ffffff;
+  --tt-console-light-surface-raised: #f7f7f8;
+  --tt-console-light-surface-muted: #eeeeef;
+  --tt-console-light-border: #d7d9df;
+  --tt-console-light-border-strong: #b8bcc6;
+  --tt-console-light-divider: #e6e7eb;
+  --tt-console-light-text: #15171c;
+  --tt-console-light-text-muted: #60656f;
+  --tt-console-light-text-subtle: #8a909b;
+  --tt-console-light-brand: #7257ea;
+  --tt-console-light-brand-strong: #5c42da;
+  --tt-console-light-brand-surface: #eeeaff;
+  --tt-console-light-focus: #654cf0;
+  --tt-console-light-on-brand: #ffffff;
+  --tt-console-light-success: #16845b;
+  --tt-console-light-success-surface: #e4f5ed;
+  --tt-console-light-success-fg: #0f7049;
+  --tt-console-light-warning: #bd7600;
+  --tt-console-light-warning-surface: #fdf0d9;
+  --tt-console-light-warning-fg: #805200;
+  --tt-console-light-danger: #c83b4c;
+  --tt-console-light-danger-surface: #fce4e7;
+  --tt-console-light-danger-fg: #a92536;
+  --tt-console-light-info: #2f64dc;
+  --tt-console-light-info-surface: #e6edff;
+  --tt-console-light-info-fg: #2449be;
+  --tt-console-light-neutral-surface: #eef0f3;
+  --tt-console-light-neutral-fg: #4d5563;
+
+  --tt-console-v2-sidebar-width: 12.5rem;
+  --tt-console-v2-topbar-height: 3.5rem;
+  --tt-console-v2-content-max-width: none;
+  --tt-console-v2-content-gutter: 2rem;
+  --tt-console-v2-page-gap: 1.5rem;
+  --tt-console-v2-workbench-gap: 1.5rem;
+  --tt-console-v2-panel-radius: 0.5rem;
+  --tt-console-v2-panel-padding: 1.5rem;
+  --tt-console-v2-panel-padding-compact: 1rem;
+  --tt-console-v2-toolbar-height: 3rem;
+  --tt-console-v2-control-height: 2.25rem;
+  --tt-console-v2-icon-button-size: 2.25rem;
+  --tt-console-v2-tab-height: 3rem;
+  --tt-console-v2-tab-underline: 0.125rem;
+  --tt-console-v2-chip-height: 2rem;
+  --tt-console-v2-chip-padding-inline: 0.75rem;
+  --tt-console-v2-rail-width: 17.5rem;
+  --tt-console-v2-row-min-height: 4rem;
+  --tt-console-v2-row-gap: 1rem;
+  --tt-console-v2-progress-height: 0.375rem;
+  --tt-console-v2-search-width: 25rem;
+  --tt-console-v2-dialog-width: 60rem;
+  --tt-console-v2-dialog-rail-width: 13.75rem;
+  --tt-console-v2-background: var(--tt-console-dark-canvas);
+  --tt-console-v2-muted-band: var(--tt-console-dark-surface-raised);
+  --tt-console-v2-rail-surface: var(--tt-console-dark-surface);
+  --tt-console-v2-active-band: var(--tt-console-dark-surface-muted);
+
+  /* ---------------------------------------------------------------------------
+     Mobile metrics (owner + caller), measured from docs/design-canon/pwa/*.png.
+
+     The mobile screens are a different system from the console: a single column
+     of white cards on a very light ground, one primary button per screen, and a
+     bottom tab bar. They are built token-first for the same reason the console
+     is — the owner activation and public contact screens each grew their own
+     padding, radius and control heights, and no two of them matched.
+
+     Measurement note: the four approved mockups were not rendered at one common
+     viewport (the gutter reads 18.3 CSS px in 01-caller-compose and 22.3 in
+     03-owner-reply), so ratios were normalised against the card width and the
+     nearest round value taken. Heights and colours agreed across all four.
+     --------------------------------------------------------------------------- */
+
+  /* The column stops growing past a phone; a 900px-wide card stack is not the canon. */
+  --tt-m-max-width: 27rem;
+  --tt-m-gutter: 1.5rem;
+  --tt-m-stack-gap: 1.5rem;
+
+  /* The mockups sit on a near-white ground so the white cards separate without a border. */
+  --tt-m-background: #f8f9fb;
+  --tt-m-surface: var(--tt-color-surface);
+  --tt-m-hairline: #e5e7eb;
+  --tt-m-chip-surface: #f3f4f6;
+
+  /* The canon's mobile purple is the logo tone, one step lighter than the console
+     brand: sampled #8a6eff on the primary button, the plate figures, the selected
+     row border and the active tab. The 12% tint resolves to the sampled #f1eeff. */
+  --tt-m-accent: var(--tt-color-logo-purple);
+  --tt-m-accent-surface: color-mix(in srgb, var(--tt-color-logo-purple) 12%, #ffffff);
+  --tt-m-on-accent: #ffffff;
+
+  --tt-m-card-radius: 1.25rem;
+  --tt-m-card-padding: 1.5rem;
+
+  /* Choice row: icon chip + one line. 64px keeps the 18.7% of card width the
+     mockups hold and stays above the 44px touch minimum. */
+  --tt-m-choice-height: 4.75rem;
+  --tt-m-choice-gap: 0.875rem;
+  --tt-m-choice-padding-inline: 1.25rem;
+  --tt-m-choice-radius: 1.125rem;
+  --tt-m-chip-size: 2.375rem;
+  --tt-m-chip-radius: 0.75rem;
+
+  /* One primary per screen, full width. */
+  --tt-m-button-height: 3.375rem;
+  --tt-m-button-radius: 1.125rem;
+  --tt-m-button-font-size: 1.125rem;
+  --tt-m-button-mark-size: 1.25rem;
+
+  /* Fields are taller than console fields because they are typed on a phone. */
+  --tt-m-field-height: 3.25rem;
+  --tt-m-field-radius: 0.875rem;
+  --tt-m-textarea-min-height: 7.5rem;
+
+  /* The plate is the largest figure on any mobile screen and always brand-coloured. */
+  --tt-m-plate-size: 2.5rem;
+  --tt-m-plate-weight: 700;
+  --tt-m-plate-letter-spacing: -0.01em;
+
+  --tt-m-heading-size: 1.45rem;
+  --tt-m-title-size: 1.125rem;
+  --tt-m-body-size: 1.0625rem;
+  --tt-m-label-size: 1rem;
+  --tt-m-meta-size: 0.8125rem;
+
+  --tt-m-brand-width: 9.75rem;
+  --tt-m-tabbar-height: 5rem;
+  --tt-m-tab-icon-size: 1.75rem;
+  --tt-m-tab-label-size: 0.8125rem;
+  --tt-m-tab-label-letter-spacing: 0.06em;
+
+  /* State tint pairs for badges / pills / tiles — bg + accessible foreground (new) */
+  --tt-color-brand-surface: #eeeaff;
+  --tt-color-brand-fg: #5540c9;
+  --tt-color-success-surface: #e4f5ed;
+  --tt-color-success-fg: #0f7a4f;
+  --tt-color-warning-surface: #fdf0d9;
+  --tt-color-warning-fg: #8f5c00;
+  --tt-color-danger-surface: #fce4e7;
+  --tt-color-danger-fg: #b3283a;
+  --tt-color-info-surface: #e6edff;
+  --tt-color-info-fg: #2a4fd6;
+  --tt-color-neutral-surface: #eef0f6;
+  --tt-color-neutral-fg: #4a5468;
+
+  /* Radius (existing sm/md/lg + new) */
+  --tt-radius-xs: 0.5rem;
+  --tt-radius-sm: 0.75rem;
+  --tt-radius-md: 1.25rem;
+  --tt-radius-lg: 2rem;
+  --tt-radius-pill: 999px;
+
+  /* Elevation (existing card + new sm/md) */
+  --tt-shadow-sm:
+    0 1px 2px color-mix(in srgb, var(--tt-color-text) 6%, transparent),
+    0 1px 3px color-mix(in srgb, var(--tt-color-text) 4%, transparent);
+  --tt-shadow-md: 0 4px 14px color-mix(in srgb, var(--tt-color-text) 9%, transparent);
+  --tt-shadow-card: 0 1rem 3rem color-mix(in srgb, var(--tt-color-text) 8%, transparent);
+
+  /* Focus ring (new) */
+  --tt-focus-ring: 0 0 0 3px color-mix(in srgb, var(--tt-color-focus) 35%, transparent);
+
+  /* Spacing scale (existing 1-7 + new 8) */
+  --tt-space-1: 0.25rem;
+  --tt-space-2: 0.5rem;
+  --tt-space-3: 0.75rem;
+  --tt-space-4: 1rem;
+  --tt-space-5: 1.5rem;
+  --tt-space-6: 2rem;
+  --tt-space-7: 3rem;
+  --tt-space-8: 4rem;
+
+  /* Type scale (new) */
+  /* 2xs is the micro-label rank (sidebar group labels, table micro-captions).
+     Reference-1 uses ~0.62rem here; 0.6875rem is the single canonical value so
+     the 0.62–0.71 one-offs collapse to one token instead of a dozen literals. */
+  --tt-font-size-2xs: 0.6875rem;
+  --tt-font-size-xs: 0.75rem;
+  --tt-font-size-sm: 0.8125rem;
+  --tt-font-size-base: 0.875rem;
+  --tt-font-size-md: 1rem;
+  --tt-font-size-lg: 1.25rem;
+  --tt-font-size-xl: 1.625rem;
+  --tt-font-size-2xl: 2rem;
+  --tt-font-size-3xl: 2.5rem;
+  --tt-font-weight-regular: 400;
+  --tt-font-weight-medium: 500;
+  --tt-font-weight-semibold: 600;
+  --tt-font-weight-bold: 700;
+
+  /* Line heights (existing heading/body + new tight) */
+  --tt-line-tight: 1.1;
+  --tt-line-heading: 1.18;
+  --tt-line-body: 1.72;
+
+  /* Z-index scale (new) */
+  --tt-z-sidebar: 20;
+  --tt-z-dropdown: 40;
+  --tt-z-modal: 60;
+  --tt-z-toast: 80;
+}
