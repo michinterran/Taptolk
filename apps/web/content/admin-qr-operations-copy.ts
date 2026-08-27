@@ -11,6 +11,17 @@ export interface AdminQrOperationsCopy {
   batchPlan: string;
   company: string;
   completedBatches: string;
+  currentRequest: string;
+  currentRequestOnly: string;
+  allBatchHistory: string;
+  batchView: string;
+  batchSort: string;
+  batchSortRecent: string;
+  batchSortOldest: string;
+  batchSortProgress: string;
+  batchSortStatus: string;
+  applyBatchFilters: string;
+  createdAt: string;
   confirmed: string;
   confirmSelection: string;
   description: string;
@@ -42,6 +53,7 @@ export interface AdminQrOperationsCopy {
   progressEmpty: string;
   progressAutoRefresh: string;
   progressPending: string;
+  progressWorking: string;
   requestPending: string;
   progressFailed: string;
   progressOutput: string;
@@ -108,6 +120,17 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       batchPlan: "Batch plan",
       company: "Management company",
       completedBatches: "Completed batches",
+      currentRequest: "Current request",
+      currentRequestOnly: "Current request only",
+      allBatchHistory: "All batch history",
+      batchView: "Batch view",
+      batchSort: "Sort batches",
+      batchSortRecent: "Newest first",
+      batchSortOldest: "Oldest first",
+      batchSortProgress: "Progress",
+      batchSortStatus: "Status",
+      applyBatchFilters: "Apply filters",
+      createdAt: "Created",
       confirmed: "Scope confirmed",
       confirmSelection: "Continue with this location",
       description:
@@ -146,6 +169,8 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       progressAutoRefresh: "Updating automatically while generation is in progress.",
       progressPending:
         "The request was accepted and placed in the QR generation queue. Progress updates automatically.",
+      progressWorking:
+        "The worker is processing this request now. The numeric count updates when each batch is committed; the animated bar confirms that work is active.",
       requestPending: "Starting QR generation…",
       progressFailed: "Failed",
       progressOutput: "SVG output",
@@ -236,6 +261,17 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       batchPlan: "생성 묶음 계획",
       company: "관리회사",
       completedBatches: "완료 묶음",
+      currentRequest: "현재 요청",
+      currentRequestOnly: "현재 요청만 보기",
+      allBatchHistory: "전체 발행 이력",
+      batchView: "발행 묶음 보기",
+      batchSort: "발행 묶음 정렬",
+      batchSortRecent: "최신순",
+      batchSortOldest: "오래된순",
+      batchSortProgress: "진행률순",
+      batchSortStatus: "상태순",
+      applyBatchFilters: "필터 적용",
+      createdAt: "생성 시각",
       confirmed: "범위 확인 완료",
       confirmSelection: "이 현장으로 계속",
       description:
@@ -273,6 +309,8 @@ export const ADMIN_QR_OPERATIONS_COPY: Readonly<Record<AppLocale, AdminQrOperati
       progressAutoRefresh: "생성이 진행되는 동안 진행률을 자동으로 갱신합니다.",
       progressPending:
         "생성 요청을 접수하고 QR 생성 큐에 등록했습니다. 진행률을 자동으로 갱신합니다.",
+      progressWorking:
+        "worker가 현재 요청을 처리하고 있습니다. 숫자는 묶음 커밋 시 갱신되며, 움직이는 막대는 실제 처리가 진행 중임을 나타냅니다.",
       requestPending: "QR 생성을 시작하는 중…",
       progressFailed: "실패",
       progressOutput: "SVG 출력",

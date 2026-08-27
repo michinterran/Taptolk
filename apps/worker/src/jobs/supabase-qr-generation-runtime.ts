@@ -145,7 +145,10 @@ export class SupabaseQrGenerationExecutionRepository implements QrGenerationExec
     if (batchMode.error) {
       throw new SupabaseQrGenerationRuntimeError("UNAVAILABLE");
     }
-    const renderMode = batchMode.data?.request_mode === "ADMIN_DIRECT" ? "QR_ONLY" : "STICKER";
+    const renderMode =
+      batchMode.data?.request_mode === "ADMIN_DIRECT" || batchMode.data?.request_mode === "QR_ONLY"
+        ? "QR_ONLY"
+        : "STICKER";
     if (!context.customerLogoSource) {
       return { ...context, renderMode };
     }

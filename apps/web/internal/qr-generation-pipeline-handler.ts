@@ -48,16 +48,27 @@ export async function handleQrGenerationPipelineMessage(
   }
 
   const dispatch = await dependencies.runDispatch(configuration, wake.requestId);
-  const iteration = await worker.runOnce();
-  if (iteration.status === "RETRY") {
-    throw new QrGenerationPipelineRetryError("WORKER_RETRY");
+  let sawCompleted = false;
+  let sawRejected = false;
+  let sawEmpty = false;
+  const workerIterations = Math.max(dispatch.claimedCount, 1);
+  for (let index = 0; index < workerIterations; index += 1) {
+    const iteration = await worker.runOnce();
+    if (iteration.status === "RETRY") {
+      throw new QrGenerationPipelineRetryError("WORKER_RETRY");
+    }
+    sawCompleted ||= iteration.status === "COMPLETED";
+    sawRejected ||= iteration.status === "REJECTED";
+    sawEmpty ||= iteration.status === "EMPTY";
+    if (iteration.status === "EMPTY") break;
   }
-  if (dispatch.claimedCount === 0 && iteration.status === "EMPTY" && metadata.deliveryCount < 5) {
+  const workerStatus = sawCompleted ? "COMPLETED" : sawRejected ? "REJECTED" : "EMPTY";
+  if (dispatch.claimedCount === 0 && sawEmpty && metadata.deliveryCount < 5) {
     throw new QrGenerationPipelineRetryError("NO_WORK_YET");
   }
 
   return {
     dispatchClaimedCount: dispatch.claimedCount,
-    workerStatus: iteration.status,
+    workerStatus,
   };
 }

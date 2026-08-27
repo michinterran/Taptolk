@@ -119,4 +119,24 @@ describe("Vercel QR generation pipeline handler", () => {
       ),
     ).resolves.toEqual({ dispatchClaimedCount: 1, workerStatus: "COMPLETED" });
   });
+
+  it("drains every message published by one dispatch wake", async () => {
+    const runOnce = vi
+      .fn()
+      .mockResolvedValueOnce({ messageId: "1", status: "COMPLETED" as const })
+      .mockResolvedValueOnce({ messageId: "2", status: "COMPLETED" as const })
+      .mockResolvedValueOnce({ messageId: "3", status: "COMPLETED" as const });
+
+    await expect(
+      handleQrGenerationPipelineMessage(
+        wake,
+        { deliveryCount: 1 },
+        dependencies({
+          claimedCount: 3,
+          worker: { ready: true, runOnce },
+        }),
+      ),
+    ).resolves.toEqual({ dispatchClaimedCount: 3, workerStatus: "COMPLETED" });
+    expect(runOnce).toHaveBeenCalledTimes(3);
+  });
 });

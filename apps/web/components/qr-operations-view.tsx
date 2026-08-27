@@ -37,6 +37,8 @@ interface QrOperationsViewProps {
   activeRequestId?: string | undefined;
   batchPage: number;
   batchPageSize: number;
+  batchSort?: BatchSort;
+  batchView?: BatchView;
   confirmed: boolean;
   copy: AdminQrOperationsCopy;
   directGenerationEnabled?: boolean;
@@ -53,6 +55,9 @@ interface QrOperationsViewProps {
   sitePageSize: number;
   statusMessage?: string | undefined;
 }
+
+type BatchView = "current" | "all";
+type BatchSort = "recent" | "oldest" | "progress" | "status";
 
 function headingLine(value: string): readonly [string] {
   return [value];
@@ -136,6 +141,38 @@ function isTerminalBatchStatus(status: QrBatchStatus): boolean {
   return ["CANCELLED", "COMPLETED", "DELIVERED", "FAILED", "PARTIALLY_COMPLETED"].includes(status);
 }
 
+function isBatchProcessing(batch: QrOperationsBatch): boolean {
+  return (
+    ["QUEUED", "PROCESSING", "DELIVERY_LEASED", "RETRY_WAIT"].includes(batch.jobStatus ?? "") ||
+    ["GENERATION_QUEUED", "GENERATING"].includes(batch.status)
+  );
+}
+
+function batchStatusRank(status: QrBatchStatus): number {
+  const order: QrBatchStatus[] = [
+    "GENERATING",
+    "GENERATION_QUEUED",
+    "PARTIALLY_COMPLETED",
+    "FAILED",
+    "COMPLETED",
+    "DELIVERED",
+    "GENERATED",
+    "PRINT_FILE_READY",
+    "QUALITY_CHECKED",
+    "PRINTED",
+    "SHIPPED",
+    "DISTRIBUTING",
+    "SENT_TO_PRINTER",
+    "SAMPLE_RENDERING",
+    "SAMPLE_READY",
+    "SAMPLE_APPROVED",
+    "FINAL_APPROVAL_PENDING",
+    "DRAFT",
+    "CANCELLED",
+  ];
+  return order.indexOf(status) === -1 ? order.length : order.indexOf(status);
+}
+
 function clampPage(value: number, totalPages: number): number {
   if (!Number.isInteger(value)) return 1;
   return Math.min(Math.max(value, 1), totalPages);
@@ -170,6 +207,8 @@ export function QrOperationsView({
   activeRequestId,
   batchPage,
   batchPageSize,
+  batchSort = "recent",
+  batchView = "current",
   confirmed,
   copy,
   directGenerationEnabled = false,
@@ -187,6 +226,10 @@ export function QrOperationsView({
   statusMessage,
 }: QrOperationsViewProps) {
   const number = new Intl.NumberFormat(locale);
+  const dateTime = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
   const companiesWithSites = operationsModel.companies.filter((company) =>
     operationsModel.sites.some((site) => site.managementCompanyId === company.id),
   );
@@ -223,14 +266,41 @@ export function QrOperationsView({
   const plan = quantityPlan(quantity);
   const idempotencyKey = crypto.randomUUID();
   const companyById = new Map(operationsModel.companies.map((item) => [item.id, item]));
+  const hasCurrentBatchView = batchView === "current" && hasTrackedBatches;
+  const tableBatches = (hasCurrentBatchView ? trackedBatches : scopedBatches)
+    .slice()
+    .sort((a, b) => {
+      const currentDelta =
+        Number(
+          Boolean(b.directGenerationRequestId === activeRequestId || activeBatchIdSet.has(b.id)),
+        ) -
+        Number(
+          Boolean(a.directGenerationRequestId === activeRequestId || activeBatchIdSet.has(a.id)),
+        );
+      if (batchView === "all" && currentDelta !== 0) return currentDelta;
+      if (batchSort === "progress") {
+        const progressDelta = batchProgress(b) - batchProgress(a);
+        if (progressDelta !== 0) return progressDelta;
+      }
+      if (batchSort === "status") {
+        const statusDelta = batchStatusRank(a.status) - batchStatusRank(b.status);
+        if (statusDelta !== 0) return statusDelta;
+      }
+      const aTime = Date.parse(a.createdAt);
+      const bTime = Date.parse(b.createdAt);
+      const timeDelta = batchSort === "oldest" ? aTime - bTime : bTime - aTime;
+      return timeDelta !== 0 ? timeDelta : a.id.localeCompare(b.id);
+    });
   const pageSize = clampPageSize(batchPageSize);
-  const totalBatchPages = Math.max(1, Math.ceil(scopedBatches.length / pageSize));
+  const totalBatchPages = Math.max(1, Math.ceil(tableBatches.length / pageSize));
   const currentBatchPage = clampPage(batchPage, totalBatchPages);
   const batchPageStart = (currentBatchPage - 1) * pageSize;
-  const pagedBatches = scopedBatches.slice(batchPageStart, batchPageStart + pageSize);
-  const batchRangeStart = scopedBatches.length === 0 ? 0 : batchPageStart + 1;
-  const batchRangeEnd = Math.min(scopedBatches.length, batchPageStart + pagedBatches.length);
+  const pagedBatches = tableBatches.slice(batchPageStart, batchPageStart + pageSize);
+  const batchRangeStart = tableBatches.length === 0 ? 0 : batchPageStart + 1;
+  const batchRangeEnd = Math.min(tableBatches.length, batchPageStart + pagedBatches.length);
   const batchQueryBase = {
+    batchSort,
+    batchView,
     batches: activeBatchIds.join(","),
     company: companyHref,
     confirmed: scopeConfirmed ? 1 : undefined,
@@ -247,6 +317,8 @@ export function QrOperationsView({
   const siteRangeStart = operationsModel.sites.length === 0 ? 0 : sitePageStart + 1;
   const siteRangeEnd = Math.min(operationsModel.sites.length, sitePageStart + pagedSites.length);
   const siteQueryBase = {
+    batchSort,
+    batchView,
     batches: activeBatchIds.join(","),
     company: companyHref,
     confirmed: scopeConfirmed ? 1 : undefined,
@@ -259,14 +331,26 @@ export function QrOperationsView({
 
   const columns = [
     {
-      cell: (batch) => (
-        <span className="tt-table-entity">
-          <strong>{batch.batchCode}</strong>
-          <small>
-            {companyById.get(batch.managementCompanyId)?.name ?? copy.company} · {batch.siteName}
-          </small>
-        </span>
-      ),
+      cell: (batch) => {
+        const isCurrent =
+          batch.directGenerationRequestId === activeRequestId || activeBatchIdSet.has(batch.id);
+        return (
+          <span className="tt-table-entity">
+            <strong>
+              {batch.batchCode}
+              {isCurrent ? (
+                <span className="qr-current-batch-badge">{copy.currentRequest}</span>
+              ) : null}
+            </strong>
+            <small>
+              {companyById.get(batch.managementCompanyId)?.name ?? copy.company} · {batch.siteName}
+            </small>
+            <small>
+              {copy.createdAt} {dateTime.format(new Date(batch.createdAt))}
+            </small>
+          </span>
+        );
+      },
       header: copy.batch,
       key: "batch",
     },
@@ -285,6 +369,7 @@ export function QrOperationsView({
               {number.format(batch.generatedQuantity)} / {number.format(batch.requestedQuantity)}
             </strong>
             <MeterBar
+              className={isBatchProcessing(batch) ? "qr-progress-meter--active" : undefined}
               tone={progress >= 100 ? "success" : progress > 0 ? "warning" : "muted"}
               value={progress}
             />
@@ -752,11 +837,13 @@ export function QrOperationsView({
                   </div>
                   <div className="qr-console-v2-progress">
                     <p className="qr-console-v2-help">
-                      {hasTrackedBatches
-                        ? copy.progressDescription
-                        : hasTrackedRequest
-                          ? copy.progressPending
-                          : copy.progressEmpty}
+                      {hasTrackedBatches && trackedBatches.some(isBatchProcessing)
+                        ? copy.progressWorking
+                        : hasTrackedBatches
+                          ? copy.progressDescription
+                          : hasTrackedRequest
+                            ? copy.progressPending
+                            : copy.progressEmpty}
                     </p>
                     {hasTrackedRequest ? (
                       <>
@@ -766,6 +853,11 @@ export function QrOperationsView({
                             {number.format(progressRequested)}
                           </strong>
                           <MeterBar
+                            className={
+                              trackedBatches.some(isBatchProcessing) && trackedProgressPercent < 100
+                                ? "qr-progress-meter--active"
+                                : undefined
+                            }
                             tone={trackedProgressPercent >= 100 ? "success" : "warning"}
                             value={trackedProgressPercent}
                           />
@@ -925,6 +1017,63 @@ export function QrOperationsView({
               <p>{copy.operationsPanelDescription}</p>
             </div>
           </header>
+          <ConsoleQueryForm
+            aria-label={copy.batchOperations}
+            className="qr-console-v2-batch-filters"
+          >
+            <input aria-label="company" name="company" type="hidden" value={companyHref ?? ""} />
+            <input aria-label="site" name="site" type="hidden" value={siteHref ?? ""} />
+            <input
+              aria-label="confirmed"
+              name="confirmed"
+              type="hidden"
+              value={scopeConfirmed ? "1" : ""}
+            />
+            <input aria-label="quantity" name="quantity" type="hidden" value={quantity} />
+            <input
+              aria-label="batches"
+              name="batches"
+              type="hidden"
+              value={activeBatchIds.join(",")}
+            />
+            <input
+              aria-label="request"
+              name="request"
+              type="hidden"
+              value={activeRequestId ?? ""}
+            />
+            <label className="admin-field" htmlFor="qr-batch-view">
+              <span>{copy.batchView}</span>
+              <span className="qr-console-v2-select">
+                <select
+                  defaultValue={hasCurrentBatchView ? "current" : batchView}
+                  id="qr-batch-view"
+                  name="batchView"
+                >
+                  <option disabled={!hasTrackedBatches} value="current">
+                    {copy.currentRequestOnly}
+                  </option>
+                  <option value="all">{copy.allBatchHistory}</option>
+                </select>
+                <CaretDown aria-hidden="true" size={14} />
+              </span>
+            </label>
+            <label className="admin-field" htmlFor="qr-batch-sort">
+              <span>{copy.batchSort}</span>
+              <span className="qr-console-v2-select">
+                <select defaultValue={batchSort} id="qr-batch-sort" name="batchSort">
+                  <option value="recent">{copy.batchSortRecent}</option>
+                  <option value="oldest">{copy.batchSortOldest}</option>
+                  <option value="progress">{copy.batchSortProgress}</option>
+                  <option value="status">{copy.batchSortStatus}</option>
+                </select>
+                <CaretDown aria-hidden="true" size={14} />
+              </span>
+            </label>
+            <button className="tt-button tt-button--secondary tt-button--compact" type="submit">
+              {copy.applyBatchFilters}
+            </button>
+          </ConsoleQueryForm>
           <DataTable
             className="admin-table-scroll admin-table-scroll--catalog qr-operations-table"
             columns={columns}
@@ -937,7 +1086,7 @@ export function QrOperationsView({
               {formatTemplate(copy.tableRange, {
                 end: number.format(batchRangeEnd),
                 start: number.format(batchRangeStart),
-                total: number.format(scopedBatches.length),
+                total: number.format(tableBatches.length),
               })}
             </span>
             <nav className="qr-console-v2-pagination" aria-label={copy.batchOperations}>

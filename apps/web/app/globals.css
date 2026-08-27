@@ -7523,6 +7523,58 @@ h3,
   font-size: var(--tt-font-size-sm);
 }
 
+.qr-progress-meter--active {
+  position: relative;
+}
+
+.qr-progress-meter--active .tt-meter__bar {
+  animation: qr-progress-pulse 1.4s ease-in-out infinite;
+  min-width: 18%;
+}
+
+.qr-current-batch-badge {
+  background: var(--tt-color-brand-surface);
+  border: 1px solid var(--tt-color-brand);
+  border-radius: var(--tt-radius-pill);
+  color: var(--tt-color-brand-strong);
+  display: inline-flex;
+  font-size: var(--tt-font-size-2xs);
+  font-weight: var(--tt-font-weight-semibold);
+  margin-inline-start: var(--tt-space-2);
+  padding: var(--tt-space-1) var(--tt-space-2);
+  vertical-align: middle;
+}
+
+.qr-console-v2-batch-filters {
+  align-items: end;
+  border-block: 1px solid var(--tt-color-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tt-space-3);
+  padding: var(--tt-space-3) 0;
+}
+
+.qr-console-v2-batch-filters .admin-field {
+  min-width: min(15rem, 100%);
+}
+
+@keyframes qr-progress-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-progress-meter--active .tt-meter__bar {
+    animation: none;
+  }
+}
+
 .qr-console-v2-progress-grid {
   display: grid;
   gap: var(--tt-space-2);

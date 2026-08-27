@@ -28,6 +28,19 @@ function readPositiveInteger(value: string | string[] | undefined, fallback: num
   return Number.isInteger(candidate) && candidate > 0 ? candidate : fallback;
 }
 
+function readBatchView(value: string | string[] | undefined): "current" | "all" {
+  return readValue(value) === "all" ? "all" : "current";
+}
+
+function readBatchSort(
+  value: string | string[] | undefined,
+): "recent" | "oldest" | "progress" | "status" {
+  const candidate = readValue(value);
+  return candidate === "oldest" || candidate === "progress" || candidate === "status"
+    ? candidate
+    : "recent";
+}
+
 function isQrOperationsUnavailable(error: unknown): boolean {
   return error instanceof Error && error.message === "QR_OPERATIONS_UNAVAILABLE";
 }
@@ -40,6 +53,8 @@ export default async function QrOperationsPage({
   searchParams: Promise<{
     company?: string | string[];
     batches?: string | string[];
+    batchSort?: string | string[];
+    batchView?: string | string[];
     confirmed?: string | string[];
     page?: string | string[];
     pageSize?: string | string[];
@@ -132,6 +147,8 @@ export default async function QrOperationsPage({
         activeRequestId={readValue(query.request)}
         batchPage={readPositiveInteger(query.page, 1)}
         batchPageSize={readPositiveInteger(query.pageSize, 10)}
+        batchSort={readBatchSort(query.batchSort)}
+        batchView={readBatchView(query.batchView)}
         confirmed={readValue(query.confirmed) === "1"}
         copy={ADMIN_QR_OPERATIONS_COPY[locale]}
         directGenerationEnabled
